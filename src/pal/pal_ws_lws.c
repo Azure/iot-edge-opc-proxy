@@ -350,7 +350,7 @@ static int pal_wsworker_lws_on_verify_certs(
         if (result != er_ok)
         {
             log_error(worker->log, "Failed loading certs (%s)", 
-                pi_error_string(result));
+                prx_err_string(result));
             return -1;
         }
     }

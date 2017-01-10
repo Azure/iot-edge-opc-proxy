@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         Ipv6Only,
         Tcp_nodelay,
         // ...
-        __pi_so_max
+        __prx_so_max
     }
 
 

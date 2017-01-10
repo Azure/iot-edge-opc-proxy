@@ -141,7 +141,7 @@ static int32_t pal_kqueue_worker_thread(
         if (result != er_ok)
         {
             log_error(NULL, "Error occurred in polling thread: %s.",
-                prx_error_string(result));
+                prx_err_string(result));
             ThreadAPI_Sleep(100);
         }
     }

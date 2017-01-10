@@ -150,7 +150,7 @@ static int32_t pal_epoll_worker_thread(
         if (result != er_ok && pal_port->running)
         {
             log_error(NULL, "Error occurred in polling thread: %s.",
-                prx_error_string(result));
+                prx_err_string(result));
             ThreadAPI_Sleep(100);
         }
     }

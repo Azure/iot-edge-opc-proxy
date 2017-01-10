@@ -333,7 +333,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public class ResolveResponse : IMessageContent, IResponse, IEquatable<ResolveResponse> {
 
         /// <summary>
-        /// Results in the form of pi_addrinfo
+        /// Results in the form of prx_addrinfo
         /// </summary>
         [DataMember(Name = "results", Order = 1)]
         public HashSet<AddressInfo> Results { get; set; } = new HashSet<AddressInfo>();

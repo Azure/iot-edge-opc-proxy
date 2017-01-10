@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     }
 
     /// <summary>
-    /// pi_addrinfo provides a platform independent host resolution
+    /// prx_addrinfo provides a platform independent host resolution
     /// </summary>
     [DataContract]
     public class AddressInfo : IEquatable<AddressInfo> {
