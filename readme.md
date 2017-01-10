@@ -37,7 +37,7 @@ The module was successfully built and tested on Ubuntu 16.04.
 
 Install CMAKE, and other dev tools using apt-get, as well as OpenSSL 1.0.1+ and pthreads:
 ```
-sudo apt-get install  
+sudo apt-get install git cmake libcurl4-openssl-dev build-essential
 ```
 
 ### Building
