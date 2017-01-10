@@ -1,0 +1,7 @@
+{
+  "projects": [ 
+    "src", 
+    "ext/azure-relay-dotnet/src", 
+    "samples" 
+  ]
+}

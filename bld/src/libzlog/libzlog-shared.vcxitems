@@ -1,0 +1,71 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{9DE32F51-262E-471C-B74B-8189FD1920F8}</ItemsProjectGuid>
+    <ItemsProjectName>libzlog-shared</ItemsProjectName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\buf.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\category.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\category_table.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\conf.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\event.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\fmacros.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\format.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\level.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\level_list.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\mdc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\record.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\record_table.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\rotater.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\rule.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\spec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\thread.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\version.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_arraylist.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_defs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_hashtable.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_profile.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_threads.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_util.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_xplatform.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zlog.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\api.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_dbg.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_zlog.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\buf.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\category.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\category_table.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\conf.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\event.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\format.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\level.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\level_list.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\mdc.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\record.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\record_table.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\rotater.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\rule.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\spec.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\thread.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_arraylist.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_hashtable.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_profile.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_threads.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zc_util.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\zlog\src\zlog.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_zlog.c" />
+  </ItemGroup>
+</Project>

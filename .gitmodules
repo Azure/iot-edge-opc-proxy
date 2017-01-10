@@ -1,0 +1,41 @@
+[submodule "deps/uamqp"]
+	path = deps/uamqp
+	url = https://github.com/marcschier/azure-uamqp-c.git
+[submodule "deps/umqtt"]
+	path = deps/umqtt
+	url = https://github.com/marcschier/azure-umqtt-c.git
+[submodule "deps/shared"]
+	path = deps/shared
+	url = https://github.com/marcschier/azure-c-shared-utility.git
+[submodule "deps/umock"]
+	path = deps/umock
+	url = https://github.com/Azure/umock-c.git
+	branch = develop
+[submodule "deps/ctest"]
+	path = deps/ctest
+	url = https://github.com/Azure/azure-ctest.git
+	branch = develop
+[submodule "deps/trunner"]
+	path = deps/trunner
+	url = https://github.com/Azure/azure-c-testrunnerswitcher.git
+	branch = develop
+[submodule "deps/parson"]
+	path = deps/parson
+	url = https://github.com/marcschier/parson.git
+	branch = develop
+[submodule "deps/cmp"]
+	path = deps/cmp
+	url = https://github.com/marcschier/cmp.git
+	branch = develop
+[submodule "deps/zlog"]
+	path = deps/zlog
+	url = https://github.com/marcschier/zlog.git
+	branch = v1.2.12.1-develop
+[submodule "deps/hashtable"]
+	path = deps/hashtable
+	url = https://github.com/marcschier/c-hashtable.git
+	branch = c99
+[submodule "deps/lws"]
+	path = deps/lws
+	url = https://github.com/warmcat/libwebsockets.git
+	branch = v2.1-stable

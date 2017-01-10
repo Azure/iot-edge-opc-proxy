@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{E113EC9B-1D47-437E-87B9-2044F68F086C}</ItemsProjectGuid>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpalloc.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpvalue.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpvalue_to_string.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqp_definitions.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqp_frame_codec.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqp_management.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\cbs.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\connection.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\frame_codec.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\header_detect_io.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\link.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\message.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\message_receiver.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\message_sender.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\messaging.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\saslclientio.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\sasl_anonymous.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\sasl_frame_codec.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\sasl_mechanism.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\sasl_mssbcbs.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\sasl_plain.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\session.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpalloc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpvalue.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpvalue_to_string.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqp_definitions.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqp_frame_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqp_management.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqp_types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\cbs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\connection.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\frame_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\header_detect_io.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\link.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\message.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\message_receiver.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\message_sender.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\messaging.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\saslclientio.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\sasl_anonymous.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\sasl_frame_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\sasl_mechanism.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\sasl_mssbcbs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\sasl_plain.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\session.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\socket_listener.h" />
+  </ItemGroup>
+</Project>

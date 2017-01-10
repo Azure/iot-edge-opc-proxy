@@ -1,0 +1,24 @@
+{
+    "version": "1.0.0-*",
+    "buildOptions": {
+        "emitEntryPoint": true
+    },
+
+    "dependencies": {
+        "Opc.Ua.Proxy": "0.0.5-*",
+        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.0.9",
+        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.0.9"
+    },
+
+    "frameworks": {
+        "netcoreapp1.0": {
+            "dependencies": {
+                "Microsoft.NETCore.App": {
+                    "type": "platform",
+                    "version": "1.0.0"
+                }
+            }
+        },
+        "net46": {}
+    }
+}

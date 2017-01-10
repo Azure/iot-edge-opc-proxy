@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{531c833b-fcda-4956-8bf0-20dd1dc5fe9b}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="inc">
+      <UniqueIdentifier>{b24faba8-4075-438c-a938-90adccbeb92c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\umock_c">
+      <UniqueIdentifier>{0763294d-d189-40c1-aa13-c261dddb22e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\testrunnerswitcher">
+      <UniqueIdentifier>{e662d778-c27e-4588-be17-018828546027}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\umock_c">
+      <UniqueIdentifier>{fdc21762-53bd-44cf-b90e-fa865e55fbcb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\testrunnerswitcher">
+      <UniqueIdentifier>{19f346ee-fedb-4b6d-8a47-291c39e8502a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\src\testmutex.c">
+      <Filter>src\testrunnerswitcher</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_c.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_c_negative_tests.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_log.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockalloc.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcall.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallpairs.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallrecorder.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypename.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_bool.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_c.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_charptr.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_stdint.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testmutex.h">
+      <Filter>inc\testrunnerswitcher</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testrunnerswitcher.h">
+      <Filter>inc\testrunnerswitcher</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_internal.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_negative_tests.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_prod.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_log.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockalloc.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcall.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallpairs.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallrecorder.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypename.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_bool.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_c.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_charptr.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_stdint.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)CMakeLists.txt" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <ItemsProjectGuid>{225282AE-47FC-4538-B087-795AC8FB1160}</ItemsProjectGuid>
+    <ItemsProjectName>libtest-shared</ItemsProjectName>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectCapability Include="SourceItemsFromImports" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\src\testmutex.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockalloc.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcall.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallpairs.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallrecorder.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypename.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_bool.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_c.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_charptr.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_stdint.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_c.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_c_negative_tests.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umock_log.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testmutex.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testrunnerswitcher.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockalloc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcall.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallpairs.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallrecorder.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypename.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_bool.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_c.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_charptr.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_stdint.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_internal.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_negative_tests.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_c_prod.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umock_log.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="$(MSBuildThisFileDirectory)CMakeLists.txt" />
+  </ItemGroup>
+</Project>

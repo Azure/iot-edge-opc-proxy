@@ -1,0 +1,182 @@
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.Azure.Devices.Proxy.Model {
+    using System;
+    using System.Linq;
+    using System.Collections.Generic;
+    using System.Collections.Concurrent;
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Proxy link represents a 1:1 link with a remote socket. Proxy
+    /// Link is created via LinkRequest, and OpenRequest Handshake.
+    /// </summary>
+    internal sealed class ProxyLink : IProxyLink {
+
+        /// <summary>
+        /// Remote link id
+        /// </summary>
+        public Reference RemoteId { get; private set; }
+
+        /// <summary>
+        /// Local address on remote side
+        /// </summary>
+        public SocketAddress LocalAddress { get; private set; }
+
+        /// <summary>
+        /// Peer address on remote side
+        /// </summary>
+        public SocketAddress PeerAddress { get; private set; }
+
+        /// <summary>
+        /// Bound proxy for this stream
+        /// </summary>
+        public INameRecord Proxy { get; private set; }
+
+        /// <summary>
+        /// Constructor for proxy link object
+        /// </summary>
+        /// <param name="socket">Owning proxy link</param>
+        /// <param name="remoteId">Remote endpoint id assigned by proxy</param>
+        /// <param name="localAddress">Remote local address</param>
+        /// <param name="peerAddress">Remote peer address</param>
+        /// <returns></returns>
+        internal ProxyLink(ProxySocket socket, INameRecord proxy, Reference remoteId, 
+            SocketAddress localAddress, SocketAddress peerAddress) {
+            _streamId = new Reference();
+            _socket = socket;
+            Proxy = proxy;
+            RemoteId = remoteId;
+            LocalAddress = localAddress;
+            PeerAddress = peerAddress;
+        }
+
+        /// <summary>
+        /// Begin open of stream, this provides the connection string for the
+        /// remote side, that is passed as part of the open request.
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<OpenRequest> BeginOpenAsync(
+            TimeSpan timeout, CancellationToken ct) {
+            try {
+                if (timeout == TimeSpan.MaxValue)
+                    timeout = TimeSpan.FromMinutes(5);
+                _connection = await _socket.Provider.StreamService.CreateConnectionAsync(_streamId, timeout);
+                return new OpenRequest {
+                    ConnectionString = _connection.ConnectionString.ToString(),
+                    StreamId = _streamId
+                };
+            }
+            catch (OperationCanceledException) {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Complete connection by waiting for remote side to connect.
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<bool> TryCompleteOpenAsync(CancellationToken ct) {
+            if (_connection == null)
+                return false;
+            try {
+                _stream = await _connection.OpenAsync(ct);
+                return true;
+            }
+            catch (OperationCanceledException) {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Receive queue from stream to read from
+        /// </summary>
+        public BlockingCollection<Message> ReceiveQueue {
+            get {
+                return _stream.ReceiveQueue;
+            }
+        }
+
+        /// <summary>
+        /// Receive more on link stream
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public Task ReceiveAsync(CancellationToken ct) =>
+            _stream.ReceiveAsync(ct);
+
+        /// <summary>
+        /// Forward cloned message through this link
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public Task SendAsync(Message message, CancellationToken ct) =>
+            _stream.SendAsync(new Message(_streamId, RemoteId, Proxy.Address, message.Content), ct);
+
+
+        /// <summary>
+        /// Send socket option message
+        /// </summary>
+        /// <param name="option"></param>
+        /// <param name="value"></param>
+        /// <param name="timeout"></param>
+        /// <param name="ct"></param>
+        public async Task SetSocketOptionAsync(
+            SocketOption option, ulong value, TimeSpan timeout, CancellationToken ct) {
+
+            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
+                new Message(_socket.Id, RemoteId, 
+                    new SetOptRequest(new SocketOptionValue(option, value))), timeout, ct);
+            ProxySocket.ThrowIfFailed(response);
+        }
+
+        /// <summary>
+        /// Get socket option
+        /// </summary>
+        /// <param name="option"></param>
+        /// <param name="timeout"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<ulong> GetSocketOptionAsync(
+            SocketOption option, TimeSpan timeout, CancellationToken ct) {
+            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
+                new Message(_socket.Id, RemoteId, 
+                    new GetOptRequest(option)), timeout, ct);
+            ProxySocket.ThrowIfFailed(response);
+            return ((GetOptResponse)response.Content).OptionValue.Value;
+        }
+
+        /// <summary>
+        /// Close link
+        /// </summary>
+        /// <param name="timeout"></param>
+        /// <param name="ct"></param>
+        public async Task CloseAsync(TimeSpan timeout, CancellationToken ct) {
+            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
+                new Message(_socket.Id, RemoteId, 
+                    new CloseRequest()), timeout, ct);
+            if (response == null) {
+                return;
+            }
+            SocketError errorCode = (SocketError)response.Error;
+            if (errorCode != SocketError.Ok &&
+                errorCode != SocketError.Timeout &&
+                errorCode != SocketError.Closed) {
+                throw new SocketException(errorCode);
+            }
+        }
+
+        private IMessageStream _stream;
+        private ProxySocket _socket;
+        private IConnection _connection;
+        private Reference _streamId;
+    }
+}

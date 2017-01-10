@@ -1,0 +1,164 @@
+// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.Azure.Devices.Proxy {
+    using System;
+    using System.Threading.Tasks;
+    using Model;
+
+    public class TcpClient : IDisposable {
+
+        private NetworkStream _dataStream;
+        private AddressFamily _family = AddressFamily.InterNetwork;
+        private bool _cleanedUp = false;
+
+        //
+        // Provide already accepted socket, used by listener
+        //
+        internal TcpClient(Socket acceptedSocket)
+        {
+            Socket = acceptedSocket;
+            Active = true;
+        }
+
+        //
+        // Initializes a new instance of the System.Net.Sockets.TcpClient class.
+        //
+        public TcpClient()
+            : this(AddressFamily.InterNetwork) {
+        }
+
+        //
+        // Initializes a new instance of the System.Net.Sockets.TcpClient class.
+        //
+        public TcpClient(AddressFamily family) {
+            // Validate parameter
+            if (family != AddressFamily.InterNetwork && family != AddressFamily.InterNetworkV6) {
+                throw new ArgumentException("Invalid address family");
+            }
+
+            _family = family;
+            Socket = new Socket(_family, SocketType.Stream, ProtocolType.Tcp);
+            Active = false;
+        }
+
+        //
+        // Underlying socket
+        //
+        public Socket Socket {
+            get; set;
+        }
+
+        //
+        // Used by the class to indicate that a connection has been made.
+        //
+        protected bool Active {
+            get; set;
+        }
+
+        //
+        // How much data is available
+        //
+        public int Available {
+            get {
+                return Socket.Available;
+            }
+        }
+
+        //
+        // Whether the socket is connected
+        //
+        public bool Connected {
+            get {
+                return Socket.Connected;
+            }
+        }
+
+        //
+        // Connect async
+        //
+        public Task ConnectAsync(SocketAddress endpoint) =>
+            Socket.ConnectAsync(endpoint);
+
+        //
+        // Connect async
+        //
+        public Task ConnectAsync(string host, int port) =>
+            Socket.ConnectAsync(host, port);
+
+        //
+        // Connect async
+        //
+        public void Connect(SocketAddress endpoint) =>
+            Socket.Connect(endpoint);
+
+        //
+        // Connect async
+        //
+        public void Connect(string host, int port) =>
+            Socket.Connect(host, port);
+
+        //
+        // Begin connecting to device with specified name and port
+        //
+        public IAsyncResult BeginConnect(string host, int port, AsyncCallback requestCallback, object state) =>
+            TaskToApm.Begin(ConnectAsync(host, port), requestCallback, state);
+
+        //
+        // Complete connection
+        //
+        public static void EndConnect(IAsyncResult asyncResult) =>
+            TaskToApm.End(asyncResult);
+
+        //
+        // Returns a stream used to read and write data to the remote host.
+        //
+        public NetworkStream GetStream() {
+            if (_cleanedUp) {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+            if (_dataStream == null) {
+                _dataStream = new NetworkStream(Socket);
+            }
+            return _dataStream;
+        }
+
+        //
+        // Disposes the Tcp client.
+        //
+        protected virtual void Dispose(bool disposing) {
+            if (_cleanedUp) {
+                return;
+            }
+            if (disposing) {
+                IDisposable dataStream = _dataStream;
+                if (dataStream != null) {
+                    dataStream.Dispose();
+                } else {
+                    Socket chkClientSocket = Socket;
+                    if (chkClientSocket != null) {
+                        try {
+                            chkClientSocket.Shutdown(SocketShutdown.Both);
+                        }
+                        finally {
+                            chkClientSocket.Dispose();
+                            Socket = null;
+                        }
+                    }
+                }
+                GC.SuppressFinalize(this);
+                _cleanedUp = true;
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
+        }
+
+        ~TcpClient() {
+            Dispose(false);
+        }
+    }
+}

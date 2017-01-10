@@ -1,0 +1,4 @@
+﻿ns.local.json
+*.err
+*.log
+!log.config.ini
