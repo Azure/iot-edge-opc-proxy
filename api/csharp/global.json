@@ -1,7 +1,7 @@
 {
-  "projects": [ 
-    "src", 
-    "ext/azure-relay-dotnet/src", 
-    "samples" 
-  ]
+    "projects": [
+        "src",
+        "samples/opc-ua/src",
+        "samples/simple"
+    ]
 }

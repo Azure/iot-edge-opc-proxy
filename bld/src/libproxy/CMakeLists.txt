@@ -141,7 +141,7 @@ endif()
 		${_HASHTABLE_ROOT}/hashtable_itr.c
 	)
 if(WIN32)
-    set(source_c_files ${source_c_files} ${_GETOPT_ROOT}/getopt.c)
+    set(source_c_files ${source_c_files} ${_GETOPT_ROOT}/src/getopt.c)
 endif()
 foreach(unit ${_PROXY_COMPONENTS})
 	set(source_c_files ${source_c_files} ${_PROJECT_ROOT}/src/${unit}.c)
@@ -169,7 +169,7 @@ endforeach()
 		PRIVATE ${_PARSON_ROOT}
 	)
 if(WIN32)
-    target_include_directories(libproxy PRIVATE ${_GETOPT_ROOT})
+    target_include_directories(libproxy PRIVATE ${_GETOPT_INC})
 endif()
 if(${use_lws})
 	target_include_directories(libproxy
@@ -226,7 +226,7 @@ endif()
 		PUBLIC ${_PARSON_ROOT}
 	)
 if(WIN32)
-    target_include_directories(libproxy-static PRIVATE ${_GETOPT_ROOT})
+    target_include_directories(libproxy-static PRIVATE ${_GETOPT_INC})
 endif()
 if (${use_lws})
 	target_include_directories(libproxy-static

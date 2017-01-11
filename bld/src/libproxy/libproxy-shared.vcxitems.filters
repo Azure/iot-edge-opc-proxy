@@ -24,9 +24,6 @@
     <Filter Include="inc\getopt">
       <UniqueIdentifier>{82b558ee-79c4-4dea-b0c6-f0ad463af1fb}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\getopt">
-      <UniqueIdentifier>{b0edfe2c-0fc2-411f-94b9-3da67a9477d5}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\hashtable">
       <UniqueIdentifier>{39b6aa9e-c238-497c-bf74-128e8613ed37}</UniqueIdentifier>
     </Filter>
@@ -104,7 +101,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.h">
       <Filter>inc\json</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\getopt.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\src\getopt.h">
       <Filter>inc\getopt</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_err.h">
@@ -261,9 +258,6 @@
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.c">
       <Filter>src\json</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\getopt.c">
-      <Filter>src\getopt</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\pal.c">
       <Filter>src</Filter>

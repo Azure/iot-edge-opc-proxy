@@ -1,8 +1,8 @@
 {
   "version": "0.0.5-*",
   "name": "Microsoft.Azure.Devices.Proxy",
-  "title": "Microsoft.Azure.Devices.Proxy",
-  "description": "Microsoft IoT Proxy Module for Field Gateway",
+  "title": "Test.Microsoft.Azure.Devices.Proxy",
+  "description": "API for Field Gateway Proxy Module",
   "authors": [ "Microsoft" ],
   "buildOptions": {
     "xmlDoc": false,
@@ -13,9 +13,9 @@
   },
   "packOptions": {
     "tags": [ "Azure", "IoT", ".NET", "Relay", "websocket", "Proxy" ],
-    "projectUrl": "https://github.com/Azure/azure-iot-proxy",
-    "licenseUrl": "https://raw.githubusercontent.com/Azure/azure-iot-proxy/master/LICENSE",
-    "releaseNotes": "https://github.com/Azure/azure-iot-proxy/releases",
+    "projectUrl": "https://github.com/Azure/iot-gateway-proxy",
+    "licenseUrl": "https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE",
+    "releaseNotes": "https://github.com/Azure/iot-gateway-proxy/releases",
     "requireLicenseAcceptance": true
   },
   "dependencies": {
