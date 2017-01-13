@@ -186,7 +186,9 @@ endif()
 		PUBLIC HAVE_IN6_U=1
 	)
 
+if(${use_zlog})
 	target_link_libraries(libproxy PRIVATE libzlog)
+endif()
 if(WIN32)
     target_link_libraries(libproxy
         PRIVATE winhttp 
@@ -258,7 +260,9 @@ else()
         PUBLIC pthread m
     )
 endif()
+if(${use_zlog})
 	target_link_libraries(libproxy-static PUBLIC libzlog)
+endif()
 if (${use_lws})
     target_link_libraries(libproxy-static PUBLIC websockets_shared)
 endif()

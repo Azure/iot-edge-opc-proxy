@@ -3,6 +3,7 @@
 
 #include "util_mem.h"
 #include "prx_host.h"
+#include "prx_module.h"
 #include "prx_sched.h"
 #include "prx_server.h"
 #include "io_host.h"
@@ -10,14 +11,12 @@
 
 #include "pal.h"
 #include "pal_file.h"
-#include "pal_time.h"
 #include "pal_net.h"  // for pal_gethostname
 
 #include "util_signal.h"
 #include "util_string.h"
 
 #include "azure_c_shared_utility/doublylinkedlist.h"
-#include "azure_c_shared_utility/tickcounter.h"
 #include "azure_c_shared_utility/refcount.h"
 
 #include <stdio.h>
@@ -27,77 +26,466 @@ const char* k_ns_local_json_file = "ns.local.json";
 const char* k_ns_hub_json_file = "ns.hub.json";
 
 //
-// Server running in host process
+// Server running in or outside host process
 //
-typedef struct prx_host_server
+typedef struct prx_host_module
 {
-    prx_server_t* server;
+    prx_ns_entry_t* entry;
+    prx_module_t* module;
     DLIST_ENTRY link;
 }
-prx_host_server_t;
+prx_host_module_t;
 
 //
 // Host process instance structure
 //
 struct prx_host
 {
-    io_ref_t id;
-    prx_ns_t* ns;
-    prx_scheduler_t* scheduler;
-    DLIST_ENTRY servers;
+    prx_host_type_t type;
+    bool hidden;                    // Whether the host should be run hidden
+    io_ref_t id;                                           // Unique host id
+    prx_ns_t* local;           // Local registry, either from file or memory
+    prx_ns_t* remote;                    // Remote registry instance or null
+    bool uninstall_on_exit;      // Whether to uninstall all modules on exit
+    prx_scheduler_t* scheduler;           // Host specific scheduler or null
+    DLIST_ENTRY modules;                  // List of modules managed by host
     bool running;
-    signal_t* exit_signal;
+    signal_t* exit_signal;                // Allows waiting for host to exit
+    prx_module_api_t* module;      // entry points to manage gateway modules
     log_t log;
 };
 
 DEFINE_REFCOUNT_TYPE(prx_host_t);
 
-static bool init = false;
+//
+// Global host when initialized
+//
+static prx_host_t* process_host = NULL;
 
 //
-// Stop all running socket servers
+// Install
 //
-static void prx_host_servers_stop(
+static int32_t prx_host_install_server(
+    prx_host_t* host,
+    const char* name
+)
+{
+    int32_t result;
+    prx_ns_entry_t* entry = NULL;
+    prx_ns_result_t* resultset = NULL;
+
+    dbg_assert_ptr(host);
+    dbg_assert_ptr(host->remote);
+    dbg_assert_ptr(host->local);
+
+    while (true)
+    {
+        result = prx_ns_get_entry_by_name(host->remote, name, &resultset);
+        if (result == er_not_found)
+        {
+            result = prx_ns_entry_create(
+                prx_ns_entry_type_proxy, name, name, &entry);
+            if (result != er_ok)
+                break;
+            result = prx_ns_create_entry(host->remote, entry);
+            prx_ns_entry_release(entry);
+            entry = NULL;
+            if (result != er_ok)
+                break;
+            continue;
+        }
+
+        if (result != er_ok)
+            break;
+        entry = prx_ns_result_pop(resultset);
+        while (entry)
+        {
+            if (prx_ns_entry_get_type(entry) & prx_ns_entry_type_proxy)
+            {
+                result = prx_ns_create_entry(host->local, entry);
+                if (result != er_ok)
+                    break;
+            }
+            prx_ns_entry_release(entry);
+            entry = prx_ns_result_pop(resultset);
+        }
+        break;
+    }
+
+    if (entry)
+        prx_ns_entry_release(entry);
+    if (resultset)
+        prx_ns_result_release(resultset);
+    return result;
+}
+
+//
+// Uninstall server
+//
+static int32_t prx_host_uninstall_server(
+    prx_host_t* host,
+    const char* name
+)
+{
+    int32_t result;
+    prx_ns_entry_t* entry = NULL;
+    prx_ns_result_t* resultset = NULL;
+
+    dbg_assert_ptr(host);
+    dbg_assert_ptr(host->remote);
+    dbg_assert_ptr(host->local);
+
+    do
+    {
+        result = prx_ns_get_entry_by_name(host->local, name, &resultset);
+        if (result != er_ok)
+            break;
+
+        entry = prx_ns_result_pop(resultset);
+        while (entry)
+        {
+            if (prx_ns_entry_get_type(entry) & prx_ns_entry_type_proxy)
+            {
+                result = prx_ns_remove_entry(host->local, entry);
+                if (result != er_ok)
+                    break;
+                result = prx_ns_remove_entry(host->remote, entry);
+                if (result != er_ok)
+                {
+                    (void)prx_ns_create_entry(host->local, entry);
+                    break;
+                }
+            }
+            prx_ns_entry_release(entry);
+            entry = prx_ns_result_pop(resultset);
+        }
+    } while (0);
+
+    if (entry)
+        prx_ns_entry_release(entry);
+    if (resultset)
+        prx_ns_result_release(resultset);
+    return result;
+}
+
+//
+// Initialize host object from passed command line arguments
+//
+static int32_t prx_host_init_from_command_line(
+    prx_host_t* host,
+    int32_t argc,
+    char *argv[]
+)
+{
+    int32_t result;
+
+    int c;
+    int option_index = 0;
+
+    io_cs_t *cs = NULL;
+    const char *server_name = NULL;
+    const char *log_config = NULL;
+    const char *ns_registry = NULL;
+    char buffer[128];
+    bool is_install = false;
+    bool is_uninstall = false;
+    bool should_exit = false;
+    bool is_adhoc = false;
+    io_ref_t adhoc;
+
+    static struct option long_options[] =
+    {
+        { "ad-hoc",                     no_argument,            NULL, 'a' },
+        { "exit",                       no_argument,            NULL, 'x' },
+        { "hidden",                     no_argument,            NULL, 'h' },
+        { "install",                    no_argument,            NULL, 'i' },
+        { "uninstall",                  no_argument,            NULL, 'u' },
+        { "name",                       required_argument,      NULL, 'n' },
+        { "connection-string",          required_argument,      NULL, 'c' },
+        { "connection-string-file",     required_argument,      NULL, 'C' },
+        { "log-config-file",            required_argument,      NULL, 'L' },
+        { "ns-db-file",                 required_argument,      NULL, 'd' },
+        { 0,                            0,                      NULL,  0  }
+    };
+
+    do
+    {
+        result = er_ok;
+        // Parse options
+        while (result == er_ok)
+        {
+            c = getopt_long(
+                argc, argv, "axhiuc:n:L:C:d:", long_options, &option_index);
+            if (c == -1)
+                break;
+
+            switch (c)
+            {
+            case 'x':
+                should_exit = true;
+                break;
+            case 'h':
+                host->hidden = true;
+                break;
+            case 'i':
+                is_install = true;
+                break;
+            case 'u':
+                is_uninstall = true;
+                break;
+            case 'a':
+                is_adhoc = true;
+                result = io_ref_new(&adhoc);
+                if (result != er_ok)
+                    printf("Failed making ad-hoc id for proxy server. \n\n");
+                break;
+            case 'n':
+                server_name = optarg;
+                if (!server_name)
+                {
+                    printf("Missing arg for -name option. \n\n");
+                    result = er_arg;
+                }
+                break;
+            case 'c':
+                result = io_cs_create_from_string(optarg, &cs);
+                if (result != er_ok)
+                    printf("Malformed --connection-string argument. \n\n");
+                break;
+            case 'd':
+                ns_registry = optarg;
+                if (!ns_registry)
+                {
+                    printf("Missing arg for --ns-db-file option. \n\n");
+                    result = er_arg;
+                }
+                break;
+            case 'C':
+                result = prx_ns_iot_hub_create(optarg, &host->remote);
+                if (result != er_ok)
+                    printf("Failed to load iot hub registry from "
+                        "--connection-string-file '%s' arg. \n\n", 
+                            optarg ? optarg : "");
+                break;
+            case 'L':
+                log_config = optarg;
+                if (!log_config)
+                {
+                    printf("Missing arg for --log-config-file option. \n\n");
+                    result = er_arg;
+                }
+                break;
+            default:
+                printf("Unrecognized option %c\n\n", (char)c);
+                // Fall through
+            case '?':
+                result = er_arg;
+                break;
+            }
+        }
+
+        if (result != er_ok)
+            break;
+
+        if ((is_install && is_uninstall) ||
+            (is_adhoc && is_install) ||
+            (is_adhoc && is_uninstall))
+        {
+            printf("Cannot use --install and --uninstall and --adhoc together...");
+            result = er_arg;
+            break;
+        }
+
+        // Configure logging
+        log_config = pal_create_full_path(log_config ? log_config : "log.config");
+        if (!log_config)
+        {
+            result = er_out_of_memory;
+        }
+        else
+        {
+            // Configure logging
+            result = log_configure(log_config);
+            if (result != er_ok)
+            {
+                printf("Logging config file %s not found. \r\n", log_config);
+            }
+        
+            pal_free_path(log_config);
+            log_config = NULL;
+        }
+
+        // Load registry from file or create in memory one if no file specified
+        result = prx_ns_generic_create(ns_registry, &host->local);
+        if (result != er_ok)
+        {
+            printf("Failed to create local registry. \n\n");
+            break;
+        }
+
+        if (!host->remote)
+        {
+            // Ensure we have the secrets to create the remote registry
+            if (!cs)
+            {
+                result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
+            }
+
+            // If we want to install or uninstall we will need secrets
+            if (!cs && (is_install || is_uninstall))
+            {
+                printf("Missing --connection-string option. \n\n");
+                result = er_arg;
+                break;
+            }
+
+            if (cs)
+            {
+                result = prx_ns_iot_hub_create_from_cs(cs, &host->remote);
+                if (result != er_ok)
+                {
+                    printf("Failed to create iothub registry from "
+                        "--connection-string supplied connection string. \n\n");
+                    break;
+                }
+            }
+        }
+
+        if (is_install || is_uninstall || is_adhoc)
+        {
+            // Ensure we have a name
+            if (!server_name)
+            {
+                if (!is_adhoc)
+                    result = pal_gethostname(buffer, _countof(buffer));
+                else
+                    result = io_ref_to_string(&adhoc, buffer, _countof(buffer));
+                if (result != er_ok)
+                    break;
+                server_name = buffer;
+            }
+
+            // Run install/uninstall
+            /**/ if (is_install || is_adhoc)
+                result = prx_host_install_server(host, server_name);
+            else if (is_uninstall)
+                result = prx_host_uninstall_server(host, server_name);
+
+            if (result != er_ok)
+            {
+                printf("FAILURE %s: %s failed! Check parameters...",
+                    prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
+                break;
+            }
+
+            printf("Proxy %s %s\n", server_name, !is_uninstall ? 
+                "installed" : "uninstalled");
+            if (is_adhoc)
+                host->uninstall_on_exit = true;
+        }
+
+        break;
+    } 
+    while (0);
+
+    if (cs)
+        io_cs_free(cs);
+
+    if (result != er_arg)
+        return result;
+    if (should_exit)
+        return er_aborted;
+
+printf(" Proxy command line options:                                       \n\n");
+printf(" --log-config-file,-L                                                \n");
+printf("                    Log configuration file to use. Defaults to       \n");
+printf("                    ./log.config.                                    \n");
+printf(" --ns-db-file,-d                                                     \n");
+printf("                    Local name service database file to use.         \n");
+printf("                    If not provided keeps ns in memory.              \n");
+printf(" --connection-string,-c <connection-string>                          \n");
+printf("                    iothubowner connection string for install or     \n");
+printf("                    uninstall. Required for -i, -u, or -a            \n");
+printf(" --connection-string-file,-C <file-name>                             \n");
+printf("                    same as above but read from file.                \n");
+printf(" --name,-n <server-name>                                             \n");
+printf("                    Name of servers to install or uninstall.         \n");
+printf(" --install,-i                                                        \n");
+printf("                    Installs a proxy server in the IoT Hub device    \n");
+printf("                    registry and creates a local database entry.     \n");
+printf("                    Requires -c or -C.                               \n");
+printf("                    If -n is not specified, uses hostname.           \n");
+printf(" --uninstall,-u                                                      \n");
+printf("                    Uninstalls proxy server on Iot Hub and removes   \n");
+printf("                    the entry from the local database file.          \n");
+printf("                    Requires -c or -C.                               \n");
+printf("                    If -n is not specified, uses hostname.           \n");
+printf(" --ad-hoc,-a                                                         \n");
+printf("                    Installs a proxy server under a random name on   \n");
+printf("                    startup and removes it on clean(!) exit.         \n");
+printf("                    Requires -c or -C.                               \n");
+printf(" --exit,-x                                                           \n");
+printf("                    Performs console tasks and then exits, otherwise \n");
+printf("                    runs proxy host process as console process.      \n");
+printf(" --hidden,-h                                                         \n");
+printf("                    Runs the proxy as a service/daemon process.      \n");
+    return er_arg;
+}
+
+//
+// Stop all running modules/servers
+//
+static void prx_host_modules_stop(
     prx_host_t* host
 )
 {
+    int32_t result;
     dbg_assert_ptr(host);
-    prx_host_server_t* next;
+    prx_host_module_t* next;
     
-    while (!DList_IsListEmpty(&host->servers))
+    while (!DList_IsListEmpty(&host->modules))
     {
         next = containingRecord(
-            DList_RemoveHeadList(&host->servers), prx_host_server_t, link);
+            DList_RemoveHeadList(&host->modules), prx_host_module_t, link);
 
         // This will release, but async cleanup tasks will still run on scheduler
-        prx_server_release(next->server);
-        mem_free_type(prx_host_server_t, next);
+        host->module->on_destroy(next->module);
+
+        // Remove this entry if it was ad-hoc created
+        if (host->uninstall_on_exit)
+        {
+            result = prx_host_uninstall_server(
+                host, prx_ns_entry_get_name(next->entry));
+            if (result != er_ok)
+            {
+                log_error(host->log, "Failed uninstalling server %s", "");
+            }
+        }
+
+        if (next->entry)
+            prx_ns_entry_release(next->entry);
+
+        mem_free_type(prx_host_module_t, next);
     }
 }
 
 //
-// Amqp server transport (methods)
+// Load all startup modules/servers 
 //
-extern io_transport_t* io_iot_hub_mqtt_server_transport(
-    void
-);
-
-//
-// Load all startup servers 
-//
-static int32_t prx_host_servers_start(
+static int32_t prx_host_modules_start(
     prx_host_t* host
 )
 {
     int32_t result;
     prx_ns_result_t* startup;
     prx_ns_entry_t* proxy_entry;
-    prx_host_server_t* server;
+    prx_host_module_t* module;
     
     dbg_assert_ptr(host);
-    dbg_assert_ptr(host->ns);
-    
-    result = prx_ns_get_entry_by_type(host->ns, prx_ns_entry_type_startup, &startup);
+    dbg_assert_ptr(host->local);
+
+    result = prx_ns_get_entry_by_type(host->local, 
+        prx_ns_entry_type_startup, &startup);
     if (result == er_not_found)
         return er_ok;
     if (result != er_ok)
@@ -108,21 +496,24 @@ static int32_t prx_host_servers_start(
         if (!proxy_entry)
             break; // Done
 
-        server = mem_zalloc_type(prx_host_server_t);
-        if (!server)
+        module = mem_zalloc_type(prx_host_module_t);
+        if (!module)
         {
+            prx_ns_entry_release(proxy_entry);
             result = er_out_of_memory;
             break;
         }
 
-        result = prx_server_create(io_iot_hub_mqtt_server_transport(), 
-            proxy_entry, host->scheduler, &server->server);
-        if (result != er_ok)
+        DList_InsertTailList(&host->modules, &module->link);
+        module->entry = proxy_entry;
+        module->module = host->module->on_create(
+            NULL, module->entry);
+
+        if (!module->module)
+        {
+            result = er_out_of_memory;
             break;
-
-        DList_InsertTailList(&host->servers, &server->link);
-
-        prx_ns_entry_release(proxy_entry);
+        }
     }
     while (result == er_ok);
     
@@ -132,137 +523,7 @@ static int32_t prx_host_servers_start(
 }
 
 //
-// Init host
-//
-int32_t prx_host_init(
-    void
-)
-{
-    int32_t result;
-    const char* config_file = NULL;
-
-    if (init)
-        return er_ok;
-    init = true;
-
-    result = log_init();
-    if (result != er_ok)
-        return result;
-
-    result = pal_init();
-    if (result == er_ok)
-    {
-        config_file = pal_create_full_path("log.config.ini");
-        if (!config_file)
-        {
-            result = er_out_of_memory;
-        }
-        else
-        {
-            // Configure logging
-            result = log_configure(config_file);
-            if (result != er_ok)
-            {
-                log_info(NULL, 
-                    "Default logging config file %s not found. \r\n", 
-                    config_file);
-            }
-
-            pal_free_path(config_file);
-            return er_ok;
-        }
-        pal_deinit();
-    }
-
-    log_deinit();
-    init = false; 
-    return result;
-}
-
-//
-// Create host instance
-//
-int32_t prx_host_create(
-    const char* config,
-    prx_host_type_t type,
-    prx_host_t** created
-)
-{
-    int32_t result;
-    prx_host_t* host;
-
-    // Call init if it hasnt been done yet
-    result = prx_host_init();
-    if (result != er_ok)
-        return result;
-
-    host = REFCOUNT_TYPE_CREATE(prx_host_t);
-    if (!host)
-        return er_out_of_memory;
-    memset(host, 0, sizeof(prx_host_t));
-    do
-    {
-        DList_InitializeListHead(&host->servers);
-        host->log = log_get("host");
-
-        // Assign a random id to the host
-        result = io_ref_new(&host->id);
-        if (result != er_ok)
-            break;
-
-        result = signal_create(true, false, &host->exit_signal);
-        if (result != er_ok)
-            break;
-
-        result = prx_scheduler_create(NULL, &host->scheduler);
-        if (result != er_ok)
-            break;
-
-        /**/ if (type == proxy_type_server)
-        {
-            result = prx_ns_generic_create(
-                config ? config : k_ns_local_json_file, &host->ns);
-            if (result == er_not_found)
-            {
-                log_error(host->log, "Unable to load local database from %s (%s)", 
-                    config, prx_err_string(result));
-                break;
-            }
-            if (result != er_ok)
-                break;
-        }
-        else if (type == proxy_type_client)
-        {
-            result = prx_ns_iot_hub_create(
-                config ? config : k_ns_hub_json_file, &host->ns);
-            if (result != er_ok)
-            {
-                log_error(host->log, "Unable to load hub registry from %s (%s)",
-                    config, prx_err_string(result));
-                break;
-            }
-            if (result != er_ok)
-                break;
-        }
-        else if (type != proxy_type_custom)
-        {
-            log_error(host->log, "Unknown host type %d", type);
-            result = er_arg;
-            break;
-        }
- 
-        *created = host;
-        return er_ok;
-
-    } while (0);
-
-    if (host)
-        prx_host_release(host);
-    return result;
-}
-
-//
-// Start host instance
+// Start allm server modules if any
 //
 int32_t prx_host_start(
     prx_host_t* host
@@ -277,7 +538,7 @@ int32_t prx_host_start(
         host->running = true;
 
         // Start socket servers
-        result = prx_host_servers_start(host);
+        result = prx_host_modules_start(host);
         if (result != er_ok)
             break;
 
@@ -288,6 +549,23 @@ int32_t prx_host_start(
 
     prx_host_stop(host);
     return result;
+}
+
+//
+// Stop host
+//
+int32_t prx_host_stop(
+    prx_host_t* host
+)
+{
+    if (!host)
+        return er_fault;
+    if (!host->running)
+        return er_ok;
+
+    prx_host_modules_stop(host);
+    host->running = false;
+    return er_ok;
 }
 
 //
@@ -317,17 +595,25 @@ int32_t prx_host_sig_break(
 }
 
 // 
-// Clone the host
+// Returns a reference to the host
 //
-int32_t prx_host_clone(
-    prx_host_t* host,
+int32_t prx_host_get(
     prx_host_t** cloned
 )
 {
-    if (!host || !cloned)
+    int32_t result;
+    if (!cloned)
         return er_fault;
-    INC_REF(prx_host_t, host);
-    *cloned = host;
+    if (!process_host)
+    {
+        // Lazy create
+        result = prx_host_init(proxy_type_server, 0, NULL);
+        if (result != er_ok)
+            return result;
+    }
+
+    INC_REF(prx_host_t, process_host);
+    *cloned = process_host;
     return er_ok;
 }
 
@@ -352,24 +638,21 @@ prx_ns_t* prx_host_get_ns(
 {
     if (!host)
         return NULL;
-    return host->ns;
+    if (host->remote)
+        return host->remote;
+    return host->local;
 }
 
 //
-// Stop host
+// Returns null if multiple schedulers should be used
 //
-int32_t prx_host_stop(
+prx_scheduler_t* prx_host_get_scheduler(
     prx_host_t* host
 )
 {
     if (!host)
-        return er_fault;
-    if (!host->running)
-        return er_ok;
-
-    prx_host_servers_stop(host);
-    host->running = false;
-    return er_ok;
+        return NULL;
+    return host->scheduler;
 }
 
 //
@@ -386,8 +669,10 @@ void prx_host_release(
     {
         prx_host_stop(host);
 
-        if (host->ns)
-            prx_ns_close(host->ns);
+        if (host->remote)
+            prx_ns_close(host->remote);
+        if (host->local)
+            prx_ns_close(host->local);
 
         if (host->scheduler)
         {
@@ -400,328 +685,92 @@ void prx_host_release(
         if (host->exit_signal)
             signal_free(host->exit_signal);
 
+        pal_deinit();
+
+        log_deinit();
+
+        dbg_assert(host == process_host, "Unexpected");
+        process_host = NULL;
         REFCOUNT_TYPE_FREE(prx_host_t, host);
     }
 }
 
 //
-// Deinit host
+// Init host
 //
-void prx_host_deinit(
-    void
-)
-{
-    if (!init)
-        return;
-
-    init = false;
-
-    pal_deinit();
-
-    log_deinit();
-}
-
-//
-// Install
-//
-static int32_t proxy_install(
-    const char* registry_file,
-    const char* name,
-    io_cs_t* cs
-)
-{
-    int32_t result;
-    prx_ns_t* hub, *local = NULL;
-    prx_ns_entry_t* entry = NULL;
-    prx_ns_result_t* resultset = NULL;
-
-    result = prx_ns_iot_hub_create_from_cs(cs, &hub);
-    if (result != er_ok)
-        return result;
-
-    while(true)
-    {
-        result = prx_ns_get_entry_by_name(hub, name, &resultset);
-        if (result == er_not_found)
-        {
-            result = prx_ns_entry_create(prx_ns_entry_type_proxy, name, name, &entry);
-            if (result != er_ok)
-                break;
-            result = prx_ns_create_entry(hub, entry);
-            prx_ns_entry_release(entry);
-            entry = NULL;
-            if (result != er_ok)
-                break;
-            continue;
-        }
-
-        if (result != er_ok)
-            break;
-        result = prx_ns_generic_create(registry_file, &local);
-        if (result != er_ok)
-            break;
-        entry = prx_ns_result_pop(resultset);
-        while(entry)
-        {
-            if (prx_ns_entry_get_type(entry) & prx_ns_entry_type_proxy)
-            {
-                result = prx_ns_create_entry(local, entry);
-                if (result != er_ok)
-                    break;
-            }
-            prx_ns_entry_release(entry);
-            entry = prx_ns_result_pop(resultset);
-        } 
-        break;
-    } 
-
-    if (entry)
-        prx_ns_entry_release(entry);
-    if (resultset)
-        prx_ns_result_release(resultset);
-    if (local)
-        prx_ns_close(local);
-    prx_ns_close(hub);
-    return result;
-}
-
-//
-// Uninstall proxy
-//
-static int32_t proxy_uninstall(
-    const char* registry_file,
-    const char* name,
-    io_cs_t* cs
-)
-{
-    int32_t result;
-    prx_ns_t* hub = NULL, *local = NULL;
-    prx_ns_entry_t* entry = NULL;
-    prx_ns_result_t* resultset = NULL;
-
-    result = prx_ns_generic_create(registry_file, &local);
-    if (result != er_ok)
-        return result;
-    do
-    {
-        result = prx_ns_iot_hub_create_from_cs(cs, &hub);
-        if (result != er_ok)
-            break;
-
-        result = prx_ns_get_entry_by_name(local, name, &resultset);
-        if (result != er_ok)
-            break;
-
-        entry = prx_ns_result_pop(resultset);
-        while (entry)
-        {
-            if (prx_ns_entry_get_type(entry) & prx_ns_entry_type_proxy)
-            {
-                result = prx_ns_remove_entry(local, entry);
-                if (result != er_ok)
-                    break;
-                result = prx_ns_remove_entry(hub, entry);
-                if (result != er_ok)
-                {
-                    (void)prx_ns_create_entry(local, entry);
-                    break;
-                }
-            }
-            prx_ns_entry_release(entry);
-            entry = prx_ns_result_pop(resultset);
-        }
-    } 
-    while (0);
-
-    if (entry)
-        prx_ns_entry_release(entry);
-    if (resultset)
-        prx_ns_result_release(resultset);
-    if (hub)
-        prx_ns_close(hub);
-    prx_ns_close(local);
-    return result;
-}
-
-//
-// Console entry point to provision proxy name service
-//
-int32_t prx_host_console(
-    const char* registry_file,
+int32_t prx_host_init(
+    prx_host_type_t type,
     int32_t argc,
     char *argv[]
 )
 {
     int32_t result;
 
-    int c;
-    io_cs_t *cs = NULL;
-    const char *proxy_name = NULL;
-    char buffer[128];
-    bool is_install = false, is_uninstall = false;
-    int option_index = 0;
+    if (process_host)  // only one host per process
+        return er_bad_state;
 
-    static struct option long_options[] =
-    {
-        { "install",           no_argument,        NULL, 'i' },
-        { "uninstall",         no_argument,        NULL, 'u' },
-        { "name",              required_argument,  NULL, 'n' },
-        { "connection-string", required_argument,  NULL, 'c' },
-        { 0,                   0,                  NULL,  0  }
-    };
-
-    result = prx_host_init();
-    if (result != er_ok)
-        return result;
-
-    if (!registry_file)
-        registry_file = k_ns_local_json_file;
+    process_host = REFCOUNT_TYPE_CREATE(prx_host_t);
+    if (!process_host)
+        return er_out_of_memory;
     do
     {
-        result = er_ok;
-        // Parse options
-        while (result == er_ok)
-        {
-            c = getopt_long(argc, argv, "iuvc:n:",
-                long_options, &option_index);
-            if (c == -1)
-                break;
+        memset(process_host, 0, sizeof(prx_host_t));
+        DList_InitializeListHead(&process_host->modules);
 
-            switch (c)
-            {
-            case 'i':
-                is_install = true; 
-                break;
-            case 'u':
-                is_uninstall = true;
-                break;
-            case 'n':
-                proxy_name = optarg; 
-                if (!proxy_name)
-                {
-                    printf("Missing <name> for -name option. \n\n");
-                    result = er_arg;
-                }
-                break;
-            case 'c': 
-                result = io_cs_create_from_string(optarg, &cs);   
-                if (result != er_ok)
-                {
-                    printf("Malformed --connection-string value. \n\n");
-                }
-                break;
-            default:
-                printf("Unrecognized option %c\n\n", (char)c);
-                // Fall through
-            case '?':
-                result = er_arg;
-                break;
-            }
+        // Init logging and pal
+        result = log_init();
+        if (result != er_ok)
+        {
+            printf("Failed to init logging!");
+            break;
         }
 
+        process_host->log = log_get("host");
+        process_host->type = type;
+        process_host->module = Module_GetAPIS(0);
+        dbg_assert_ptr(process_host->module);
+
+        result = pal_init();
+        if (result != er_ok)
+        {
+            log_error(process_host->log, "Failed to initialize pal (%s)",
+                prx_err_string(result));
+            break;
+        }
+
+        // Init from console
+        result = prx_host_init_from_command_line(process_host, argc, argv);
+        if (result == er_aborted)
+        {
+            // exit
+            result = er_ok;
+            break;
+        }
+        else if (result != er_ok)
+            break;
+
+        // Assign a random id to the host
+        result = io_ref_new(&process_host->id);
         if (result != er_ok)
             break;
 
-        // Check options
-        if (!cs)
-        {
-            result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
-        }
-
-        if (!cs)
-        {
-            printf("Missing --connection-string option missing. \n\n");
-            result = er_arg;
+        result = signal_create(true, false, &process_host->exit_signal);
+        if (result != er_ok)
             break;
-        }
 
-        if (!is_install && !is_uninstall)
-        {
-            printf("Missing --install or --uninstall option. \n\n");
-            result = er_arg;
+        result = prx_scheduler_create(NULL, &process_host->scheduler);
+        if (result != er_ok)
             break;
-        }
 
-        if (!proxy_name)
-        {
-            result = pal_gethostname(buffer, _countof(buffer));
-            if (result != er_ok)
-                break;
-            proxy_name = buffer;
-        }
+        // Host created
+        log_info(process_host->log, "Proxy host created!");
+        DEC_REF(prx_host_t, process_host); // weak reference
+        return er_ok;
+            
+    } while (0);
 
-        // Run install/uninstall
-        /**/ if (is_install)
-            result = proxy_install(registry_file, proxy_name, cs);
-        else if (is_uninstall)
-            result = proxy_uninstall(registry_file, proxy_name, cs);
-        if (result == er_ok)
-        {
-            printf("Proxy %s %s\n", proxy_name,
-                is_install ? "installed" : "uninstalled");
-        }
-        else
-        {
-            printf("FAILURE %s: %s failed! Check parameters...", 
-                prx_err_string(result), is_install ? "Install" : "Uninstall");
-        }
-    } 
-    while (0);
-
-    if (cs)
-        io_cs_free(cs);
-
-    prx_host_deinit();
-
-    if (result != er_arg)
-        return result;
-printf(" Proxy command line options:                               \n\n");
-printf(" --install,-i <proxy-name>                                   \n");
-printf("      --connection-string,-c <connection-string>             \n");
-printf("            Given the iothubowner connection string installs \n");
-printf("            proxy in the device registry and creates a local \n");
-printf("            database entry. If proxy name is not provided,   \n");
-printf("            host name is used.                               \n");
-printf(" --uninstall,-u <connection-string>                          \n");
-printf("      --connection-string,-c <connection-string>             \n");
-printf("            Given the iothubowner connection string removes  \n");
-printf("            proxy from the device registry and deletes local \n");
-printf("            database entry. If proxy name is not provided,   \n");
-printf("            host name is used.                               \n");
-    return er_arg;
-}
-
-//
-// Pal wrapper
-//
-TICK_COUNTER_HANDLE tickcounter_create(
-    void
-)
-{
-    return (TICK_COUNTER_HANDLE)0x1;
-}
-
-//
-// Pal wrapper
-//
-void tickcounter_destroy(
-    TICK_COUNTER_HANDLE tick_counter
-)
-{
-    (void)tick_counter;
-}
-
-//
-// Pal wrapper
-//
-int tickcounter_get_current_ms(
-    TICK_COUNTER_HANDLE tick_counter,
-    tickcounter_ms_t* current_ms
-)
-{
-    (void)tick_counter;
-    *current_ms = (tickcounter_ms_t)ticks_get();
-    return 0;
+    prx_host_release(process_host);
+    return result;
 }
 
 //

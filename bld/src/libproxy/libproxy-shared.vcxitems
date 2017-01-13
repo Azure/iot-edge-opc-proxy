@@ -108,6 +108,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_misc.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_signal.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_string.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_sk.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_ws.c" />
   </ItemGroup>

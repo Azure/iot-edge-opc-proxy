@@ -304,6 +304,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_buffer.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="$(MSBuildThisFileDirectory)CMakeLists.txt" />

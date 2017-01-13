@@ -26,12 +26,9 @@ typedef enum service_status
 service_status_t;
 
 typedef void(*on_status_change_t)(
-    prx_host_t* host,
     service_status_t,
     int32_t result
 );
-
-static prx_host_t* host = NULL;
 
 //
 // Called on termination 
@@ -40,14 +37,18 @@ static int32_t signal_handler(
     int32_t signal
 )
 {
+    int32_t result;
+    prx_host_t* host;
 #if _WIN32
     if (signal != CTRL_C_EVENT)
         return 0;
 #endif
-
-    if (host)
+    result = prx_host_get(&host);
+    if (result == er_ok)
+    {
         prx_host_sig_break(host);
-
+        prx_host_release(host);
+    }
     return 1;
 }
 
@@ -55,12 +56,11 @@ static int32_t signal_handler(
 // Dummy callback
 //
 static void service_status_cb_dummy(
-    prx_host_t* context,
     service_status_t state,
     int32_t result
 )
 {
-	(void)context, result;
+	(void)result;
     switch (state)
     {
     case service_status_init:
@@ -93,50 +93,52 @@ static void service_status_cb_dummy(
 // Main program thread
 //
 static int32_t service_main(
+    int32_t argc,
+    char *argv[],
     on_status_change_t on_status
 )
 {
     int32_t result;
+    prx_host_t* host = NULL;
     if (!on_status)
         on_status = service_status_cb_dummy;
-        
-    on_status(host, service_status_init, 0);
-    result = prx_host_init();
+
+    on_status(service_status_init, 0);
+    result = prx_host_init(proxy_type_server, argc, argv);
     if (result != er_ok)
     {
-        on_status(host, service_status_error, result);
+        on_status(service_status_error, result);
         return result;
     }
     do
     {
-        result = prx_host_create(NULL, proxy_type_server, &host);
+        result = prx_host_get(&host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_starting, 0);
+        on_status(service_status_starting, 0);
         result = prx_host_start(host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_running, 0);
+        on_status(service_status_running, 0);
         result = prx_host_sig_wait(host);
-        on_status(host, service_status_stopping, 0);
+        on_status(service_status_stopping, 0);
 
         result = prx_host_stop(host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_stopped, 0);
+        on_status(service_status_stopped, 0);
     } while (0);
 
     if (result != er_ok)
-        on_status(host, service_status_error, result);
+        on_status(service_status_error, result);
 
     if (host)
         prx_host_release(host);
-    prx_host_deinit();
-    host = NULL;
-    on_status(host, service_status_deinit, 0);
+
+    on_status(service_status_deinit, 0);
     return 0;
 }
 
@@ -148,14 +150,12 @@ static SERVICE_STATUS_HANDLE service_status_handle = NULL;
 // Callback when service status changes
 //
 static void service_status_cb(
-    prx_host_t* context,
     service_status_t state,
     int32_t result
 )
 {
     static SERVICE_STATUS service_status;
     static DWORD counter = 1;
-	(void)context;
 
     if (result != er_ok)
     {
@@ -232,10 +232,9 @@ DWORD WINAPI ServiceControl(
 //
 void _ext__ WINAPI ServiceMain(
     DWORD argc,
-    LPSTR *pszArgv
+    LPSTR *argv
 )
 {
-	(void)argc, pszArgv;
     service_status_handle = RegisterServiceCtrlHandlerA("proxyd", ServiceControl);
     if (service_status_handle == NULL)
     {
@@ -243,7 +242,7 @@ void _ext__ WINAPI ServiceMain(
             GetLastError());
         return;
     }
-    service_main(service_status_cb);
+    service_main((int32_t)argc, argv, service_status_cb);
 }
 
 #endif // _WIN32
@@ -256,13 +255,14 @@ int32_t main(
     char *argv[]
 )
 {
-    // Check if run as service when no args are passed otherwise run console
-    if (argc > 1)
-        return prx_host_console(NULL, argc, argv);
 #if _WIN32
+    // If called by SCM, then register entry point and start dispatcher
     SERVICE_TABLE_ENTRYA service_table[2] = { { "proxyd", ServiceMain }, 0 };
     if (StartServiceCtrlDispatcherA(service_table))
+    {
+        // Success, running as daemon
         return 0;
+    }
 #endif
     mem_init();
 #if _WIN32
@@ -270,5 +270,5 @@ int32_t main(
 #else
     signal(SIGINT, (__sighandler_t)signal_handler);
 #endif
-    return service_main(NULL);
+    return service_main(argc, argv, NULL);
 }

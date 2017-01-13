@@ -125,6 +125,11 @@ else()
 	option(use_openssl "set use_openssl to OFF to use a different library (default is ON) ON")
 endif()
 
+	option(use_zlog "set use_zlog to ON to use zlog as logging library (default is OFF)" OFF)
+	if(NOT ${use_zlog})
+		add_definitions(-DNO_ZLOG)
+	endif()
+
 	option(leak_detection "set leak_detection to ON (default is OFF)" OFF)
 	if(${leak_detection})
 		add_definitions(-DLEAK_DETECT)

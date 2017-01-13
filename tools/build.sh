@@ -52,7 +52,7 @@ process_args ()
 
 process_args $*
 
-cmake_root="$build_root"/bld
+cmake_root="$build_root"/build
 rm -r -f "$cmake_root"
 mkdir -p "$cmake_root"
 pushd "$cmake_root"

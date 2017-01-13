@@ -50,7 +50,7 @@ rem -- build with CMAKE and run tests
 rem -----------------------------------------------------------------------------
 
 rem this is setting the cmake path in a quoted way
-set cmake-root="%build-root%"\bld
+set cmake-root="%build-root%"\build
 
 rmdir /s/q %cmake-root%
 mkdir %cmake-root%

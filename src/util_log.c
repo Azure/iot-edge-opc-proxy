@@ -56,7 +56,6 @@ static void zlog_logger_log(
     va_end(args);
 }
 
-#if !defined (NO_ZLOG)
 //
 // Initialize zlog library
 //
@@ -82,7 +81,5 @@ void log_deinit(
     xlogging_set_log_function(NULL);
     zlog_deinit();
 }
-
-#endif
 
 #endif

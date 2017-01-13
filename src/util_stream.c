@@ -90,6 +90,7 @@ static int32_t io_dynamic_buffer_stream_writer(
     io_dynamic_buffer_stream_t* mem = (io_dynamic_buffer_stream_t*)context;
     dbg_assert_ptr(data);
     dbg_assert_ptr(mem);
+    dbg_assert_ptr(mem->pool);
 
     if (!count)
         return er_ok;
@@ -102,6 +103,41 @@ static int32_t io_dynamic_buffer_stream_writer(
         result = prx_buffer_set_size(mem->pool, (void**)&mem->out, size);
         if (result != er_ok)
             return result;
+    }
+
+    memcpy(&mem->out[mem->out_len], data, count);
+    mem->out_len += count;
+    return er_ok;
+}
+
+//
+// Writes to malloc'ed memory
+//
+static int32_t io_dynamic_memory_stream_writer(
+    void *context,
+    const void *data,
+    size_t count
+)
+{
+    io_dynamic_buffer_stream_t* mem = (io_dynamic_buffer_stream_t*)context;
+    void* tmp;
+
+    dbg_assert_ptr(data);
+    dbg_assert_ptr(mem);
+    dbg_assert(!mem->pool, "Unexpected");
+
+    if (!count)
+        return er_ok;
+
+    while (mem->out_len + count > mem->increment)
+    {
+        // Grow
+        tmp = mem_realloc(mem->out, 2 * mem->increment);
+        if (!tmp)
+            return er_out_of_memory;
+
+        mem->out = (uint8_t*)tmp;
+        mem->increment *= 2;
     }
 
     memcpy(&mem->out[mem->out_len], data, count);
@@ -270,7 +306,10 @@ io_stream_t* io_dynamic_buffer_stream_init(
     mem->pool = pool;
     mem->increment = increment ? increment : 0x400;
     mem->out_len = 0;
-    mem->out = (uint8_t*)prx_buffer_new(pool, mem->increment);
+    if (!pool)
+        mem->out = (uint8_t*)mem_alloc(mem->increment);
+    else
+        mem->out = (uint8_t*)prx_buffer_new(pool, mem->increment);
     if (!mem->out)
         return NULL;
 
@@ -281,7 +320,7 @@ io_stream_t* io_dynamic_buffer_stream_init(
     mem->itf.read =
         NULL;
     mem->itf.write =
-        io_dynamic_buffer_stream_writer;
+        pool ? io_dynamic_buffer_stream_writer : io_dynamic_memory_stream_writer;
     mem->itf.writeable =
         io_dynamic_buffer_stream_writeable;
     mem->itf.reset =

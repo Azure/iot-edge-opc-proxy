@@ -13,7 +13,7 @@
 //
 typedef struct io_fixed_buffer_stream
 {
-    io_stream_t itf;           // codec stream interface
+    io_stream_t itf;                 // codec stream interface
     const uint8_t* in;
     size_t in_len;
     uint8_t* out;
@@ -27,7 +27,7 @@ io_fixed_buffer_stream_t;
 typedef struct io_dynamic_buffer_stream
 {
     io_stream_t itf;                 // codec stream interface
-    prx_buffer_factory_t* pool;                 // dynamic pool
+    prx_buffer_factory_t* pool;                // dynamic pool
     size_t increment;   // Grow buffer by this number of bytes
     uint8_t* out;                           // != null on fini
     size_t out_len;                                    // Size 

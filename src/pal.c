@@ -24,7 +24,7 @@ static void pal_diag_callback(
     log_entry_t* msg
 )
 {
-#ifdef NO_ZLOG
+#if defined(NO_ZLOG)
     (void)msg;
 #else
     pal_diag_callback_t _cb = diag_callback;
