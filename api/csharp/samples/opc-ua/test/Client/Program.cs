@@ -15,6 +15,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
+using Opc.Ua.Proxy;
+
 using System.Security.Cryptography.X509Certificates;
 
 namespace NetCoreConsoleClient
@@ -24,6 +26,7 @@ namespace NetCoreConsoleClient
         public static void Main(string[] args)
         {
             Console.WriteLine(".Net Core OPC UA Console Client sample");
+
             string endpointURL;
             if (args.Length == 0)
             {
@@ -36,8 +39,12 @@ namespace NetCoreConsoleClient
             }
             try
             {
-                Task t = ConsoleSampleClient(endpointURL);
-                t.Wait();
+                Console.WriteLine("Init Microsoft.Azure.Devices.Proxy");
+                Microsoft.Azure.Devices.Proxy.Provider.DefaultProvider.Instance.Init().Wait();
+
+                WcfChannelBase.g_CustomTransportChannel = new ProxyTransportChannelFactory();
+
+                ConsoleSampleClient(endpointURL).Wait();
             }
             catch (Exception e)
             {

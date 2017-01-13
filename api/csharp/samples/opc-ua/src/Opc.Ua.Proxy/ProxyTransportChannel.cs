@@ -11,9 +11,26 @@
 //
 
 using System;
+using Opc.Ua.Bindings;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
+
+    /// <summary>
+    /// Creates a new ProxyTransportChannel with ITransportChannel interface.
+    /// </summary>
+    public class ProxyTransportChannelFactory : ITransportChannelFactory
+    {
+        /// <summary>
+        /// The method creates a new instance of a proxy transport channel
+        /// </summary>
+        /// <returns> the transport channel</returns>
+        public ITransportChannel Create()
+        {
+            return new ProxyTransportChannel();
+        }
+    }
+
     /// <summary>
     /// Wraps the ProxyTransportChannel and provides an ITransportChannel implementation.
     /// </summary>

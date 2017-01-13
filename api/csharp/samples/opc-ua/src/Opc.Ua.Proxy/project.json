@@ -1,5 +1,5 @@
 {
-  "version": "0.0.5-*",
+  "version": "0.0.6-*",
   "name": "Opc.Ua.Proxy",
   "title": "Opc.Ua.Proxy",
   "description": "Opc-UA IoT Proxy Transport",
@@ -19,9 +19,8 @@
     "requireLicenseAcceptance": true
   },
   "dependencies": {
-    "Microsoft.Azure.Devices.Proxy": "0.0.5-*",
-    "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.0.9",
-    "OPCFoundation.NetStandard.Opc.Ua.Core": "0.0.9",
+    "Microsoft.Azure.Devices.Proxy": "0.0.6-*",
+    "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.0",
     "NETStandard.Library": "1.6.0"
   },
   "frameworks": {

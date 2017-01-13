@@ -14,8 +14,9 @@ using System;
 using System.Text;
 using System.IO;
 using System.Security.Cryptography;
+using Opc.Ua.Bindings;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
     public partial class ProxyChannel
     {

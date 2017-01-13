@@ -1,5 +1,5 @@
 {
-  "version": "0.0.5-*",
+  "version": "0.0.6-*",
   "name": "Microsoft.Azure.Devices.Proxy",
   "title": "Microsoft.Azure.Devices.Proxy",
   "description": "Microsoft IoT Proxy Module for Field Gateway",

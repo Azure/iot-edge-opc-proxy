@@ -11,7 +11,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Simple", "samples\Simple\Si
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Opc.Ua.Proxy", "samples\Opc-ua\src\Opc.Ua.Proxy\Opc.Ua.Proxy.xproj", "{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Opc-Ua", "Opc-Ua", "{A2C5F44E-4EF3-4E24-8FF7-E2D392A81016}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Opc.Ua", "Opc.Ua", "{A2C5F44E-4EF3-4E24-8FF7-E2D392A81016}"
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Client", "samples\Opc-ua\test\Client\Client.xproj", "{A9E3812C-982C-426F-987F-7882C712F64C}"
 EndProject

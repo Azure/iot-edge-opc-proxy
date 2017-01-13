@@ -11,10 +11,11 @@
 //
 
 using System;
-using Microsoft.Azure.Devices.Proxy;
 using System.Threading.Tasks;
+using Opc.Ua.Bindings;
+using Microsoft.Azure.Devices.Proxy;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
     /// <summary>
     /// An interface to an object that received messages from the socket.

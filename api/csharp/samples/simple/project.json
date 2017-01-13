@@ -5,7 +5,7 @@
   },
 
   "dependencies": {
-    "Microsoft.Azure.Devices.Proxy": "0.0.5-*"
+    "Microsoft.Azure.Devices.Proxy": "0.0.6-*"
   },
 
   "frameworks": {

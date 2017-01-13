@@ -14,9 +14,10 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Security.Cryptography.X509Certificates;
+using Opc.Ua.Bindings;
 using Microsoft.Azure.Devices.Proxy;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
     /// <summary>
     /// Manages the connections for a UA TCP server.

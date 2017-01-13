@@ -16,10 +16,11 @@ using System.Text;
 using System.IO;
 using System.Threading;
 using System.Security.Cryptography.X509Certificates;
+using Opc.Ua.Bindings;
 using Microsoft.Azure.Devices.Proxy;
 using System.Threading.Tasks;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
     /// <summary>
     /// Manages the server side of a UA TCP channel.
