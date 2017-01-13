@@ -41,18 +41,20 @@ extern "C"
 
 #include "util_log.h"
 
-#if !defined(_MSC_VER)
-#define __analysis_assume(cond)
-#endif
-
 #ifndef dbg_assert
 #if !defined(UNIT_TEST)
-#define dbg_assert(cond, ...) \
-    { __analysis_assume(cond); \
-        if (!(cond)) { \
-            log_error(NULL, "\r\n!!! ASSERT \r\n    " __VA_ARGS__); dbg_brk(); \
-        } \
-    }
+#if defined(_MSC_VER)
+#define dbg_assert(cond, fmt, ...) \
+    do { __analysis_assume(cond); \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, __VA_ARGS__); dbg_brk(); } \
+    } while(0)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#define dbg_assert(cond, fmt, ...) \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, ##__VA_ARGS__); dbg_brk(); }
+#else
+#define dbg_assert(cond, fmt, args...) \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, ## args); dbg_brk(); }
+#endif
 #else
 #define dbg_assert(...) (void)(__VA_ARGS__)
 #endif

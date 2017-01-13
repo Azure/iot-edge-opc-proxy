@@ -32,6 +32,7 @@ set(_PROXY_COMPONENTS
 	util_signal
 	util_stream
 	util_string
+	util_time
 	xio_sk
 	xio_ws
 )

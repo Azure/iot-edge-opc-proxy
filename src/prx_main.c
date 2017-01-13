@@ -82,7 +82,6 @@ static void service_status_cb_dummy(
         printf("Proxy stopping...\r\n");
         break;
     case service_status_error:
-        printf("!! ERROR !! !\r\n");
         break;
     default:
         break;

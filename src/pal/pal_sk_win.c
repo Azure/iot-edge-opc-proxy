@@ -307,7 +307,7 @@ static void pal_socket_async_accept_complete(
     struct sockaddr* sa_local, *sa_peer;
     socklen_t sa_llen, sa_plen;
     dbg_assert_ptr(async_op);
-    dbg_assert(async_op->buf_len == sizeof(pal_socket_t*));
+    dbg_assert(async_op->buf_len == sizeof(pal_socket_t*), "Unexpected size");
     dbg_assert_ptr(async_op->sock);
     do
     {

@@ -328,7 +328,7 @@ static int32_t prx_host_init_from_command_line(
             // Ensure we have the secrets to create the remote registry
             if (!cs)
             {
-                result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
+                (void)io_cs_create_from_string(getenv("_HUB_CS"), &cs);
             }
 
             // If we want to install or uninstall we will need secrets
