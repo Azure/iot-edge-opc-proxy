@@ -57,6 +57,8 @@ if(WIN32)
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_win)
 	endif()
 else()
+    include(CheckIncludeFile)
+	
 	set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
 		pal_err_posix
 		pal_file_posix
@@ -65,11 +67,19 @@ else()
 		pal_sk_posix
 		pal_time_posix
 	)
-	if(LINUX)
+
+    check_include_file("linux/random.h" HAVE_LINUX_RANDOM_H)
+    if(HAVE_LINUX_RANDOM_H)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_linux)
+    else()
+        set(use_openssl 1)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_openssl)
+    endif()
+
+    if(LINUX)
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
 			pal_ev_epoll
 			pal_net_linux
-			pal_rand_linux
 			pal_proc_linux
 		)
 	else()
@@ -77,7 +87,6 @@ else()
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
 			pal_ev_poll
 			pal_net_stubs
-			pal_rand_openssl
 			pal_proc_posix
 		)
 	endif()

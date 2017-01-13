@@ -8,7 +8,7 @@ build_clean=
 build_root=$(cd "$(dirname "$0")/.." && pwd)
 log_dir=$build_root
 skip_unittests=OFF
-run_valgrind=0
+use_zlog=OFF
 
 cd "$build_root"
 usage ()
@@ -19,7 +19,7 @@ usage ()
     echo " -c,  --clean                  remove artifacts from previous build before building"
     echo " -cl, --compileoption <value>  specify a compile option to be passed to gcc"
     echo "   Example: -cl -O1 -cl ..."
-    echo " -rv, --run-valgrind           will execute ctest with valgrind"
+    echo " --use-zlog                    compile in zlog as logging framework"
     echo " --skip-unittests              skip the running of unit tests (unit tests are run by default)"
     exit 1
 }
@@ -41,9 +41,9 @@ process_args ()
           case "$arg" in
               "-x" | "--xtrace" ) set -x;;
               "-c" | "--clean" ) build_clean=1;;
-              "--skip-unittests" ) skip_unittests=ON;;
               "-cl" | "--compileoption" ) save_next_arg=1;;
-              "-rv" | "--run-valgrind" ) run_valgrind=1;;
+              "--use-zlog" ) use_zlog=ON;;
+              "--skip-unittests" ) skip_unittests=ON;;
               * ) usage;;
           esac
       fi
@@ -58,7 +58,7 @@ mkdir -p "$cmake_root"
 pushd "$cmake_root"
 cmake -DCMAKE_BUILD_TYPE=Debug \
       -Dskip_unittests:BOOL=$skip_unittests \
-      -Drun_valgrind:BOOL=$run_valgrind \
+      -Duse_zlog:BOOL=$use_zlog \
       "$build_root"
 
 CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)

@@ -33,7 +33,11 @@ typedef void(*on_status_change_t)(
 //
 // Called on termination 
 //
+#if _WIN32
 static int32_t signal_handler(
+#else
+static void signal_handler(
+#endif
     int32_t signal
 )
 {
@@ -49,7 +53,9 @@ static int32_t signal_handler(
         prx_host_sig_break(host);
         prx_host_release(host);
     }
+#if _WIN32
     return 1;
+#endif
 }
 
 //
@@ -267,7 +273,7 @@ int32_t main(
 #if _WIN32
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)signal_handler, TRUE);
 #else
-    signal(SIGINT, (__sighandler_t)signal_handler);
+    signal(SIGINT, signal_handler);
 #endif
     return service_main(argc, argv, NULL);
 }

@@ -4,12 +4,13 @@
 
 #include "util_mem.h"
 #include "util_log.h"
-#include "pal_errors.h"
+#include "pal_err.h"
 #include "pal_rand.h"
-#include "os_win.h"
+#include "os.h"
 
 #if !defined(UNIT_TEST)
 #include <openssl/rand.h>
+#include <openssl/err.h>
 #endif
 
 //
@@ -19,8 +20,13 @@ static void log_ssl_error(
     void
 )
 {
-    char buf[256];
-    while ((err = ERR_get_error()) != 0) {
+	char buf[256];
+	u_long err;
+    while(true)
+    {
+        err = ERR_get_error();
+        if (err == 0)
+            return;
         ERR_error_string_n(err, buf, sizeof(buf));
         log_error(NULL, "%s\n", buf);
     }

@@ -20,6 +20,6 @@ ENTRYPOINT rm -rf /proxy && \
            git clone ${PROXY_REPO} /proxy && \
            git -C /proxy checkout ${COMMIT_ID} && \
            git -C /proxy submodule update --init && \
-		   chmod +x /proxy/tools/build.sh && \
-           /proxy/tools/build.sh -rv && \
+           chmod +x /proxy/bld/build.sh && \
+           /proxy/bld/build.sh -rv && \
            bash
