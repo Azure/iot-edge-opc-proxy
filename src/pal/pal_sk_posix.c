@@ -11,6 +11,8 @@
 #include "util_string.h"
 #include "os.h"
 
+// #define ASYNC_CONNECT 1
+
 #define MAX_SOCKET_ADDRESS_BYTES 127
 
 static uintptr_t event_port = 0;
@@ -175,6 +177,7 @@ static int32_t pal_socket_connect_finish(
         }
         result = pal_os_to_prx_socket_address(
             (const struct sockaddr*)sa_in, len, &sock->peer);
+           
         break;
     }
 
@@ -194,6 +197,7 @@ static int32_t pal_socket_dummy_cb(
     (void)sock;
     return result;
 }
+
 //
 // Called by event port when event occurred on registered socket
 //
@@ -253,8 +257,10 @@ static int32_t pal_socket_on_connected(
 
     if (sock->state != pal_socket_state_opening)
         return er_bad_state;
-if (result == er_closed)
-return er_ok;
+#if defined(ASYNC_CONNECT)
+    if (result == er_closed)
+        return er_ok;  // TODO: Need to check socket error here...
+#endif
     // Complete connection
     result = pal_socket_connect_finish(sock, result);
     if (result == er_ok)
@@ -459,7 +465,9 @@ static int32_t pal_socket_on_recv(
         return pal_socket_on_connected(sock, result);
     else if (sock->state != pal_socket_state_open)
         return er_closed;
-
+    else if (result == er_closed)
+        sock->state = pal_socket_state_closing;
+        
     sock->itf.cb(sock->itf.context, pal_socket_event_begin_recv,
         &buffer, &buf_len, NULL, NULL, er_ok, &context);
     if (!buffer)
@@ -691,12 +699,13 @@ static int32_t pal_socket_connect(
         (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT, 
             (char*)&timeout, sizeof(timeout));
 
+#if defined(ASYNC_CONNECT)
         // Wait for close, error, or writeable
         result = pal_event_select(sock->event_handle, 
             pal_event_type_close);
         if (result != er_ok)
             break;
-
+#endif
         error = connect(sock->sock_fd, (const struct sockaddr*)sa_in, sa_len);
         if (error < 0)
         {
@@ -753,12 +762,13 @@ static int32_t pal_socket_bind(
             break;
         }
  
-        // Wait for close, error
+#if defined(ASYNC_CONNECT)
+         // Wait for close, error
         result = pal_event_select(sock->event_handle, 
             pal_event_type_close);
         if (result != er_ok)
             break;
- 
+#endif
         error = bind(sock->sock_fd, (const struct sockaddr*)sa_in, sa_len);
         if (error < 0)
         {
@@ -830,11 +840,13 @@ static int32_t pal_socket_try_open(
         }
         log_info(sock->log, "Socket created ... (fd:%d)", sock->sock_fd);
 
+#if defined(ASYNC_CONNECT)
         // This will make socket nonblocking
         result = pal_event_port_register(event_port, sock->sock_fd, 
             pal_socket_event_callback, sock, &sock->event_handle);
         if (result != er_ok)
             break;
+#endif
 
         if ((sock->itf.props.sock_type == prx_socket_type_seqpacket ||
              sock->itf.props.sock_type == prx_socket_type_rdm ||
@@ -900,6 +912,23 @@ static void pal_socket_try_next(
         }
         // Success!
         log_info(sock->log, "Socket %d opened synchronously!", sock->sock_fd);
+        
+#if !defined(ASYNC_CONNECT)
+        // Make sure any event is not completing open
+        sock->state = pal_socket_state_open;
+
+        // This will make socket nonblocking
+        result = pal_event_port_register(event_port, sock->sock_fd, 
+            pal_socket_event_callback, sock, &sock->event_handle);
+        if (result != er_ok)
+            break;
+
+        // Wait for close, error, or writeable
+        result = pal_event_select(sock->event_handle, 
+            pal_event_type_close);
+        if (result != er_ok)
+            break;
+#endif
         break;
     }
 

@@ -7,7 +7,7 @@
 #include "azure_c_shared_utility/refcount.h"
 #include "pal_mt.h"
 
-#define DBG_MEM
+// #define DBG_MEM
 
 //
 // Universal buffer header
@@ -266,7 +266,7 @@ static void prx_dynamic_pool_free(
     {
         lock_enter(pool->pool.lock);
 
-#if 0
+#if defined(DBG_MEM)
         // Free all checked_out buffers, and let owner crash
         while (!DList_IsListEmpty(&pool->pool.checked_out))
         {
@@ -274,10 +274,10 @@ static void prx_dynamic_pool_free(
                 DList_RemoveHeadList(&pool->pool.checked_out), prx_buffer_t, link);
             mem_free(next);
         }
-#endif
+#else
         dbg_assert(DList_IsListEmpty(&pool->pool.checked_out),
             "Leaking buffer that was not returned to pool!");
-
+#endif
         while (!DList_IsListEmpty(&pool->pool.free_list))
         {
             next = containingRecord(
@@ -435,7 +435,7 @@ static void prx_fixed_pool_free(
     if (pool->pool.lock)
     {
         lock_enter(pool->pool.lock);
-#if 1
+#if !defined(DBG_MEM)
         dbg_assert(DList_IsListEmpty(&pool->pool.checked_out),
             "Leaking buffer that was not returned to pool!");
 #endif

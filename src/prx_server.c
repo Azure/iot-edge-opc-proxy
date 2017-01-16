@@ -139,7 +139,7 @@ static void prx_server_socket_free(
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
-    log_info(server_sock->log, "Server socket freed!");
+    log_info(server_sock->log, "Server socket %p freed!", server_sock);
     mem_free_type(prx_server_socket_t, server_sock);
 }
 
@@ -217,15 +217,16 @@ static void prx_server_worker(
                     // fall through
 
                 case prx_server_socket_closed:
-                    log_info(next->log, "Socket closed, clean up socket %p", next);
                     if (next->stream)
                     {
-                    //  __do_later(next, prx_server_socket_free, next->timeout);
+                        log_info(next->log, "Socket %p closed, clean up stream", 
+                            next);
                         io_connection_close(next->stream);
                     }
                     else
                     {
-                        prx_server_socket_free(next);
+                        // Delay free to debounce hang up race condition
+                        __do_later(next, prx_server_socket_free, 2000);
                     }
                     result = hashtable_iterator_remove(itr);
                     break;
@@ -277,6 +278,7 @@ static void prx_server_worker(
                     // If not, initiate close...
                     next->last_activity = now;
                     next->state = prx_server_socket_closing;
+                    log_debug(next->log, "Worker closing socket... (%p)", next);
                     pal_socket_close(next->sock, NULL); // Wait for close complete
                     break;
                 default:
@@ -373,6 +375,7 @@ static void prx_server_socket_close_complete(
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
     server_sock->state = prx_server_socket_closed;
+    log_debug(server_sock->log, "Server socket closed! (%p)", server_sock);
     __do_next(server_sock->server, prx_server_worker);
 }
 
@@ -452,7 +455,8 @@ static void prx_server_socket_on_begin_receive(
     dbg_assert_ptr(buffer);
     dbg_assert_ptr(op_context);
     dbg_assert(size != 0, "size");
-
+    dbg_assert(server_sock->state != prx_server_socket_closed, "State");
+    
     // Create new message from pool with a 64k buffer
     result = io_message_create(server_sock->message_pool, io_message_type_data,
         &server_sock->id, &server_sock->stream_id, &message);
@@ -463,10 +467,6 @@ static void prx_server_socket_on_begin_receive(
             message, BUF_SIZE, (void**)&message->content.data_message.buffer);
         if (result == er_ok)
             message->content.data_message.buffer_length = BUF_SIZE;
-        else
-        {
-            // Out of memory...
-        }
     }
 
     if (result != er_ok)
@@ -513,9 +513,15 @@ static void prx_server_socket_on_end_receive(
             if (result == er_aborted || // Abort is returned during close
                 result == er_retry)  
                 break;
+            if (result == er_closed)
+            {
+                log_info(server_sock->log, "Remote close received (s: %d, %p)",
+                    server_sock->state, server_sock);
+                break;
+            }
             
-            log_error(server_sock->log, "Failed receive operation (%s)",
-                prx_err_string(result));
+            log_error(server_sock->log, "Failed receive operation (s: %d, %s, %p)",
+                server_sock->state, prx_err_string(result), server_sock);
             message->content.data_message.buffer_length = 0;
 
             // TODO: Decide whether to send an error to clients...
@@ -564,6 +570,7 @@ static void prx_server_socket_on_begin_send(
     dbg_assert_ptr(flags);
     dbg_assert_ptr(op_context);
     dbg_assert(size != 0, "size");
+    dbg_assert(server_sock->state != prx_server_socket_closed, "State");
 
     // Get message to send
     lock_enter(server_sock->send_lock);
@@ -911,6 +918,9 @@ static void prx_server_socket_handle_closerequest(
     if (server_sock->state == prx_server_socket_created ||
         server_sock->state == prx_server_socket_opened)
     {
+        log_debug(server_sock->log, 
+            "Server socket asked to close! (%p)", server_sock);
+
         // Shutdown
         (void)pal_socket_setsockopt(
             server_sock->sock, prx_so_shutdown, prx_shutdown_op_both);
@@ -1092,7 +1102,10 @@ static int32_t prx_server_socket_handler(
     else if (ev == io_connection_closed)
     {
         // Stream closed, now free socket and exit
-        __do_next(server_sock, prx_server_socket_free);
+        log_debug(server_sock->log, "Stream closed, schedule socket %p free", 
+            server_sock);
+        // Delay free to debounce hang up race condition
+        __do_later(server_sock, prx_server_socket_free, 2000);
     }
     return er_ok;
 }

@@ -196,7 +196,6 @@ static int32_t prx_host_init_from_command_line(
     static struct option long_options[] =
     {
         { "ad-hoc",                     no_argument,            NULL, 'a' },
-        { "exit",                       no_argument,            NULL, 'x' },
         { "hidden",                     no_argument,            NULL, 'h' },
         { "install",                    no_argument,            NULL, 'i' },
         { "uninstall",                  no_argument,            NULL, 'u' },
@@ -215,22 +214,21 @@ static int32_t prx_host_init_from_command_line(
         while (result == er_ok)
         {
             c = getopt_long(
-                argc, argv, "axhiuc:n:L:C:d:", long_options, &option_index);
+                argc, argv, "ahiuc:n:L:C:d:", long_options, &option_index);
             if (c == -1)
                 break;
 
             switch (c)
             {
-            case 'x':
-                should_exit = true;
-                break;
             case 'h':
                 host->hidden = true;
                 break;
             case 'i':
+                should_exit = true;
                 is_install = true;
                 break;
             case 'u':
+                should_exit = true;
                 is_uninstall = true;
                 break;
             case 'a':
@@ -351,6 +349,14 @@ static int32_t prx_host_init_from_command_line(
             }
         }
 
+        if (!ns_registry && !is_install && !is_uninstall && !is_adhoc)
+        {
+            if (host->remote)
+                is_install = true; // Always install without args
+            else
+                should_exit = true;  // Always exit
+        }
+
         if (is_install || is_uninstall || is_adhoc)
         {
             // Ensure we have a name
@@ -391,44 +397,42 @@ static int32_t prx_host_init_from_command_line(
     if (cs)
         io_cs_free(cs);
 
-    if (result != er_arg)
-        return result;
     if (should_exit)
         return er_aborted;
+    if (result != er_arg)
+        return result;
 
 printf(" Proxy command line options:                                       \n\n");
-printf(" --log-config-file,-L                                                \n");
+printf(" -L, --log-config-file                                               \n");
 printf("                    Log configuration file to use. Defaults to       \n");
 printf("                    ./log.config.                                    \n");
-printf(" --ns-db-file,-d                                                     \n");
+printf(" -d, --ns-db-file                                                    \n");
 printf("                    Local name service database file to use.         \n");
 printf("                    If not provided keeps ns in memory.              \n");
-printf(" --connection-string,-c <connection-string>                          \n");
+printf(" -c, --connection-string <string>                                    \n");
 printf("                    iothubowner connection string for install or     \n");
 printf("                    uninstall. Required for -i, -u, or -a            \n");
-printf(" --connection-string-file,-C <file-name>                             \n");
+printf(" -C, --connection-string-file <file-name>                            \n");
 printf("                    same as above but read from file.                \n");
-printf(" --name,-n <server-name>                                             \n");
+printf(" -n, --name <string>                                                 \n");
 printf("                    Name of servers to install or uninstall.         \n");
-printf(" --install,-i                                                        \n");
+printf(" -i, --install                                                       \n");
 printf("                    Installs a proxy server in the IoT Hub device    \n");
-printf("                    registry and creates a local database entry.     \n");
-printf("                    Requires -c or -C.                               \n");
+printf("                    registry and creates a local database entry,     \n");
+printf("                    then exits. Requires -c or -C.                   \n");
 printf("                    If -n is not specified, uses hostname.           \n");
-printf(" --uninstall,-u                                                      \n");
+printf(" -u, --uninstall                                                     \n");
 printf("                    Uninstalls proxy server on Iot Hub and removes   \n");
-printf("                    the entry from the local database file.          \n");
-printf("                    Requires -c or -C.                               \n");
+printf("                    the entry from the local database file, then     \n");
+printf("                    exits. Requires -c or -C.                        \n");
 printf("                    If -n is not specified, uses hostname.           \n");
-printf(" --ad-hoc,-a                                                         \n");
+printf(" -a, --ad-hoc                                                        \n");
 printf("                    Installs a proxy server under a random name on   \n");
 printf("                    startup and removes it on clean(!) exit.         \n");
 printf("                    Requires -c or -C.                               \n");
-printf(" --exit,-x                                                           \n");
-printf("                    Performs console tasks and then exits, otherwise \n");
+printf(" -h, --hidden                                                        \n");
+printf("                    Runs the proxy as a service/daemon, otherwise    \n");
 printf("                    runs proxy host process as console process.      \n");
-printf(" --hidden,-h                                                         \n");
-printf("                    Runs the proxy as a service/daemon process.      \n");
     return er_arg;
 }
 
@@ -740,13 +744,7 @@ int32_t prx_host_init(
 
         // Init from console
         result = prx_host_init_from_command_line(process_host, argc, argv);
-        if (result == er_aborted)
-        {
-            // exit
-            result = er_ok;
-            break;
-        }
-        else if (result != er_ok)
+        if (result != er_ok)
             break;
 
         // Assign a random id to the host

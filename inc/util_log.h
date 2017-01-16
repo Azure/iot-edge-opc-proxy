@@ -50,25 +50,31 @@
 #include "azure_c_shared_utility/xlogging.h"
 #define CRLF "\n"
 
+#ifdef LOG_VERBOSE
+#define __should_log(c) (true)
+#else
+#define __should_log(c) (c != LOG_TRACE)
+#endif
+
 // 
-// Log a trace message using xlogging
+// Log messages using xlogging
 //
 #if defined(_MSC_VER)
 #define __log(log, c, file, func, line, fmt, ...) \
     do { LOGGER_LOG logger = xlogging_get_log_function(); \
-        (void)log; if (logger) logger( \
+        (void)log; if (logger && __should_log(c)) logger( \
             c, file, func, line, 0, fmt "\r\n", __VA_ARGS__); \
     } while(0)
 #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define __log(log, c, file, func, line, fmt, ...) \
     do { LOGGER_LOG logger = xlogging_get_log_function(); \
-        (void)log; if (logger) logger( \
+        (void)log; if (logger && __should_log(c)) logger( \
             c, file, func, line, 0, fmt "\n", ##__VA_ARGS__); \
     } while(0)
 #else
 #define __log(log, c, file, func, line, fmt, args...) \
     do { LOGGER_LOG logger = xlogging_get_log_function(); \
-        (void)log; if (logger) logger( \
+        (void)log; if (logger && __should_log(c)) logger( \
             c, file, func, line, 0, fmt "\n", ## args); \
     } while(0)
 #endif

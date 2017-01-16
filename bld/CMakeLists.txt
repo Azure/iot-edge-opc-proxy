@@ -161,6 +161,9 @@ else()
         message(FATAL_ERROR "getopt not found" )
     endif()
 
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        add_definitions(-D_DEBUG)
+	endif()
 endif()
 
 #

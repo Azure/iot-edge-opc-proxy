@@ -524,7 +524,7 @@ int32_t pal_os_last_error_as_prx_error(
         error != EWOULDBLOCK &&
         error != EINTR)
     {
-        log_error(NULL, "A OS operation resulted in error %d (%s)", 
+        log_info(NULL, "A OS operation resulted in error %d (%s)", 
             error, strerror(error));
     }
     return pal_os_to_prx_error(error);

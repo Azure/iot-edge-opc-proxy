@@ -19,25 +19,31 @@
 #define compile_assert(cond) enum { __expand_1(__LINE__) = 1 / (!!(cond)) }
 #endif
 
-#if !defined(_WIN32) && !defined(dbg_brk)
-#if defined(__GNUC__)
+#if !defined(dbg_brk)
+#if !defined(_WIN32) 
+#if defined(__GNUC__) && defined(DEBUG)
 #define dbg_brk __builtin_trap
 #else
 #define dbg_brk() 
-#endif
-#else
+#endif // !__GNUC__
+#else // WIN32
+#if defined(DEBUG)
 #ifdef __cplusplus
 extern "C" 
 {
-#endif
+#endif // __cplusplus
     __declspec(dllimport) void __stdcall DebugBreak(
         void
     );
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 #define dbg_brk DebugBreak
-#endif
+#else // !DEBUG
+#define dbg_brk() 
+#endif // DEBUG
+#endif // !WIN32
+#endif // !dbg_brk
 
 #include "util_log.h"
 
