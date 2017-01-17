@@ -245,9 +245,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="log.config.ini">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
+    <None Include="log.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

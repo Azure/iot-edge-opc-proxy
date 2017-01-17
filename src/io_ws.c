@@ -441,7 +441,7 @@ static void io_ws_connection_on_disconnected(
         connection->status = io_ws_connection_status_disconnected;
         __do_next(connection, io_ws_connection_reconnect);
     }
-    else
+    else if (connection->status != io_ws_connection_status_disconnected)
     {
         dbg_assert(0, "bad state %d for connection %p", 
             connection->status, connection);

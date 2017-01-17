@@ -53,7 +53,7 @@
 #ifdef LOG_VERBOSE
 #define __should_log(c) (true)
 #else
-#define __should_log(c) (c != LOG_TRACE)
+#define __should_log(c) (c != AZ_LOG_TRACE)
 #endif
 
 // 
@@ -91,33 +91,33 @@
 
 #if defined(_MSC_VER)
 #define __log_debug(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_TRACE, file, func, line, fmt, __VA_ARGS__)
+      __log(log, AZ_LOG_TRACE, file, func, line, fmt, __VA_ARGS__)
 #define __log_info(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_INFO, file, func, line, fmt, __VA_ARGS__)
+      __log(log, AZ_LOG_INFO, file, func, line, fmt, __VA_ARGS__)
 #define __log_error(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_ERROR, file, func, line, fmt, __VA_ARGS__)
+      __log(log, AZ_LOG_ERROR, file, func, line, fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define __log_debug(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_TRACE, file, func, line, fmt, ##__VA_ARGS__)
+      __log(log, AZ_LOG_TRACE, file, func, line, fmt, ##__VA_ARGS__)
 #define __log_info(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_INFO, file, func, line, fmt, ##__VA_ARGS__)
+      __log(log, AZ_LOG_INFO, file, func, line, fmt, ##__VA_ARGS__)
 #define __log_error(log, file, a1, func, a2, line, fmt, ...) \
-      __log(log, LOG_ERROR, file, func, line, fmt, ##__VA_ARGS__)
+      __log(log, AZ_LOG_ERROR, file, func, line, fmt, ##__VA_ARGS__)
 #else
 #define __log_debug(log, file, a1, func, a2, line, args...) \
-      __log(log, LOG_TRACE, file, func, line, ## args)
+      __log(log, AZ_LOG_TRACE, file, func, line, ## args)
 #define __log_info(log, file, a1, func, a2, line, args...) \
-      __log(log, LOG_INFO, file, func, line, ## args)
+      __log(log, AZ_LOG_INFO, file, func, line, ## args)
 #define __log_error(log, file, a1, func, a2, line, args...) \
-      __log(log, LOG_ERROR, file, func, line, ## args)
+      __log(log, AZ_LOG_ERROR, file, func, line, ## args)
 #endif
 
 #define __log_debug_b(log, file, a1, func, a2, line, fmt, b, len) \
-      __log_b(log, LOG_TRACE, file, func, line, fmt, b, len)
+      __log_b(log, AZ_LOG_TRACE, file, func, line, fmt, b, len)
 #define __log_info_b(log, file, a1, func, a2, line, fmt, b, len) \
-      __log_b(log, LOG_INFO, file, func, line, fmt, b, len)
+      __log_b(log, AZ_LOG_INFO, file, func, line, fmt, b, len)
 #define __log_error_b(log, file, a1, func, a2, line, fmt, b, len) \
-      __log_b(log, LOG_ERROR, file, func, line, fmt, b, len)
+      __log_b(log, AZ_LOG_ERROR, file, func, line, fmt, b, len)
 
 #else // !NO_ZLOG 
 

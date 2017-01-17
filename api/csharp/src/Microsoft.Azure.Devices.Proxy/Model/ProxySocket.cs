@@ -90,7 +90,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             var task = Provider.ControlChannel.BroadcastAsync(
                     new Message(Id, Reference.Null, new PingRequest(address)),
                 (m, r) => {
-                    queue.Add(r);
+                    if (m.Error == (int)SocketError.Ok)
+                        queue.Add(r);
                     return Task.FromResult(false);
                 },
                 timeout, cts.Token).ContinueWith(t => {

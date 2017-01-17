@@ -35,12 +35,12 @@ static void zlog_logger_log(
     va_start(args, format);
     switch (log_category)
     {
-    case LOG_ERROR:
+    case AZ_LOG_ERROR:
         __zlog_error_v(log, file, strlen(file), func, strlen(func), line, format, args);
         break;
-    case LOG_INFO:
+    case AZ_LOG_INFO:
 		__zlog_info_v(log, file, strlen(file), func, strlen(func), line, format, args);
-	case LOG_TRACE:
+	case AZ_LOG_TRACE:
 	default:
 #ifndef LINE_BREAK
         (void)options;

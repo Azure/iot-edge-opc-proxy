@@ -1439,21 +1439,24 @@ static void prx_server_handle_pingrequest(
         }
     }
 
-    if (prx_ai)
+    if (result == er_ok)
     {
+        dbg_assert_ptr(prx_ai);
         dbg_assert(prx_ai_count > 0, "Unexpected");
         memcpy(&message->content.ping_response, &prx_ai->address, sizeof(prx_socket_address_t));
-        pal_freeaddrinfo(prx_ai);
-
-        io_message_as_response(message);
-        message->error_code = result;
-        result = io_connection_send(server->listener, message);
-        if (result != er_ok)
-        {
-            log_error(server->log, "Failed sending ping response (%s).",
-                prx_err_string(result));
-        }
     }
+
+    io_message_as_response(message);
+    message->error_code = result;
+    result = io_connection_send(server->listener, message);
+    if (result != er_ok)
+    {
+        log_error(server->log, "Failed sending ping response (%s).",
+            prx_err_string(result));
+    }
+
+    if (prx_ai)
+        pal_freeaddrinfo(prx_ai);
 }
 
 //

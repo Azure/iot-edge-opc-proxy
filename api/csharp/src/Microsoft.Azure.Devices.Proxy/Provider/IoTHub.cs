@@ -144,7 +144,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 var results = await LookupAsync(sql, ct);
                 var tasks = new List<Task>();
                 foreach (var proxy in results) {
-                    tasks.Add(InvokeDeviceMethodWithRetryAsync(proxy, message, handler, timeout, ct));
+                    tasks.Add(InvokeDeviceMethodAsync(proxy, message, handler, timeout, ct));
                 }
                 await Task.WhenAll(tasks);
             }
@@ -349,7 +349,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             }
             var buffer = new MemoryStream();
             var request = new MethodCallRequest(message, timeout);
-            try {
+            try
+            {
                 request.Encode(buffer, CodecId.Json);
 
                 var uri = new UriBuilder("https", _hubConnectionString.HostName);
@@ -401,7 +402,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         private async Task InvokeDeviceMethodAsync(INameRecord record, Message request,
             Func<Message, INameRecord, Task> handler, TimeSpan timeout, CancellationToken ct) {
             var response = await InvokeDeviceMethodAsync(record, request, timeout, ct);
-            await handler(response, record);
+            if (response != null && !ct.IsCancellationRequested)
+                await handler(response, record);
         }
 
         /// <summary>
