@@ -1374,8 +1374,8 @@ int32_t pal_wsclient_disconnect(
 
     if (!wsclient->worker)
     {
-        wsclient->cb(wsclient->context, pal_wsclient_event_disconnected,
-            NULL, NULL, NULL, wsclient->disconnect_reason);
+       // wsclient->cb(wsclient->context, pal_wsclient_event_disconnected,
+       //     NULL, NULL, NULL, wsclient->disconnect_reason);
         return er_ok;
     }
 

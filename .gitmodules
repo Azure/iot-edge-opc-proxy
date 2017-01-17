@@ -21,8 +21,7 @@
 	branch = develop
 [submodule "deps/parson"]
 	path = deps/parson
-	url = https://github.com/marcschier/parson.git
-	branch = develop
+	url = https://github.com/kgabis/parson.git
 [submodule "deps/cmp"]
 	path = deps/cmp
 	url = https://github.com/marcschier/cmp.git
@@ -39,3 +38,6 @@
 	path = deps/lws
 	url = https://github.com/warmcat/libwebsockets.git
 	branch = v2.1-stable
+[submodule "deps/getopt"]
+	path = deps/getopt
+	url = https://github.com/alex85k/wingetopt

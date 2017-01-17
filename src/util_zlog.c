@@ -69,7 +69,7 @@ log_t zlog_get(
 //
 int32_t zlog_register(
     const char* target,
-    log_cb_t callback
+    zlog_cb_t callback
 )
 {
     if (0 != zlog_set_record(target, (zlog_record_fn)callback))

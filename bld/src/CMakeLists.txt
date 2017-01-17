@@ -9,8 +9,11 @@ function(add_lib_subdirectory folder)
     set_target_properties(${folder} PROPERTIES FOLDER "lib")
 endfunction()
 
-add_lib_subdirectory(libiotsdk)
+if(${use_zlog})
 add_lib_subdirectory(libzlog)
+endif()
+
+add_lib_subdirectory(libiotsdk)
 add_lib_subdirectory(libproxy)
 add_lib_subdirectory(libuamqp)
 add_lib_subdirectory(libumqtt)

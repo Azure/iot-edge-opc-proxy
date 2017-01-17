@@ -15,7 +15,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\cmp\cmp.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\getopt.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\src\getopt.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_itr.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_private.h" />
@@ -76,7 +76,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\cmp\cmp.c">
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\getopt\getopt.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_itr.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.c">
@@ -109,6 +108,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_misc.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_signal.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_string.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_sk.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_ws.c" />
   </ItemGroup>

@@ -21,7 +21,7 @@ set(libproxy_ut_include
 
 if(WIN32)
 set(libproxy_ut_include ${libproxy_ut_include}
-	${_GETOPT_ROOT}
+	${_GETOPT_INC}
 )
 else()
 endif()

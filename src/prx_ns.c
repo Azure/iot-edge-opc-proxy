@@ -459,7 +459,7 @@ static int32_t prx_ns_generic_entry_create(
         return er_ok;
     } while (0);
 
-    prx_ns_generic_entry_free(&entry->itf);
+    prx_ns_generic_entry_free(entry);
     return result;
 }
 
@@ -2595,4 +2595,123 @@ int32_t prx_ns_entry_create(
 
     *created = &entry->itf;
     return er_ok;
+}
+
+//
+// Create entry from a json configuration string
+//
+int32_t prx_ns_entry_create_from_string(
+    const char* string,
+    prx_ns_entry_t** entry
+)
+{
+    int32_t result;
+    io_codec_ctx_t ctx, obj;
+    io_fixed_buffer_stream_t stream;
+    prx_ns_generic_entry_t* generic_entry = NULL;
+    io_stream_t* codec_stream;
+
+    codec_stream = io_fixed_buffer_stream_init(
+        &stream, (uint8_t*)string, strlen(string)+1, NULL, 0);
+    dbg_assert_ptr(codec_stream);
+
+    result = io_codec_ctx_init(
+        io_codec_by_id(io_codec_json), &ctx, codec_stream, true, NULL);
+    if (result != er_ok)
+        return result;
+    do
+    {
+        result = io_decode_object(&ctx, NULL, NULL, &obj);
+        if (result != er_ok)
+            break;
+        result = prx_ns_generic_entry_create(0, NULL, NULL, NULL, &generic_entry);
+        if (result != er_ok)
+            break;
+
+        result = prx_ns_generic_entry_decode(&obj, generic_entry);
+        if (result != er_ok)
+            break;
+
+        *entry = &generic_entry->itf;
+        generic_entry = NULL;
+        break;
+    } 
+    while (0);
+
+    (void)io_codec_ctx_fini(&ctx, codec_stream, false);
+    if (generic_entry)
+        prx_ns_generic_entry_free(generic_entry);
+    return result;
+}
+
+//
+// Serialize entry to json configuration string
+//
+int32_t prx_ns_entry_to_STRING(
+    prx_ns_entry_t* entry,
+    STRING_HANDLE* string
+)
+{
+    int32_t result;
+    io_codec_ctx_t ctx, obj;
+    io_dynamic_buffer_stream_t stream;
+    io_stream_t* codec_stream;
+    io_ref_t addr;
+    prx_ns_generic_entry_t* generic_entry;
+    io_cs_t* cs = NULL;
+
+    codec_stream = io_dynamic_buffer_stream_init(&stream, NULL, 0x100);
+    if (!codec_stream)
+        return er_out_of_memory;
+    do
+    {
+        result = io_codec_ctx_init(io_codec_by_id(io_codec_json),
+            &ctx, codec_stream, false, NULL);
+        if (result != er_ok)
+            break;
+
+        // Create generic entry from entry
+        result = prx_ns_entry_get_addr(entry, &addr);
+        if (result != er_ok)
+            break;
+        result = prx_ns_entry_get_cs(entry, &cs);
+        if (result != er_ok)
+            break;
+        result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &addr,
+            prx_ns_entry_get_name(entry), cs, &generic_entry);
+        if (result != er_ok)
+            break;
+
+        result = io_encode_object(&ctx, NULL, false, &obj);
+        if (result == er_ok)
+            result = prx_ns_generic_entry_encode(&obj, generic_entry);
+        if (result != er_ok)
+            break;
+
+        // Dynamic stream has no close function, so no cleanup needed
+        result = io_codec_ctx_fini(&ctx, codec_stream, true);
+        if (result != er_ok)
+            break;
+
+        // Ensure null terminated...
+        result = io_stream_write(&stream.itf, "\0", 1);
+        if (result != er_ok)
+            break;
+
+        *string = STRING_construct((const char*)stream.out);
+        if (!*string)
+        {
+            result = er_out_of_memory;
+            break;
+        }
+        break;
+    } 
+    while (0);
+
+    if (cs)
+        io_cs_free(cs);
+    if (stream.out)
+        mem_free(stream.out);
+
+    return result;
 }

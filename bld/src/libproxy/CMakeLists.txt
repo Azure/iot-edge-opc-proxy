@@ -32,6 +32,7 @@ set(_PROXY_COMPONENTS
 	util_signal
 	util_stream
 	util_string
+	util_time
 	xio_sk
 	xio_ws
 )
@@ -56,6 +57,8 @@ if(WIN32)
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_win)
 	endif()
 else()
+    include(CheckIncludeFile)
+	
 	set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
 		pal_err_posix
 		pal_file_posix
@@ -64,11 +67,19 @@ else()
 		pal_sk_posix
 		pal_time_posix
 	)
-	if(LINUX)
+
+    check_include_file("linux/random.h" HAVE_LINUX_RANDOM_H)
+    if(HAVE_LINUX_RANDOM_H)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_linux)
+    else()
+        set(use_openssl 1)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_openssl)
+    endif()
+
+    if(LINUX)
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
 			pal_ev_epoll
 			pal_net_linux
-			pal_rand_linux
 			pal_proc_linux
 		)
 	else()
@@ -76,7 +87,6 @@ else()
 		set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
 			pal_ev_poll
 			pal_net_stubs
-			pal_rand_openssl
 			pal_proc_posix
 		)
 	endif()
@@ -141,7 +151,7 @@ endif()
 		${_HASHTABLE_ROOT}/hashtable_itr.c
 	)
 if(WIN32)
-    set(source_c_files ${source_c_files} ${_GETOPT_ROOT}/getopt.c)
+    set(source_c_files ${source_c_files} ${_GETOPT_ROOT}/src/getopt.c)
 endif()
 foreach(unit ${_PROXY_COMPONENTS})
 	set(source_c_files ${source_c_files} ${_PROJECT_ROOT}/src/${unit}.c)
@@ -169,7 +179,7 @@ endforeach()
 		PRIVATE ${_PARSON_ROOT}
 	)
 if(WIN32)
-    target_include_directories(libproxy PRIVATE ${_GETOPT_ROOT})
+    target_include_directories(libproxy PRIVATE ${_GETOPT_INC})
 endif()
 if(${use_lws})
 	target_include_directories(libproxy
@@ -186,7 +196,9 @@ endif()
 		PUBLIC HAVE_IN6_U=1
 	)
 
+if(${use_zlog})
 	target_link_libraries(libproxy PRIVATE libzlog)
+endif()
 if(WIN32)
     target_link_libraries(libproxy
         PRIVATE winhttp 
@@ -226,7 +238,7 @@ endif()
 		PUBLIC ${_PARSON_ROOT}
 	)
 if(WIN32)
-    target_include_directories(libproxy-static PRIVATE ${_GETOPT_ROOT})
+    target_include_directories(libproxy-static PRIVATE ${_GETOPT_INC})
 endif()
 if (${use_lws})
 	target_include_directories(libproxy-static
@@ -258,7 +270,9 @@ else()
         PUBLIC pthread m
     )
 endif()
+if(${use_zlog})
 	target_link_libraries(libproxy-static PUBLIC libzlog)
+endif()
 if (${use_lws})
     target_link_libraries(libproxy-static PUBLIC websockets_shared)
 endif()

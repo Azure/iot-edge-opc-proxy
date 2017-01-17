@@ -5,15 +5,19 @@
 #define _prx_module_h_
 
 #include "common.h"
-#include "prx_host.h"
 
 //
-// Opaque Broker handle, need to wait for apis to send message are passed...
+// Proxy server module
+//
+typedef struct prx_module prx_module_t;
+
+//
+// Opaque Broker handle...
 //
 typedef void broker_handle_t;
 
 //
-// Opaque Message handle, need to wait until we have apis to crack it passed
+// Opaque Message handle...
 //
 typedef void message_handle_t;
 
@@ -34,7 +38,7 @@ typedef void (*prx_module_free_t)(
 //
 // Creates a host instance to be managed by field gateway
 //
-typedef prx_host_t* (*prx_module_create_t)(
+typedef prx_module_t* (*prx_module_create_t)(
     broker_handle_t* broker, 
     const void* configuration
     );
@@ -43,21 +47,21 @@ typedef prx_host_t* (*prx_module_create_t)(
 // Start module
 //
 typedef void (*prx_module_start_t)(
-    prx_host_t* host
+    prx_module_t* module
     );
 
 //
 // Destroys host instance
 //
 typedef void (*prx_module_destroy_t)(
-    prx_host_t* host
+    prx_module_t* module
     );
 
 //
 // Callback when field gateway received message - stub only at this point
 //
 typedef void (*prx_module_receive_t)(
-    prx_host_t* host,
+    prx_module_t* module,
     message_handle_t* message 
     );
 
@@ -74,12 +78,12 @@ typedef struct prx_module_api
     prx_module_receive_t on_receive;
     prx_module_start_t on_start;
 }
-prx_module_aprx_t;
+prx_module_api_t;
 
 //
 // Mandatory export for field gateway to load host
 //
-decl_public_1(prx_module_aprx_t*, Module_GetAPIS,
+decl_public_1(prx_module_api_t*, Module_GetAPIS,
     int, gateway_aprx_version
 );
 

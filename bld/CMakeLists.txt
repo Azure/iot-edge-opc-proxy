@@ -49,6 +49,7 @@ set(_ZLOG_INC ${_ZLOG_ROOT}/src CACHE INTERNAL "" FORCE)
 set(_UMOCKC_INC ${_UMOCKC_ROOT}/inc CACHE INTERNAL "" FORCE)
 set(_TRUNNER_INC ${_TRUNNER_ROOT}/inc CACHE INTERNAL "" FORCE)
 set(_CTEST_INC ${_CTEST_ROOT}/inc CACHE INTERNAL "" FORCE)
+set(_GETOPT_INC ${_GETOPT_ROOT}/src CACHE INTERNAL "" FORCE)
 
 #
 # Compiler and Linker settings
@@ -116,7 +117,6 @@ if(MSVC)
     endif()
 endif()
 
-	option(leak_detection "set leak_detection to ON (default is OFF)" OFF)
 if(WIN32)
 	option(use_lws "set use_lws to ON to use libwebsockets (default is OFF)" OFF)
 	option(use_openssl "set use_openssl to ON to use openssl instead of schannel (default is OFF) OFF")
@@ -125,6 +125,15 @@ else()
 	option(use_openssl "set use_openssl to OFF to use a different library (default is ON) ON")
 endif()
 
+	option(use_zlog "set use_zlog to ON to use zlog as logging library (default is OFF)" OFF)
+	if(NOT ${use_zlog})
+		add_definitions(-DNO_ZLOG)
+	endif()
+
+	option(leak_detection "set leak_detection to ON (default is OFF)" OFF)
+	if(${leak_detection})
+		add_definitions(-DLEAK_DETECT)
+	endif()
 if(WIN32)
     if(MSVC)
         add_definitions(-D_CRT_SECURE_NO_WARNINGS)
@@ -151,6 +160,10 @@ else()
     else()
         message(FATAL_ERROR "getopt not found" )
     endif()
+
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
+        add_definitions(-D_DEBUG)
+	endif()
 endif()
 
 #

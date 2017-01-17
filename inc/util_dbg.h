@@ -19,40 +19,48 @@
 #define compile_assert(cond) enum { __expand_1(__LINE__) = 1 / (!!(cond)) }
 #endif
 
-#if !defined(_WIN32) && !defined(dbg_brk)
-#if defined(__GNUC__)
+#if !defined(dbg_brk)
+#if !defined(_WIN32) 
+#if defined(__GNUC__) && defined(DEBUG)
 #define dbg_brk __builtin_trap
 #else
 #define dbg_brk() 
-#endif
-#else
+#endif // !__GNUC__
+#else // WIN32
+#if defined(DEBUG)
 #ifdef __cplusplus
 extern "C" 
 {
-#endif
+#endif // __cplusplus
     __declspec(dllimport) void __stdcall DebugBreak(
         void
     );
 #ifdef __cplusplus
 }
-#endif
+#endif // __cplusplus
 #define dbg_brk DebugBreak
-#endif
+#else // !DEBUG
+#define dbg_brk() 
+#endif // DEBUG
+#endif // !WIN32
+#endif // !dbg_brk
 
 #include "util_log.h"
 
-#if !defined(_MSC_VER)
-#define __analysis_assume(cond)
-#endif
-
 #ifndef dbg_assert
 #if !defined(UNIT_TEST)
-#define dbg_assert(cond, ...) \
-    { __analysis_assume(cond); \
-        if (!(cond)) { \
-            log_error(NULL, "\r\n!!! ASSERT \r\n    " __VA_ARGS__); dbg_brk(); \
-        } \
-    }
+#if defined(_MSC_VER)
+#define dbg_assert(cond, fmt, ...) \
+    do { __analysis_assume(cond); \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, __VA_ARGS__); dbg_brk(); } \
+    } while(0)
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#define dbg_assert(cond, fmt, ...) \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, ##__VA_ARGS__); dbg_brk(); }
+#else
+#define dbg_assert(cond, fmt, args...) \
+    if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, ## args); dbg_brk(); }
+#endif
 #else
 #define dbg_assert(...) (void)(__VA_ARGS__)
 #endif

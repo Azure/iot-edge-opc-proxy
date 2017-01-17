@@ -7,6 +7,12 @@
     <Filter Include="inc">
       <UniqueIdentifier>{b315f940-466d-4eb4-9487-54e07c455f9e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\getopt">
+      <UniqueIdentifier>{8370dafa-4aee-43aa-bc52-885847ef8c6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\getopt">
+      <UniqueIdentifier>{7e248875-c17f-42b9-89f0-14f950eec63f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\src\pal\pal_mt_win.c">
@@ -41,6 +47,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\src\pal\pal_rand_win.c">
       <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\getopt\src\getopt.c">
+      <Filter>src\getopt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +88,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_rand.h">
       <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\deps\getopt\src\getopt.h">
+      <Filter>inc\getopt</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
 
+#define NO_LOGGING
 #include "util_mem.h"
 
 #if _WIN32

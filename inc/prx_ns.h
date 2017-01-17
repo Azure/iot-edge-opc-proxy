@@ -572,6 +572,22 @@ decl_internal_3(int32_t, prx_ns_entry_create_from_cs,
 );
 
 //
+// Create entry from a json configuration string
+//
+decl_internal_2(int32_t, prx_ns_entry_create_from_string,
+    const char*, string,
+    prx_ns_entry_t**, entry
+);
+
+//
+// Serialize entry to json configuration string
+//
+decl_internal_2(int32_t, prx_ns_entry_to_STRING,
+    prx_ns_entry_t*, entry,
+    STRING_HANDLE*, string
+);
+
+//
 // Free entry
 //
 decl_inline_1(void, prx_ns_entry_release,

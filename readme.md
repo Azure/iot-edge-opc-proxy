@@ -45,23 +45,12 @@ sudo apt-get install git cmake libcurl4-openssl-dev build-essential
 After cloning the repository, and installing all required tools and dependencies, run build.cmd on Windows, or build.sh on Linux.
 
 
-## Future direction
+## Contributions
 
-We plan on enhancing the following areas over the coming months:
+Contributions are welcome, in particular in the following areas 
 
-- Re-Enable C API and C sample (currently disabled)
-- UDP and forward proxy support (currently untested and likely not working)
-- Increased test coverage, in particular end to end tests
-- Better PAL abstractions for socket and web
-- VNC and BacNET samples
-- Documentation
-- Appveyor and Travis CI
-
-Contributions are welcome, e.g. in the following areas 
-
-- Better file system abstractions
-- RTOS, OSX and Unix ports
-- Serial port remoting
-- TUN IF tunnel integration
-- node.js API
+- RTOS, OSX and Unix PAL ports and testing
+- None IP streams, e.g. Pipe and Serial port remoting
+- Raw IP e.g. through TUN IF tunnel
+- API bindings, e.g. node.js or Java
 

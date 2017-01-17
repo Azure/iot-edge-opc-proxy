@@ -143,6 +143,8 @@ static int32_t pal_wsclient_from_winhttp_error(
         return er_permission;
     case ERROR_WINHTTP_INVALID_SERVER_RESPONSE:
         return er_connecting;
+    case ERROR_WINHTTP_SECURE_FAILURE:
+        return er_invalid_format;
     }
     return pal_os_to_prx_error(error);
 }
@@ -202,16 +204,26 @@ static void pal_wsclient_log_winhttp_callback_status(
 )
 {
     (void)wsclient, info, status;
-#define __case(v, ...) \
-    case v: log_info(wsclient->log, #v __VA_ARGS__); break;
-
+#if defined(_MSC_VER)
+#define __case(v, fmt, ...) \
+    case v: log_info(wsclient->log, #v fmt, __VA_ARGS__); break;
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define __case(v, fmt, ...) \
+    case v: log_info(wsclient->log, #v fmt, ##__VA_ARGS__); break;
+#else
+#define __case(v, fmt, args...) \
+    case v: log_info(wsclient->log, #v fmt, ## args); break;
+#endif
     switch (status)
     {
-    __case(WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED);
-    __case(WINHTTP_CALLBACK_STATUS_DETECTING_PROXY);
-    __case(WINHTTP_CALLBACK_STATUS_SECURE_FAILURE);
-    __case(WINHTTP_CALLBACK_STATUS_REQUEST_ERROR);
-        
+    __case(WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED,
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_DETECTING_PROXY, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_SECURE_FAILURE,
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, 
+        "");
     __case(WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER,
         " %S", (LPWSTR)info);
     __case(WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 
@@ -233,16 +245,26 @@ static void pal_wsclient_log_winhttp_callback_status(
     __case(WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE,
         "...");
 #ifdef LOG_VERBOSE
-    __case(WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE);
-    __case(WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION);
-    __case(WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE);
-    __case(WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE);
-    __case(WINHTTP_CALLBACK_STATUS_READ_COMPLETE);
-    __case(WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE);
-    __case(WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE);
-    __case(WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE);
-    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CREATED);
-    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING);
+    __case(WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_READ_COMPLETE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CREATED, 
+        "");
+    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 
+        "");
     default:
         log_error(wsclient->log, 
             "WINHTTP_CALLBACK_STATUS_UNKNOWN %x", status);

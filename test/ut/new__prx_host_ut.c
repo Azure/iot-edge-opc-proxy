@@ -12,6 +12,7 @@
 #include "io_ref.h"
 #include "io_cs.h"
 #include "prx_ns.h"
+#include "prx_sched.h"
 
 char *optarg;   /* pointer to argument of current option  */
 

@@ -76,6 +76,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpal-win-ut-win32", "test\ut\libpal\libpal-win-ut-win32.vcxproj", "{CC3F298F-E748-43A7-8662-9C99985D76BB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libtest", "libtest", "{BDD885BC-4738-4F91-A6AE-03A3186719C7}"
+	ProjectSection(SolutionItems) = preProject
+		test\libtest\CMakeLists.txt = test\libtest\CMakeLists.txt
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtest-shared", "test\libtest\libtest-shared.vcxitems", "{225282AE-47FC-4538-B087-795AC8FB1160}"
 EndProject
