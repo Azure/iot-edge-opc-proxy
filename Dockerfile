@@ -1,25 +1,37 @@
-FROM ubuntu:16.04
+FROM alpine:3.5
 
-RUN apt-get clean && \
-    apt-get update && \
-    apt-get update && \
-    apt-get install -y \
-        curl \
-        build-essential \
-        libcurl4-openssl-dev \
-        git \
+RUN set -ex \
+        && \
+    apk add --no-cache --virtual .build-deps \
+        bash \
         cmake \
-        libssl-dev \
-        valgrind \
-        libglib2.0-dev
+        build-base \
+		gcc \
+        abuild \
+        binutils \
+		make \
+		libc-dev \
+        curl-dev
 
-ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
-ENV COMMIT_ID master
+ADD / /proxy_build
+        
+RUN chmod +x /proxy_build/bld/build.sh \
+        && \
+    /proxy_build/bld/build.sh --skip-unittests --use-zlog \
+        && \
+    mv /proxy_build/build/bin/* /usr/bin \
+        && \
+    mv /proxy_build/build/libwebsockets/lib/* /usr/lib \
+        && \
+    mv /proxy_build/build/lib/* /usr/lib \
+            && \
+    rm -rf /proxy_build
+   
+RUN apk del .build-deps \
+        && \
+    apk add --no-cache --virtual .run-deps \
+        bash \
+        curl
 
-ENTRYPOINT rm -rf /proxy && \
-           git clone ${PROXY_REPO} /proxy && \
-           git -C /proxy checkout ${COMMIT_ID} && \
-           git -C /proxy submodule update --init && \
-           chmod +x /proxy/bld/build.sh && \
-           /proxy/bld/build.sh -rv && \
-           bash
+ENTRYPOINT \
+    proxyd

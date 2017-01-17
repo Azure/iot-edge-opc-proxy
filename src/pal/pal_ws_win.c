@@ -143,6 +143,8 @@ static int32_t pal_wsclient_from_winhttp_error(
         return er_permission;
     case ERROR_WINHTTP_INVALID_SERVER_RESPONSE:
         return er_connecting;
+    case ERROR_WINHTTP_SECURE_FAILURE:
+        return er_invalid_format;
     }
     return pal_os_to_prx_error(error);
 }
