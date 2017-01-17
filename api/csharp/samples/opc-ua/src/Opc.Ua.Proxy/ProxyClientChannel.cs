@@ -102,7 +102,6 @@ namespace Opc.Ua.Proxy
             if (url == null) throw new ArgumentNullException("url");
             if (timeout <= 0) throw new ArgumentException("Timeout must be greater than zero.", "timeout");
 
-            Task t;
             lock (DataLock)
             {
                 if (State != TcpChannelState.Closed)
@@ -128,13 +127,9 @@ namespace Opc.Ua.Proxy
                 State = TcpChannelState.Connecting;
                 Socket = new ProxyMessageSocket(this, BufferManager, Quotas.MaxBufferSize);
 
-                t = Task.Run(async () =>
-                {
-                    await Socket.BeginConnect(m_via, m_ConnectCallback, operation);
-                });
-            }
+                Socket.BeginConnect(m_via, m_ConnectCallback, operation).Wait();
 
-            t.Wait();
+            }
 
             return m_handshakeOperation;
         }
@@ -771,7 +766,6 @@ namespace Opc.Ua.Proxy
             {
                 Utils.Trace("Channel {0}: Scheduled Handshake Starting: TokenId={1}", ChannelId, CurrentToken.TokenId);
 
-                Task t;
                 lock (DataLock)
                 {
                     // check if renewing a token.
@@ -825,12 +819,9 @@ namespace Opc.Ua.Proxy
 
                     State = TcpChannelState.Connecting;
                     Socket = new ProxyMessageSocket(this, BufferManager, Quotas.MaxBufferSize);
-                    t = Task.Run(async () =>
-                    {
-                        await Socket.BeginConnect(m_via, m_ConnectCallback, m_handshakeOperation);
-                    });
+                    Socket.BeginConnect(m_via, m_ConnectCallback, m_handshakeOperation).Wait();
+
                 }
-                t.Wait();
             }
             catch (Exception e)
             {

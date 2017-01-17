@@ -122,6 +122,8 @@ namespace Opc.Ua.Proxy
         /// </summary>
         public async Task<bool> BeginConnect(Uri endpointUrl, EventHandler<SocketAsyncEventArgs> callback, object state)
         {
+            bool result = false;
+
             if (endpointUrl == null) throw new ArgumentNullException("endpointUrl");
 
             if (m_socket != null)
@@ -129,17 +131,31 @@ namespace Opc.Ua.Proxy
                 throw new InvalidOperationException("The socket is already connected.");
             }
 
+            SocketAsyncEventArgs args = new SocketAsyncEventArgs();
+            args.UserToken = state;
+            args.SocketError = SocketError.Host_unknown;
+
             m_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
                 await m_socket.ConnectAsync(endpointUrl.DnsSafeHost, endpointUrl.Port);
-                return true;
+                args.SocketError = SocketError.Ok;
+                result = true;
             }
-            catch(Exception)
+            catch (Exception e)
             {
-                return false;
+                SocketException se = e as SocketException;
+                if (se != null)
+                {
+                    args.SocketError = se.Error;
+                }
             }
+            finally
+            {
+                Task t = Task.Run(() => callback(this, args));
+            }
+            return result;
         }
 
         /// <summary>
