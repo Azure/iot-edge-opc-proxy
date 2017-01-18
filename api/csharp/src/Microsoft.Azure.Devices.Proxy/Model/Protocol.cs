@@ -758,7 +758,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Buffer content
         /// </summary>
         [DataMember(Name = "buffer", Order = 2)]
-        public byte[] Payload { get; set; }
+        public ArraySegment<byte> Payload { get; set; }
 
         //     /// <summary>
         //     /// Control buffer

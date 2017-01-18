@@ -43,14 +43,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 }
 
                 int toCopy = Math.Min(
-                    buffer.Count - result.Count, _lastData.Payload.Length);
+                    buffer.Count - result.Count, _lastData.Payload.Count);
                 Buffer.BlockCopy(
-                    _lastData.Payload, _offset, buffer.Array, result.Count, toCopy);
+                    _lastData.Payload.Array, _offset + _lastData.Payload.Offset, buffer.Array, result.Count, toCopy);
 
                 result.Count += toCopy;
                 _offset += toCopy;
 
-                if (_offset == _lastData.Payload.Length) {
+                if (_offset == _lastData.Payload.Count) {
                     _lastData = null;
                 }
                 if (result.Count > 0)
