@@ -14,6 +14,7 @@
 static LPFN_CONNECTEX _ConnectEx = NULL;
 static LPFN_ACCEPTEX _AcceptEx = NULL;
 static LPFN_GETACCEPTEXSOCKADDRS _GetAcceptExSockAddrs = NULL;
+static HMODULE _ntdll = NULL;
 
 //
 // Io Completion port operation context
@@ -62,16 +63,16 @@ struct pal_socket
     pal_socket_client_itf_t itf;                // Client interface
     SOCKET sock_fd;                // Real underlying socket handle
                      
-    prx_addrinfo_t* prx_ai;   // For async connect save the ai result
-    prx_size_t prx_ai_count;        // Size of the resolved addresses
-    prx_size_t prx_ai_cur;              // Current address to connect
+    prx_addrinfo_t* prx_ai; // For async connect save the ai result
+    prx_size_t prx_ai_count;      // Size of the resolved addresses
+    prx_size_t prx_ai_cur;            // Current address to connect
 
     pal_socket_async_t open_op;          // Async connect operation
     pal_socket_async_t send_op;             // Async send operation
     pal_socket_async_t recv_op;   // Async recv or accept operation
 
-    prx_socket_address_t local;              // Cached local address
-    prx_socket_address_t peer;                // Cached peer address
+    prx_socket_address_t local;             // Cached local address
+    prx_socket_address_t peer;               // Cached peer address
     void* close_context;
     log_t log;
 };
@@ -90,12 +91,14 @@ static int32_t pal_socket_from_os_error(
     {
         FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS |
+            FORMAT_MESSAGE_MAX_WIDTH_MASK,
+            _ntdll, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (char*)&message, 0, NULL);
-
-        log_error(NULL, "Socket error code 0x%x: %s",
-            error, message ? message : "<unknown>");
+        if (message)
+            log_info(NULL, "%s (0x%x)", message, error);
+        else
+            log_info(NULL, "Unknown socket error 0x%x.", error);
         LocalFree(message);
     }
     return pal_os_to_prx_error(error);
@@ -285,6 +288,7 @@ static void pal_socket_async_connect_complete(
             prx_err_string(result));
 
         // Continue with next address
+        async_op->sock->prx_ai_cur++;
         pal_socket_open_next_begin(async_op->sock, async_op->context);
     }
     async_op->buffer = NULL;
@@ -1614,6 +1618,9 @@ int32_t pal_socket_init(
     GUID guid_acceptex = WSAID_ACCEPTEX;
     GUID guid_getacceptexsockaddrs = WSAID_GETACCEPTEXSOCKADDRS;
 
+    // To format NTSTATUS errors
+    _ntdll = LoadLibrary("NTDLL.DLL");
+
     error = WSAStartup(MAKEWORD(2, 2), &wsd);
     if (error != 0)
         return pal_socket_from_os_error(error);
@@ -1666,8 +1673,8 @@ void pal_socket_deinit(
 {
     int error;
     error = WSACleanup();
-    if (!error)
-        return;
-    // Logs os error as side effect 
-    (void)pal_socket_from_os_error(error);
+    if (error != 0)
+        (void)pal_socket_from_os_error(error);
+    if (_ntdll)
+        FreeLibrary(_ntdll);
 }

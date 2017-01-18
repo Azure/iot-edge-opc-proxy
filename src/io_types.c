@@ -302,6 +302,7 @@ int32_t io_encode_prx_socket_address(
     case prx_address_family_unix:
         return io_encode_prx_socket_address_unix(ctx, &prx_sa->un.ux);
     }
+    dbg_assert(0, "Unexpected family %d during encoding", prx_sa->un.family);
     return er_arg;
 }
 

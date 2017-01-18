@@ -323,6 +323,8 @@ static void prx_server_socket_open_complete(
 
     dbg_assert_ptr(message);
     dbg_assert_ptr(server_sock->server);
+
+    io_message_as_response(message);
     do
     {
         if (result != er_ok)
@@ -356,7 +358,6 @@ static void prx_server_socket_open_complete(
         __do_next(server_sock->server, prx_server_worker);
     }
 
-    io_message_as_response(message);
     result = io_connection_send(server_sock->server->listener, message);
     if (result != er_ok)
     {
@@ -810,11 +811,10 @@ static void prx_server_socket_handle_openrequest(
     dbg_assert_ptr(message);
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
+
     do
     {
         // Set as response here already, since the message is sent twice...
-        io_message_as_response(message);
-
         /**/ if (server_sock->state == prx_server_socket_opened)
         {
             result = er_bad_state;
@@ -829,10 +829,8 @@ static void prx_server_socket_handle_openrequest(
         io_ref_copy(&message->content.open_request.stream_id, &server_sock->stream_id);
 
         // Make a new protocol message factory for received messages...
-        result = io_message_factory_create(
-            RECV_POOL_SIZE, RECV_POOL_LWM, RECV_POOL_HWM,
-            prx_server_socket_flow_control, server_sock,
-            &server_sock->message_pool);
+        result = io_message_factory_create(RECV_POOL_SIZE, RECV_POOL_LWM, RECV_POOL_HWM,
+            prx_server_socket_flow_control, server_sock, &server_sock->message_pool);
         if (result != er_ok)
             break;
 
@@ -849,25 +847,32 @@ static void prx_server_socket_handle_openrequest(
             server_sock->server->scheduler, &server_sock->stream);
         if (result != er_ok)
             break;
+    } while (0);
 
+    io_message_as_response(message);
+    do
+    {
         //
         // Send open response over stream as first message to allow clients to 
         // correlate the stream with the open request.
         //
+        if (result != er_ok)
+            break;
         message->error_code = er_ok;
-        io_ref_copy(&message->content.open_request.stream_id, &message->target_id);
+        io_ref_copy(&server_sock->stream_id, &message->target_id);
         result = io_connection_send(server_sock->stream, message);
         if (result != er_ok)
             break;
 
         server_sock->time_opened = server_sock->last_activity = ticks_get();
         server_sock->state = prx_server_socket_opened;
-        log_info(server_sock->log, "Socket open!");
 
         // Start receiving on our socket, sending further messages over the stream
         result = pal_socket_can_recv(server_sock->sock, true);
         if (result != er_ok)
             break;
+
+        log_info(server_sock->log, "Socket open!");
         break;
     } 
     while (0);
@@ -908,6 +913,8 @@ static void prx_server_socket_handle_closerequest(
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
 
+    io_message_as_response(message);
+
     message->content.close_response.time_open = 
         ticks_get() - server_sock->time_opened;
     message->content.close_response.bytes_received = 
@@ -935,7 +942,6 @@ static void prx_server_socket_handle_closerequest(
         message->content.close_response.error_code = er_closed;
     }
 
-    io_message_as_response(message);
     message->error_code = er_ok;
     result = io_connection_send(server_sock->server->listener, message);
     if (result != er_ok)
@@ -985,11 +991,12 @@ static void prx_server_socket_handle_setoptrequest(
     }
     while (0);
 
+    io_message_as_response(message);
+
     if (result != er_ok)
         log_error(server_sock->log, "Failed to handle set option message (%s).",
             prx_err_string(result));
 
-    io_message_as_response(message);
     message->error_code = result;
     result = io_connection_send(server_sock->server->listener, message);
     if (result != er_ok)
@@ -1008,9 +1015,14 @@ static void prx_server_socket_handle_getoptrequest(
 )
 {
     int32_t result;
+    prx_socket_option_t so_opt;
     dbg_assert_ptr(message);
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
+
+    so_opt = message->content.getopt_request.so_opt;
+    io_message_as_response(message);
+
     do
     {
         if (server_sock->state != prx_server_socket_created &&
@@ -1020,16 +1032,12 @@ static void prx_server_socket_handle_getoptrequest(
             break;
         }
 
-        result = pal_socket_getsockopt(server_sock->sock, 
-            message->content.getopt_request.so_opt, 
+        result = pal_socket_getsockopt(server_sock->sock, so_opt,
             &message->content.getopt_response.so_val.value);
-
         if (result != er_ok)
             break;
 
-        message->content.getopt_response.so_val.option = 
-            message->content.getopt_request.so_opt;
-
+        message->content.getopt_response.so_val.option = so_opt;
         server_sock->last_activity = ticks_get();
     }
     while (0);
@@ -1038,7 +1046,6 @@ static void prx_server_socket_handle_getoptrequest(
         log_error(server_sock->log, "Failed to handle get option message! (%s).",
             prx_err_string(result));
 
-    io_message_as_response(message);
     message->error_code = result;
     result = io_connection_send(server_sock->server->listener, message);
     if (result != er_ok)
@@ -1309,13 +1316,13 @@ static void prx_server_handle_linkrequest(
     } 
     while (0);
 
+    io_message_as_response(message);
     message->error_code = result;
     log_error(server->log, "Failed to link socket (%s)", prx_err_string(result));
 
     if (server_sock)
         prx_server_socket_free(server_sock);
 
-    io_message_as_response(message);
     result = io_connection_send(server->listener, message);
     if (result != er_ok)
     {
@@ -1335,6 +1342,8 @@ static void prx_server_handle_resolverequest(
 {
     int32_t result;
     char port[MAX_PORT_LENGTH];
+    prx_size_t result_count = 0;
+    prx_addrinfo_t* results = NULL;   // Call prx_free_addrinfo
 
     dbg_assert_ptr(message);
     dbg_assert_ptr(server);
@@ -1350,9 +1359,7 @@ static void prx_server_handle_resolverequest(
         result = pal_getaddrinfo(message->content.resolve_request.host,
             message->content.resolve_request.port != 0 ? port : NULL,
             message->content.resolve_request.family, 
-            message->content.resolve_request.flags,
-            &message->content.resolve_response.results, 
-            &message->content.resolve_response.result_count);
+            message->content.resolve_request.flags, &results, &result_count);
 
         if (result != er_ok)
         {
@@ -1363,14 +1370,21 @@ static void prx_server_handle_resolverequest(
     } 
     while (0);
 
-    message->error_code = result;
     io_message_as_response(message);
+
+    message->content.resolve_response.results = results;
+    message->content.resolve_response.result_count = result_count;
+    message->error_code = result;
+
     result = io_connection_send(server->listener, message);
     if (result != er_ok)
     {
         log_error(server->log, "Failed sending resolve response (%s).",
             prx_err_string(result));
     }
+
+    if (results)
+        pal_freeaddrinfo(results);
 }
 
 //
@@ -1439,6 +1453,8 @@ static void prx_server_handle_pingrequest(
         }
     }
 
+    io_message_as_response(message);
+    message->error_code = result;
     if (result == er_ok)
     {
         dbg_assert_ptr(prx_ai);
@@ -1446,8 +1462,6 @@ static void prx_server_handle_pingrequest(
         memcpy(&message->content.ping_response, &prx_ai->address, sizeof(prx_socket_address_t));
     }
 
-    io_message_as_response(message);
-    message->error_code = result;
     result = io_connection_send(server->listener, message);
     if (result != er_ok)
     {

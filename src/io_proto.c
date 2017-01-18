@@ -998,5 +998,6 @@ void io_message_as_response(
 )
 {
     io_ref_swap(&message->source_id, &message->target_id);
+    memset(&message->content, 0, sizeof(message->content));
     message->is_response = true;
 }

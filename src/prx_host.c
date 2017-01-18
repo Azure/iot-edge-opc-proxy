@@ -135,9 +135,21 @@ static int32_t prx_host_uninstall_server(
     dbg_assert_ptr(host->remote);
     dbg_assert_ptr(host->local);
 
-    do
+    for (int local = 0; local < 2; local++)
     {
-        result = prx_ns_get_entry_by_name(host->local, name, &resultset);
+        //
+        // First round remove from remote and local, next remove remaining 
+        // matching entries from local database.  If remote removal fails, 
+        // re-add to local, and exit.
+        //
+        if (name)
+            result = prx_ns_get_entry_by_name(local ? host->local : host->remote,
+                name, &resultset);
+        else
+            result = prx_ns_get_entry_by_type(local ? host->local : host->remote,
+                prx_ns_entry_type_proxy, &resultset);
+        if (result == er_not_found)
+            continue;
         if (result != er_ok)
             break;
 
@@ -147,20 +159,27 @@ static int32_t prx_host_uninstall_server(
             if (prx_ns_entry_get_type(entry) & prx_ns_entry_type_proxy)
             {
                 result = prx_ns_remove_entry(host->local, entry);
-                if (result != er_ok)
+                if (local && result != er_ok)
                     break;
-                result = prx_ns_remove_entry(host->remote, entry);
-                if (result != er_ok)
+                if (!local)
                 {
-                    (void)prx_ns_create_entry(host->local, entry);
-                    break;
+                    result = prx_ns_remove_entry(host->remote, entry);
+                    if (result != er_ok)
+                    {
+                        (void)prx_ns_create_entry(host->local, entry);
+                        break;
+                    }
                 }
             }
             prx_ns_entry_release(entry);
             entry = prx_ns_result_pop(resultset);
         }
-    } while (0);
+        if (result != er_ok)
+            break;
+    } 
 
+    if (result == er_not_found)
+        result = er_ok;
     if (entry)
         prx_ns_entry_release(entry);
     if (resultset)
@@ -191,14 +210,15 @@ static int32_t prx_host_init_from_command_line(
     bool is_uninstall = false;
     bool should_exit = false;
     bool is_adhoc = false;
+    int loops = 1;
     io_ref_t adhoc;
 
     static struct option long_options[] =
     {
-        { "ad-hoc",                     no_argument,            NULL, 'a' },
         { "hidden",                     no_argument,            NULL, 'h' },
         { "install",                    no_argument,            NULL, 'i' },
         { "uninstall",                  no_argument,            NULL, 'u' },
+        { "ad-hoc",                     required_argument,      NULL, 'a' },
         { "name",                       required_argument,      NULL, 'n' },
         { "connection-string",          required_argument,      NULL, 'c' },
         { "connection-string-file",     required_argument,      NULL, 'C' },
@@ -206,7 +226,7 @@ static int32_t prx_host_init_from_command_line(
         { "ns-db-file",                 required_argument,      NULL, 'd' },
         { 0,                            0,                      NULL,  0  }
     };
-
+    
     do
     {
         result = er_ok;
@@ -214,7 +234,7 @@ static int32_t prx_host_init_from_command_line(
         while (result == er_ok)
         {
             c = getopt_long(
-                argc, argv, "ahiuc:n:L:C:d:", long_options, &option_index);
+                argc, argv, "hiuc:a:n:L:C:d:", long_options, &option_index);
             if (c == -1)
                 break;
 
@@ -233,9 +253,15 @@ static int32_t prx_host_init_from_command_line(
                 break;
             case 'a':
                 is_adhoc = true;
-                result = io_ref_new(&adhoc);
-                if (result != er_ok)
-                    printf("Failed making ad-hoc id for proxy server. \n\n");
+                if (!optarg)
+                    break;
+                loops = atoi(optarg);
+                if (!loops)
+                {
+                    printf("Bad arg for -ad-hoc option (%s). \n\n",
+                        optarg ? optarg : "");
+                    result = er_arg;
+                }
                 break;
             case 'n':
                 server_name = optarg;
@@ -357,46 +383,62 @@ static int32_t prx_host_init_from_command_line(
                 should_exit = true;  // Always exit
         }
 
-        if (is_install || is_uninstall || is_adhoc)
+        if (is_adhoc)
         {
-            // Ensure we have a name
-            if (!server_name)
-            {
-                if (!is_adhoc)
-                    result = pal_gethostname(buffer, _countof(buffer));
-                else
-                    result = io_ref_to_string(&adhoc, buffer, _countof(buffer));
-                if (result != er_ok)
-                    break;
-                server_name = buffer;
-            }
-
-            // Run install/uninstall
-            /**/ if (is_install || is_adhoc)
-                result = prx_host_install_server(host, server_name);
-            else if (is_uninstall)
-                result = prx_host_uninstall_server(host, server_name);
-
-            if (result != er_ok)
-            {
-                printf("FAILURE %s: %s failed! Check parameters...",
-                    prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
-                break;
-            }
-
-            printf("Proxy %s %s\n", server_name, !is_uninstall ? 
-                "installed" : "uninstalled");
-            if (is_adhoc)
-                host->uninstall_on_exit = true;
+            if (loops > 1 && server_name)
+                loops = 1;
+            host->uninstall_on_exit = true;
         }
 
+        if (is_install || is_uninstall || is_adhoc)
+        {
+            for (int i = 0; i < loops; i++)
+            {
+                // Ensure we have a name
+                if (!server_name)
+                {
+                    if (!is_adhoc)
+                        result = pal_gethostname(buffer, _countof(buffer));
+                    else
+                    {
+                        result = io_ref_new(&adhoc);
+                        if (result != er_ok)
+                        {
+                            printf("Failed making ad-hoc id for proxy server. \n\n");
+                            break;
+                        }
+                        result = io_ref_to_string(&adhoc, buffer, _countof(buffer));
+                    }
+                    if (result != er_ok)
+                        break;
+                    server_name = buffer;
+                }
+                else if (is_uninstall && 0 == string_compare(server_name, "*"))
+                    server_name = NULL;  // Remove all!
+
+                // Run install/uninstall
+                /**/ if (is_install || is_adhoc)
+                    result = prx_host_install_server(host, server_name);
+                else if (is_uninstall)
+                    result = prx_host_uninstall_server(host, server_name);
+
+                if (result != er_ok)
+                {
+                    printf("FAILURE %s: %s failed! Check parameters...",
+                        prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
+                    break;
+                }
+                printf("Proxy %s %s\n", server_name, 
+                    !is_uninstall ? "installed" : "uninstalled");
+                server_name = NULL;
+            }
+        }
         break;
     } 
     while (0);
 
     if (cs)
         io_cs_free(cs);
-
     if (should_exit)
         return er_aborted;
     if (result != er_arg)

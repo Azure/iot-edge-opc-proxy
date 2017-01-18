@@ -349,6 +349,8 @@ intptr_t prx_scheduler_queue(
 #ifdef DEBUG
     entry->func = func;
     entry->line = line;
+#else
+    (void)func, line;
 #endif
     rw_lock_enter_w(scheduler->lock);
     if (!delay)
