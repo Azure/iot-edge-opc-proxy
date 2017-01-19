@@ -15,9 +15,8 @@ using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Opc.Ua.Bindings;
 
-namespace Opc.Ua.Proxy
+namespace Opc.Ua.Bindings
 {
     /// <summary>
     /// Manages the server side of a UA TCP channel.

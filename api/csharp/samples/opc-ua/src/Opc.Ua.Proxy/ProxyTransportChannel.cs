@@ -11,9 +11,8 @@
 //
 
 using System;
-using Opc.Ua.Bindings;
 
-namespace Opc.Ua.Proxy
+namespace Opc.Ua.Bindings
 {
 
     /// <summary>

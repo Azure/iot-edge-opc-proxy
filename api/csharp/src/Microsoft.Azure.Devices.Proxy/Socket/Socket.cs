@@ -501,7 +501,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try
+                {
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex)
+                {
+                    e.BytesTransferred = 0;
+                }
                 e.Complete(this);
             });
             return true;
@@ -661,7 +668,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try
+                {
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex)
+                {
+                    e.BytesTransferred = 0;
+                }
                 e.Complete(this);
             });
             return true;
@@ -883,8 +897,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             else {
                 throw new ArgumentException("Buffer");
             }
+
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try
+                {
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex)
+                {
+                    e.BytesTransferred = 0;
+                }
                 e.Complete(this);
             });
             return true;
