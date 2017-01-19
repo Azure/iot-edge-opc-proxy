@@ -22,7 +22,7 @@ int32_t rw_lock_create(
     int rc;
     if (!created)
         return er_fault;
-	pthread_rwlock_t* lock = mem_zalloc_type(pthread_rwlock_t);
+    pthread_rwlock_t* lock = mem_zalloc_type(pthread_rwlock_t);
     if (!lock)
         return er_out_of_memory;
     rc = pthread_rwlock_init(lock, NULL);

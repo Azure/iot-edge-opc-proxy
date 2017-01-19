@@ -366,7 +366,7 @@ int32_t pal_getifnameinfo(
     uint64_t *if_index
 )
 {
-	(void)if_address, if_name, if_name_length, if_index;
+    (void)if_address, if_name, if_name_length, if_index;
     return er_not_impl;
 }
 

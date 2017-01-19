@@ -136,11 +136,11 @@ bool io_ref_equals(
     io_ref_t* ref2
 )
 {
-	if (!ref1 && !ref2)
-		return true;
-	if (!ref1 || !ref2)
-		return false;
-	return
+    if (!ref1 && !ref2)
+        return true;
+    if (!ref1 || !ref2)
+        return false;
+    return
         ref1->un.u64[0] == ref2->un.u64[0] &&
         ref1->un.u64[1] == ref2->un.u64[1];
 }

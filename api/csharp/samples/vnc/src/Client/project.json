@@ -1,0 +1,21 @@
+{
+  "version": "1.0.0-*",
+  "buildOptions": {
+    "emitEntryPoint": true
+  },
+
+  "dependencies": {
+    "Microsoft.Azure.Devices.Proxy": "0.0.5-*",
+    "RemoteViewing": "0.9.1"
+  },
+
+  "frameworks": {
+    "net45": {
+      "frameworkAssemblies": {
+        "System.Windows": "",
+        "System.Windows.Forms": "",
+        "System.Drawing": ""
+      }
+    }
+  }
+}

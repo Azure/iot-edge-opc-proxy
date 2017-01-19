@@ -73,7 +73,10 @@ static void io_ws_connection_disconnect(
 {
     dbg_assert_is_task(connection->scheduler);
     if (connection->status == io_ws_connection_status_connected)
+    {
+        // Wait for disconnect to complete, then reconnect
         pal_wsclient_disconnect(connection->wsclient);
+    }
 }
 
 //
@@ -259,10 +262,30 @@ static void io_ws_connection_free(
     dbg_assert_ptr(connection);
     dbg_assert_is_task(connection->scheduler);
 
+    connection->status = io_ws_connection_status_closing;
+
+    if (connection->status == io_ws_connection_status_connected)
+    {
+        // Wait for disconnect to complete
+        log_debug(connection->log,
+            "connection %p closing... waiting for disconnect!",
+            connection);
+        pal_wsclient_disconnect(connection->wsclient);
+        return;
+    }
+
+    if (connection->wsclient)
+    {
+        // Wait for close to complete
+        log_debug(connection->log,
+            "connection %p closing... waiting for close!",
+            connection);
+        pal_wsclient_close(connection->wsclient);
+        return;
+    }
+
     connection->status = io_ws_connection_status_closed;
     
-    if (connection->wsclient)
-        pal_wsclient_close(connection->wsclient);
     if (connection->scheduler)
         prx_scheduler_release(connection->scheduler, connection);
 
@@ -283,7 +306,7 @@ static void io_ws_connection_free(
     if (connection->pwd_header_key)
         STRING_delete(connection->pwd_header_key);
     
-    log_debug(connection->log, "%p freed", connection);
+    log_debug(connection->log, "connection %p freed!", connection);
     mem_free_type(io_ws_connection_t, connection);
 }
 
@@ -314,8 +337,6 @@ static void io_ws_connection_reconnect(
 {
     dbg_assert_ptr(connection);
     dbg_assert_is_task(connection->scheduler);
-    // Assume we are disconnected
-    dbg_assert(!connection->wsclient, "Should be disconnected");
 
     log_info(connection->log, "Reconnecting in %d seconds...",
         connection->back_off_in_seconds);
@@ -427,21 +448,23 @@ static void io_ws_connection_on_disconnected(
 )
 {
     dbg_assert_is_task(connection->scheduler);
-    if (connection->status == io_ws_connection_status_closing)
+    /**/ if (connection->status == io_ws_connection_status_closing)
     {
-        // Complete close and free connection
-        io_ws_connection_free(connection);
+        // Continue freeing connection
+        log_debug(connection->log,
+            "connection %p disconnected... continue to close!",
+            connection);
+        __do_next(connection, io_ws_connection_free);
     }
     else if (connection->status == io_ws_connection_status_connected)
     {
-        if (connection->wsclient)
-            pal_wsclient_close(connection->wsclient);
-        connection->wsclient = NULL;
-
+        // reconnect later
+        log_debug(connection->log,
+            "connection %p disconnected... reconnect!", connection);
         connection->status = io_ws_connection_status_disconnected;
         __do_next(connection, io_ws_connection_reconnect);
     }
-    else if (connection->status != io_ws_connection_status_disconnected)
+    else 
     {
         dbg_assert(0, "bad state %d for connection %p", 
             connection->status, connection);
@@ -510,7 +533,8 @@ static void io_ws_connection_on_end_receive(
     dbg_assert_ptr(length);
 
     buffer = io_queue_buffer_from_ptr(*buf);
-    dbg_assert_ptr(buffer);
+    if (!buffer)
+        return;
 
     if (result != er_ok)
     {
@@ -589,7 +613,8 @@ static void io_ws_connection_on_end_send(
     dbg_assert_ptr(length);
 
     buffer = io_queue_buffer_from_ptr(*buf);
-    dbg_assert_ptr(buffer);
+    if (!buffer)
+        return;
 
     io_queue_buffer_set_done(buffer);
     __do_next(connection, io_ws_connection_deliver_send_results);
@@ -627,12 +652,22 @@ static void io_ws_connection_event_handler(
             break;
         }
         log_info(connection->log, "Connection failed to connect...");
+        connection->status = io_ws_connection_status_connected;
         // Fall through
     case pal_wsclient_event_disconnected:
         dbg_assert(!buffer && !size && !type, "no buffer expected.");
         log_info(connection->log, "... connection %p disconnected. (%s)",
             connection, prx_err_string(error));
         __do_next(connection, io_ws_connection_on_disconnected);
+        break;
+    case pal_wsclient_event_closed:
+        dbg_assert(error == er_ok, "no error expected.");
+        dbg_assert(!buffer && !size && !type, "no buffer expected.");
+        dbg_assert_ptr(connection->wsclient);
+        connection->wsclient = NULL;
+        log_info(connection->log, "... connection %p client destroyed.",
+            connection);
+        __do_next(connection, io_ws_connection_free);
         break;
     case pal_wsclient_event_begin_recv:
         dbg_assert(error == er_ok, "no error expected.");
@@ -723,12 +758,19 @@ static void io_ws_connection_connect(
 
     dbg_assert_ptr(connection);
     dbg_assert_is_task(connection->scheduler);
-    dbg_assert(!connection->wsclient, "No socket expected");
     do
     {
-        result = pal_wsclient_create("relay", 
-            STRING_c_str(connection->address->host_name), connection->address->port, 
-            STRING_c_str(connection->address->path), io_ws_connection_event_handler, 
+        if (connection->wsclient)
+        {
+            log_debug(connection->log, "Connection %p, connecting existing client %p",
+                connection, connection->wsclient);
+            result = er_ok;
+            break;
+        }
+
+        result = pal_wsclient_create("relay",
+            STRING_c_str(connection->address->host_name), connection->address->port,
+            STRING_c_str(connection->address->path), io_ws_connection_event_handler,
             connection, &connection->wsclient);
         if (result != er_ok)
             break;
@@ -790,7 +832,14 @@ static void io_ws_connection_connect(
 
         if (token)
             STRING_delete(token);
+    } while (0);
 
+    // Connect client
+    do
+    {
+        if (result != er_ok)
+            break;
+ 
         result = pal_wsclient_connect(connection->wsclient);
         if (result != er_ok)
             break;
@@ -832,7 +881,7 @@ int32_t io_ws_connection_create(
         return er_out_of_memory;
     do
     {
-        connection->log = log_get("io.websocket");
+        connection->log = log_get("io_ws");
         connection->receiver_cb = receiver_cb;
         connection->receiver_ctx = receiver_ctx;
         connection->keep_alive_interval = 60 * 1000;
@@ -968,27 +1017,18 @@ int32_t io_ws_connection_close(
 )
 {
     dbg_assert_is_task(connection->scheduler);
-
     if (!connection)
         return er_fault;
+
+    dbg_assert(connection->status != io_ws_connection_status_closing && 
+        connection->status != io_ws_connection_status_closed,
+        "Double close of %p ...", connection); 
 
     // Abort all outbound buffers
     if (connection->outbound.queue)
         io_queue_abort(connection->outbound.queue);
 
-    if (connection->status == io_ws_connection_status_connected)
-    {
-        connection->status = io_ws_connection_status_closing;
-
-        // Schedule free in 30 seconds, if disconnect fails...
-        // __do_later(connection, io_ws_connection_free, 30000);
-        return pal_wsclient_disconnect(connection->wsclient);
-    }
-    else
-    {
-        dbg_assert(connection->status == io_ws_connection_status_disconnected,
-            "Double delete");
-        __do_next(connection, io_ws_connection_free);
-        return er_ok;
-    }
+    log_debug(connection->log, "Freeing connection %p ...", connection);
+    io_ws_connection_free(connection);
+    return er_ok;
 }

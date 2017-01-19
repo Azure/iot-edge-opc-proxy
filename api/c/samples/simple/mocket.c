@@ -54,15 +54,15 @@ int socket_connect_send_receive_close(
 
         // Resolve the server address and port
 #ifdef _WIN32
-		_itoa(port, buf, 10);
+        _itoa(port, buf, 10);
 #else
-		sprintf(buf, "%d", port);
+        sprintf(buf, "%d", port);
 #endif
         gethostname(host_name, 128);
         
         result = getaddrinfo(host_name, buf, &hints, &address);
         if (result != 0) 
-		{
+        {
             printf("getaddrinfo failed with error: %d\n", result);
             break;
         }
@@ -81,7 +81,7 @@ int socket_connect_send_receive_close(
             // Connect to server.
             result = connect(ConnectSocket, ptr->ai_addr, (int)ptr->ai_addrlen);
             if (result == -1) 
-			{
+            {
 #ifdef _WIN32
                 closesocket(ConnectSocket);
 #else
@@ -139,7 +139,7 @@ int socket_connect_send_receive_close(
     }
     while(0);
 
-	if (ConnectSocket != _invalid_fd)
+    if (ConnectSocket != _invalid_fd)
 #ifndef _WIN32
         close(ConnectSocket);
 #else
@@ -292,90 +292,90 @@ int test_server(
     void
 )
 {
-	int result = 1;
-	fd_t ListenSocket = _invalid_fd;
-	fd_t AcceptSocket = _invalid_fd;
-	struct sockaddr_in service;
-	char buf[DEFAULT_BUFLEN];
-	int buflen = DEFAULT_BUFLEN;
+    int result = 1;
+    fd_t ListenSocket = _invalid_fd;
+    fd_t AcceptSocket = _invalid_fd;
+    struct sockaddr_in service;
+    char buf[DEFAULT_BUFLEN];
+    int buflen = DEFAULT_BUFLEN;
 
-	do
-	{
-		ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-		if (ListenSocket == _invalid_fd) 
-		{
-			printf("socket failed with error: %d\n", errno);
-			break;
-		}
+    do
+    {
+        ListenSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (ListenSocket == _invalid_fd) 
+        {
+            printf("socket failed with error: %d\n", errno);
+            break;
+        }
 
-		service.sin_family = AF_INET;
-		service.sin_addr.s_addr = INADDR_LOOPBACK;
-		service.sin_port = htons(PORT);
+        service.sin_family = AF_INET;
+        service.sin_addr.s_addr = INADDR_LOOPBACK;
+        service.sin_port = htons(PORT);
 
-		result = bind(ListenSocket, (const struct sockaddr *)&service, sizeof(service));
-		if (result < 0)
-		{
-			printf("bind failed with error: %d\n", errno);
-			break;
-		}
+        result = bind(ListenSocket, (const struct sockaddr *)&service, sizeof(service));
+        if (result < 0)
+        {
+            printf("bind failed with error: %d\n", errno);
+            break;
+        }
 
-		result = listen(ListenSocket, 1);
-		if (result < 0)
-		{
-			printf("listen failed with error: %d\n", errno);
-			break;
-		}
+        result = listen(ListenSocket, 1);
+        if (result < 0)
+        {
+            printf("listen failed with error: %d\n", errno);
+            break;
+        }
 
-		while (true)
-		{
-			printf("Waiting for client to connect...\n");
+        while (true)
+        {
+            printf("Waiting for client to connect...\n");
 
-			AcceptSocket = accept(ListenSocket, NULL, NULL);
-			if (AcceptSocket == _invalid_fd)
-			{
-				printf("accept failed with error: %d\n", errno);
-				break;
-			}
+            AcceptSocket = accept(ListenSocket, NULL, NULL);
+            if (AcceptSocket == _invalid_fd)
+            {
+                printf("accept failed with error: %d\n", errno);
+                break;
+            }
 
-			printf("Client connected.\n");
+            printf("Client connected.\n");
 
-			// Echo back until the peer closes the connection
-			do
-			{
-				result = recv(AcceptSocket, buf, buflen, 0);
-				if (result > 0)
-				{
-					printf("Bytes received: %d\n", result);
-					result = send(AcceptSocket, buf, buflen, 0);
-					if (result >= 0)
-						printf("Bytes sent: %d\n", result);
-					else
-						printf("send failed with error: %d\n", errno);
-				}
-				else if (result == 0)
-					printf("Connection closed\n");
-				else
-					printf("recv failed with error: %d\n", errno);
-			} while (result > 0);
+            // Echo back until the peer closes the connection
+            do
+            {
+                result = recv(AcceptSocket, buf, buflen, 0);
+                if (result > 0)
+                {
+                    printf("Bytes received: %d\n", result);
+                    result = send(AcceptSocket, buf, buflen, 0);
+                    if (result >= 0)
+                        printf("Bytes sent: %d\n", result);
+                    else
+                        printf("send failed with error: %d\n", errno);
+                }
+                else if (result == 0)
+                    printf("Connection closed\n");
+                else
+                    printf("recv failed with error: %d\n", errno);
+            } while (result > 0);
 
 #ifndef _WIN32
-			close(AcceptSocket);
+            close(AcceptSocket);
 #else
-			closesocket(AcceptSocket);
+            closesocket(AcceptSocket);
 #endif
-		}
-		result = 0;
+        }
+        result = 0;
 
-	} while (0);
+    } while (0);
 
-	if (ListenSocket != _invalid_fd)
+    if (ListenSocket != _invalid_fd)
 #ifndef _WIN32
-		close(ListenSocket);
+        close(ListenSocket);
 #else
-		closesocket(ListenSocket);
+        closesocket(ListenSocket);
 #endif
 
-	return 0;
+    return 0;
 }
 
 //
@@ -495,7 +495,7 @@ int main(int argc, char *argv[])
     const char* cmd_line_proxy = "proxy";
 
 #if defined(_MSC_VER)
-	// _CrtSetDbgFlag(_CRTDBG_FLAGS);
+    // _CrtSetDbgFlag(_CRTDBG_FLAGS);
 #endif
 
     if (argc > 1 && 0 == strcmp(argv[1], cmd_line_proxy))

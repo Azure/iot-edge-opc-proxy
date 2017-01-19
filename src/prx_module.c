@@ -92,7 +92,7 @@ static prx_module_t* prx_module_create(
         return NULL;
     do
     {
-        module->log = log_get("proxy.module");
+        module->log = log_get("module");
         module->broker = broker;
 
         // Aquire a host

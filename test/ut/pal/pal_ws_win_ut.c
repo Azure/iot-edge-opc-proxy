@@ -48,11 +48,15 @@ MOCKABLE_FUNCTION(WINAPI, DWORD, WinHttpWebSocketClose,
 MOCKABLE_FUNCTION(WINAPI, int, MultiByteToWideChar,
     UINT, CodePage, DWORD, dwFlags, LPCSTR, lpMultiByteStr, int, cbMultiByte, LPWSTR, lpWideCharStr, int, cchWideChar);
 // Winbase.h
+MOCKABLE_FUNCTION(WINAPI, HMODULE, LoadLibraryA,
+    LPCSTR, lpLibFileName);
 MOCKABLE_FUNCTION(WINAPI, DWORD, FormatMessageA,
     DWORD, dwFlags, LPCVOID, lpSource, DWORD, dwMessageId, DWORD, dwLanguageId,
     LPSTR, lpBuffer, DWORD, nSize, void**, Arguments);
 MOCKABLE_FUNCTION(WINAPI, HLOCAL, LocalFree,
     HLOCAL, hMem);
+MOCKABLE_FUNCTION(WINAPI, BOOL, FreeLibrary,
+    HMODULE, hLibModule);
 MOCKABLE_FUNCTION(WINAPI, DWORD, GetLastError);
 
 //
@@ -91,6 +95,7 @@ REGISTER_UMOCK_ALIAS_TYPE(LPCWSTR, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LPWSTR, void*);
 REGISTER_UMOCK_ALIAS_TYPE(BOOL, bool);
 REGISTER_UMOCK_ALIAS_TYPE(STRING_HANDLE, void*);
+REGISTER_UMOCK_ALIAS_TYPE(HMODULE, void*);
 END_DECLARE_TEST_SUITE()
 
 //
@@ -971,15 +976,15 @@ TEST_FUNCTION(pal_win_wsclient_can_recv__neg)
     STRICT_EXPECTED_CALL(WinHttpWebSocketReceive(k_h_wsclient_valid, k_buffer_ptr, (DWORD)k_length_valid, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn(ERROR_WINHTTP_OPERATION_CANCELLED);
-    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, NULL, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
-        .IgnoreArgument(1).IgnoreArgument(4)
+    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, IGNORED_PTR_ARG, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
+        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(4)
         .CopyOutArgumentBuffer_lpBuffer(&k_message, sizeof(const char*))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(LocalFree((HLOCAL)k_message))
         .SetReturn((HLOCAL)NULL);
-    STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_end_recv, IGNORED_PTR_ARG, IGNORED_PTR_ARG, NULL, er_aborted))
+    STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_end_recv, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, er_aborted))
         .ValidateArgumentBuffer(3, &k_buffer_ptr, sizeof(k_buffer_ptr))
-        .IgnoreArgument(4);
+        .IgnoreArgument(4).IgnoreArgument(5);
 
     // act 
     result = pal_wsclient_can_recv(&wsclient_valid, true);
@@ -1106,8 +1111,8 @@ TEST_FUNCTION(pal_win_wsclient_can_send__neg)
         .CopyOutArgumentBuffer_type(&k_type_valid, sizeof(k_type_valid));
     STRICT_EXPECTED_CALL(WinHttpWebSocketSend(k_h_wsclient_valid, WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE, k_buffer_ptr, (DWORD)k_length_valid))
         .SetReturn(ERROR_WINHTTP_OPERATION_CANCELLED);
-    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, NULL, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
-        .IgnoreArgument(1).IgnoreArgument(4)
+    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, IGNORED_PTR_ARG, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
+        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(4)
         .CopyOutArgumentBuffer_lpBuffer(&k_message, sizeof(const char*))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(LocalFree((HLOCAL)k_message))
@@ -1399,7 +1404,12 @@ TEST_FUNCTION(pal_win_wsclient_close__arg_wsclient_invalid)
 // 
 TEST_FUNCTION(pal_win_wsclient_deinit__success)
 {
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
+    _winhttp = k_valid_dll;
+
     // arrange 
+    STRICT_EXPECTED_CALL(FreeLibrary(k_valid_dll))
+        .SetReturn(TRUE);
 
     // act 
     pal_wsclient_deinit();
@@ -1413,15 +1423,21 @@ TEST_FUNCTION(pal_win_wsclient_deinit__success)
 // 
 TEST_FUNCTION(pal_win_wsclient_init__success)
 {
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
     int32_t result;
 
+    _winhttp = NULL;
+
     // arrange 
+    STRICT_EXPECTED_CALL(LoadLibraryA("WINHTTP.DLL"))
+        .SetReturn(k_valid_dll);
 
     // act 
     result = pal_wsclient_init();
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_TRUE(_winhttp == k_valid_dll);
 }
 
 

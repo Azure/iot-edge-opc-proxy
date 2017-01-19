@@ -981,7 +981,7 @@ static void io_mqtt_connection_reconnect(
                     break;
             }
             else
-			{
+            {
                 tls_io_config.port = 
                     connection->address->port ? connection->address->port : 8883;
                 tls_io_config.hostname = STRING_c_str(connection->address->host_name);
@@ -1318,7 +1318,7 @@ int32_t io_mqtt_connection_subscribe(
     do
     {
         DList_InitializeListHead(&subscription->link);
-        subscription->log = log_get("mqtt.subscription");
+        subscription->log = log_get("io_mqtt_sub");
 
         subscription->receiver_cb = cb;
         subscription->receiver_ctx = ctx;
@@ -1368,7 +1368,7 @@ int32_t io_mqtt_connection_create(
         DList_InitializeListHead(&connection->subscriptions);
         DList_InitializeListHead(&connection->send_queue);
 
-        connection->log = log_get("mqtt.subscription.connection");
+        connection->log = log_get("io_mqtt");
         connection->status = io_mqtt_status_reset;
         connection->keep_alive_interval = 10 * 1000; // 10 seconds
 

@@ -234,6 +234,12 @@ static void pal_wsclient_free(
     dbg_assert_ptr(wsclient);
     dbg_assert(!wsclient->wsi, "Still open");
 
+    wsclient->cb(wsclient->context, pal_wsclient_event_closed,
+        NULL, NULL, NULL, er_ok);
+
+    wsclient->cb = NULL;
+    wsclient->context = NULL;
+
     if (wsclient->host)
         mem_free(wsclient->host);
     if (wsclient->relative_path)
@@ -1070,7 +1076,7 @@ static int32_t pal_wsworker_pool_attach(
 
         DList_InitializeListHead(&worker->link);
         DList_InitializeListHead(&worker->clients);
-        worker->log = log_get("websocket.proto");
+        worker->log = log_get("pal_ws_proto");
         worker->pool = pool;
         worker->protocols = (struct lws_protocols*)mem_zalloc(
             sizeof(struct lws_protocols) * 2);
@@ -1193,7 +1199,7 @@ static int32_t pal_wsworker_pool_create(
     do
     {
         DList_InitializeListHead(&pool->workers);
-        pool->log = log_get("lws");
+        pool->log = log_get("pal_ws_lws");
         pool->counter = 1;
         result = lock_create(&pool->pool_lock);
         if (result != er_ok)
@@ -1235,7 +1241,7 @@ int32_t pal_wsclient_create(
         return er_out_of_memory;
     do
     {
-        wsclient->log = log_get("websocket");
+        wsclient->log = log_get("pal_ws");
         wsclient->cb = callback;
         wsclient->context = context;
         DList_InitializeListHead(&wsclient->link);

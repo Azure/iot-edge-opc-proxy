@@ -1048,7 +1048,7 @@ int32_t pal_socket_create(
         return er_out_of_memory;
  
     sock->state = pal_socket_state_closed;
-	sock->log = log_get("socket");
+    sock->log = log_get("pal_sk");
     sock->sock_fd = _invalid_fd;
     memcpy(&sock->itf, client_itf, sizeof(pal_socket_client_itf_t));
 

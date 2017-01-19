@@ -125,7 +125,7 @@ static int32_t prx_client_socket_create(
     memset(sock, 0, sizeof(prx_client_socket_t));
     do
     {
-        sock->log = log_get("sock");
+        sock->log = log_get("client_sk");
         sock->timeout = 60000;
 #ifdef _DEBUG
         sock->control_timeout = 60000;
@@ -1299,7 +1299,7 @@ int32_t prx_client_getnameinfo(
     prx_ns_entry_t* host = NULL;
     io_ref_t address;
 
-	(void)flags;
+    (void)flags;
 
     if (!address)
         return er_fault;
@@ -1376,7 +1376,7 @@ int32_t prx_client_getifaddrinfo(
     prx_ns_result_t* resultset = NULL;
     prx_ifaddrinfo_t* prx_ifa_cur;
 
-	(void)flags;
+    (void)flags;
 
     if (!prx_ifa || !prx_ifa_count)
         return er_fault;

@@ -8,11 +8,11 @@ RUN set -ex && \
     apk add --no-cache --virtual .build-deps \
         cmake \
         build-base \
-		gcc \
+        gcc \
         abuild \
         binutils \
-		make \
-		libc-dev \
+        make \
+        libc-dev \
         curl-dev
 
 ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy

@@ -2296,7 +2296,7 @@ int32_t prx_ns_generic_create(
         return er_out_of_memory;
     do
     {
-        registry->log = log_get("ns.registry.generic");
+        registry->log = log_get("ns_generic");
         DList_InitializeListHead(&registry->entries);
         registry->num_entries = 0;
 
@@ -2368,7 +2368,7 @@ int32_t prx_ns_iot_hub_create_from_cs(
         return er_out_of_memory;
     do
     {
-        registry->log = log_get("ns.registry.hub");
+        registry->log = log_get("ns_hub");
         DList_InitializeListHead(&registry->link);
 
         result = prx_ns_generic_entry_create(
@@ -2432,7 +2432,7 @@ int32_t prx_ns_iot_hub_create(
         return er_out_of_memory;
     do
     {
-        registry->log = log_get("ns.registry.composite");
+        registry->log = log_get("ns_composite");
         DList_InitializeListHead(&registry->hubs);
 
         file_name = pal_create_full_path(config);

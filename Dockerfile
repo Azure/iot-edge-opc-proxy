@@ -6,11 +6,11 @@ RUN set -ex \
         bash \
         cmake \
         build-base \
-		gcc \
+        gcc \
         abuild \
         binutils \
-		make \
-		libc-dev \
+        make \
+        libc-dev \
         curl-dev
 
 ADD / /proxy_build

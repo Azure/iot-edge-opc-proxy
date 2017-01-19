@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// #define DBG_MEM
+
 #include "util_mem.h"
 #include "prx_buffer.h"
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/refcount.h"
 #include "pal_mt.h"
-
-// #define DBG_MEM
 
 //
 // Universal buffer header
@@ -30,7 +30,7 @@ typedef struct prx_buffer_pool
 {
     const char* name;
     lock_t lock;
-    DLIST_ENTRY free_list;		                // buffers that are free
+    DLIST_ENTRY free_list;                        // buffers that are free
     size_t free_count;             // Number of free buffers in the pool
     DLIST_ENTRY checked_out;             // buffers that are checked out
     size_t item_size;                             // default buffer size
@@ -82,7 +82,8 @@ typedef int32_t (*prx_buffer_pool_grow_t)(
 #ifdef DBG_MEM
 #define _sentinel 0x98112124444ULL
 #define dbg_assert_buf(buf) \
-    dbg_assert(buf->sentinel == _sentinel, "Bad sentinel")
+    dbg_assert(buf->sentinel == _sentinel, "Bad sentinel in %p (%p).", \
+        buf, (void*)buf->sentinel)
 #else
 #define dbg_assert_buf(buf)
 #endif
@@ -187,6 +188,8 @@ static void* prx_buffer_pool_alloc_buffer(
 
         out = containingRecord(
             DList_RemoveHeadList(&pool->free_list), prx_buffer_t, link);
+        DList_InitializeListHead(&out->link);
+        dbg_assert_buf(out);
 
         --pool->free_count;
         if (pool->free_count == 0) // attempt to grow if we are empty
@@ -199,8 +202,8 @@ static void* prx_buffer_pool_alloc_buffer(
         DList_InsertTailList(&pool->checked_out, &out->link);
         dbg_assert_buf(out);
         result = __raw_buffer(out);
-    } while (0);
-
+    } 
+    while (0);
     lock_exit(pool->lock);
     
     if (signal)
@@ -272,6 +275,7 @@ static void prx_dynamic_pool_free(
         {
             next = containingRecord(
                 DList_RemoveHeadList(&pool->pool.checked_out), prx_buffer_t, link);
+            dbg_assert_buf(next);
             mem_free(next);
         }
 #else
@@ -282,6 +286,7 @@ static void prx_dynamic_pool_free(
         {
             next = containingRecord(
                 DList_RemoveHeadList(&pool->pool.free_list), prx_buffer_t, link);
+            dbg_assert_buf(next);
             mem_free(next);
         }
 
@@ -295,7 +300,7 @@ static void prx_dynamic_pool_free(
 //
 // Grow pool to specified size of dynamic buffers
 //
-static int32_t prx_dynamic_pool_grow(
+static int32_t prx_dynamic_pool_grow_no_lock(
     void* context
 )
 {
@@ -344,7 +349,7 @@ static void* prx_dynamic_buffer_alloc(
 {
     prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     return prx_buffer_pool_alloc_buffer(
-        &pool->pool, original, prx_dynamic_pool_grow, pool);
+        &pool->pool, original, prx_dynamic_pool_grow_no_lock, pool);
 }
 
 //
@@ -368,6 +373,7 @@ static int32_t prx_dynamic_buffer_set_size(
     size_t size
 )
 {
+    int32_t result;
     prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     prx_buffer_t* buf, *orig;
     if (size < 0 || !buffer || !*buffer)
@@ -377,23 +383,29 @@ static int32_t prx_dynamic_buffer_set_size(
     dbg_assert_buf(orig);
 
     // Pointers will change after realloc, so remove from checked out list
+    lock_enter(pool->pool.lock);
     DList_RemoveEntryList(&orig->link);
+    dbg_assert_buf(orig);
+
     buf = (prx_buffer_t*)mem_realloc(orig, sizeof(prx_buffer_t) + size);
     if (buf)
     {
         // Then return to checked out list with new pointers
         DList_InsertTailList(&pool->pool.checked_out, &buf->link);
-        dbg_assert_buf(buf);
         buf->length = size;
         *buffer = __raw_buffer(buf);
-        return er_ok;
+        dbg_assert_buf(buf);
+        result = er_ok;
     }
     else
     {
         // In case of error always return original to checked out list
         DList_InsertTailList(&pool->pool.checked_out, &orig->link);
-        return er_out_of_memory;
+        dbg_assert_buf(orig);
+        result = er_out_of_memory;
     }
+    lock_exit(pool->pool.lock);
+    return result;
 }
 
 //
@@ -435,16 +447,17 @@ static void prx_fixed_pool_free(
     if (pool->pool.lock)
     {
         lock_enter(pool->pool.lock);
-#if !defined(DBG_MEM)
+
         dbg_assert(DList_IsListEmpty(&pool->pool.checked_out),
             "Leaking buffer that was not returned to pool!");
-#endif
+
         DList_InitializeListHead(&pool->pool.checked_out);
         DList_InitializeListHead(&pool->pool.free_list);
         while (!DList_IsListEmpty(&pool->blocks))
         {
             next = containingRecord(
                 DList_RemoveHeadList(&pool->blocks), prx_buffer_t, link);
+            dbg_assert_buf(next);
             mem_free(next);
         }
 
@@ -458,7 +471,7 @@ static void prx_fixed_pool_free(
 //
 // Grow fixed pool by adding another block
 //
-static int32_t prx_fixed_pool_grow(
+static int32_t prx_fixed_pool_grow_no_lock(
     void* context
 )
 {
@@ -482,6 +495,9 @@ static int32_t prx_fixed_pool_grow(
     // Add block to block list
     memset(buf, 0, sizeof(prx_buffer_t));
     buf->length = sizeof(prx_buffer_t) + (items * size);
+#ifdef DBG_MEM
+    buf->sentinel = _sentinel;
+#endif
     DList_InsertTailList(&pool->blocks, &buf->link);
    
     // Initialize all buffers in block
@@ -518,7 +534,7 @@ static void* prx_fixed_buffer_alloc(
 {
     prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
     return prx_buffer_pool_alloc_buffer(
-        &pool->pool, original, prx_fixed_pool_grow, pool);
+        &pool->pool, original, prx_fixed_pool_grow_no_lock, pool);
 }
 
 //
@@ -586,7 +602,7 @@ int32_t prx_dynamic_pool_create(
         if (result != er_ok)
             break;
 
-        result = prx_dynamic_pool_grow(pool);
+        result = prx_dynamic_pool_grow_no_lock(pool);
         if (result != er_ok)
             break;
 
@@ -639,7 +655,7 @@ int32_t prx_fixed_pool_create(
         if (result != er_ok)
             break;
 
-        result = prx_fixed_pool_grow(pool);
+        result = prx_fixed_pool_grow_no_lock(pool);
         if (result != er_ok)
             break;
 

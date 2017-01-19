@@ -13,7 +13,7 @@ BOOL __stdcall DllMain(
     void* reserved
 )
 {
-	(void)hinstDLL, reserved;
+    (void)hinstDLL, reserved;
     switch (reason)
     {
     case DLL_PROCESS_ATTACH:

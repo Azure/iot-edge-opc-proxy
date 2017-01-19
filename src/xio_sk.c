@@ -549,7 +549,7 @@ CONCRETE_IO_HANDLE xio_socket_create(
         return NULL;
     do
     {
-        sk->log = log_get("socket.xio");
+        sk->log = log_get("xio_sk");
 
         memset(&client.props, 0, sizeof(client.props));
         client.props.family = prx_address_family_unspec;

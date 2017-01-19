@@ -373,7 +373,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         return er_out_of_memory;
     do
     {
-        connection->log = log_get("tp.server.umqtt");
+        connection->log = log_get("tp_mqtt");
         result = io_iot_hub_connection_base_init(
             &connection->base, handler_cb, handler_cb_ctx);
         if (result != er_ok)
@@ -710,7 +710,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
         return er_out_of_memory;
     do
     {
-        connection->log = log_get("tp.server.ws");
+        connection->log = log_get("tp_ws");
         result = io_iot_hub_connection_base_init(
             &connection->base, handler_cb, handler_cb_ctx);
         if (result != er_ok)

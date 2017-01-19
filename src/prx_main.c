@@ -66,7 +66,7 @@ static void service_status_cb_dummy(
     int32_t result
 )
 {
-	(void)result;
+    (void)result;
     switch (state)
     {
     case service_status_init:

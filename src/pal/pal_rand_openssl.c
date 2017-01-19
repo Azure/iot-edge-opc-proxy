@@ -20,8 +20,8 @@ static void log_ssl_error(
     void
 )
 {
-	char buf[256];
-	u_long err;
+    char buf[256];
+    u_long err;
     while(true)
     {
         err = ERR_get_error();

@@ -96,10 +96,14 @@ static int32_t pal_socket_from_os_error(
             _ntdll, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (char*)&message, 0, NULL);
         if (message)
+        {
             log_info(NULL, "%s (0x%x)", message, error);
+            LocalFree(message);
+        }
         else
+        {
             log_info(NULL, "Unknown socket error 0x%x.", error);
-        LocalFree(message);
+        }
     }
     return pal_os_to_prx_error(error);
 }
@@ -1281,7 +1285,7 @@ int32_t pal_socket_create(
     if (!sock)
         return er_out_of_memory;
 
-    sock->log = log_get("socket");
+    sock->log = log_get("pal_sk");
     sock->sock_fd = INVALID_SOCKET;
 
     memcpy(&sock->itf, itf, sizeof(pal_socket_client_itf_t));
@@ -1619,7 +1623,7 @@ int32_t pal_socket_init(
     GUID guid_getacceptexsockaddrs = WSAID_GETACCEPTEXSOCKADDRS;
 
     // To format NTSTATUS errors
-    _ntdll = LoadLibrary("NTDLL.DLL");
+    _ntdll = LoadLibraryA("NTDLL.DLL");
 
     error = WSAStartup(MAKEWORD(2, 2), &wsd);
     if (error != 0)
@@ -1676,5 +1680,5 @@ void pal_socket_deinit(
     if (error != 0)
         (void)pal_socket_from_os_error(error);
     if (_ntdll)
-        FreeLibrary(_ntdll);
+        (void)FreeLibrary(_ntdll);
 }

@@ -161,23 +161,23 @@ decl_public_8(void, __zlog_error_b,
 // Accumulate a partial log event
 //
 decl_public_3(void, __zlog_info_a,
-	zlog_t, log,
-	const char*, format,
-	va_list, args
+    zlog_t, log,
+    const char*, format,
+    va_list, args
 );
 
 //
 // Flush all partial log events and this one
 //
 decl_public_8(void, __zlog_info_a_flush,
-	zlog_t, log,
-	const char*, file,
-	size_t, filelen,
-	const char*, func,
-	size_t, funclen,
-	long, line,
-	const char*, format,
-	va_list, args
+    zlog_t, log,
+    const char*, file,
+    size_t, filelen,
+    const char*, func,
+    size_t, funclen,
+    long, line,
+    const char*, format,
+    va_list, args
 );
 
 #endif // _util_zlog_h_

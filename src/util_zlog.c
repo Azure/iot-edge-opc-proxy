@@ -336,7 +336,7 @@ void __zlog_info_a(
 {
     if (!log || zlog_category_needless_level(((zlog_category_t*)log), ZLOG_LEVEL_INFO))
         return;
-	__zlog_info_a_to_mdc(log, format, args);
+    __zlog_info_a_to_mdc(log, format, args);
 }
 
 //
@@ -355,7 +355,7 @@ void __zlog_info_a_flush(
 {
     if (!log || zlog_category_needless_level(((zlog_category_t*)log), ZLOG_LEVEL_INFO))
         return;
-	__zlog_info_a_flush_mdc(log, file, filelen, func, funclen, line, format, args);
+    __zlog_info_a_flush_mdc(log, file, filelen, func, funclen, line, format, args);
 }
 
 #if _WIN32

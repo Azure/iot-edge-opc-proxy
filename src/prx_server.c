@@ -403,6 +403,8 @@ static void prx_server_socket_deliver_results(
         if (!message)
             break;
 
+        DList_InitializeListHead(&message->link);
+
         result = io_connection_send(server_sock->stream, message);
         if (result != er_ok)
         {
@@ -1202,6 +1204,7 @@ static int32_t prx_server_socket_create(
         DList_InitializeListHead(&server_sock->send_queue);
         DList_InitializeListHead(&server_sock->recv_queue);
         server_sock->state = prx_server_socket_created;
+        server_sock->log = log_get("server_sk");
 
         // TODO: Configure this for socket in link request!
         server_sock->timeout = 30 * 1000;
@@ -1580,7 +1583,7 @@ int32_t prx_server_create(
     do
     {
         server->timeout = 60000; // TODO: make configurable...
-        server->log = log_get("proxy.server");
+        server->log = log_get("server");
         io_ref_new(&server->id);
 
         server->sockets = create_hashtable(10, 

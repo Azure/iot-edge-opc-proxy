@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// #define DBG_MEM
+
 #include "util_mem.h"
 #include "io_queue.h"
 #include "prx_buffer.h"
@@ -18,6 +20,15 @@ typedef struct io_queue
     DLIST_ENTRY done;           // queue_buffers that are in done state
 }
 io_queue_t;
+
+
+#if defined(DBG_MEM)
+#define dbg_assert_buf(b) \
+    prx_buffer_get_size(b->queue->factory, b)
+#else
+#define dbg_assert_buf(b) \
+    dbg_assert_ptr(b);
+#endif
 
 //
 // Calls callback with abort
@@ -47,6 +58,7 @@ static void io_queue_release_buffer_no_lock(
 {
     if (!queue_buffer)
         return;
+
     DList_RemoveEntryList(&queue_buffer->qlink);
     DList_InitializeListHead(&queue_buffer->qlink);
     io_queue_buffer_abort_callback(queue_buffer);
@@ -62,10 +74,11 @@ static void io_queue_state_push(
     io_queue_buffer_t* queue_buffer
 )
 {
-    dbg_assert_ptr(queue_buffer);
     dbg_assert_ptr(queue);
     dbg_assert_ptr(list);
+
     lock_enter(queue->queue_lock);
+    dbg_assert_buf(queue_buffer);
     DList_RemoveEntryList(&queue_buffer->qlink);
     DList_InsertTailList(list, &queue_buffer->qlink);
     lock_exit(queue->queue_lock);
@@ -102,6 +115,7 @@ static io_queue_buffer_t* io_queue_state_pop(
         {
             queue_buffer = containingRecord(
                 DList_RemoveHeadList(list), io_queue_buffer_t, qlink);
+            dbg_assert_buf(queue_buffer);
             DList_InitializeListHead(&queue_buffer->qlink);
         }
         lock_exit(queue->queue_lock);
@@ -117,9 +131,14 @@ static void io_queue_state_release_no_lock(
     PDLIST_ENTRY list
 )
 {
+    io_queue_buffer_t* queue_buffer = NULL;
     while (!DList_IsListEmpty(list))
-        io_queue_release_buffer_no_lock(queue, containingRecord(
-            DList_RemoveHeadList(list), io_queue_buffer_t, qlink));
+    {
+        queue_buffer = containingRecord(
+            DList_RemoveHeadList(list), io_queue_buffer_t, qlink);
+        dbg_assert_buf(queue_buffer);
+        io_queue_release_buffer_no_lock(queue, queue_buffer);
+    }
     DList_InitializeListHead(list);
 }
 
@@ -200,7 +219,8 @@ uint8_t* io_queue_buffer_to_ptr(
     io_queue_buffer_t* queue_buffer
 )
 {
-     return ((uint8_t*)queue_buffer) + sizeof(io_queue_buffer_t);
+    dbg_assert_buf(queue_buffer);
+    return ((uint8_t*)queue_buffer) + sizeof(io_queue_buffer_t);
 }
 
 //
@@ -210,7 +230,12 @@ io_queue_buffer_t* io_queue_buffer_from_ptr(
     uint8_t* payload
 )
 {
-     return (io_queue_buffer_t*)(payload - sizeof(io_queue_buffer_t));
+    io_queue_buffer_t* queue_buffer;
+    if (!payload)
+        return NULL;
+    queue_buffer = (io_queue_buffer_t*)(payload - sizeof(io_queue_buffer_t));
+    dbg_assert_buf(queue_buffer);
+    return queue_buffer;
 }
 
 //
@@ -224,6 +249,7 @@ void io_queue_buffer_release(
     if (!queue_buffer || !queue_buffer->queue)
         return;
 
+    dbg_assert_buf(queue_buffer);
     queue = queue_buffer->queue;
     queue_buffer->queue = NULL;
 
@@ -245,7 +271,10 @@ int32_t io_queue_buffer_write(
 {
     size_t write;
 
-    if (!queue_buffer || len < 0)
+    if (!queue_buffer)
+        return er_fault;
+    dbg_assert_buf(queue_buffer);
+    if (len < 0)
         return er_fault;
     if (len == 0)
         return er_ok;
@@ -254,6 +283,7 @@ int32_t io_queue_buffer_write(
 
     memcpy(io_queue_buffer_to_ptr(queue_buffer) + queue_buffer->write_offset, buf, write);
     queue_buffer->write_offset += write;
+    dbg_assert_buf(queue_buffer);
     return er_ok;
 }
 
@@ -269,7 +299,10 @@ int32_t io_queue_buffer_read(
 {
     size_t available;
 
-    if (!queue_buffer || !buf || len < 0 || !read)
+    if (!queue_buffer)
+        return er_fault;
+    dbg_assert_buf(queue_buffer);
+    if (!queue_buffer)
         return er_fault;
     if (len == 0)
         return er_ok;
@@ -279,6 +312,7 @@ int32_t io_queue_buffer_read(
 
     memcpy(buf, io_queue_buffer_to_ptr(queue_buffer) + queue_buffer->read_offset, *read);
     queue_buffer->read_offset += *read;
+    dbg_assert_buf(queue_buffer);
     return er_ok;
 }
 
@@ -325,11 +359,11 @@ void io_queue_buffer_set_done(
 // Frees a queue that was allocated 
 //
 void io_queue_free(
-	io_queue_t* queue
-	)
+    io_queue_t* queue
+    )
 {
-	if (!queue)
-		return;
+    if (!queue)
+        return;
 
     if (queue->queue_lock)
     {
@@ -351,18 +385,18 @@ int32_t io_queue_create(
     io_queue_t** created
 )
 {
-	io_queue_t* queue;
-	int32_t result;
+    io_queue_t* queue;
+    int32_t result;
 
     if (!created)
         return er_fault;
 
-	queue = mem_zalloc_type(io_queue_t);
-	if (!queue) 
-		return er_out_of_memory;
+    queue = mem_zalloc_type(io_queue_t);
+    if (!queue) 
+        return er_out_of_memory;
     do
     {
-	    DList_InitializeListHead(&queue->inprogress);
+        DList_InitializeListHead(&queue->inprogress);
         DList_InitializeListHead(&queue->ready);
         DList_InitializeListHead(&queue->done);
 
@@ -378,8 +412,8 @@ int32_t io_queue_create(
         return er_ok;
     } while (0);
 
-	io_queue_free(queue);
-	return result;
+    io_queue_free(queue);
+    return result;
 }
 
 //
@@ -398,7 +432,7 @@ bool io_queue_has_ready(
 // retrieve the first queue_buffer that is "ready" from the queue
 //
 io_queue_buffer_t* io_queue_pop_ready(
-	io_queue_t* queue
+    io_queue_t* queue
 )
 {
     if (!queue)
@@ -422,8 +456,8 @@ bool io_queue_has_inprogress(
 // retrieve the first queue_buffer that is in progress
 //
 io_queue_buffer_t* io_queue_pop_inprogress(
-	io_queue_t* queue
-	)
+    io_queue_t* queue
+    )
 {
     return io_queue_state_pop(queue, &queue->inprogress);
 }
@@ -455,8 +489,8 @@ io_queue_buffer_t* io_queue_pop_done(
 // requeue everything in progress into ready queue
 //
 void io_queue_rollback(
-	io_queue_t* queue
-	)
+    io_queue_t* queue
+    )
 {
     if (!queue)
         return;

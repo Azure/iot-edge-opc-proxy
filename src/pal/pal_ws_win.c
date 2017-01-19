@@ -54,6 +54,8 @@ struct pal_wsclient
     log_t log;
 };
 
+static HMODULE _winhttp = NULL;
+
 #define PROTOCOL_HEADER "Sec-WebSocket-Protocol"
 
 //
@@ -90,23 +92,34 @@ int32_t pal_string_clone_as_wide_string(
 // Get error code for winhttp error
 //
 static int32_t pal_wsclient_from_winhttp_error(
+    pal_wsclient_t* wsclient,
     DWORD error
 )
 {
     char* message = NULL;
+    (void)wsclient;
+
     if (error == ERROR_SUCCESS)
         return er_ok;
+    if (error == ERROR_INVALID_OPERATION)
+        return er_aborted;
+    if (error < WINHTTP_ERROR_BASE || error > WINHTTP_ERROR_LAST)
+        return pal_os_to_prx_error(error);
+
+    FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_IGNORE_INSERTS |
+        FORMAT_MESSAGE_MAX_WIDTH_MASK,
+        _winhttp, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+        (char*)&message, 0, NULL);
+    if (message)
+    {
+        log_error(NULL, "%s (0x%x)", message, error);
+        LocalFree(message);
+    }
     else
     {
-        FormatMessageA(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            (char*)&message, 0, NULL);
-
-        log_error(NULL, "Winhttp error code %d: %s",
-            error, message ? message : "<unknown>");
-        LocalFree(message);
+        log_error(NULL, "Unknown Winhttp error 0x%x.", error);
     }
 
     switch (error) 
@@ -145,8 +158,10 @@ static int32_t pal_wsclient_from_winhttp_error(
         return er_connecting;
     case ERROR_WINHTTP_SECURE_FAILURE:
         return er_invalid_format;
+    default:
+        dbg_assert(0, "Unknown Winhttp error %d", error);
+        return er_unknown;
     }
-    return pal_os_to_prx_error(error);
 }
 
 //
@@ -222,30 +237,34 @@ static void pal_wsclient_log_winhttp_callback_status(
         "");
     __case(WINHTTP_CALLBACK_STATUS_SECURE_FAILURE,
         "");
-    __case(WINHTTP_CALLBACK_STATUS_REQUEST_ERROR, 
-        "");
     __case(WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER,
-        " %S", (LPWSTR)info);
-    __case(WINHTTP_CALLBACK_STATUS_RESOLVING_NAME, 
         " %S", (LPWSTR)info);
     __case(WINHTTP_CALLBACK_STATUS_NAME_RESOLVED, 
         " (%S)", info ? (LPWSTR)info : L"???");
     __case(WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER, 
         " %S", (LPWSTR)info);
     __case(WINHTTP_CALLBACK_STATUS_REQUEST_SENT,
-        " %d bytes ...", (int)(*(DWORD*)info));
+        " with %d bytes ...", (int)(*(DWORD*)info));
     __case(WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED, 
-        " %d bytes ...", (int)(*(DWORD*)info));
+        " with %d bytes ...", (int)(*(DWORD*)info));
     __case(WINHTTP_CALLBACK_STATUS_REDIRECT, 
         " to %S...", (LPWSTR)info);
     __case(WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE, 
         " %d...", (int)(*(DWORD*)info));
+    __case(WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE,
+        "");
+#ifdef LOG_VERBOSE
+    __case(WINHTTP_CALLBACK_STATUS_RESOLVING_NAME,
+        " %S", (LPWSTR)info);
+    __case(WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE,
+        "");
     __case(WINHTTP_CALLBACK_STATUS_SENDING_REQUEST,
         "...");
+    __case(WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE,
+        "");
     __case(WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE,
         "...");
-#ifdef LOG_VERBOSE
-    __case(WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE, 
+    __case(WINHTTP_CALLBACK_STATUS_REQUEST_ERROR,
         "");
     __case(WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION, 
         "");
@@ -257,10 +276,6 @@ static void pal_wsclient_log_winhttp_callback_status(
         "");
     __case(WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE, 
         "");
-    __case(WINHTTP_CALLBACK_STATUS_CLOSE_COMPLETE, 
-        "");
-    __case(WINHTTP_CALLBACK_STATUS_SHUTDOWN_COMPLETE, 
-        "");
     __case(WINHTTP_CALLBACK_STATUS_HANDLE_CREATED, 
         "");
     __case(WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 
@@ -270,48 +285,6 @@ static void pal_wsclient_log_winhttp_callback_status(
             "WINHTTP_CALLBACK_STATUS_UNKNOWN %x", status);
         break;
 #endif
-    }
-}
-
-//
-// Start to receive with the provided client
-//
-static void pal_wsclient_begin_recv(
-    pal_wsclient_t* wsclient
-)
-{
-    int32_t result;
-    DWORD read;
-    size_t length;
-    WINHTTP_WEB_SOCKET_BUFFER_TYPE type;
-
-    if (!wsclient->can_recv || !wsclient->h_websocket)
-        return;
-    if (wsclient->cur_recv_buffer)
-        return; // recv in progress, should not be here...
-
-    // Get a buffer to receive into from upper layer
-    wsclient->cb(wsclient->context, pal_wsclient_event_begin_recv,
-        &wsclient->cur_recv_buffer, &length, NULL, er_ok);
-    if (!wsclient->cur_recv_buffer)
-    {
-        wsclient->can_recv = false;
-        return;
-    }
-    
-    result = WinHttpWebSocketReceive(wsclient->h_websocket, 
-        wsclient->cur_recv_buffer, (DWORD)length, &read, &type);
-    
-    result = pal_wsclient_from_winhttp_error(result);
-    if (result != er_ok)
-    {
-        log_error(wsclient->log, "Unexpected receive error %s",
-            prx_err_string(result));
-
-        length = 0;
-        wsclient->cb(wsclient->context, pal_wsclient_event_end_recv,
-            &wsclient->cur_recv_buffer, &length, NULL, result);
-        wsclient->cur_recv_buffer = NULL;
     }
 }
 
@@ -329,8 +302,78 @@ static void pal_wsclient_end_recv(
     buffer = (uint8_t*)set_atomic_ptr(wsclient->cur_recv_buffer, NULL);
     if (!buffer)
         return;
+
+    log_debug(wsclient->log, "Websocket %p buffer %p (%zu) received (%s)!", 
+        wsclient, buffer, len, prx_err_string(error));
+
     wsclient->cb(wsclient->context, pal_wsclient_event_end_recv,
         &buffer, &len, type, error);
+}
+
+//
+// Start to receive with the provided client
+//
+static void pal_wsclient_begin_recv(
+    pal_wsclient_t* wsclient
+)
+{
+    int32_t result;
+    DWORD read;
+    size_t length;
+    WINHTTP_WEB_SOCKET_BUFFER_TYPE type;
+    pal_wsclient_buffer_type_t unknown = pal_wsclient_buffer_type_unknown;
+
+    if (!wsclient->can_recv || !wsclient->h_websocket)
+        return;
+    if (wsclient->cur_recv_buffer)
+        return; // recv in progress, should not be here...
+
+    // Get a buffer to receive into from upper layer
+    wsclient->cb(wsclient->context, pal_wsclient_event_begin_recv,
+        &wsclient->cur_recv_buffer, &length, NULL, er_ok);
+    if (!wsclient->cur_recv_buffer)
+    {
+        wsclient->can_recv = false;
+        return;
+    }
+
+    log_debug(wsclient->log, "Websocket %p receiving into buffer %p (%zu)...", 
+        wsclient, wsclient->cur_recv_buffer, length);
+
+    result = WinHttpWebSocketReceive(wsclient->h_websocket, 
+        wsclient->cur_recv_buffer, (DWORD)length, &read, &type);
+    
+    result = pal_wsclient_from_winhttp_error(wsclient, result);
+    if (result != er_ok)
+    {
+        if (result != er_aborted)
+        {
+            log_error(wsclient->log, "Unexpected receive error %s",
+                prx_err_string(result));
+        }
+        pal_wsclient_end_recv(wsclient, 0, &unknown, result);
+    }
+}
+
+//
+// Complete send with the provided client
+//
+static void pal_wsclient_end_send(
+    pal_wsclient_t* wsclient,
+    size_t len,
+    int32_t error
+)
+{
+    uint8_t* buffer;
+    buffer = (uint8_t*)set_atomic_ptr(wsclient->cur_send_buffer, NULL);
+    if (!buffer)
+        return;
+
+    log_debug(wsclient->log, "Websocket %p buffer %p (%zu) sent (%s)!",
+        wsclient, buffer, len, prx_err_string(error));
+
+    wsclient->cb(wsclient->context, pal_wsclient_event_end_send,
+        &buffer, &len, NULL, error);
 }
 
 //
@@ -358,38 +401,23 @@ static void pal_wsclient_begin_send(
         return;
     }
 
+    log_debug(wsclient->log, "Websocket %p sending buffer %p (%zu)...", 
+        wsclient, wsclient->cur_send_buffer, length);
+
     result = WinHttpWebSocketSend(wsclient->h_websocket,
         pal_wsclient_to_winhttp_buffer_type(type),
         wsclient->cur_send_buffer, (DWORD)length);
 
-    result = pal_wsclient_from_winhttp_error(result);
+    result = pal_wsclient_from_winhttp_error(wsclient, result);
     if (result != er_ok)
     {
-        log_error(wsclient->log, "Unexpected send error %s",
-            prx_err_string(result));
-
-        length = 0;
-        wsclient->cb(wsclient->context, pal_wsclient_event_end_send,
-            &wsclient->cur_send_buffer, &length, NULL, result);
-        wsclient->cur_send_buffer = NULL;
+        if (result != er_aborted)
+        {
+            log_error(wsclient->log, "Unexpected send error %s",
+                prx_err_string(result));
+        }
+        pal_wsclient_end_send(wsclient, 0, result);
     }
-}
-
-//
-// Complete send with the provided client
-//
-static void pal_wsclient_end_send(
-    pal_wsclient_t* wsclient,
-    size_t len,
-    int32_t error
-)
-{
-    uint8_t* buffer;
-    buffer = (uint8_t*)set_atomic_ptr(wsclient->cur_send_buffer, NULL);
-    if (!buffer)
-        return;
-    wsclient->cb(wsclient->context, pal_wsclient_event_end_send,
-        &buffer, &len, NULL, error);
 }
 
 //
@@ -401,11 +429,21 @@ static void pal_wsclient_free(
 {
     dbg_assert_ptr(wsclient);
 
-    wsclient->h_session = NULL;
     dbg_assert(!wsclient->h_request && !wsclient->h_connection &&
-        !wsclient->h_websocket, "Leaking open handle. ");
-    dbg_assert(!wsclient->cur_send_buffer && !wsclient->cur_recv_buffer,
-        "Leaking buffer. Wait for disconnect callback before calling close.");
+        !wsclient->h_session && !wsclient->h_websocket, "Leaking open handle. ");
+
+    if (wsclient->cb)
+    {
+        pal_wsclient_end_send(wsclient, 0, er_aborted);
+        pal_wsclient_end_recv(wsclient, 0, NULL, er_aborted);
+
+        log_debug(wsclient->log, "Websocket client destroying... (%p [%p]).",
+            wsclient, wsclient->context);
+        wsclient->cb(wsclient->context, pal_wsclient_event_closed,
+            NULL, NULL, NULL, er_ok);
+        wsclient->cb = NULL;
+        wsclient->context = NULL;
+    }
 
     if (wsclient->headers)
         STRING_delete(wsclient->headers);
@@ -415,6 +453,9 @@ static void pal_wsclient_free(
 
     if (wsclient->relative_path)
         mem_free(wsclient->relative_path);
+
+    log_debug(wsclient->log, "Websocket client destroyed (%p [%p]).",
+        wsclient, wsclient->context);
 
     mem_free_type(pal_wsclient_t, wsclient);
 }
@@ -438,23 +479,28 @@ static void pal_wsclient_close_context(
             atomic_bit_set(wsclient->state, pal_wsclient_disconnecting_bit);
 
             // We are connected, close the web socket, which will clean up the other handles
+            log_debug(wsclient->log, "Websocket closing... (%p [%p])",
+                wsclient, wsclient->context);
+
             error = WinHttpWebSocketClose(wsclient->h_websocket,
                 WINHTTP_WEB_SOCKET_ENDPOINT_TERMINATED_CLOSE_STATUS, NULL, 0);
-            result = pal_wsclient_from_winhttp_error(error);
+            result = pal_wsclient_from_winhttp_error(wsclient, error);
             if (result == er_ok)
-                return;  // Wait for close complete
-
-            log_error(wsclient->log, "Failed closing websocket with close status (%s).",
-                prx_err_string(result));
+                return;  // Wait for close complete - do not touch wsclient ptr
+            if (result != er_aborted)
+                log_error(wsclient->log, "Failed closing websocket with close status (%s).",
+                    prx_err_string(result));
             atomic_bit_clear(wsclient->state, pal_wsclient_disconnecting_bit);
         }
 
+        log_debug(wsclient->log, "Websocket handle closing... (%p [%p])",
+            wsclient, wsclient->context);
         if (WinHttpCloseHandle(wsclient->h_websocket))
-            return;  // Wait for handle close complete
+            return;  // Wait for handle close complete - do not touch wsclient ptr
         {
             error = GetLastError();
             log_error(wsclient->log, "Failed closing websocket handle (%s).",
-                prx_err_string(pal_wsclient_from_winhttp_error(error)));
+                prx_err_string(pal_wsclient_from_winhttp_error(wsclient, error)));
             wsclient->h_websocket = NULL;
         }
 
@@ -463,28 +509,30 @@ static void pal_wsclient_close_context(
 
     if (wsclient->h_request)
     {
-        if (!WinHttpCloseHandle(wsclient->h_request))
+        log_debug(wsclient->log, "Request handle closing... (%p [%p])",
+            wsclient, wsclient->context);
+
+        if (WinHttpCloseHandle(wsclient->h_request))
+            return; // Wait for request to close - do not touch wsclient ptr
         {
             error = GetLastError();
             log_error(wsclient->log, "Failed closing request handle (%s).",
-                prx_err_string(pal_wsclient_from_winhttp_error(error)));
+                prx_err_string(pal_wsclient_from_winhttp_error(wsclient, error)));
             wsclient->h_request = NULL;
         }
-        else if (!wsclient->h_connection)
-            return; // Wait for request to close
-
-        // fall through to close connection...
     }
 
     if (wsclient->h_connection)
     {
+        log_debug(wsclient->log, "Connection handle closing... (%p [%p])",
+            wsclient, wsclient->context);
+
         if (WinHttpCloseHandle(wsclient->h_connection))
-            return;
-        else
+            return; // Wait for connection to close - do not touch wsclient ptr
         {
             error = GetLastError();
             log_error(wsclient->log, "Failed closing connection handle (%s).",
-                prx_err_string(pal_wsclient_from_winhttp_error(error)));
+                prx_err_string(pal_wsclient_from_winhttp_error(wsclient, error)));
             wsclient->h_connection = NULL;
         }
     }
@@ -493,22 +541,27 @@ static void pal_wsclient_close_context(
     {
         // Close session
         dbg_assert(wsclient->h_session != NULL, "Expected session handle");
-        if (!WinHttpCloseHandle(wsclient->h_session))
+        log_debug(wsclient->log, "Session handle closing... (%p [%p])",
+            wsclient, wsclient->context);
+        if (WinHttpCloseHandle(wsclient->h_session))
+            return;  // Wait for session to close - do not touch wsclient ptr
         {
             error = GetLastError();
             log_error(wsclient->log, "Failed closing session handle (%s).",
-                prx_err_string(pal_wsclient_from_winhttp_error(error)));
+                prx_err_string(pal_wsclient_from_winhttp_error(wsclient, error)));
+            wsclient->h_session = NULL;
+
             pal_wsclient_free(wsclient);
         }
     }
     else if (atomic_bit_clear(wsclient->state, pal_wsclient_disconnected_bit))
     {
+        log_debug(wsclient->log, "Websocket successfully disconnected! (%p [%p])",
+            wsclient, wsclient->context);
         //
         // If connection, socket, and request are closed, return any in 
         // progress buffers and signal disconnect, so caller can free 
-        // buffer pools without leaking.  This should be running in 
-        // callback context.  However, if all handles are closed, then
-        // it is fine to run on caller context.
+        // buffer pools without leaking before reconnecting.  
         //
         pal_wsclient_end_send(wsclient, 0, er_aborted);
         pal_wsclient_end_recv(wsclient, 0, NULL, er_aborted);
@@ -549,7 +602,7 @@ static void CALLBACK pal_wsclient_winhttp_cb(
             result = GetLastError();
             log_error(wsclient->log, "Error WinHttpReceiveResponse %d.", result);
             wsclient->cb(wsclient->context, pal_wsclient_event_connected, 
-                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(result));
+                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(wsclient, result));
         }
         break;
     case WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE:
@@ -567,7 +620,7 @@ static void CALLBACK pal_wsclient_winhttp_cb(
             result = GetLastError();
             log_error(wsclient->log, "Error WinHttpQueryHeaders %d.", result);
             wsclient->cb(wsclient->context, pal_wsclient_event_connected,
-                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(result));
+                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(wsclient, result));
             break;
         }
         if (status_code != HTTP_STATUS_SWITCH_PROTOCOLS)
@@ -587,9 +640,11 @@ static void CALLBACK pal_wsclient_winhttp_cb(
             result = GetLastError();
             log_error(wsclient->log, "Failed upgrading %d.", result);
             wsclient->cb(wsclient->context, pal_wsclient_event_connected,
-                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(result));
+                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(wsclient, result));
             break;
         }
+
+        log_info(wsclient->log, "Connection upgraded to websocket (%p)!", wsclient);
 
         if (!WinHttpSetOption(
             wsclient->h_websocket, WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)))
@@ -600,7 +655,7 @@ static void CALLBACK pal_wsclient_winhttp_cb(
                 wsclient->h_websocket, WINHTTP_WEB_SOCKET_ABORTED_CLOSE_STATUS, NULL, 0);
             wsclient->h_websocket = NULL;
             wsclient->cb(wsclient->context, pal_wsclient_event_connected,
-                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(result));
+                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(wsclient, result));
             break;
         }
 
@@ -645,9 +700,9 @@ static void CALLBACK pal_wsclient_winhttp_cb(
         // Check which handle was closed
         /**/ if (handle == wsclient->h_request)
         {
-            // Request close as part of upgrade
             wsclient->h_request = NULL;
-            break;
+            if (wsclient->h_websocket)
+                break; // Request close as part of upgrade
         }
         else if (handle == wsclient->h_connection)
             wsclient->h_connection = NULL;
@@ -656,6 +711,7 @@ static void CALLBACK pal_wsclient_winhttp_cb(
         else if (handle == wsclient->h_session)
         {
             // Destroy was called and h_session is now fully closed
+            wsclient->h_session = NULL;
             pal_wsclient_free(wsclient);
             break;
         }
@@ -666,7 +722,6 @@ static void CALLBACK pal_wsclient_winhttp_cb(
         }
         pal_wsclient_close_context(wsclient);
         break;
-
     case WINHTTP_CALLBACK_STATUS_SECURE_FAILURE:
         wsclient->cb(wsclient->context, pal_wsclient_event_connected, 
             NULL, NULL, NULL, er_permission);
@@ -677,20 +732,30 @@ static void CALLBACK pal_wsclient_winhttp_cb(
             break;
         /**/ if (wsclient->state & (1 << pal_wsclient_connecting_bit))
         {
+            result = pal_wsclient_from_winhttp_error(wsclient, result);
             wsclient->cb(wsclient->context, pal_wsclient_event_connected,
-                NULL, NULL, NULL, pal_wsclient_from_winhttp_error(result));
+                NULL, NULL, NULL, result);
         }
         else if (wsclient->state & (1 << pal_wsclient_connected_bit))
         {
-            result = pal_wsclient_from_winhttp_error(result);
+            result = pal_wsclient_from_winhttp_error(wsclient, result);
             pal_wsclient_end_send(wsclient, 0, result);
             pal_wsclient_end_recv(wsclient, 0, NULL, result);
         }
-        else if (atomic_bit_clear(
-            wsclient->state, pal_wsclient_disconnecting_bit))
+        else if (atomic_bit_clear(wsclient->state, pal_wsclient_disconnecting_bit))
         {
+            if (result == ERROR_WINHTTP_TIMEOUT)
+            {
+                // If remote side has closed, we will time out, that is expected.
+                log_info(wsclient->log, "Timeout closing websocket "
+                    "with remote side likely disconnected - continue...");
+            }
+            else
+            {
+                log_error(wsclient->log, "Error closing websocket (%s) - continue...",
+                    prx_err_string(pal_wsclient_from_winhttp_error(wsclient, result)));
+            }
             // Failed close, continue disconnecting
-            log_error(wsclient->log, "Failed close - continue...");
             pal_wsclient_close_context(wsclient);
         }
         break;
@@ -753,10 +818,7 @@ int32_t pal_wsclient_create(
         return er_out_of_memory;
     do
     {
-        wsclient->log = log_get("websocket");
-        wsclient->context = context;
-        wsclient->cb = callback;
-
+        wsclient->log = log_get("pal_ws");
         if (protocol_name)
         {
             result = pal_wsclient_add_header(wsclient, PROTOCOL_HEADER,
@@ -804,6 +866,12 @@ int32_t pal_wsclient_create(
             break;
         }
 
+        wsclient->context = context;
+        wsclient->cb = callback;
+
+        log_debug(wsclient->log, "Websocket client created (%p [%p]).",
+            wsclient, wsclient->context);
+
         *created = wsclient;
         return er_ok;
     } 
@@ -833,6 +901,8 @@ int32_t pal_wsclient_connect(
         return er_fault;
     if (wsclient->h_connection)
         return er_bad_state;
+    dbg_assert(!wsclient->h_request && !wsclient->h_connection &&
+        !wsclient->h_websocket, "Unexpected open handle. Close not completed...");
     do
     {
         atomic_bit_set(wsclient->state, pal_wsclient_connecting_bit);
@@ -905,6 +975,8 @@ int32_t pal_wsclient_connect(
             break;
         }
 
+        log_debug(wsclient->log, "Websocket client connected (%p [%p]).",
+            wsclient, wsclient->context);
         return er_ok;
     } 
     while (0);
@@ -977,6 +1049,9 @@ int32_t pal_wsclient_disconnect(
     pal_wsclient_end_send(wsclient, 0, er_aborted);
     pal_wsclient_end_recv(wsclient, 0, NULL, er_aborted);
 
+    log_debug(wsclient->log, "Websocket client disconnecting... (%p [%p]).",
+        wsclient, wsclient->context);
+
     pal_wsclient_close_context(wsclient);
     return er_ok;
 }
@@ -992,8 +1067,12 @@ void pal_wsclient_close(
         return;
 
     atomic_bit_set(wsclient->state, pal_wsclient_closing_bit);
+
+    log_debug(wsclient->log, "Websocket client closing... (%p [%p]).",
+        wsclient, wsclient->context);
+
     pal_wsclient_close_context(wsclient);
-    // Wait for callback to free context
+    // Wait for callback to free context - do not touch wsclient afterwards...
 }
 
 //
@@ -1003,7 +1082,7 @@ int32_t pal_wsclient_init(
     void
 )
 {
-    // no-op
+    _winhttp = LoadLibraryA("WINHTTP.DLL");
     return er_ok;
 }
 
@@ -1014,5 +1093,6 @@ void pal_wsclient_deinit(
     void
 )
 {
-    // no-op
+    if (_winhttp)
+        (void)FreeLibrary(_winhttp);
 }

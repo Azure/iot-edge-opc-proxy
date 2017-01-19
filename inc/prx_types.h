@@ -50,7 +50,7 @@ typedef struct
         uint32_t addr;
         uint8_t u8[4];
     }
-	un;
+    un;
 }
 prx_inet4_address_t;
 
@@ -67,7 +67,7 @@ typedef struct
         uint32_t u32[4];
         uint64_t u64[2];
     }
-	un;
+    un;
     uint32_t scope_id;
 }
 prx_inet6_address_t;
@@ -86,7 +86,7 @@ typedef struct prx_inet_address
 
         char raw[sizeof(prx_inet6_address_t)];
     }
-	un;
+    un;
     uint8_t prefix; // Subnet prefix
 }
 prx_inet_address_t;
@@ -117,7 +117,7 @@ typedef struct prx_socket_address_inet
 
         char raw[sizeof(prx_inet6_address_t)];
     }
-	un;
+    un;
 }
 prx_socket_address_inet_t;
 
@@ -149,7 +149,7 @@ typedef struct prx_socket_address
 
         char raw[sizeof(prx_socket_address_proxy_t)];
     }
-	un;
+    un;
 }
 prx_socket_address_t;
 

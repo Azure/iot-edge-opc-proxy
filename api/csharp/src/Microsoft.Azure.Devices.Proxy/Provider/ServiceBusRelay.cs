@@ -311,14 +311,20 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         private async Task RunAsync() {
             while (!_cts.IsCancellationRequested) {
-                var relayConnection = await _listener.AcceptConnectionAsync();
-                if (relayConnection == null) {
-                    await _listener.CloseAsync(_cts.Token);
-                    ProxyEventSource.Log.LocalListenerClosed(this);
-                    break;
+                try {
+                    var relayConnection = await _listener.AcceptConnectionAsync();
+                    if (relayConnection == null) {
+                        await _listener.CloseAsync(_cts.Token);
+                        ProxyEventSource.Log.LocalListenerClosed(this);
+                        break;
+                    }
+                    else {
+                        ProxyEventSource.Log.ConnectionAccepted(this, relayConnection);
+                        DoHandshakeAsync(relayConnection, _cts.Token);
+                    }
                 }
-                else {
-                    DoHandshakeAsync(relayConnection, _cts.Token);
+                catch(Exception ex) {
+                    ProxyEventSource.Log.HandledExceptionAsError(this, ex);
                 }
             }
         }

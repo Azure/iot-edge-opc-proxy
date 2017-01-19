@@ -108,17 +108,17 @@ rem no error checking
 pushd %cmake-root%\cmake\%CMAKE_DIR%
 
 if %build-platform% == x64 (
-	echo ***Running CMAKE for Win64***
-	cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root%  -G "Visual Studio 14 Win64"
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for Win64***
+    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root%  -G "Visual Studio 14 Win64"
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == arm (
-	echo ***Running CMAKE for ARM***
-	cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root%  -G "Visual Studio 14 ARM"
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for ARM***
+    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root%  -G "Visual Studio 14 ARM"
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 ) else (
-	echo ***Running CMAKE for Win32***
-	cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root% 
-	if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
+    echo ***Running CMAKE for Win32***
+    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %build-root% 
+    if not !ERRORLEVEL!==0 exit /b !ERRORLEVEL!
 )
 
 msbuild /m azure-iot-proxy.sln
@@ -144,7 +144,7 @@ echo  --platform ^<value^>       [Win32] build platform (e.g. Win32, x64, ...)
 echo  --use-zlog                 Uses zlog instead of xlogging
 echo  --use-openssl              Uses openssl instead of schannel
 echo  --use-libwebsockets        Uses libwebsockets instead of winhttp on windows
-echo  --cmake-root			     Directory to place the cmake files used for building the project
+echo  --cmake-root                 Directory to place the cmake files used for building the project
 echo  --skip-unittests           Skips building and executing unit tests (not advisable)
 goto :eof
 

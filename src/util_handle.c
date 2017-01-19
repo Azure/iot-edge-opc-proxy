@@ -84,7 +84,7 @@ void handle_map_deinit(
     while (!DList_IsListEmpty(&handle_map->handles))
     {
         handle = containingRecord(DList_RemoveHeadList(&handle_map->handles), handle_t, link);
-		dbg_assert(0, "Open handle %d (%p) not freed", handle->id, handle->pointer);
+        dbg_assert(0, "Open handle %d (%p) not freed", handle->id, handle->pointer);
     }
 
     if (handle_map->lock)

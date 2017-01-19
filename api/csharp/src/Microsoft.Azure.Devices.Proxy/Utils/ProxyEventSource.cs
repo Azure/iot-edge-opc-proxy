@@ -9,6 +9,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks;
     using Provider;
     using Model;
+    using Relay;
 
     /// <summary>
     /// EventSource for the new Dynamic EventSource type of Microsoft-Azure-Devices-Proxy traces.
@@ -26,8 +27,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             //public const EventKeywords Client = (EventKeywords)0x0001;
             //public const EventKeywords Proxy = (EventKeywords)0x0002;
         }
-
-
 
 
         [Event(40191, Message = "Stream accepted and connected: Target: {0}.")]
@@ -51,7 +50,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-
         [Event(40194, Message = "Remote proxy closed: Exception: {0}.")]
         public void RemoteProxyClosed(object source, Exception e) {
             if (this.IsEnabled()) {
@@ -68,7 +66,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        // 40201 Available
+        [Event(40201, Message = "Listener accepted message: Source: {0}, Connection {1}.")]
+        public void ConnectionAccepted(object source, HybridConnectionStream relayConnection) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40201, CreateSourceString(source), relayConnection.ToString());
+            }
+        }
 
         [Event(40202, Message = "Listener closed: Source: {0}.")]
         public void LocalListenerClosed(object source) {
@@ -77,15 +80,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-
-
-
-
-        // TODO
-
-
-
-
+        // 40203 - 40247 Available
 
         [Event(40248, Level = EventLevel.Warning, Message = "{0} Retrying: {1}")]
         public void Retry(object source, int k) {
