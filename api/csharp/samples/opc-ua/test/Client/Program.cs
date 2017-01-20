@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
-using Opc.Ua.Bindings;
+using Opc.Ua.Proxy;
 
 using System.Security.Cryptography.X509Certificates;
 
@@ -103,7 +103,8 @@ namespace NetCoreConsoleClient
                     config.SecurityConfiguration.ApplicationCertificate.StoreType,
                     config.SecurityConfiguration.ApplicationCertificate.StorePath,
                     config.ApplicationUri,
-                    config.ApplicationName
+                    config.ApplicationName,
+                    config.SecurityConfiguration.ApplicationCertificate.SubjectName
                     );
 
                 config.SecurityConfiguration.ApplicationCertificate.Certificate = certificate;

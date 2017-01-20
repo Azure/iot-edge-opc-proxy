@@ -11,8 +11,9 @@
 //
 
 using System;
+using Opc.Ua.Bindings;
 
-namespace Opc.Ua.Bindings
+namespace Opc.Ua.Proxy
 {
 
     /// <summary>
@@ -40,7 +41,7 @@ namespace Opc.Ua.Bindings
         /// Frees any unmanaged resources.
         /// </summary>
         public void Dispose()
-        {   
+        {
             Dispose(true);
         }
 
@@ -95,7 +96,7 @@ namespace Opc.Ua.Bindings
         /// </summary>
         public int OperationTimeout
         {
-            get { return m_operationTimeout;  }
+            get { return m_operationTimeout; }
             set { m_operationTimeout = value; }
         }
 
@@ -136,9 +137,10 @@ namespace Opc.Ua.Bindings
             lock (m_lock)
             {
                 // create the channel.
-                m_channel = new ProxyClientChannel(
+                m_channel = new TcpClientChannel(
                     Guid.NewGuid().ToString(),
                     m_bufferManager,
+                    new ProxyMessageSocketFactory(),
                     m_quotas,
                     m_settings.ClientCertificate,
                     m_settings.ServerCertificate,
@@ -169,16 +171,16 @@ namespace Opc.Ua.Bindings
         /// </remarks>
         public void Reconnect()
         {
-            Utils.Trace("TcpTransportChannel RECONNECT: Reconnecting to {0}.", m_url);
+            Utils.Trace("ProxyTransportChannel RECONNECT: Reconnecting to {0}.", m_url);
 
             lock (m_lock)
             {
                 // the new channel must be created first because WinSock will reuse sockets and this
                 // can result in messages sent over the old socket arriving as messages on the new socket.
                 // if this happens the new channel is shutdown because of a security violation.
-                ProxyClientChannel channel = m_channel;
+                TcpClientChannel channel = m_channel;
                 m_channel = null;
-                
+
                 // reconnect.
                 OpenOnDemand();
 
@@ -301,7 +303,7 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="SendRequest"/>
         public IAsyncResult BeginSendRequest(IServiceRequest request, AsyncCallback callback, object callbackData)
         {
-            ProxyClientChannel channel = m_channel;
+            TcpClientChannel channel = m_channel;
 
             if (channel == null)
             {
@@ -328,7 +330,7 @@ namespace Opc.Ua.Bindings
         /// <seealso cref="SendRequest"/>
         public IServiceResponse EndSendRequest(IAsyncResult result)
         {
-            ProxyClientChannel channel = m_channel;
+            TcpClientChannel channel = m_channel;
 
             if (channel == null)
             {
@@ -380,17 +382,14 @@ namespace Opc.Ua.Bindings
         private void OpenOnDemand()
         {
             // create the channel.
-            m_channel = new ProxyClientChannel(
+            m_channel = new TcpClientChannel(
                 Guid.NewGuid().ToString(),
                 m_bufferManager,
+                new ProxyMessageSocketFactory(),
                 m_quotas,
                 m_settings.ClientCertificate,
                 m_settings.ServerCertificate,
                 m_settings.Description);
-
-            // begin connect operation.
-            // IAsyncResult result = m_channel.BeginConnect(m_url, m_operationTimeout, null, null);
-            // m_channel.EndConnect(result);
         }
         #endregion
 
@@ -401,7 +400,7 @@ namespace Opc.Ua.Bindings
         private TransportChannelSettings m_settings;
         private TcpChannelQuotas m_quotas;
         private BufferManager m_bufferManager;
-        private ProxyClientChannel m_channel;
+        private TcpClientChannel m_channel;
         #endregion
     }
 }

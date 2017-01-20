@@ -505,7 +505,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 {
                     e.BytesTransferred = t.Result;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     e.BytesTransferred = 0;
                 }
@@ -672,7 +672,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 {
                     e.BytesTransferred = t.Result;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     e.BytesTransferred = 0;
                 }
@@ -903,7 +903,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 {
                     e.BytesTransferred = t.Result;
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     e.BytesTransferred = 0;
                 }
