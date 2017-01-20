@@ -1,5 +1,5 @@
 {
-  "version": "0.0.5-*",
+  "version": "0.0.6-*",
   "name": "Microsoft.Azure.Devices.Proxy",
   "title": "Test.Microsoft.Azure.Devices.Proxy",
   "description": "API for Field Gateway Proxy Module",
