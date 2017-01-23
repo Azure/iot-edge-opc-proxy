@@ -13,8 +13,6 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Proxy;
-using ProxySocketError = Microsoft.Azure.Devices.Proxy.SocketError;
-using MessageSocketError = System.Net.Sockets.SocketError;
 
 namespace Opc.Ua.Bindings.Proxy
 {
@@ -77,25 +75,16 @@ namespace Opc.Ua.Bindings.Proxy
             m_args.SetBuffer(buffer, offset, count);
         }
 
-        public MessageSocketError SocketError
+        public bool IsSocketError
         {
-            get
-            {
-                switch (m_args.SocketError)
-                {
-                    case ProxySocketError.Ok: return MessageSocketError.Success;
-                }
-                return MessageSocketError.SocketError;
-            }
-            set
-            {
-                switch (value)
-                {
-                    case MessageSocketError.Success: m_args.SocketError = ProxySocketError.Ok; break;
-                }
-                m_args.SocketError = ProxySocketError.Unknown;
-            }
+            get { return m_args.SocketError != SocketError.Ok; }
         }
+
+        public string SocketErrorString
+        {
+            get { return m_args.SocketError.ToString(); }
+        }
+
 
         public event EventHandler<IMessageSocketAsyncEventArgs> Completed
         {
@@ -258,7 +247,7 @@ namespace Opc.Ua.Bindings.Proxy
 
             ProxyMessageSocketAsyncEventArgs args = new ProxyMessageSocketAsyncEventArgs();
             args.UserToken = state;
-            args.m_args.SocketError = ProxySocketError.Host_unknown;
+            args.m_args.SocketError = SocketError.Host_unknown;
 
             m_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
@@ -565,7 +554,7 @@ namespace Opc.Ua.Bindings.Proxy
             {
                 throw new InvalidOperationException("The socket is not connected.");
             }
-
+            eventArgs.m_args.SocketError = SocketError.Unknown;
             return m_socket.SendAsync(eventArgs.m_args);
         }
         #endregion
