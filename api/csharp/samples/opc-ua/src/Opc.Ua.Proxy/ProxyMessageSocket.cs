@@ -144,6 +144,12 @@ namespace Opc.Ua.Bindings.Proxy
         {
             return new ProxyMessageSocket(sink, bufferManager, receiveBufferSize);
         }
+
+        /// <summary>
+        /// Gets the implementation description.
+        /// </summary>
+        /// <value>The implementation string.</value>
+        public string Implementation { get { return "UA-Proxy"; } }
     }
 
     /// <summary>
@@ -564,7 +570,7 @@ namespace Opc.Ua.Bindings.Proxy
             return new ProxyMessageSocketAsyncEventArgs();
         }
         #endregion
-
+        #region Private Fields
         private IMessageSink m_sink;
         private BufferManager m_bufferManager;
         private int m_receiveBufferSize;
@@ -578,5 +584,6 @@ namespace Opc.Ua.Bindings.Proxy
         private int m_bytesReceived;
         private int m_bytesToReceive;
         private int m_incomingMessageSize;
+        #endregion
     }
 }
