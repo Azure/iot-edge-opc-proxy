@@ -15,7 +15,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
-using Opc.Ua.Proxy;
+using Opc.Ua.Bindings.Proxy;
 
 using System.Security.Cryptography.X509Certificates;
 

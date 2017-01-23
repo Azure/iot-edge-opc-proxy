@@ -12,13 +12,38 @@
 
 using System;
 using System.Threading.Tasks;
-using Opc.Ua.Bindings;
 using Microsoft.Azure.Devices.Proxy;
 using ProxySocketError = Microsoft.Azure.Devices.Proxy.SocketError;
 using MessageSocketError = System.Net.Sockets.SocketError;
 
-namespace Opc.Ua.Proxy
+namespace Opc.Ua.Bindings.Proxy
 {
+
+    /// <summary>
+    /// Creates a new ProxyTransportChannel with ITransportChannel interface.
+    /// </summary>
+    public class ProxyTransportChannelFactory : ITransportChannelFactory
+    {
+        /// <summary>
+        /// The method creates a new instance of a Proxy transport channel
+        /// </summary>
+        /// <returns> the transport channel</returns>
+        public ITransportChannel Create()
+        {
+            return new ProxyTransportChannel();
+        }
+    }
+
+    /// <summary>
+    /// Creates a transport channel with proxy transport, UA-SC security and UA Binary encoding
+    /// </summary>
+    public class ProxyTransportChannel : UaSCBinaryTransportChannel
+    {
+        public ProxyTransportChannel() :
+            base(new ProxyMessageSocketFactory())
+        {
+        }
+    }
 
     /// <summary>
     /// Handles async event callbacks from a socket
