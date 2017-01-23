@@ -35,7 +35,7 @@ namespace Opc.Ua.Bindings.Proxy
     /// <summary>
     /// Creates a transport channel with proxy transport, UA-SC security and UA Binary encoding
     /// </summary>
-    public class ProxyTransportChannel : UaSCBinaryTransportChannel
+    public class ProxyTransportChannel : UaSCUaBinaryTransportChannel
     {
         public ProxyTransportChannel() :
             base(new ProxyMessageSocketFactory())
