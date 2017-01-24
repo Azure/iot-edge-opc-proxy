@@ -19,23 +19,22 @@ typedef uint32_t prx_size_t;
 #define prx_invalid_socket ((prx_fd_t)(-1))
 
 
-#define MAX_HOST_LENGTH 128 // 1025 - TODO: Allocate host buffer
+#define MAX_HOST_LENGTH 128         // 1025 - TODO: Allocate host buffer
 #define MAX_INTERFACE_LENGTH 128
 #define MAX_UNIX_PATH_LENGTH 108
 #define MAX_PORT_LENGTH 32
 
 //
-// Address family
+// Address family (http://www.iana.org assigned numbers)
 //
 typedef enum prx_address_family
 {
-    // Standard http://www.iana.org assigned numbers
     prx_address_family_unspec = 0,     
     prx_address_family_unix = 1,
     prx_address_family_inet = 2,
     prx_address_family_inet6 = 23,
 
-    // Non standard first come first serve family for proxy
+                 // Non standard first come first serve family for proxy
     prx_address_family_proxy = 28165   
 }
 prx_address_family_t;
@@ -79,7 +78,7 @@ prx_inet6_address_t;
 //
 typedef struct prx_inet_address
 {
-    union    // Start with address, so it can be used as raw buffer
+    union         // Start with address, so it can be used as raw buffer
     {
         prx_inet4_address_t in4;
         prx_inet6_address_t in6;
@@ -96,8 +95,8 @@ prx_inet_address_t;
 //
 typedef struct prx_socket_address_unix
 {
-    prx_address_family_t family;      // Always first so can be cast
-    char path[MAX_UNIX_PATH_LENGTH];                // See man page
+    prx_address_family_t family;          // Always first so can be cast
+    char path[MAX_UNIX_PATH_LENGTH];                     // See man page
 }
 prx_socket_address_unix_t;
 
@@ -106,9 +105,9 @@ prx_socket_address_unix_t;
 //
 typedef struct prx_socket_address_inet
 {
-    prx_address_family_t family;      // Always first so can be cast
+    prx_address_family_t family;          // Always first so can be cast
     uint32_t flow;
-    uint16_t port;               // In host byte order, not network
+    uint16_t port;                    // In host byte order, not network
     uint16_t reserved;
     union
     {
@@ -126,9 +125,9 @@ prx_socket_address_inet_t;
 //
 typedef struct prx_socket_address_proxy
 {
-    prx_address_family_t family;      // Always first so can be cast
+    prx_address_family_t family;          // Always first so can be cast
     uint32_t flow;
-    uint16_t port;               // In host byte order, not network
+    uint16_t port;                    // In host byte order, not network
     uint16_t reserved;
     char host[MAX_HOST_LENGTH];
 }
@@ -141,7 +140,7 @@ typedef struct prx_socket_address
 {
     union
     {
-        prx_address_family_t family;  // Always first so can be cast
+        prx_address_family_t family;      // Always first so can be cast
 
         prx_socket_address_inet_t ip;
         prx_socket_address_unix_t ux;
@@ -202,9 +201,9 @@ prx_client_getaddrinfo_flags_t;
 //
 typedef struct prx_addrinfo
 {
-    prx_socket_address_t address;                // Address
+    prx_socket_address_t address;                             // Address
     int64_t reserved;
-    char* name;              // Canonical name of the host
+    char* name;                            // Canonical name of the host
 }
 prx_addrinfo_t;
 
@@ -221,12 +220,12 @@ prx_ifaddrinfo_flags_t;
 //
 typedef struct prx_ifaddrinfo
 {
-    prx_socket_address_t address;                // Address
-    uint8_t prefix;                  // Subnet mask prefix
+    prx_socket_address_t address;                             // Address
+    uint8_t prefix;                                // Subnet mask prefix
     uint8_t flags;
     uint16_t reserved;
-    char name[128];                   // Name of interface
-    int32_t index;                      // Interface index
+    char name[128];                                 // Name of interface
+    int32_t index;                                    // Interface index
     prx_socket_address_t broadcast_addr;
 }
 prx_ifaddrinfo_t;
@@ -283,15 +282,6 @@ typedef struct prx_socket_option_value
 prx_socket_option_value_t;
 
 //
-// Flags for socket properties
-//
-typedef enum prx_client_socket_flags
-{
-    socket_flag_passive = 0x1       // Whether socket is passive socket
-}
-prx_client_socket_flags_t;
-
-//
 // Multicast option
 //
 typedef struct prx_multicast_option
@@ -301,8 +291,8 @@ typedef struct prx_multicast_option
     {
         prx_inet4_address_t in4;  
         prx_inet6_address_t in6;  
-    } address;                                     // Multicast address
-    int32_t interface_index;            // Local ondex of the interface
+    } address;                                      // Multicast address
+    int32_t interface_index;             // Local ondex of the interface
 }
 prx_multicast_option_t;
 
@@ -325,10 +315,19 @@ prx_message_flags_t;
 typedef enum prx_shutdown_op
 {
     prx_shutdown_op_read = 0,                        // Shutdown reading
-    prx_shutdown_op_write = 1,                     // Shutdown writing
+    prx_shutdown_op_write = 1,                       // Shutdown writing
     prx_shutdown_op_both = 2                         // Or shutdown both
 }
 prx_shutdown_op_t;
+
+//
+// Flags for socket properties
+//
+typedef enum prx_socket_flags
+{
+    socket_flag_passive = 0x1        // Whether socket is passive socket
+}
+prx_socket_flags_t;
 
 //
 // Properties of a socket
@@ -338,8 +337,9 @@ typedef struct prx_socket_properties
     prx_address_family_t family;
     prx_socket_type_t sock_type;
     prx_protocol_type_t proto_type;
-    uint32_t flags;                                  // socket_flags_t
-    prx_socket_address_t address;
+    uint32_t flags;                                // prx_socket_flags_t
+    uint32_t timeout;  // Inactivity timeout of socket after which to gc
+    prx_socket_address_t address;               // address of the socket 
     prx_socket_option_value_t options[__prx_so_max]; // options to apply
 }
 prx_socket_properties_t;

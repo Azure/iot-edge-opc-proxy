@@ -18,11 +18,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// remote side to open the remote end of the stream.  
         /// </summary>
         /// <param name="streamId">Reference of the caller</param>
-        /// <param name="timeout">Timeout given to client to open remote side</param>
         /// <returns>
         /// A connection string to be brokered to remote side to open the remote end 
         /// of the stream.  
         /// </returns>
-        Task<IConnection> CreateConnectionAsync(Reference streamId, TimeSpan timeout);
+        Task<IConnection> CreateConnectionAsync(Reference streamId);
     }
 }

@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "Microsoft.Azure.Devices.Proxy": "0.0.6-*",
-    "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.1",
+    "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.2",
     "NETStandard.Library": "1.6.0"
   },
   "frameworks": {

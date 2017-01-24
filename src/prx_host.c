@@ -588,7 +588,7 @@ int32_t prx_host_start(
         if (result != er_ok)
             break;
 
-        log_info(host->log, "Host server started!\n\n");
+        log_info(host->log, "Host server started!");
         return er_ok;
 
     } while (0);

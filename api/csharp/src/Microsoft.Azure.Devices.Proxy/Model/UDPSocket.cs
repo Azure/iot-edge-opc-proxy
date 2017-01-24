@@ -22,16 +22,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 throw new ArgumentException("Udp only supports datagrams");
         }
 
-        public override Task BindAsync(SocketAddress endpoint, TimeSpan timeout, CancellationToken ct) {
+        public override Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
             _stream = new PacketStream(this);
             throw new NotImplementedException();
         }
 
-        public override Task ConnectAsync(SocketAddress address, TimeSpan timeout, CancellationToken ct) {
+        public override Task ConnectAsync(SocketAddress address, CancellationToken ct) {
             throw new NotSupportedException("Cannot call connect on udp socket");
         }
 
-        public override Task ListenAsync(int backlog, TimeSpan timeout, CancellationToken ct) {
+        public override Task ListenAsync(int backlog, CancellationToken ct) {
             throw new NotSupportedException("Cannot call listen on udp socket");
         }
     }

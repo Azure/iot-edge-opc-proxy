@@ -120,7 +120,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (_dataStream == null) {
-                _dataStream = new NetworkStream(Socket);
+                _dataStream = new NetworkStream(Socket, false);
             }
             return _dataStream;
         }
@@ -138,9 +138,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                     dataStream.Dispose();
                 } else {
                     Socket chkClientSocket = Socket;
+                    Socket = null;
                     if (chkClientSocket != null) {
                         try {
                             chkClientSocket.Shutdown(SocketShutdown.Both);
+                        }
+                        catch (Exception) {
+                            // ignore
                         }
                         finally {
                             chkClientSocket.Dispose();

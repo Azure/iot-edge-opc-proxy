@@ -38,5 +38,20 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             return sb.ToString();
         }
+
+        public static SocketError GetSocketError(this Exception ex) {
+            SocketError error = SocketError.Fatal;
+            if (ex is SocketException) {
+                return ((SocketException)ex).Error;
+            }
+            else if (ex is AggregateException) {
+                foreach (Exception e in ((AggregateException)ex).InnerExceptions) {
+                    error = e.GetSocketError();
+                    if (error != SocketError.Fatal)
+                        break;
+                }
+            }
+            return error;
+        }
     }
 }

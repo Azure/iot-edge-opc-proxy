@@ -348,8 +348,8 @@ static void pal_wsclient_begin_recv(
     {
         if (result != er_aborted)
         {
-            log_error(wsclient->log, "Unexpected receive error %s",
-                prx_err_string(result));
+            log_error(wsclient->log, "Unexpected receive error %s (%d, %p)",
+                prx_err_string(result), length, wsclient->cur_recv_buffer);
         }
         pal_wsclient_end_recv(wsclient, 0, &unknown, result);
     }
@@ -413,8 +413,8 @@ static void pal_wsclient_begin_send(
     {
         if (result != er_aborted)
         {
-            log_error(wsclient->log, "Unexpected send error %s",
-                prx_err_string(result));
+            log_error(wsclient->log, "Unexpected send error %s (%d, %p)",
+                prx_err_string(result), length, wsclient->cur_send_buffer);
         }
         pal_wsclient_end_send(wsclient, 0, result);
     }

@@ -70,23 +70,15 @@ static void service_status_cb_dummy(
     switch (state)
     {
     case service_status_init:
-        printf("Azure IoT Socket Proxy\r\n");
+        printf("=== Azure IoT Proxy Gateway === \n");
         break;
     case service_status_deinit:
-        printf("Proxy exits... Goodbye!\r\n");
+        printf("Proxy exits... Goodbye!\n");
         break;
     case service_status_stopped:
-        printf("Proxy stopped!\r\n");
-        break;
     case service_status_starting:
-        printf("Proxy starting...\r\n");
-        break;
     case service_status_running:
-        printf("Proxy started!\r\n");
-        break;
     case service_status_stopping:
-        printf("Proxy stopping...\r\n");
-        break;
     case service_status_error:
         break;
     default:
@@ -206,7 +198,7 @@ static void service_status_cb(
     }
 
     if (!SetServiceStatus(service_status_handle, &service_status))
-        printf("SetServiceStatus failed with errror code 0x%08X.", GetLastError());
+        printf("SetServiceStatus failed with errror code 0x%08X.\r\n", GetLastError());
 }
 
 //
@@ -243,7 +235,7 @@ void _ext__ WINAPI ServiceMain(
     service_status_handle = RegisterServiceCtrlHandlerA("proxyd", ServiceControl);
     if (service_status_handle == NULL)
     {
-        printf("RegisterServiceCtrlHandler failed with error code 0x%08X. ",
+        printf("RegisterServiceCtrlHandler failed with error code 0x%08X.\r\n",
             GetLastError());
         return;
     }

@@ -6,8 +6,8 @@
 
     "dependencies": {
         "Opc.Ua.Proxy": "0.0.6-*",
-        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.1",
-        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.1.1"
+        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.2",
+        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.1.2"
     },
 
     "frameworks": {
