@@ -213,7 +213,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                                         message = Message.DecodeAsync(
                                             _stream, CodecId.Mpack, _open.Token).Result;
                                         ReceiveQueue.Enqueue(message);
-                                        Console.WriteLine(message.ToString());
                                         tcs.TrySetResult(true);
                                     }
                                     catch (Exception e) {
