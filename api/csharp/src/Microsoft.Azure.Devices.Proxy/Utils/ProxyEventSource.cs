@@ -3,12 +3,10 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Diagnostics;
     using System.Diagnostics.Tracing;
     using System.Globalization;
-    using System.IO;
-    using System.Threading.Tasks;
     using Provider;
-    using Model;
     using Relay;
 
     /// <summary>
@@ -24,8 +22,8 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         public class Keywords   // This is a bitvector
         {
-            //public const EventKeywords Client = (EventKeywords)0x0001;
-            //public const EventKeywords Proxy = (EventKeywords)0x0002;
+            public const EventKeywords Client = (EventKeywords)0x0001;
+            public const EventKeywords Proxy = (EventKeywords)0x0002;
         }
 
 
@@ -64,13 +62,15 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40200, CreateSourceString(source));
             }
-        }
+            Trace.TraceInformation($"Listener started ({source}).");
+       }
 
         [Event(40201, Message = "Listener accepted message: Source: {0}, Connection {1}.")]
         public void ConnectionAccepted(object source, HybridConnectionStream relayConnection) {
             if (this.IsEnabled()) {
                 this.WriteEvent(40201, CreateSourceString(source), relayConnection.ToString());
             }
+            Trace.TraceInformation($"Connection accepted: {relayConnection} ({source}).");
         }
 
         [Event(40202, Message = "Listener closed: Source: {0}.")]
@@ -78,54 +78,84 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40202, CreateSourceString(source));
             }
+            Trace.TraceInformation($"Listener closed ({source}).");
         }
 
-        // 40203 - 40247 Available
-
-        [Event(40248, Level = EventLevel.Warning, Message = "{0} Retrying: {1}")]
-        public void Retry(object source, int k) {
+        [Event(40203, Message = "Stream closing: Source: {0}, Reason {1}.")]
+        public void StreamClosing(object source, Exception exception) {
             if (this.IsEnabled()) {
-                this.WriteEvent(40248, source, k);
+                this.WriteEvent(40203, CreateSourceString(source), ExceptionToString(exception));
             }
+        }
+
+        [Event(40204, Message = "Stream closed: Source: {0}.")]
+        public void StreamClosed(object source) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40204, CreateSourceString(source));
+            }
+            Trace.TraceInformation($"Stream closed! ({source}).");
+        }
+
+        // 40205 - 40219 Available
+
+        [Event(40220, Level = EventLevel.Error, Message = "{0} No proxies installed on IoT Hub.")]
+        public void NoProxyInstalled(object source) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40210, CreateSourceString(source));
+            }
+            Trace.TraceError($"No proxies installed - Add proxies to IoT Hub! ({source})");
+        }
+
+        // 40221 - 40247 Available
+
+        [Event(40248, Level = EventLevel.Warning, Message = "{0} Retry {1} after exception: {2}")]
+        public void Retry(object source, int k, Exception ex) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40248, source, k, ExceptionToString(ex));
+            }
+            Trace.TraceInformation($"{source} Retry {k} after exception: {ex.ToString()}");
         }
 
         // Not the actual event definition since we're using object and Exception types
         [NonEvent]
         public void HandledExceptionAsInformation(object source, Exception exception) {
-            if (this.IsEnabled()) {
-                this.HandledExceptionAsInformation(CreateSourceString(source), ExceptionToString(exception));
-            }
+            this.HandledExceptionAsInformation(CreateSourceString(source), ExceptionToString(exception));
         }
 
         [Event(40249, Message = "{0} Handled Exception: {1}")]
         void HandledExceptionAsInformation(string source, string exception) {
-            this.WriteEvent(40249, source, exception);
+            if (this.IsEnabled()) {
+                this.WriteEvent(40249, source, exception);
+            }
+            Trace.TraceInformation($"Exception handled: {exception} ({source}).");
         }
 
         // Not the actual event definition since we're using object and Exception types
         [NonEvent]
         public void HandledExceptionAsWarning(object source, Exception exception) {
-            if (this.IsEnabled()) {
-                this.HandledExceptionAsWarning(CreateSourceString(source), ExceptionToString(exception));
-            }
+            this.HandledExceptionAsWarning(CreateSourceString(source), ExceptionToString(exception));
         }
 
         [Event(40250, Level = EventLevel.Warning, Message = "{0} Handled Exception: {1}")]
         void HandledExceptionAsWarning(string source, string exception) {
-            this.WriteEvent(40250, source, exception);
+            if (this.IsEnabled()) {
+                this.WriteEvent(40250, source, exception);
+            }
+            Trace.TraceWarning($"Exception handled: {exception} ({source}).");
         }
 
         // Not the actual event definition since we're using object and Exception types
         [NonEvent]
         public void HandledExceptionAsError(object source, Exception exception) {
-            if (this.IsEnabled()) {
-                this.HandledExceptionAsError(CreateSourceString(source), ExceptionToString(exception));
-            }
+            this.HandledExceptionAsError(CreateSourceString(source), ExceptionToString(exception));
         }
 
         [Event(40251, Level = EventLevel.Error, Message = "{0} Handled Exception: {1}")]
         void HandledExceptionAsError(string source, string exception) {
-            this.WriteEvent(40251, source, exception);
+            if (this.IsEnabled()) {
+                this.WriteEvent(40251, source, exception);
+            }
+            Trace.TraceError($"Exception handled: {exception} ({source}).");
         }
 
         [NonEvent]
@@ -177,22 +207,20 @@ namespace Microsoft.Azure.Devices.Proxy {
         public TException Rethrow<TException>(TException exception, object source = null, EventLevel level = EventLevel.Error)
             where TException : Exception {
             // Avoid converting ToString, etc. if ETW tracing is not enabled.
-            if (this.IsEnabled()) {
-                switch (level) {
-                    case EventLevel.Critical:
-                    case EventLevel.LogAlways:
-                    case EventLevel.Error:
-                        this.ThrowingExceptionError(CreateSourceString(source), ExceptionToString(exception));
-                        break;
-                    case EventLevel.Warning:
-                        this.ThrowingExceptionWarning(CreateSourceString(source), ExceptionToString(exception));
-                        break;
-                    case EventLevel.Informational:
-                    case EventLevel.Verbose:
-                    default:
-                        this.ThrowingExceptionInfo(CreateSourceString(source), ExceptionToString(exception));
-                        break;
-                }
+            switch (level) {
+                case EventLevel.Critical:
+                case EventLevel.LogAlways:
+                case EventLevel.Error:
+                    this.ThrowingExceptionError(CreateSourceString(source), ExceptionToString(exception));
+                    break;
+                case EventLevel.Warning:
+                    this.ThrowingExceptionWarning(CreateSourceString(source), ExceptionToString(exception));
+                    break;
+                case EventLevel.Informational:
+                case EventLevel.Verbose:
+                default:
+                    this.ThrowingExceptionInfo(CreateSourceString(source), ExceptionToString(exception));
+                    break;
             }
 
             // This allows "throw ServiceBusEventSource.Log.ThrowingException(..."
@@ -200,21 +228,32 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         [Event(40262, Level = EventLevel.Error, Message = "{0} Throwing an Exception: {1}")]
-        void ThrowingExceptionError(string source, string exception) {
-            // The IsEnabled() check is in the [NonEvent] Wrapper method
-            this.WriteEvent(40262, source, exception);
+        public void ThrowingExceptionError(string source, string exception) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40262, source, exception);
+            }
         }
 
         [Event(40263, Level = EventLevel.Warning, Message = "{0} Throwing an Exception: {1}")]
-        void ThrowingExceptionWarning(string source, string exception) {
-            // The IsEnabled() check is in the [NonEvent] Wrapper method
-            this.WriteEvent(40263, source, exception);
+        public void ThrowingExceptionWarning(string source, string exception) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40263, source, exception);
+            }
         }
 
         [Event(40264, Level = EventLevel.Informational, Message = "{0} Throwing an Exception: {1}")]
-        void ThrowingExceptionInfo(string source, string exception) {
-            // The IsEnabled() check is in the [NonEvent] Wrapper method
-            this.WriteEvent(40264, source, exception);
+        public void ThrowingExceptionInfo(string source, string exception) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40264, source, exception);
+            }
+        }
+
+        [Event(40265, Level = EventLevel.Verbose , Message = "{0}")]
+        public void TraceVerbose(string message) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40265, message);
+            }
+            Trace.WriteLine(message);
         }
 
         [NonEvent]
@@ -230,7 +269,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             else if ((s = source as string) != null) {
                 return s;
             }
-
             return source.ToString();
         }
 

@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         protected async Task<DataMessage> ReceiveAsync(
             CancellationToken ct) {
             Message message;
-            while (!Socket.ReceiveQueue.TryTake(out message)) {
+            while (!Socket.ReceiveQueue.TryDequeue(out message)) {
                 await Socket.ReceiveAsync(ct);
             }
             ProxySocket.ThrowIfFailed(message);

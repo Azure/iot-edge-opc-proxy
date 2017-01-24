@@ -4,6 +4,7 @@ namespace simple_client {
     using System.Collections.Generic;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Linq;
     using Microsoft.Azure.Devices.Proxy;
 
     class Program {
@@ -35,13 +36,13 @@ namespace simple_client {
                     Console.Out.WriteLine(e.ToString());
                 }
             }
-
+            
             // Sync tests
             for (int i = 0; i < 3; i++) {
                 try {
-          
+            
                     SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
-          
+            
                     Receive(19);
                     Receive(13);
                     Receive(17);
@@ -52,20 +53,27 @@ namespace simple_client {
                     Console.Out.WriteLine(e.ToString());
                 }
             }
-
+            
             // async tests
             try {
                 var tasks = new List<Task>();
 
-                for (int i = 0; i < 1000; i++) {
+                for (int i = 0; i < 10; i++) {
 
                     tasks.Add(ReceiveAsync(19));
                     tasks.Add(ReceiveAsync(13));
                     tasks.Add(ReceiveAsync(17));
-
+                   
                     tasks.Add(EchoLoopAsync(100));
                 }
-                Task.WaitAll(tasks.ToArray());
+                while (tasks.Any()) {
+                    int index = Task.WaitAny(tasks.ToArray());
+                    var task = tasks.ElementAt(index);
+                    tasks.RemoveAt(index);
+                    if (task.IsFaulted) {
+                        Console.Out.WriteLine(task.Exception.ToString());
+                    }
+                }
             }
             catch (Exception e) {
                 Console.Out.WriteLine(e.ToString());

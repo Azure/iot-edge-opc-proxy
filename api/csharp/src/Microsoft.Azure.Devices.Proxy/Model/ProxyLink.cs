@@ -59,15 +59,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Begin open of stream, this provides the connection string for the
         /// remote side, that is passed as part of the open request.
         /// </summary>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<OpenRequest> BeginOpenAsync(
-            TimeSpan timeout, CancellationToken ct) {
+        public async Task<OpenRequest> BeginOpenAsync(CancellationToken ct) {
             try {
-                if (timeout == TimeSpan.MaxValue)
-                    timeout = TimeSpan.FromMinutes(5);
-                _connection = await _socket.Provider.StreamService.CreateConnectionAsync(_streamId, timeout);
+                _connection = await _socket.Provider.StreamService.CreateConnectionAsync(_streamId);
                 return new OpenRequest {
                     ConnectionString = _connection.ConnectionString.ToString(),
                     StreamId = _streamId
@@ -98,7 +94,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Receive queue from stream to read from
         /// </summary>
-        public BlockingCollection<Message> ReceiveQueue {
+        public ConcurrentQueue<Message> ReceiveQueue {
             get {
                 return _stream.ReceiveQueue;
             }
@@ -127,14 +123,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="option"></param>
         /// <param name="value"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         public async Task SetSocketOptionAsync(
-            SocketOption option, ulong value, TimeSpan timeout, CancellationToken ct) {
+            SocketOption option, ulong value, CancellationToken ct) {
 
             var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
                 new Message(_socket.Id, RemoteId, 
-                    new SetOptRequest(new SocketOptionValue(option, value))), timeout, ct);
+                    new SetOptRequest(new SocketOptionValue(option, value))), ct);
             ProxySocket.ThrowIfFailed(response);
         }
 
@@ -142,14 +137,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Get socket option
         /// </summary>
         /// <param name="option"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         public async Task<ulong> GetSocketOptionAsync(
-            SocketOption option, TimeSpan timeout, CancellationToken ct) {
+            SocketOption option, CancellationToken ct) {
             var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
-                new Message(_socket.Id, RemoteId, 
-                    new GetOptRequest(option)), timeout, ct);
+                new Message(_socket.Id, RemoteId, new GetOptRequest(option)), ct);
             ProxySocket.ThrowIfFailed(response);
             return ((GetOptResponse)response.Content).OptionValue.Value;
         }
@@ -157,20 +150,36 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Close link
         /// </summary>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
-        public async Task CloseAsync(TimeSpan timeout, CancellationToken ct) {
-            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
-                new Message(_socket.Id, RemoteId, 
-                    new CloseRequest()), timeout, ct);
-            if (response == null) {
-                return;
+        public async Task CloseAsync(CancellationToken ct) {
+            IConnection connection = _connection;
+            IMessageStream stream = _stream;
+            _connection = null;
+            _stream = null;
+            try {
+                // Close both ends
+                await Task.WhenAll(new Task[] { UnlinkAsync(ct), connection.CloseAsync() });
             }
-            SocketError errorCode = (SocketError)response.Error;
-            if (errorCode != SocketError.Ok &&
-                errorCode != SocketError.Timeout &&
-                errorCode != SocketError.Closed) {
-                throw new SocketException(errorCode);
+            catch(Exception ex) {
+                throw new SocketException("Exception during close", ex.GetSocketError());
+            }
+        }
+
+        /// <summary>
+        /// Remove link on remote proxy
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        internal async Task UnlinkAsync(CancellationToken ct) {
+            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
+                new Message(_socket.Id, RemoteId, new CloseRequest()), ct);
+            if (response != null) {
+                SocketError errorCode = (SocketError)response.Error;
+                if (errorCode != SocketError.Success &&
+                    errorCode != SocketError.Timeout &&
+                    errorCode != SocketError.Closed) {
+                    throw new SocketException(errorCode);
+                }
             }
         }
 

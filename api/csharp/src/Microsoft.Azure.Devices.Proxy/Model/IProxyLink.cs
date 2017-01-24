@@ -35,11 +35,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Begin connect sequence, returns connection string to
         /// be brokered to remote side.
         /// </summary>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<OpenRequest> BeginOpenAsync(TimeSpan timeout, 
-            CancellationToken ct);
+        Task<OpenRequest> BeginOpenAsync(CancellationToken ct);
 
         /// <summary>
         /// Waits for connect from remote side to complete.
@@ -49,11 +47,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         Task<bool> TryCompleteOpenAsync(CancellationToken ct);
 
         /// <summary>
-        /// Close (close)
+        /// Close the stream asynchronously
         /// </summary>
-        /// <param name="connectTimeout"></param>
-        /// <param name="ct"></param>
         /// <returns></returns>
-        Task CloseAsync(TimeSpan timeout, CancellationToken ct);
+        Task CloseAsync(CancellationToken ct);
     }
 }

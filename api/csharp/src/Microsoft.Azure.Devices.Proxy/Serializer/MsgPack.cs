@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 : base(ownerContext) { }
 
             protected override void PackToCore(Packer packer, Message addr) {
-                PackToAsyncCore(packer, addr, CancellationToken.None).Wait();
+                PackToAsyncCore(packer, addr, CancellationToken.None).GetAwaiter().GetResult();
             }
 
             protected override Message UnpackFromCore(Unpacker unpacker) {
@@ -249,7 +249,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 : base( ownerContext ) { }
 
             protected override void PackToCore(Packer packer, SocketAddress addr) {
-                PackToAsyncCore(packer, addr, CancellationToken.None).Wait();
+                PackToAsyncCore(packer, addr, CancellationToken.None).GetAwaiter().GetResult();
             }
 
             protected override SocketAddress UnpackFromCore(Unpacker unpacker) {

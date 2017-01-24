@@ -113,22 +113,22 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         protected virtual void Dispose(bool disposing) {
             if (disposing) {
-                // The only resource we need to free is the network stream, since this
-                // is based on the client socket, closing the stream will cause us
-                // to flush the data to the network, close the stream and (in the
-                // NetoworkStream code) close the socket as well.
                 if (_cleanedUp) {
                     return;
                 }
-
                 Socket chkClientSocket = Socket;
+                Socket = null;
                 if (chkClientSocket != null) {
-                    // If the NetworkStream wasn't retrieved, the Socket might
-                    // still be there and needs to be closed to release the effect
-                    // of the Bind() call and free the bound IPEndPoint.
-                    chkClientSocket.Shutdown(SocketShutdown.Both);
-                    chkClientSocket.Close();
-                    Socket = null;
+                    try {
+                        chkClientSocket.Shutdown(SocketShutdown.Both);
+                    }
+                    catch (Exception) {
+                        // ignore
+                    }
+                    finally {
+                        chkClientSocket.Dispose();
+                        Socket = null;
+                    }
                 }
                 _cleanedUp = true;
                 GC.SuppressFinalize(this);

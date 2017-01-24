@@ -77,7 +77,7 @@ namespace Opc.Ua.Bindings.Proxy
 
         public bool IsSocketError
         {
-            get { return m_args.SocketError != SocketError.Ok; }
+            get { return m_args.SocketError != SocketError.Success; }
         }
 
         public string SocketErrorString
@@ -260,7 +260,7 @@ namespace Opc.Ua.Bindings.Proxy
             try
             {
                 await m_socket.ConnectAsync(endpointUrl.DnsSafeHost, endpointUrl.Port);
-                args.m_args.SocketError = SocketError.Ok;
+                args.m_args.SocketError = SocketError.Success;
                 result = true;
             }
             catch (Exception e)
@@ -523,7 +523,7 @@ namespace Opc.Ua.Bindings.Proxy
                 if (!socket.ReceiveAsync(args))
                 {
                     // I/O completed synchronously
-                    if ((args.SocketError != SocketError.Ok) || (args.BytesTransferred < (m_bytesToReceive - m_bytesReceived)))
+                    if ((args.SocketError != SocketError.Success) || (args.BytesTransferred < (m_bytesToReceive - m_bytesReceived)))
                     {
                         throw ServiceResultException.Create(StatusCodes.BadTcpInternalError, args.SocketError.ToString());
                     }
