@@ -32,10 +32,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Select the proxy to use for listen or connect, caches the proxy list for connect or listen
         /// </summary>
         /// <param name="endpoint"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override async Task BindAsync(SocketAddress endpoint, TimeSpan timeout, CancellationToken ct) {
+        public override async Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
             // Proxy selected, look up records
             var bindList = await LookupRecordsForAddressAsync(endpoint, ct);
             if (!bindList.Any()) {
@@ -48,31 +47,49 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Connect to a target on first of bound proxies, or use ping based dynamic lookup
         /// </summary>
         /// <param name="address"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override async Task ConnectAsync(SocketAddress address, TimeSpan timeout, CancellationToken ct) {
+        public override async Task ConnectAsync(SocketAddress address, CancellationToken ct) {
             bool connected = false;
 
             // If bind list present, use it
             if (_bindList != null) {
-                connected = await LinkAsync(_bindList, address, timeout, ct);
+                foreach (var proxy in _bindList) {
+                    bool success = await LinkAsync(proxy, address, ct);
+                    if (!connected && success)
+                        connected = true;
+                }
+                if (!connected) {
+                    throw new SocketException(SocketError.No_host);
+                }
             }
             else {
                 // Otherwise find a proxy that knows about the address
                 address = await TranslateAddressAsync(address, ct);
 
-                await PingAsync(address, async c => {
-
-                    connected = await LinkAsync(c.GetConsumingEnumerable(ct), address, timeout, ct);
-
-                    // Check to see if connect completed
-                    if (!connected)
-                        throw new SocketException(SocketError.No_host);
-
-                    _stream = new SequentialStream(this);
-                }, 
-                timeout, ct);
+                await PingAsync(address, async (response, proxy, ct2) => {
+                    if (connected) {
+                        return Disposition.Done;
+                    }
+                    if (response != null && response.Error == (int)SocketError.Success) {
+                        try {
+                            // Foreach returned item, try to link now
+                            connected = await LinkAsync(proxy, address, ct2);
+                            // Once connected, create stream, and cancel the rest
+                            if (connected)
+                                _stream = new SequentialStream(this);
+                        }
+                        catch (Exception) {
+                            return Disposition.Retry;
+                        }
+                    }
+                    return connected ? Disposition.Done : Disposition.Continue; 
+                }, (ex) => {
+                    if (!connected) {
+                        throw new SocketException(
+                            "Could not link socket on proxy", ex, SocketError.No_host);
+                    }
+                }, ct);
             }
         }
 
@@ -80,14 +97,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Start listening
         /// </summary>
         /// <param name="backlog"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override async Task ListenAsync(int backlog, TimeSpan timeout, CancellationToken ct) {
+        public override async Task ListenAsync(int backlog, CancellationToken ct) {
             bool listening = false;
 
             if (_bindList != null) {
-                listening = await LinkAllAsync(_bindList, null, timeout, ct);
+                listening = await LinkAllAsync(_bindList, null, ct);
             }
             else {
                 // Not bound, must be bound

@@ -50,13 +50,18 @@ namespace Microsoft.Azure.Devices.Proxy {
                         msg.Content = new StringContent(payload, Encoding.UTF8, contentType);
                     }
                 }
-                try {
-                    var resp = await _client.SendAsync(msg).ConfigureAwait(false);
+                try { 
+                    var resp = await _client.SendAsync(msg, ct); 
                     queryHeaders(resp.Headers);
-                    return await resp.Content.ReadAsStringAsync();
+                    return await resp.Content.ReadAsStringAsync(); 
                 }
-                catch (Exception) {
-                    return null;
+                catch (TaskCanceledException ex) {
+                    if (!ct.IsCancellationRequested) {
+                        throw new TimeoutException("SendAsync timed out", ex);
+                    }
+                    else {
+                        throw;
+                    }
                 }
             }
         }
@@ -104,12 +109,17 @@ namespace Microsoft.Azure.Devices.Proxy {
                     }
                 }
                 try {
-                    var resp = await _client.SendAsync(msg).ConfigureAwait(false);
+                    var resp = await _client.SendAsync(msg, ct);
                     queryHeaders(resp.Headers);
-                    return await resp.Content.ReadAsStreamAsync();
+                    return await resp.Content.ReadAsStreamAsync(); 
                 }
-                catch (Exception) {
-                    return null;
+                catch (TaskCanceledException ex) {
+                    if (!ct.IsCancellationRequested) {
+                        throw new TimeoutException("SendAsync timed out", ex);
+                    }
+                    else {
+                        throw;
+                    }
                 }
             }
         }

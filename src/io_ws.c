@@ -317,6 +317,10 @@ static void io_ws_connection_clear_failures(
     io_ws_connection_t* connection
 )
 {
+    if (connection->back_off_in_seconds)
+    {
+        log_info(connection->log, "Clearing failures on connection %p...", connection);
+    }
     connection->last_success = connection->last_activity = ticks_get();
     connection->back_off_in_seconds = 0;
 }
@@ -349,9 +353,9 @@ static void io_ws_connection_reconnect(
 
     if (!connection->back_off_in_seconds)
         connection->back_off_in_seconds = 1;
-    connection->back_off_in_seconds *= 2;
-    if (connection->back_off_in_seconds > 24 * 60 * 60)
-        connection->back_off_in_seconds = 24 * 60 * 60;
+    connection->back_off_in_seconds *= 3;
+    if (connection->back_off_in_seconds > 1 * 60 * 60)
+        connection->back_off_in_seconds = 1 * 60 * 60;
 
     connection->status = io_ws_connection_status_disconnected;
 }
@@ -432,8 +436,8 @@ static void io_ws_connection_deliver_send_results(
 
         io_queue_buffer_release(buffer);
 
-        if (result == er_ok)
-            io_ws_connection_clear_failures(connection);
+      //  if (result == er_ok)
+      //      io_ws_connection_clear_failures(connection);
 
         // Inform client of sent completion
         if (cb) cb(ctx, result);
@@ -464,7 +468,7 @@ static void io_ws_connection_on_disconnected(
         connection->status = io_ws_connection_status_disconnected;
         __do_next(connection, io_ws_connection_reconnect);
     }
-    else 
+    else if (connection->status != io_ws_connection_status_disconnected)
     {
         dbg_assert(0, "bad state %d for connection %p", 
             connection->status, connection);
@@ -616,7 +620,9 @@ static void io_ws_connection_on_end_send(
     if (!buffer)
         return;
 
+    buffer->code = result;
     io_queue_buffer_set_done(buffer);
+
     __do_next(connection, io_ws_connection_deliver_send_results);
 
     if (result != er_ok && result != er_aborted)

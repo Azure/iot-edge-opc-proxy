@@ -5,9 +5,6 @@
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
-    using System.Linq;
-    using System.Collections.Generic;
-    using System.Collections.Concurrent;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -42,10 +39,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         break;
                 }
 
-                int toCopy = Math.Min(
-                    buffer.Count - result.Count, _lastData.Payload.Count);
-                Buffer.BlockCopy(
-                    _lastData.Payload.Array, _offset + _lastData.Payload.Offset, buffer.Array, buffer.Offset + result.Count, toCopy);
+                int toCopy = Math.Min(buffer.Count - result.Count, _lastData.Payload.Count - _offset);
+                Buffer.BlockCopy(_lastData.Payload.Array, _offset + _lastData.Payload.Offset,
+                buffer.Array, buffer.Offset + result.Count, toCopy);
 
                 result.Count += toCopy;
                 _offset += toCopy;

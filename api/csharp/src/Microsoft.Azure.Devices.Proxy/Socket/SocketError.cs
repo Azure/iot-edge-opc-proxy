@@ -48,6 +48,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         Undelivered,
         Token,
         Comm,
-        Ok = 0
+        Success = 0
     }
 }

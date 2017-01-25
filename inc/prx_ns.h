@@ -565,8 +565,9 @@ decl_internal_4(int32_t, prx_ns_entry_create,
 //
 // Create in memory entry from connection string
 //
-decl_internal_3(int32_t, prx_ns_entry_create_from_cs,
+decl_internal_4(int32_t, prx_ns_entry_create_from_cs,
     uint32_t, type,
+    io_ref_t*, address,
     io_cs_t*, cs,
     prx_ns_entry_t**, entry
 );

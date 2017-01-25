@@ -15,9 +15,9 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         private static readonly object Semaphore = new object();
 
-        public static int MaxRetryCount = 5;
-        public static int MaxRetryDelay = 16 * 60 * 1000; // 16 minutes
-        public static int BackoffDelta = 1000;
+        public static int MaxRetryCount = 1000;
+        public static int MaxRetryDelay = 3 * 60 * 1000; // 3 minutes
+        public static int BackoffDelta = 3;
 
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         public static Func<int, int> Linear {
             get {
-                return (k) => k * 2 * BackoffDelta;
+                return (k) => k * BackoffDelta;
             }
         }
 
@@ -72,12 +72,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                     return;
                 }
                 catch (Exception ex) {
-                    ProxyEventSource.Log.Rethrow(ex, work);
                     if (!cont(ex))
-                        throw;
-                    ProxyEventSource.Log.Retry(work, k);
+                        throw ProxyEventSource.Log.Rethrow(ex, work); 
+                    ProxyEventSource.Log.Retry(work, k, ex);
                 }
-                await Task.Delay(policy(k));
+                int delay = policy(k);
+                if (delay == 0)
+                    continue;
+                await Task.Delay(delay);
             }
             throw ProxyEventSource.Log.Timeout("Retry timeout exhausted.");
         }
@@ -101,12 +103,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                     return await work();
                 }
                 catch (Exception ex) {
-                    ProxyEventSource.Log.Rethrow(ex, work);
                     if (!cont(ex))
-                        throw;
-                    ProxyEventSource.Log.Retry(work, k);
+                        throw ProxyEventSource.Log.Rethrow(ex, work);
+                    ProxyEventSource.Log.Retry(work, k, ex);
                 }
-                await Task.Delay(policy(k));
+                int delay = policy(k);
+                if (delay == 0)
+                    continue;
+                await Task.Delay(delay);
             }
             throw ProxyEventSource.Log.Timeout("Retry timeout exhausted.");
         }

@@ -16,7 +16,7 @@ _ext__ int32_t io_message_decode_encode(
 )
 {
     int32_t result;
-    bool is_null;
+    bool is_null = false;
     bool call_fini = false;
     io_codec_ctx_t ctx, obj;
     io_fixed_buffer_stream_t mem;

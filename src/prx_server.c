@@ -24,7 +24,6 @@ struct prx_server
 {
     io_ref_t id;                                             // Server id
     io_connection_t* listener;     // connection used by server to listen
-    int32_t timeout;
     struct hashtable* sockets;                  // List of active sockets
     lock_t sockets_lock;       
     prx_scheduler_t* scheduler;  // All server tasks are on this scheduler
@@ -60,7 +59,6 @@ typedef struct prx_server_socket
     int32_t last_error;             // Last error that occurred on socket
     ticks_t last_activity;        // Last activitiy on this socket for gc
     ticks_t time_opened;
-    uint32_t timeout;                        // Timeout for current state
 
     io_ref_t id;                                         // Local link id
     io_ref_t owner;  // Remote socket id for link used for socket control
@@ -201,7 +199,7 @@ static void prx_server_worker(
                 next = (prx_server_socket_t*)hashtable_iterator_value(itr);
                 dbg_assert_ptr(next);
                 if (next->last_activity == 0 ||
-                    (uint32_t)(now - next->last_activity) < next->timeout)
+                    (uint32_t)(now - next->last_activity) < next->client_itf.props.timeout)
                     timedout = false;
                 else
                     timedout = true;  // State timed out
@@ -836,12 +834,14 @@ static void prx_server_socket_handle_openrequest(
         if (result != er_ok)
             break;
 
+
         // Create new websocket connection using websocket transport
         result = io_cs_create_from_string(
             message->content.open_request.connection_string, &cs);
         if (result != er_ok)
             break;
-        result = prx_ns_entry_create_from_cs(prx_ns_entry_type_link, cs, &entry);
+        result = prx_ns_entry_create_from_cs(
+            prx_ns_entry_type_link, &server_sock->stream_id, cs, &entry);
         if (result != er_ok)
             break;
         result = io_transport_create(io_iot_hub_ws_server_transport(),
@@ -849,37 +849,25 @@ static void prx_server_socket_handle_openrequest(
             server_sock->server->scheduler, &server_sock->stream);
         if (result != er_ok)
             break;
-    } while (0);
-
-    io_message_as_response(message);
-    do
-    {
-        //
-        // Send open response over stream as first message to allow clients to 
-        // correlate the stream with the open request.
-        //
-        if (result != er_ok)
-            break;
-        message->error_code = er_ok;
-        io_ref_copy(&server_sock->stream_id, &message->target_id);
-        result = io_connection_send(server_sock->stream, message);
-        if (result != er_ok)
-            break;
-
-        server_sock->time_opened = server_sock->last_activity = ticks_get();
-        server_sock->state = prx_server_socket_opened;
 
         // Start receiving on our socket, sending further messages over the stream
         result = pal_socket_can_recv(server_sock->sock, true);
         if (result != er_ok)
             break;
 
+        server_sock->time_opened = server_sock->last_activity = ticks_get();
+        server_sock->state = prx_server_socket_opened;
         log_info(server_sock->log, "Socket open!");
-        break;
     } 
     while (0);
 
-    if (result != er_ok)
+    io_message_as_response(message);
+    if (result == er_ok)
+    {
+        message->error_code = er_ok;
+        io_ref_copy(&server_sock->stream_id, &message->target_id);
+    } 
+    else
     {
         log_error(server_sock->log, "Failed to handle open message (%s)!",
             prx_err_string(result));
@@ -1206,9 +1194,6 @@ static int32_t prx_server_socket_create(
         server_sock->state = prx_server_socket_created;
         server_sock->log = log_get("server_sk");
 
-        // TODO: Configure this for socket in link request!
-        server_sock->timeout = 30 * 1000;
-
         if (owner_addr)
             io_ref_copy(owner_addr, &server_sock->owner);
 
@@ -1301,6 +1286,9 @@ static void prx_server_handle_linkrequest(
         // Create socket handle
         memcpy(&server_sock->client_itf.props, &message->content.link_request.props,
             sizeof(server_sock->client_itf.props));
+
+        if (server_sock->client_itf.props.timeout < 30000)
+            server_sock->client_itf.props.timeout = 30000;
         result = pal_socket_create(&server_sock->client_itf, &server_sock->sock);
         if (result != er_ok)
             break;
@@ -1582,7 +1570,6 @@ int32_t prx_server_create(
         return er_out_of_memory;
     do
     {
-        server->timeout = 60000; // TODO: make configurable...
         server->log = log_get("server");
         io_ref_new(&server->id);
 

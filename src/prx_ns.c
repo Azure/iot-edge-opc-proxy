@@ -2550,6 +2550,7 @@ int32_t prx_ns_entry_to_prx_socket_address(
 //
 int32_t prx_ns_entry_create_from_cs(
     uint32_t type,
+    io_ref_t* address,
     io_cs_t* cs,
     prx_ns_entry_t** created
 )
@@ -2560,7 +2561,7 @@ int32_t prx_ns_entry_create_from_cs(
     if (!cs || !created)
         return er_fault;
 
-    result = prx_ns_generic_entry_create(type, NULL, NULL, cs, &entry);
+    result = prx_ns_generic_entry_create(type, address, NULL, cs, &entry);
     if (result != er_ok)
         return result;
 

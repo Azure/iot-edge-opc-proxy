@@ -29,31 +29,25 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Connects a socket to an endpoint
         /// </summary>
         /// <param name="endpoint"></param>
-        /// <param name="connectTimeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task ConnectAsync(SocketAddress address, TimeSpan timeout, 
-            CancellationToken ct);
+        Task ConnectAsync(SocketAddress address, CancellationToken ct);
 
         /// <summary>
         /// Creates a socket bound to proxy
         /// </summary>
         /// <param name="endpoint"></param>
-        /// <param name="connectTimeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task BindAsync(
-            SocketAddress endpoint, TimeSpan timeout, CancellationToken ct);
+        Task BindAsync(SocketAddress endpoint, CancellationToken ct);
 
         /// <summary>
         /// Creates a listening link
         /// </summary>
         /// <param name="backlog"></param>
-        /// <param name="connectTimeout"></param>
         /// <param name="none"></param>
         /// <returns></returns>
-        Task ListenAsync(
-            int backlog, TimeSpan timeout, CancellationToken ct);
+        Task ListenAsync(int backlog, CancellationToken ct);
 
         /// <summary>
         /// Close (close)
@@ -61,6 +55,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="connectTimeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task CloseAsync(TimeSpan timeout, CancellationToken ct);
+        Task CloseAsync(CancellationToken ct);
     }
 }

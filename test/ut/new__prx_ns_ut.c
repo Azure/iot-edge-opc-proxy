@@ -2163,6 +2163,7 @@ TEST_FUNCTION(prx_ns_entry_create__neg)
 TEST_FUNCTION(prx_ns_entry_create_from_cs__success)
 {
     static const uint32_t k_type_valid;
+    static const io_ref_t* k_address_valid;
     static const io_cs_t* k_cs_valid;
     static const prx_ns_entry_t** k_entry_valid;
     int32_t result;
@@ -2171,7 +2172,7 @@ TEST_FUNCTION(prx_ns_entry_create_from_cs__success)
     // ... 
 
     // act 
-    result = prx_ns_entry_create_from_cs(k_type_valid, k_cs_valid, k_entry_valid);
+    result = prx_ns_entry_create_from_cs(k_type_valid, k_address_valid, k_cs_valid, k_entry_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -2182,6 +2183,26 @@ TEST_FUNCTION(prx_ns_entry_create_from_cs__success)
 // Test prx_ns_entry_create_from_cs passing as type argument an invalid uint32_t value 
 // 
 TEST_FUNCTION(prx_ns_entry_create_from_cs__arg_type_invalid)
+{
+    // ... 
+    int32_t result;
+
+    // arrange 
+    // ... 
+
+    // act 
+    handle = prx_ns_entry_create_from_cs();
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    // ... 
+}
+
+// 
+// Test prx_ns_entry_create_from_cs passing as address argument an invalid io_ref_t* value 
+// 
+TEST_FUNCTION(prx_ns_entry_create_from_cs__arg_address_invalid)
 {
     // ... 
     int32_t result;
@@ -2244,6 +2265,7 @@ TEST_FUNCTION(prx_ns_entry_create_from_cs__arg_entry_invalid)
 TEST_FUNCTION(prx_ns_entry_create_from_cs__neg)
 {
     static const uint32_t k_type_valid;
+    static const io_ref_t* k_address_valid;
     static const io_cs_t* k_cs_valid;
     static const prx_ns_entry_t** k_entry_valid;
     int32_t result;
@@ -2256,7 +2278,7 @@ TEST_FUNCTION(prx_ns_entry_create_from_cs__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = prx_ns_entry_create_from_cs(k_type_valid, k_cs_valid, k_entry_valid);
+    result = prx_ns_entry_create_from_cs(k_type_valid, k_address_valid, k_cs_valid, k_entry_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);

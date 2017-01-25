@@ -8,30 +8,36 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System.Threading;
     using System.Threading.Tasks;
 
+    public enum Disposition {
+        Continue,
+        Retry,
+        Done
+    }
+
     /// <summary>
     /// Services providing remote procedure call functionality for proxy
     /// command control implement this interface.
     /// </summary>
     public interface IRemotingService {
+
         /// <summary>
         /// Send message and receive response in one call
         /// </summary>
         /// <param name="message"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<Message> CallAsync(INameRecord proxy, Message message, 
-            TimeSpan timeout, CancellationToken ct);
+            CancellationToken ct);
 
         /// <summary>
         /// Broad cast to all proxies, calls delegate for each response
         /// </summary>
         /// <param name="message"></param>
         /// <param name="handler"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task BroadcastAsync(Message message, Func<Message, INameRecord, Task> handler, 
-            TimeSpan timeout, CancellationToken ct);
+        Task BroadcastAsync(Message message,
+            Func<Message, INameRecord, CancellationToken, Task<Disposition>> handler,
+            Action<Exception> last, CancellationToken ct);
     }
 }
