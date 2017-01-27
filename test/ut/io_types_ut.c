@@ -1531,10 +1531,10 @@ TEST_FUNCTION(io_decode_prx_socket_properties__neg)
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_invalid_format, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_invalid_format, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_invalid_format, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_invalid_format, er_out_of_memory);
+        er_invalid_format, er_out_of_memory,  er_out_of_memory,  er_out_of_memory, er_out_of_memory,
+        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory, er_out_of_memory, 
+        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory, er_out_of_memory, 
+        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory);
 }
 
 // 

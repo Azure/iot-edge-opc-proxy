@@ -6,11 +6,10 @@
 	url = https://github.com/marcschier/azure-umqtt-c.git
 [submodule "deps/shared"]
 	path = deps/shared
-	url = https://github.com/marcschier/azure-c-shared-utility.git
+	url = https://github.com/Azure/azure-c-shared-utility.git
 [submodule "deps/umock"]
 	path = deps/umock
 	url = https://github.com/Azure/umock-c.git
-	branch = develop
 [submodule "deps/ctest"]
 	path = deps/ctest
 	url = https://github.com/Azure/azure-ctest.git
@@ -20,6 +19,13 @@
 [submodule "deps/parson"]
 	path = deps/parson
 	url = https://github.com/kgabis/parson.git
+[submodule "deps/lws"]
+	path = deps/lws
+	url = https://github.com/warmcat/libwebsockets.git
+	branch = v2.1-stable
+[submodule "deps/getopt"]
+	path = deps/getopt
+	url = https://github.com/alex85k/wingetopt
 [submodule "deps/cmp"]
 	path = deps/cmp
 	url = https://github.com/marcschier/cmp.git
@@ -32,10 +38,3 @@
 	path = deps/hashtable
 	url = https://github.com/marcschier/c-hashtable.git
 	branch = c99
-[submodule "deps/lws"]
-	path = deps/lws
-	url = https://github.com/warmcat/libwebsockets.git
-	branch = v2.1-stable
-[submodule "deps/getopt"]
-	path = deps/getopt
-	url = https://github.com/alex85k/wingetopt

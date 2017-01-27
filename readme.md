@@ -41,7 +41,7 @@ The module was successfully built and tested on Ubuntu 16.04 and Alpine Linux 3.
 
 On Ubunutu, install the required build dependencies using apt:
 ```
-sudo apt-get install bash git cmake libcurl4-openssl-dev build-essential
+sudo apt-get install bash git cmake zlib1g-dev libssl-dev libcurl4-openssl-dev build-essential
 ```
 
 After cloning the repository, run <repo-root>/bld/build.sh in bash.

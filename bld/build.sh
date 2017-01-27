@@ -4,99 +4,176 @@
 
 set -e
 
-build_clean=
-build_root=$(cd "$(dirname "$0")/.." && pwd)
-log_dir=$build_root
+repo_root=$(cd "$(dirname "$0")/.." && pwd)
+
 skip_unittests=OFF
+skip_dotnet=0
 use_zlog=OFF
 
-cd "$build_root"
+build_root="${repo_root}"/build
+build_clean=0
+build_configs=()
+build_nuget_output=$build_root
+
 usage ()
 {
     echo "build.sh [options]"
     echo "options"
-    echo " -x,  --xtrace                 print a trace of each command"
-    echo " -c,  --clean                  remove artifacts from previous build before building"
-    echo " -cl, --compileoption <value>  specify a compile option to be passed to gcc"
-    echo "   Example: -cl -O1 -cl ..."
-    echo " --use-zlog                    compile in zlog as logging framework"
-    echo " --skip-unittests              skip the running of unit tests (unit tests are run by default)"
+	echo "    --os <value>			   [] Os to build on (needs Docker installed)."
+    echo " -c --clean                  Build clean (Removes previous build output)"
+    echo " -C --config <value>         [Debug] Build configuration (e.g. Debug, Release)"
+    echo " -o --build-root <value>     [/build] Directory in which to place all files during build"
+    echo "    --use-zlog               Use zlog as logging framework instead of xlogging"
+    echo " 	  --skip-unittests         Skips building and executing unit tests"
+	echo "	  --skip-dotnet            Do not build dotnet core API and packages"
+	echo " -n --nuget-folder <value>   [/build] Folder to use when outputting nuget packages."
+    echo " -x --xtrace                 print a trace of each command"
     exit 1
 }
 
+# -----------------------------------------------------------------------------
+# -- Parse arguments
+# -----------------------------------------------------------------------------
 process_args ()
 {
-    build_clean=0
     save_next_arg=0
-    extracloptions=" "
-
-    for arg in $*
-    do
-      if [ $save_next_arg == 1 ]
-      then
-        # save arg to pass to gcc
-        extracloptions="$extracloptions $arg"
-        save_next_arg=0
-      else
-          case "$arg" in
-              "-x" | "--xtrace" ) set -x;;
-              "-c" | "--clean" ) build_clean=1;;
-              "-cl" | "--compileoption" ) save_next_arg=1;;
-              "--use-zlog" ) use_zlog=ON;;
-              "--skip-unittests" ) skip_unittests=ON;;
-              * ) usage;;
-          esac
-      fi
+    for arg in $*; do
+		  if [ $save_next_arg == 1 ]; then
+			build_root="$arg"
+			save_next_arg=0
+		elif [ $save_next_arg == 2 ]; then
+			build_configs+=("$arg")
+			save_next_arg=0
+		elif [ $save_next_arg == 3 ]; then
+			build_nuget_output="$arg"
+			save_next_arg=0
+		else
+			case "$arg" in
+				-x | --xtrace)
+					set -x;;
+				-o | --build-root)
+					save_next_arg=1;;
+				-C | --config)
+					save_next_arg=2;;
+				-c | --clean)
+					build_clean=1;;
+				--use-zlog)
+					use_zlog=ON;;
+				--use-openssl)
+					;;
+				--use-libwebsockets)
+					;;
+				--skip-unittests)
+					skip_unittests=ON;;
+				--skip-dotnet)
+					skip_dotnet=1;;
+				-n | --nuget-folder)
+					save_next_arg=3;;
+				*)
+					usage;;
+			esac
+		fi
     done
 }
 
+# -----------------------------------------------------------------------------
+# -- build natively with CMAKE and run tests
+# -----------------------------------------------------------------------------
+native_build()
+{
+	echo -e "\033[1mBuilding native...\033[0m"
+	for c in ${build_configs[@]}; do
+		echo -e "\033[1m    ${c}...\033[0m"
+		mkdir -p "${build_root}/cmake/${c}"
+		pushd "${build_root}/cmake/${c}" > /dev/null
+		cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
+				-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
+			return 1 
+		make || \
+			return 1
+		if [ $skip_unittests == ON ]; then
+			echo "Skipping unittests..."
+		else
+			#use doctored (-DPURIFY no-asm) openssl
+			export LD_LIBRARY_PATH=/usr/local/ssl/lib
+			ctest -C "$c" --output-on-failure || \
+				return 1
+			export LD_LIBRARY_PATH=
+		fi
+		popd > /dev/null
+	done
+	return 0
+}
+
+# -----------------------------------------------------------------------------
+# -- build dotnet api
+# -----------------------------------------------------------------------------
+managed_build()
+{
+	if [ $skip_dotnet == 1 ]; then
+		echo "Skipping dotnet..."
+	else
+		if dotnet --version; then
+			pushd "${repo_root}/api/csharp" > /dev/null
+			echo -e "\033[1mBuilding dotnet...\033[0m"
+			dotnet restore || exit 1
+			for c in ${build_configs[@]}; do
+				echo -e "\033[1m    ${c}...\033[0m"
+
+				mkdir -p "${build_nuget_output}/${c}"
+				mkdir -p "${build_root}/${c}"
+
+				for f in $(find . -type f -name "project.json"); do
+					grep -q netstandard1.3 $f
+					if [ $? -eq 0 ]; then
+							echo -e "\033[1mBuilding ${f} as netstandard1.3\033[0m"
+						dotnet build -c $c -o "${build_root}/${c}" \
+							--framework netstandard1.3 $f \
+							|| return $?
+						dotnet pack --no-build -c $c $f \
+							-o "${build_nuget_output}/${c}" \
+							|| return $?
+					else
+						grep -q netcoreapp1.0 $f
+						if [ $? -eq 0 ]; then
+							echo -e "\033[1mBuilding ${f} as netcoreapp1.0\033[0m"
+							dotnet build -c $c -o "${build_root}/${c}" \
+								--framework netcoreapp1.0 $f \
+								|| return $?
+						fi
+					fi
+				done
+			done
+			popd > /dev/null
+		else
+			echo "No dotnet installed, skipping dotnet build."
+		fi
+	fi
+	return 0
+}
+
+# -----------------------------------------------------------------------------
+# -- build in container
+# -----------------------------------------------------------------------------
+#container_build()
+#{
+# todo
+#}
+
+pushd "$repo_root" > /dev/null
 process_args $*
-
-cmake_root="$build_root"/build
-rm -r -f "$cmake_root"
-mkdir -p "$cmake_root"
-pushd "$cmake_root"
-cmake -DCMAKE_BUILD_TYPE=Debug \
-      -Dskip_unittests:BOOL=$skip_unittests \
-      -Duse_zlog:BOOL=$use_zlog \
-      "$build_root"
-
-CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu)
-
-# Make sure there is enough virtual memory on the device to handle more than one job.
-# We arbitrarily decide that 500 MB per core is what we need in order to run the build
-# in parallel.
-MINVSPACE=$(expr 500000 \* $CORES)
-
-# Acquire total memory and total swap space setting them to zero in the event the command fails
-MEMAR=( $(sed -n -e 's/^MemTotal:[^0-9]*\([0-9][0-9]*\).*/\1/p' -e 's/^SwapTotal:[^0-9]*\([0-9][0-9]*\).*/\1/p' /proc/meminfo) )
-[ -z "${MEMAR[0]##*[!0-9]*}" ] && MEMAR[0]=0
-[ -z "${MEMAR[1]##*[!0-9]*}" ] && MEMAR[1]=0
-
-let VSPACE=${MEMAR[0]}+${MEMAR[1]}
-
-if [ "$VSPACE" -lt "$MINVSPACE" ] ; then
-  # We think the number of cores to use is a function of available memory divided by 500 MB
-  CORES2=$(expr ${MEMAR[0]} / 500000)
-
-  # Clamp the cores to use to be between 1 and $CORES (inclusive)
-  CORES2=$([ $CORES2 -le 0 ] && echo 1 || echo $CORES2)
-  CORES=$([ $CORES -le $CORES2 ] && echo $CORES || echo $CORES2)
+if [ -z "$build_configs" ]; then
+	build_configs=(Debug Release)
 fi
-
-make --jobs=$CORES
-
-if [[ $run_valgrind == 1 ]] ;
-then
-    #use doctored (-DPURIFY no-asm) openssl
-    export LD_LIBRARY_PATH=/usr/local/ssl/lib
-    ctest -j $CORES --output-on-failure
-    export LD_LIBRARY_PATH=
-else
-    ctest -j $CORES -C "Debug" --output-on-failure
+echo "Building ${build_configs[@]}..."
+if [ $build_clean == 1 ]; then
+    echo "Cleaning previous build output..."
+    rm -r -f "${build_root}"
 fi
-
-popd
+mkdir -p "${build_root}"
+native_build || exit 1
+managed_build || exit 1
+popd > /dev/null
 
 [ $? -eq 0 ] || exit $?
 

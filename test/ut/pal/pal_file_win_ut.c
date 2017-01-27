@@ -112,7 +112,6 @@ TEST_FUNCTION(pal_win_file_init__neg_1)
 // 
 TEST_FUNCTION(pal_win_file_init__neg_2)
 {
-    static const char* k_working_dir_valid = "working\\dir";
     int32_t result;
 
     working_dir = NULL;
@@ -121,7 +120,8 @@ TEST_FUNCTION(pal_win_file_init__neg_2)
     STRICT_EXPECTED_CALL(h_realloc(MAX_PATH, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(GetCurrentDirectoryA(MAX_PATH, (char*)UT_MEM))
+    STRICT_EXPECTED_CALL(GetCurrentDirectoryA(MAX_PATH, IGNORED_PTR_ARG))
+        .IgnoreArgument(2)
         .SetReturn(0);
     STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
