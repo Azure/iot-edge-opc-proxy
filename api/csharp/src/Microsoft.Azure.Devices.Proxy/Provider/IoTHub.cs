@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
 
                 var proxyList = new List<INameRecord>(results);
-                for (int attempts = 0; attempts < 20 && !ct.IsCancellationRequested; attempts++) {
+                for (int attempts = 0; !ct.IsCancellationRequested; attempts++) {
                     var tasks = new Dictionary<Task<Message>, INameRecord>();
                     foreach (var proxy in proxyList) {
                         tasks.Add(TryInvokeDeviceMethodAsync(proxy, message, 
@@ -182,14 +182,17 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     }
                     await Task.Delay(3 * attempts, cts.Token);
                 }
-                ct.ThrowIfCancellationRequested();
-                last(null);
+                if (!ct.IsCancellationRequested) {
+                    last(null);
+                }
             }
             catch (OperationCanceledException) {
             }
             catch (Exception e) {
-                last(e);
-                throw ProxyEventSource.Log.Rethrow(e, this);
+                if (!ct.IsCancellationRequested) {
+                    last(e);
+                    throw ProxyEventSource.Log.Rethrow(e, this);
+                }
             }
             finally {
                 try {
@@ -235,8 +238,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="sql"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private Task<IEnumerable<INameRecord>> LookupAsync(
-            string sql, CancellationToken ct) =>
+        private Task<IEnumerable<INameRecord>> LookupAsync(string sql, CancellationToken ct) =>
             Call((s, c) => LookupUncachedAsync(s, c), sql, ct);
 
         /// <summary>

@@ -1,0 +1,399 @@
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.Azure.Devices.Proxy.MsgPack {
+    using System;
+    using System.Threading;
+    using System.Runtime.Serialization;
+    using System.Reflection;
+    using System.Threading.Tasks;
+    using System.Collections.Generic;
+    using System.Collections;
+    using System.Linq;
+
+    /// <summary>
+    /// Default contract serializer
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public class ReflectionSerializer<T> : Serializer<T> {
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public ReflectionSerializer() {
+            _members = new List<Member>(typeof(T).GetProperties().Length);
+            // Find all properties that are part of the data contract
+            foreach (var prop in typeof(T).GetRuntimeProperties()) {
+                foreach (var attr in prop.CustomAttributes) {
+                    if (attr.AttributeType != typeof(DataMemberAttribute)) {
+                        continue;
+                    }
+                    string name = null;
+                    int order = -1;
+                    foreach (var arg in attr.NamedArguments) {
+                        /**/ if (arg.MemberName.Equals("Name")) {
+                            name = arg.TypedValue.Value.ToString();
+                        }
+                        else if (arg.MemberName.Equals("Order")) {
+                            int.TryParse(arg.TypedValue.Value.ToString(), out order);
+                        }
+                        else {
+                            continue;
+                        }
+                    }
+                    if (order < 0) {
+                        throw new FormatException(
+                           $"Order field required on DataMemberAttribute for {prop.Name}");
+                    }
+                    _members.Add(new Member(order, name, prop));
+                }
+            }
+            _members.Sort();
+        }
+
+
+        /// <summary>
+        /// Read property values from stream
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public override async Task<T> ReadAsync(MsgPackReader reader, 
+            SerializerContext context, CancellationToken ct) {
+
+            T result = (T)typeof(T).GetConstructor(_noType).Invoke(_noObj);
+
+            // Read object header
+            int members = await reader.ReadObjectHeaderAsync(ct);
+            if (members > _members.Count) {
+                throw new FormatException("Too many members");
+            }
+            foreach (var item in _members) {
+                if (members == 0) {
+                    throw new FormatException("Not enough members");
+                }
+                object obj = await ReadAsync(reader, item.Prop.PropertyType, context, ct);
+                if (item != null && obj != null) {
+                    item.Prop.SetValue(result, obj);
+                }
+                --members;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Write properties of this type using reflection
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="obj"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public override async Task WriteAsync(MsgPackWriter writer, T obj,
+            SerializerContext context, CancellationToken ct) {
+
+            if (obj == null) {
+                await writer.WriteNilAsync(ct);
+                return;
+            }
+
+            // Write object header
+            await writer.WriteObjectHeaderAsync(_members.Count, ct);
+
+            foreach (var item in _members) {
+                if (item != null) {
+                    await WriteAsync(writer, item.Prop.GetValue(obj), 
+                        item.Prop.PropertyType, context, ct);
+                }
+                else {
+                    await writer.WriteNilAsync(ct);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Non generic helper
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="type"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task<object> ReadAsync(MsgPackReader reader, Type type,
+            SerializerContext context, CancellationToken ct) {
+
+            Type nullable = Nullable.GetUnderlyingType(type);
+            if (nullable != null) {
+                type = nullable;
+            }
+
+            /**/ if (type == typeof(string)) {
+                return await reader.ReadStringAsync(ct);
+            }
+            else if (type == typeof(byte[])) {
+                return await reader.ReadBinAsync(ct);
+            }
+
+            else if (type.GetTypeInfo().IsPrimitive) {
+                if (type == typeof(bool))
+                    return reader.ReadBoolAsync(ct);
+                if (type == typeof(uint))
+                    return await reader.ReadUInt32Async(ct);
+                if (type == typeof(int))
+                    return await reader.ReadInt32Async(ct);
+                if (type == typeof(byte))
+                    return await reader.ReadUInt8Async(ct);
+                if (type == typeof(char))
+                    return await reader.ReadCharAsync(ct);
+                if (type == typeof(ulong))
+                    return await reader.ReadUInt64Async(ct);
+                if (type == typeof(long))
+                    return await reader.ReadInt64Async(ct);
+                if (type == typeof(sbyte))
+                    return await reader.ReadInt8Async(ct);
+                if (type == typeof(ushort))
+                    return await reader.ReadUInt16Async(ct);
+                if (type == typeof(short))
+                    return await reader.ReadInt16Async(ct);
+                if (type == typeof(double))
+                    return await reader.ReadDoubleAsync(ct);
+                if (type == typeof(float))
+                    return await reader.ReadFloatAsync(ct);
+                throw new FormatException($"Type {type} is primitive, but cannot read.");
+            }
+
+            else if (type.GetTypeInfo().IsValueType) {
+                long val = await reader.ReadInt64Async(ct);
+                return Enum.ToObject(type, val);
+            }
+
+            else if (type.GetTypeInfo().IsArray) {
+                int len = await reader.ReadArrayLengthAsync(ct);
+                Type itemType = type.GetElementType();
+                Array array = Array.CreateInstance(itemType, len);
+                for (int i = 0; i < len; i++) {
+                    object o = await ReadAsync(reader, itemType, context, ct);
+                    array.SetValue(o, i);
+                }
+                return array;
+            }
+
+            else if (typeof(IList).IsAssignableFrom(type)) {
+                IList list = (IList)Activator.CreateInstance(type);
+                Type itemType = null;
+                if (!list.GetType().GetTypeInfo().IsGenericType) {
+#if !TYPE_SUPPORT
+                    throw new FormatException("non-generic collections not supported");
+#else
+                    // Would need to add type encoding
+#endif
+                }
+                else {
+                    itemType = type.GetGenericArguments()[0];
+                }
+                int len = await reader.ReadArrayLengthAsync(ct);
+                for (int i = 0; i < len; i++) {
+                    object o = await ReadAsync(reader, itemType, context, ct);
+                    list.Add(o);
+                }
+                return list;
+            }
+
+            else if (typeof(IDictionary).IsAssignableFrom(type)) {
+                IDictionary map = (IDictionary)Activator.CreateInstance(type);
+                Type keyType = null;
+                Type valueType = null;
+                if (!map.GetType().GetTypeInfo().IsGenericType) {
+#if !TYPE_SUPPORT
+                    throw new FormatException("non-generic collections not supported");
+#else
+                    // Would need to add type encoding
+#endif
+                }
+                else {
+                    keyType = type.GetGenericArguments()[0];
+                    valueType = type.GetGenericArguments()[1];
+                }
+
+                int len = await reader.ReadMapLengthAsync(ct);
+                for (int i = 0; i < len; i++) {
+                    object key = await ReadAsync(reader, keyType, context, ct);
+                    object value = await ReadAsync(reader, valueType, context, ct);
+                    map.Add(key, value);
+                }
+                return map;
+            }
+
+            else if (typeof(IEnumerable).IsAssignableFrom(type)) {
+                object list = Activator.CreateInstance(type);
+                MethodInfo add = type.GetMethod("Add");
+                if (add == null) {
+                    throw new FormatException($"No adder for enumerable of type {type}");
+                }
+                Type itemType = add.GetParameters()[0].ParameterType;
+                int len = await reader.ReadArrayLengthAsync(ct);
+                for (int i = 0; i < len; i++) {
+                    object o = await ReadAsync(reader, itemType, context, ct);
+                    add.Invoke(list, new object[] { o });
+                }
+                return list;
+            }
+
+            else {
+                object serializer = context.GetType().GetMethod("Get").
+                    MakeGenericMethod(type).Invoke(context, _noObj);
+                return await (Task<object>)serializer.GetType().GetMethod("GetAsync").Invoke(
+                    serializer, new object[] { reader, context, ct });
+            }
+        }
+
+        /// <summary>
+        /// Non-generic helper
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="obj"></param>
+        /// <param name="type"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task WriteAsync(MsgPackWriter writer, object obj, Type type, 
+            SerializerContext context, CancellationToken ct) {
+
+            Type nullable  = Nullable.GetUnderlyingType(type);
+            if (nullable != null) {
+                type = nullable;
+            }
+
+            /**/ if (type.GetTypeInfo().IsPrimitive ||
+                type == typeof(string) ||
+                type == typeof(byte[])) {
+                await writer.WriteAsync(obj, type.GetTypeInfo(), ct);
+            }
+
+            else if (type.GetTypeInfo().IsValueType) {
+                type = Enum.GetUnderlyingType(type);
+                await WriteAsync(writer, Convert.ChangeType(obj, type), type, context, ct);
+            }
+
+            else if (type.GetTypeInfo().IsArray) {
+                await WriteAsync(writer, context, ct, (IEnumerable)obj, ((object[])obj).Length);
+            }
+            else if (typeof(IList).IsAssignableFrom(type)) {
+                await WriteAsync(writer, context, ct, (IEnumerable)obj, ((IList)obj).Count);
+            }
+            else if (typeof(IEnumerable).IsAssignableFrom(type)) {
+                IEnumerable enumerable = (IEnumerable)obj;
+                int len = 0;
+                foreach (var item in enumerable) { len++; }
+                await WriteAsync(writer, context, ct, enumerable, len);
+            }
+
+            else if (typeof(IDictionary).IsAssignableFrom(type)) {
+                IDictionary map = (IDictionary)obj;
+                await writer.WriteMapHeaderAsync(map.Count, ct);
+                if (!map.GetType().GetTypeInfo().IsGenericType) {
+#if !TYPE_SUPPORT
+                    throw new FormatException("non-generic collections not supported");
+#else
+                    IDictionaryEnumerator enumerator = map.GetEnumerator();
+                    while (enumerator.MoveNext()) { 
+                        await WriteAsync(writer, enumerator.Key, 
+                            enumerator.Key.GetType(), context, ct);
+                        await WriteAsync(writer, enumerator.Value, 
+                            enumerator.Value.GetType(), context, ct);
+                    }
+#endif
+                }
+                else {
+                    Type keyType = map.GetType().GetGenericArguments()[0];
+                    Type valueType = map.GetType().GetGenericArguments()[1];
+                    IDictionaryEnumerator enumerator = map.GetEnumerator();
+                    while (enumerator.MoveNext()) { 
+                        await WriteAsync(writer, enumerator.Key, 
+                            keyType, context, ct);
+                        await WriteAsync(writer, enumerator.Value, 
+                            valueType, context, ct);
+                    }
+                }
+            }
+
+            else {
+                object serializer = context.GetType().GetMethod("Get").
+                    MakeGenericMethod(type).Invoke(context, _noObj);
+                await (Task)serializer.GetType().GetMethod("SetAsync").Invoke(
+                    serializer, new object[] { writer, obj, context, ct });
+            }
+        }
+
+        /// <summary>
+        /// Helper to write out an enumerable
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <param name="enumerable"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
+        private async Task WriteAsync(MsgPackWriter writer, SerializerContext context,
+            CancellationToken ct, IEnumerable enumerable, int length) {
+            await writer.WriteArrayHeaderAsync(length, ct);
+            if (!enumerable.GetType().GetTypeInfo().IsGenericType) {
+#if !TYPE_SUPPORT
+                throw new FormatException("non-generic collections not supported");
+#else
+                foreach (var item in enumerable) {
+                    await WriteAsync(writer, item, item.GetType(), context, ct);
+                }
+#endif
+            }
+            else {
+                Type generic = enumerable.GetType().GetGenericArguments()[0];
+                foreach (var item in enumerable) {
+                    await WriteAsync(writer, item, generic, context, ct);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Member reflection helper
+        /// </summary>
+        class Member : IComparable<Member> {
+            /// <summary>
+            /// Order of property
+            /// </summary>
+            public int Order { get; set; }
+
+            /// <summary>
+            /// Property info
+            /// </summary>
+            public PropertyInfo Prop { get; set; }
+
+            /// <summary>
+            /// Name of contract member
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// Constructor
+            /// </summary>
+            /// <param name="order"></param>
+            /// <param name="name"></param>
+            /// <param name="prop"></param>
+            public Member(int order, string name, PropertyInfo prop) {
+                Order = order;
+                Name = name;
+                Prop = prop;
+            }
+
+            public int CompareTo(Member other) =>
+                other == null ? 1 : Order.CompareTo(other.Order);
+        }
+
+        private List<Member> _members;
+        private static readonly Type[] _noType = new Type[0];
+        private static readonly object[] _noObj = new object[0];
+    }
+}

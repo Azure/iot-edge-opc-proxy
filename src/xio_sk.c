@@ -170,6 +170,7 @@ static void xio_socket_deliver_close_result(
 
     // Roll back all in progress buffers
     io_queue_rollback(sk->outbound);
+
     while (true)
     {
         buffer = io_queue_pop_ready(sk->outbound);
@@ -482,7 +483,7 @@ static int xio_socket_open(
 
     sk->last_error = er_ok;
 
-    return pal_socket_open(sk->sock, NULL);
+    return pal_socket_open(sk->sock);
 }
 
 //
@@ -507,7 +508,7 @@ static int xio_socket_close(
     sk->last_error = er_ok;
 
     if (sk->sock)
-        pal_socket_close(sk->sock, NULL);
+        pal_socket_close(sk->sock);
     else if (on_io_close_complete)
         on_io_close_complete(on_io_close_complete_context);
     return er_ok;

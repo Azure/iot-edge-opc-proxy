@@ -90,6 +90,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                             "Could not link socket on proxy", ex, SocketError.No_host);
                     }
                 }, ct);
+                ct.ThrowIfCancellationRequested();
             }
         }
 

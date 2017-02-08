@@ -68,6 +68,22 @@ static void io_iot_hub_connection_base_deinit(
 }
 
 //
+// Reconnect handler
+//
+static bool io_iot_hub_connection_base_reconnect_handler(
+    void* context
+)
+{
+    int32_t result;
+    io_iot_hub_connection_t* connection = (io_iot_hub_connection_t*)context;
+    if (!connection->handler_cb)
+        return false;
+    result = connection->handler_cb(
+        connection->handler_cb_ctx, io_connection_reconnecting, NULL);
+    return result == er_ok;
+}
+
+//
 // Initialize connection base
 //
 static int32_t io_iot_hub_connection_base_init(
@@ -431,7 +447,8 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
             break;
 
         // Start connection
-        result = io_mqtt_connection_connect(connection->mqtt_connection);
+        result = io_mqtt_connection_connect(connection->mqtt_connection, 
+            io_iot_hub_connection_base_reconnect_handler, &connection->base);
         if (result != er_ok)
             break;
 
@@ -759,7 +776,8 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
             &connection->ws_connection);
         if (result != er_ok)
             break;
-        result = io_ws_connection_open(connection->ws_connection);
+        result = io_ws_connection_connect(connection->ws_connection,
+            io_iot_hub_connection_base_reconnect_handler, &connection->base);
         if (result != er_ok)
             break;
 

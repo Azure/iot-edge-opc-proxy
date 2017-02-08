@@ -23,5 +23,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="message"></param>
         public ProxyException(string message) : base(message) {
         }
+
+        /// <summary>
+        /// Constructor taking an exception
+        /// </summary>
+        /// <param name="message"></param>
+        public ProxyException(Exception inner) : base(inner) {
+        }
     }
 }

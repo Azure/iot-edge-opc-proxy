@@ -152,25 +152,50 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="ct"></param>
         public async Task CloseAsync(CancellationToken ct) {
+            var tasks = new Task[] { UnlinkAsync(ct), CloseStreamAsync(ct) };
+            try {
+                // Close both ends
+                await Task.WhenAll(tasks);
+            }
+            catch (AggregateException ae) {
+                if (ae.InnerExceptions.Count == tasks.Length) {
+                    // Only throw if all tasks failed.
+                    throw new SocketException("Exception during close", ae.GetSocketError());
+                }
+                else {
+                    ProxyEventSource.Log.HandledExceptionAsInformation(this, ae);
+                }
+            }
+            catch (Exception e) {
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, e);
+            }
+        }
+
+        /// <summary>
+        /// Close the stream part
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task CloseStreamAsync(CancellationToken ct) {
             IConnection connection = _connection;
             IMessageStream stream = _stream;
             _connection = null;
             _stream = null;
             try {
-                // Close both ends
-                await Task.WhenAll(new Task[] { UnlinkAsync(ct), connection.CloseAsync() });
+                await stream.SendAsync(new Message(_socket.Id, RemoteId, 
+                    new CloseRequest()), ct);
             }
-            catch(Exception ex) {
-                throw new SocketException("Exception during close", ex.GetSocketError());
+            finally {
+                await connection.CloseAsync();
             }
         }
 
         /// <summary>
-        /// Remove link on remote proxy
+        /// Remove link on remote proxy through rpc
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        internal async Task UnlinkAsync(CancellationToken ct) {
+        private async Task UnlinkAsync(CancellationToken ct) {
             var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
                 new Message(_socket.Id, RemoteId, new CloseRequest()), ct);
             if (response != null) {
@@ -180,6 +205,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     errorCode != SocketError.Closed) {
                     throw new SocketException(errorCode);
                 }
+            }
+            else {
+                throw new SocketException(SocketError.Closed);
             }
         }
 

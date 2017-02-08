@@ -431,7 +431,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Set/get the send timeout
         //
-        public int SendTimeout { get; set; } =  20 * 60 * 1000;
+        public int SendTimeout { get; set; } = 2 * 60 * 1000;
 
         //
         // Send array segment 
@@ -839,7 +839,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         //  Set/get the timeout for receive calls
         //
-        public int ReceiveTimeout { get; set; } = 20 * 60 * 1000;
+        public int ReceiveTimeout { get; set; } = 2 * 60 * 1000;
 
         #region Receive
 

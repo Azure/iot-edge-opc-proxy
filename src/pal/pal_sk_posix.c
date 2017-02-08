@@ -1010,8 +1010,7 @@ static int32_t pal_socket_open_by_addr(
 // Open a new socket based on properties passed during create
 //
 int32_t pal_socket_open(
-    pal_socket_t *sock,
-    void* op_context
+    pal_socket_t *sock
 )
 {
     if (!sock)
@@ -1023,8 +1022,6 @@ int32_t pal_socket_open(
         "Should not be open.");
 
     sock->state = pal_socket_state_opening;
-    sock->context = op_context;
-
     if (sock->itf.props.address.un.family == prx_address_family_proxy)
         return pal_socket_open_by_name(sock);
 
@@ -1081,16 +1078,13 @@ int32_t pal_socket_create(
 // Stop streaming, unregister socket from event port
 //
 void pal_socket_close(
-    pal_socket_t *sock,
-    void* context
+    pal_socket_t *sock
 )
 {
     if (!sock)
         return;
 
     sock->state = pal_socket_state_closing;
-    sock->context = context;
-
     // Close the event handle
     if (sock->event_handle != 0)
         pal_event_close(sock->event_handle);

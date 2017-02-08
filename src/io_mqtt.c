@@ -53,6 +53,8 @@ struct io_mqtt_connection
     io_mqtt_status_t status;                          // connection status
     ticks_t last_success;                     // Last successful connected
     ticks_t last_activity;
+    io_mqtt_connection_reconnect_t reconnect_cb; // Call when disconnected
+    void* reconnect_ctx;
     uint32_t back_off_in_seconds;      // Delay until next connect attempt
     log_t log;
 };
@@ -1066,6 +1068,10 @@ static void io_mqtt_connection_hard_reset(
     // First hard disconnect, release all resources
     io_mqtt_connection_complete_disconnect(connection);
 
+    if (connection->reconnect_cb &&
+        !connection->reconnect_cb(connection->reconnect_ctx))
+        return;
+
     log_info(connection->log, "Reconnecting in %d seconds...",
         connection->back_off_in_seconds);
 
@@ -1423,6 +1429,7 @@ void io_mqtt_connection_close(
 
     log_info(connection->log, "Closing connection ...");
     connection->status = io_mqtt_status_closing;
+    connection->reconnect_cb = NULL;
 
     while (!DList_IsListEmpty(&connection->send_queue))
     {
@@ -1450,11 +1457,18 @@ void io_mqtt_connection_close(
 // Connect connection
 //
 int32_t io_mqtt_connection_connect(
-    io_mqtt_connection_t* connection
+    io_mqtt_connection_t* connection,
+    io_mqtt_connection_reconnect_t reconnect_cb,
+    void* reconnect_ctx
 )
 {
     if (!connection)
         return er_fault;
+    dbg_assert_is_task(connection->scheduler);
+
+    connection->reconnect_cb = reconnect_cb;
+    connection->reconnect_ctx = reconnect_ctx;
+
     __do_next(connection, io_mqtt_connection_reconnect);
     return er_ok;
 }

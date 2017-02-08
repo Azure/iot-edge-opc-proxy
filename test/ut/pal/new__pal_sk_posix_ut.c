@@ -1084,14 +1084,13 @@ TEST_FUNCTION(pal_socket_leave_multicast_group__neg)
 TEST_FUNCTION(pal_socket_close__success)
 {
     static const pal_socket_t* k_socket_valid;
-    static const void* k_op_context_valid;
     void result;
 
     // arrange 
     // ... 
 
     // act 
-    result = pal_socket_close(k_socket_valid, k_op_context_valid);
+    result = pal_socket_close(k_socket_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void, er_ok, result);
@@ -1119,32 +1118,11 @@ TEST_FUNCTION(pal_socket_close__arg_socket_invalid)
 }
 
 // 
-// Test pal_socket_close passing as op_context argument an invalid void* value 
-// 
-TEST_FUNCTION(pal_socket_close__arg_op_context_invalid)
-{
-    // ... 
-    int32_t result;
-
-    // arrange 
-    // ... 
-
-    // act 
-    handle = pal_socket_close();
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
-}
-
-// 
 // Test pal_socket_close unhappy path 
 // 
 TEST_FUNCTION(pal_socket_close__neg)
 {
     static const pal_socket_t* k_socket_valid;
-    static const void* k_op_context_valid;
     void result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -1155,7 +1133,7 @@ TEST_FUNCTION(pal_socket_close__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_socket_close(k_socket_valid, k_op_context_valid);
+    result = pal_socket_close(k_socket_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);

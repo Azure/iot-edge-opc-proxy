@@ -17,7 +17,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public class CustomResolver : DefaultContractResolver {
         public static readonly CustomResolver Instance = new CustomResolver();
 
-        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization) {
+        protected override JsonProperty CreateProperty(MemberInfo member, 
+            MemberSerialization memberSerialization) {
             JsonProperty property = base.CreateProperty(member, memberSerialization);
 
             var dataMember = member.GetCustomAttribute<DataMemberAttribute>();
@@ -51,11 +52,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         class MessageReferencePlaceHolder : IMessageContent {
             public Message Ref { get; set; }  
         }
+
         class MessageConverter : JsonConverter {
             public override bool CanConvert(Type objectType) {
                 return false;
             }
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            public override object ReadJson(JsonReader reader, Type objectType, 
+                object existingValue, JsonSerializer serializer) {
                 Message message = new Message();
                 // Hand this message to the content converter as existing object
                 message.Content = new MessageReferencePlaceHolder { Ref = message };
@@ -63,7 +66,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return message;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            public override void WriteJson(JsonWriter writer, object value,
+                JsonSerializer serializer) {
                 throw new NotImplementedException();
             }
             public override bool CanWrite {
@@ -81,9 +85,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     serializer.Populate(reader, message);
                 return message;
             }
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
                 Message reference = ((MessageReferencePlaceHolder)existingValue).Ref;
-                return Deserialize(MessageContent.TypeOf(reference.TypeId, reference.IsResponse), reader, serializer);
+                return Deserialize(MessageContent.TypeOf(reference.TypeId,
+                    reference.IsResponse), reader, serializer);
             }
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
                 throw new NotImplementedException();
@@ -94,7 +100,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         class VoidConverter : MessageContentConverter {
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            public override void WriteJson(JsonWriter writer, 
+                object value, JsonSerializer serializer) {
                 writer.WriteNull();
             }
             public override bool CanWrite {
@@ -106,13 +113,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             public override bool CanConvert(Type objectType) {
                 return false;
             }
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
                 Reference address = null;
                 if (reader.TokenType == JsonToken.StartObject) {
                     do {
                         reader.Read();
                         if (reader.TokenType == JsonToken.PropertyName &&
-                            reader.Value.ToString().Equals("id", StringComparison.CurrentCultureIgnoreCase)) {
+                            reader.Value.ToString().Equals("id",
+                                StringComparison.CurrentCultureIgnoreCase)) {
                             reader.Read();
                             if (reader.TokenType == JsonToken.String)
                                 address = Reference.Parse(reader.Value.ToString());
@@ -124,7 +133,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return address;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            public override void WriteJson(JsonWriter writer, object value, 
+                JsonSerializer serializer) {
                 writer.WriteStartObject();
                 writer.WritePropertyName("id");
                 if (value == null) {
@@ -142,7 +152,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return false;
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer) {
+            public override object ReadJson(JsonReader reader, Type objectType, 
+                object existingValue, JsonSerializer serializer) {
                 JObject jsonObject = JObject.Load(reader);
                 AddressFamily family = (AddressFamily)jsonObject.Value<Int32>("family");
                 switch(family) {
@@ -160,7 +171,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         throw new SerializationException($"Bad socket address family {family}");
                 }
             }
-            public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer) {
+            public override void WriteJson(JsonWriter writer, object value, 
+                JsonSerializer serializer) {
                 throw new NotImplementedException();
             }
             public override bool CanWrite {

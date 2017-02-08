@@ -749,16 +749,34 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public class DataMessage : IMessageContent, IEquatable<DataMessage> {
 
         /// <summary>
+        /// Default constructor
+        /// </summary>
+        public DataMessage() {
+            // no op
+        }
+
+        /// <summary>
+        /// Convinience constructor
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="endpoint"></param>
+        public DataMessage(ArraySegment<byte> buffer, SocketAddress endpoint) {
+            Payload = new byte[buffer.Count];
+            Buffer.BlockCopy(buffer.Array, buffer.Offset, Payload, 0, buffer.Count);
+            Source = endpoint;
+        }
+
+        /// <summary>
         /// Source address if udp socket
         /// </summary>
         [DataMember(Name = "source_address", Order = 1)]
-        public SocketAddress Source { get; set; } = new NullSocketAddress();
+        public SocketAddress Source { get; set; }
 
         /// <summary>
         /// Buffer content
         /// </summary>
         [DataMember(Name = "buffer", Order = 2)]
-        public ArraySegment<byte> Payload { get; set; }
+        public byte[] Payload { get; set; }
 
         //     /// <summary>
         //     /// Control buffer

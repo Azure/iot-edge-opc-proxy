@@ -166,8 +166,12 @@ static void xio_wsclient_deliver_close_result(
 {
     io_queue_buffer_t* buffer;
 
-    // Roll back all buffers
+    xio_wsclient_deliver_inbound_results(ws);
+    xio_wsclient_deliver_outbound_results(ws);
+
+    // Roll back all in progress buffers
     io_queue_rollback(ws->outbound);
+
     while (true)
     {
         buffer = io_queue_pop_ready(ws->outbound);

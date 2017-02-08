@@ -1,0 +1,46 @@
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
+namespace Microsoft.Azure.Devices.Proxy.MsgPack {
+    using System.Threading;
+    using System.Threading.Tasks;
+
+    /// <summary>
+    /// Abstract base class for type serializers
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public abstract class Serializer<T> {
+
+        /// <summary>
+        /// Read an object
+        /// </summary>
+        /// <param name="reader"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public abstract Task<T> ReadAsync(MsgPackReader reader, 
+            SerializerContext context, CancellationToken ct);
+
+        /// <summary>
+        /// Write an object
+        /// </summary>
+        /// <param name="writer"></param>
+        /// <param name="obj"></param>
+        /// <param name="context"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public abstract Task WriteAsync(MsgPackWriter writer, T obj, 
+            SerializerContext context, CancellationToken ct);
+
+
+        public Task<object> GetAsync(MsgPackReader reader,
+            SerializerContext context, CancellationToken ct) =>
+            ReadAsync(reader, context, ct).ContinueWith((t) => (object)t.Result);
+
+        public Task SetAsync(MsgPackWriter writer, object obj,
+            SerializerContext context, CancellationToken ct) =>
+            WriteAsync(writer, (T)obj, context, ct);
+    }
+}

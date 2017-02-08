@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             var data = await ReceiveAsync(ct);
             return new ProxyAsyncResult {
                 Address = data.Source,
-                Count = data.Payload.Count
+                Count = data.Payload.Length
             };
         }
 
@@ -45,10 +45,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public async override Task<int> SendAsync(ArraySegment<byte> buffer, 
             SocketAddress endpoint, CancellationToken ct) {
-            await Socket.SendAsync(new Message(null, null, null, new DataMessage {
-                Payload = buffer,
-                Source = endpoint
-            }), ct);
+            await Socket.SendAsync(new Message(null, null, null, new DataMessage(buffer, endpoint)), ct);
             return buffer.Count;
         }
     }

@@ -484,7 +484,6 @@ io_queue_buffer_t* io_queue_pop_done(
     return io_queue_state_pop(queue, &queue->done);
 }
 
-
 //
 // requeue everything in progress into ready queue
 //

@@ -344,16 +344,33 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             // replenish it from all streams...
             Message message;
             while (true) {
-                foreach (var queue in Links.Select(i => i.ReceiveQueue).ToArray()) {
-                    while (queue.TryDequeue(out message))
-                        ReceiveQueue.Enqueue(message);
+                foreach (var link in Links) {
+                    while (link.ReceiveQueue.TryDequeue(out message)) {
+                        if (message.TypeId == MessageContent.Close) {
+                            // Remote side closed, close link
+                            Links.Remove(link);
+                            try {
+                                await link.CloseAsync(CancellationToken.None);
+                            }
+                            catch { }
+
+                            if (!Links.Any()) {
+                                throw new SocketException("Remote side closed",
+                                    null, SocketError.Closed);
+                            }
+                        }
+                        else {
+                            ReceiveQueue.Enqueue(message);
+                        }
+                    }
                 }
                 if (ReceiveQueue.Any()) { 
                     return;
                 }
                 else {
                     try {
-                        await Task.WhenAny(Links.Select(i => i.ReceiveAsync(ct)));
+                        var tasks = Links.Select(i => i.ReceiveAsync(ct));
+                        await Task.WhenAny(tasks);
                     }
                     catch(AggregateException ae) {
                         throw new SocketException("Receive await failed", 

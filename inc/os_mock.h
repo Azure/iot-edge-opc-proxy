@@ -568,6 +568,10 @@ typedef void(*LPOVERLAPPED_COMPLETION_ROUTINE)(
     DWORD error, DWORD bytes, LPOVERLAPPED ov
     );
 
+BOOL WINAPI HasOverlappedIoCompleted(
+    LPOVERLAPPED lpOverlapped
+);
+
 // Wincrypt.h
 
 typedef void* HCRYPTPROV;

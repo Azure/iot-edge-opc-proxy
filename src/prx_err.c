@@ -85,8 +85,8 @@ const char* prx_err_string(
         return "er_prop_set";
     case er_reset:
         return "er_reset";
-    case er_token:
-        return "er_token";
+    case er_crypto:
+        return "er_crypto";
     case er_comm:
         return "er_comm";
     case er_undelivered:

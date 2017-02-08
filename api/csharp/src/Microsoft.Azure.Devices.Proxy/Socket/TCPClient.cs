@@ -134,23 +134,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             if (disposing) {
                 IDisposable dataStream = _dataStream;
+                _dataStream = null;
                 if (dataStream != null) {
                     dataStream.Dispose();
-                } else {
-                    Socket chkClientSocket = Socket;
+                }
+
+                Socket chkClientSocket = Socket;
+                Socket = null;
+                if (chkClientSocket != null) {
+                    chkClientSocket.Dispose();
                     Socket = null;
-                    if (chkClientSocket != null) {
-                        try {
-                            chkClientSocket.Shutdown(SocketShutdown.Both);
-                        }
-                        catch (Exception) {
-                            // ignore
-                        }
-                        finally {
-                            chkClientSocket.Dispose();
-                            Socket = null;
-                        }
-                    }
                 }
                 GC.SuppressFinalize(this);
                 _cleanedUp = true;

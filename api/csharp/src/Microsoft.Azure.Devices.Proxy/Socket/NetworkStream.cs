@@ -500,16 +500,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     Readable = false;
                     Writeable = false;
                     if (_ownsSocket) {
-                        // Shutdown and close ignoring possible exceptions 
-                        try {
-                            chkStreamSocket.Shutdown(SocketShutdown.Both);
-                        }
-                        catch (Exception) {
-                            // ignore
-                        }
-                        finally {
-                            chkStreamSocket.Dispose();
-                        }
+                        chkStreamSocket.Dispose();
                     }
                 }
             }

@@ -34,19 +34,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         class RelayStream : IConnection, IMessageStream {
             internal ServiceBusRelay _relay;
-            private HybridConnectionStream _stream;
-            private CancellationTokenSource _open = new CancellationTokenSource();
-
-#if NET45 || NET46
-            // An outside buffered or memory stream is needed to avoid
-            // message pack to wrap with its own buffered stream which 
-            // we cannot flush. 
-            private BufferedStream _buffered;
-#endif
-            private Task _producerTask;
-            private CancellationTokenSource _streaming;
-            private BlockingCollection<TaskCompletionSource<bool>> _consumerQueue =
-                new BlockingCollection<TaskCompletionSource<bool>>();
 
             /// <summary>
             /// Receive queue 
@@ -108,30 +95,35 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 // Remove ourselves from the listener...
                 RelayStream stream;
                 _relay._streamMap.TryRemove(LinkId, out stream);
-                if (_open.IsCancellationRequested)
-                    return;
-                try {
-                    // Set close state
-                    _open.Cancel();
-                    _consumerQueue.CompleteAdding();
 
-                    // Fail any in progress open 
-                    Tcs.TrySetException(new SocketException(SocketError.Closed));
+                // If not remotely closed, close streaming now
+                if (!_open.IsCancellationRequested) {
+                    try {
+                        // Set close state
+                        _open.Cancel();
+                        _consumerQueue.CompleteAdding();
 
-                    if (_producerTask != null) {
-                        // Wait until stream etc. is closed and gone
-                        _streaming.Cancel();
-                        await _producerTask;
+                        // Fail any in progress open 
+                        Tcs.TrySetException(new SocketException(SocketError.Closed));
+
+                        ProxyEventSource.Log.StreamClosing(this, _codec.Stream);
+                        if (_producerTask != null) {
+                            // Wait until stream etc. is closed and gone
+                            _streaming.Cancel();
+                            await _producerTask;
+                        }
                     }
+                    catch (Exception ex) {
+                        ProxyEventSource.Log.HandledExceptionAsWarning(this, ex);
+                    }
+                    _producerTask = null;
                 }
-                catch (Exception) {
-                    // No-op
-                }
-                _producerTask = null;
+
+                // Mark all waiting readers as cancelled
                 TaskCompletionSource<bool> tcs;
                 while (_consumerQueue.TryTake(out tcs, 0)) {
                     // Cancel all waiting readers due to closing
-                    tcs.TrySetCanceled();
+                    tcs.TrySetException(new SocketException(SocketError.Closed));
                 }
             }
 
@@ -143,18 +135,16 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             /// <returns></returns>
             public async Task SendAsync(Message message, CancellationToken ct) {
                 try {
-#if NET45 || NET46
-                    await message.EncodeAsync(_buffered, CodecId.Mpack, ct);
-                    await _buffered.FlushAsync();
-#else
+#if !STREAM_FRAGMENT_BUG_FIXED
                     // Poor man's buffered stream.  
                     var stream = new MemoryStream();
                     message.Encode(stream, CodecId.Mpack);
                     var buffered = stream.ToArray();
-
-                    await _stream.WriteAsync(buffered, 0, buffered.Length, ct);
-                    await _stream.FlushAsync(ct);
+                    await _codec.Stream.WriteAsync(buffered, 0, buffered.Length, ct);
+#else
+                    await _codec.WriteAsync(message, ct);
 #endif
+                    await _codec.Stream.FlushAsync(ct);
                 }
                 catch (Exception e) {
                     throw ProxyEventSource.Log.Rethrow(e, this);
@@ -201,80 +191,82 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             /// notifying consumers by completing queued completion sources.
             /// </summary>
             /// <returns></returns>
-            private async Task ReceiveProducerAsync() {
+            private async Task ReceiveProducerAsync(CancellationToken ct) {
                 Connected = true;
-                ProxyEventSource.Log.StreamOpened(this, _stream);
+
+                ProxyEventSource.Log.StreamOpened(this, _codec.Stream);
                 try {
                     // Start to pump and satisfy all waiting consumers
-                    await Task.Factory.StartNew(() => {
-                        Message message;
-                        TaskCompletionSource<bool> tcs = null;
-
-                        while(true) {
-                            try {
-                                if (_consumerQueue.TryTake(out tcs, -1, _streaming.Token)) {
-                                    if (!tcs.Task.IsCanceled) {
-                                        try {
-                                            // Read and decode a message
-                                            message = Message.DecodeAsync(
-                                                _stream, CodecId.Mpack, _streaming.Token).Result;
-                                            ReceiveQueue.Enqueue(message);
-                                            tcs.TrySetResult(true);
-                                        }
-                                        catch (Exception e) {
-                                            ProxyEventSource.Log.StreamException(this, _stream, e);
-                                            // Give up on this stream for now, 
-                                            // and try again later
-                                            _consumerQueue.TryAdd(tcs);
-                                            break;
-                                        }
-                                    }
-                                }
-                            }
-                            catch (OperationCanceledException) {
-                                // Stream closing
-                                break;
-                            }
-                            if (_streaming.IsCancellationRequested || 
-                                _open.IsCancellationRequested ||
-                                _consumerQueue.IsAddingCompleted) {
-                                break;
-                            }
-                        }
-                    }, _streaming.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
+                    await Task.Factory.StartNew(() => ReceiveProducer(ct), 
+                        _open.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                }
+                catch { }
+                try {
                     if (_open.IsCancellationRequested) {
                         // User is asking for a graceful close, shutdown properly
-                        await _stream.ShutdownAsync(new CancellationTokenSource(
+                        await _codec.Stream.ShutdownAsync(new CancellationTokenSource(
                             _closeTimeout).Token);
                     }
                 }
-                catch (Exception) { }
-                ProxyEventSource.Log.StreamClosing(this, _stream);
-                if (_open.IsCancellationRequested) {
-                    try {
-                        // ... then gracefully close
-                        await _stream.CloseAsync(new CancellationTokenSource(
-                            _closeTimeout).Token);
-                    }
-                    catch (Exception) { }
-                }
-#if NET45 || NET46
+                catch { }
                 try {
-                    _buffered.Dispose();
+                    // ... then gracefully close
+                    await _codec.Stream.CloseAsync(
+                        new CancellationTokenSource(_closeTimeout).Token);
                 }
-                catch (Exception) { }
-#endif
+                catch { }
                 try {
-                    _stream.Dispose();
+                    _codec.Stream.Dispose();
                 }
-                catch (Exception) { }
-                ProxyEventSource.Log.StreamClosed(this, _stream);
-                _stream = null;
-#if NET45 || NET46
-                _buffered = null;
-#endif
+                catch { }
+                ProxyEventSource.Log.StreamClosed(this, _codec.Stream);
+                _codec.Stream = null;
                 Connected = false;
+            }
+
+            /// <summary>
+            /// Sync Receive producer loop
+            /// </summary>
+            /// <param name="stream"></param>
+            /// <param name="ct"></param>
+            private void ReceiveProducer(CancellationToken ct) {
+                Message message;
+                while (true) {
+                    try {
+                        TaskCompletionSource<bool> tcs = null;
+                        if (_consumerQueue.TryTake(out tcs, -1, ct)) {
+                            if (!tcs.Task.IsCanceled) {
+                                try {
+                                    message = _codec.ReadAsync<Message>(ct).Result;
+                                    ReceiveQueue.Enqueue(message);
+                                    if (message.TypeId == MessageContent.Close) {
+                                        // Remote side closed, close the stream
+                                        _open.Cancel();
+                                        break;
+                                    }
+                                }
+                                catch (Exception e) {
+                                    ProxyEventSource.Log.StreamException(this, _codec.Stream, e);
+                                    // Exit
+                                    break;
+                                }
+                                finally {
+                                    // Caller will retry if the queue is empty
+                                    tcs.TrySetResult(true);
+                                }
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException) {
+                        // Stream closing
+                        break;
+                    }
+                    if (_streaming.IsCancellationRequested ||
+                        _open.IsCancellationRequested ||
+                        _consumerQueue.IsAddingCompleted) {
+                        break;
+                    }
+                }
             }
 
             /// <summary>
@@ -283,32 +275,36 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             /// <param name="stream"></param>
             internal bool TryConnect(HybridConnectionStream stream) {
                 if (_open.IsCancellationRequested) {
-                    // User closed, but proxy tries to connect, reject
+                    // Stream closed, but proxy tries to connect, reject
                     return false;
                 }
+                // Ensure previous producer task finishes
                 if (_producerTask != null && !_producerTask.IsCompleted) {
-                    // Ensure previous producer task has finished
-                    try {
-                        if (_streaming != null) {
-                            _streaming.Cancel();
+                    if (_streaming != null) {
+                        _streaming.Cancel();
+                        try {
+                            _producerTask.Wait();
                         }
-                        _producerTask.GetAwaiter().GetResult();
-                    }
-                    catch (Exception) {
-                        // No-op
+                        catch (Exception) {
+                            return false;
+                        }
                     }
                 }
 
-                _stream = stream;
-#if NET45 || NET46
-                _buffered = new BufferedStream(_stream);
-#endif
+                _codec.Stream = stream;
                 _streaming = new CancellationTokenSource();
-                _producerTask = ReceiveProducerAsync();
-
+                _producerTask = ReceiveProducerAsync(_streaming.Token);
                 Tcs.TrySetResult(this);
                 return true;
             }
+
+            private MsgPackStream<HybridConnectionStream> _codec = 
+                new MsgPackStream<HybridConnectionStream>();
+            private CancellationTokenSource _open = new CancellationTokenSource();
+            private Task _producerTask;
+            private CancellationTokenSource _streaming;
+            private BlockingCollection<TaskCompletionSource<bool>> _consumerQueue =
+                new BlockingCollection<TaskCompletionSource<bool>>();
         }
 
         ConcurrentDictionary<Reference, RelayStream> _streamMap =
@@ -390,7 +386,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             if (!string.IsNullOrEmpty(id) && Reference.TryParse(id, out streamId)) {
                 RelayStream stream;
                 if (_streamMap.TryGetValue(streamId, out stream)) {
-                    // We correlate context and relay stream by finding the stream id in the stream's tracking id
+                    // We correlate context and relay stream by finding 
+                    // the stream id in the stream's tracking id
                     if (context.ToString().ToLower().Contains(id.ToLower())) {
                         return Task.FromResult(true);
                     }
@@ -436,9 +433,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             }
                         }
                         if (!connected) {
-                            // Socket was already disconnected, or accept was cancelled, shutdown...
-                            await relayConnection.ShutdownAsync(new CancellationTokenSource(
-                                _closeTimeout).Token);
+                            ProxyEventSource.Log.ConnectionRejected(relayConnection, null);
                         }
                     }
                     catch (Exception e) {
@@ -447,8 +442,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     }
                     finally {
                         if (!connected) {
-                            // ... and close the connection
-                            await relayConnection.CloseAsync(new CancellationTokenSource(
+                            // ... close the connection
+                            var closing = relayConnection.CloseAsync(new CancellationTokenSource(
                                 _closeTimeout).Token);
                         }
                     }

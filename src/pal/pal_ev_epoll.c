@@ -256,8 +256,6 @@ int32_t pal_event_select(
     plat_event = pal_event_type_to_epoll_event(event_type);
     if (!plat_event)
         return er_ok;
-    if (plat_event == (ev_data->events & plat_event))
-        return er_ok; // Already set
 
     lock_enter(ev_data->port->lock);
     evt.events = (ev_data->events | EPOLLET) | plat_event;
@@ -290,8 +288,6 @@ int32_t pal_event_clear(
     plat_event = pal_event_type_to_epoll_event(event_type);
     if (!plat_event)
         return er_ok;
-    if (plat_event != (ev_data->events & plat_event))
-        return er_ok; // Already cleared
 
     lock_enter(ev_data->port->lock);
     evt.events = (ev_data->events | EPOLLET) & ~plat_event;
@@ -325,7 +321,7 @@ void pal_event_close(
 
     ev_data->events = 0;
     evt.events = 0;
-    evt.data.ptr = (void*)ev_data;
+    evt.data.ptr = NULL;
     if (0 != epoll_ctl(ev_data->port->epoll_fd, EPOLL_CTL_DEL, ev_data->sock_fd, &evt))
     {
         log_error(NULL, "Failed to delete event data from epoll port");

@@ -95,7 +95,7 @@ decl_internal_1(io_queue_buffer_t*, io_queue_pop_done,
 //
 decl_internal_1(void, io_queue_rollback,
     io_queue_t*, queue
-    );
+);
 
 //
 // Abort all messages in the queue

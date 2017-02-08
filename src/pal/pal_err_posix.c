@@ -498,7 +498,7 @@ int pal_os_from_prx_error(
         return ECONNRESET;
     case er_undelivered:
         return ETIMEDOUT;
-    case er_token:
+    case er_crypto:
         return EPERM;
     case er_comm:
         return ECOMM;

@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 this.WriteEvent(40193, CreateSourceString(source), 
                     CreateSourceString(stream), ExceptionToString(e));
             }
-            Trace.TraceInformation($"Stream error: {stream} ... ({source}).");
+            Trace.TraceInformation($"Stream error: {stream} ... ({source}). {ExceptionToString(e)}");
         }
 
         [Event(40194, Message = "Stream opened: {0} - {1}.")]
@@ -119,6 +119,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         [NonEvent]
         public void HandledExceptionAsInformation(object source, Exception exception) {
             this.HandledExceptionAsInformation(CreateSourceString(source), ExceptionToString(exception));
+            Trace.TraceInformation($"IGNORING {exception.Message} ({source}).");
         }
 
         [Event(40249, Message = "{0} Handled Exception: {1}")]
@@ -126,7 +127,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40249, source, exception);
             }
-            Trace.TraceInformation($"Exception handled: {exception} ({source}).");
         }
 
         // Not the actual event definition since we're using object and Exception types
@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40250, source, exception);
             }
-            Trace.TraceWarning($"Exception handled: {exception} ({source}).");
+            Trace.TraceWarning($"WARNING CONTINUE: {exception} ({source}).");
         }
 
         // Not the actual event definition since we're using object and Exception types
@@ -154,7 +154,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40251, source, exception);
             }
-            Trace.TraceError($"Exception handled: {exception} ({source}).");
+            Trace.TraceError($"ERROR CONTINUE: {exception} ({source}).");
         }
 
         [NonEvent]

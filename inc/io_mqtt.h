@@ -56,10 +56,19 @@ decl_internal_5(int32_t, io_mqtt_connection_subscribe,
 );
 
 //
+// Reconnect callback
+//
+typedef bool (*io_mqtt_connection_reconnect_t)(
+    void* context
+    );
+
+//
 // and call connect on the connection 
 //
-decl_internal_1(int32_t, io_mqtt_connection_connect,
-    io_mqtt_connection_t*, connection
+decl_internal_3(int32_t, io_mqtt_connection_connect,
+    io_mqtt_connection_t*, connection,
+    io_mqtt_connection_reconnect_t, reconnect_cb,
+    void*, reconnect_ctx
 );
 
 //

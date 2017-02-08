@@ -7,10 +7,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
     using System.IO;
     using System.Runtime.Serialization;
-    using MsgPack.Serialization;
-    using Newtonsoft.Json;
     using System.Threading.Tasks;
     using System.Threading;
+    using Newtonsoft.Json;
 
     /// <summary>
     /// Known codecs
@@ -21,6 +20,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         //...
         Unknown = 0
     }
+
 
     /// <summary>
     /// Base class for serializable object
@@ -48,7 +48,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     }
                     break;
                 case CodecId.Mpack:
-                    decoded = MessagePackSerializer.Get<T>(MpackContext.Get()).Unpack(stream);
+                    using (var reader = new MsgPackStream(stream)) {
+                        decoded = reader.ReadAsync<T>(CancellationToken.None).GetAwaiter().GetResult();
+                    }
                     break;
                 default:
                     throw new NotSupportedException();
@@ -77,7 +79,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     }, ct);
                     return tcs.Task;
                 case CodecId.Mpack:
-                    return MessagePackSerializer.Get<T>(MpackContext.Get()).UnpackAsync(stream, ct);
+                    using (var reader = new MsgPackStream(stream)) {
+                        return reader.ReadAsync<T>(ct);
+                    }
                 default:
                     throw new NotSupportedException();
             }
@@ -102,7 +106,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     }
                     break;
                 case CodecId.Mpack:
-                    MessagePackSerializer.Get<T>(MpackContext.Get()).Pack(stream, this as T);
+                    using (var writer = new MsgPackStream(stream)) {
+                        writer.WriteAsync<T>(this as T, CancellationToken.None).GetAwaiter().GetResult();
+                    }
                     break;
                 default:
                     throw new NotSupportedException();
@@ -130,7 +136,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     }, ct);
                     break;
                 case CodecId.Mpack:
-                    await MessagePackSerializer.Get<T>(MpackContext.Get()).PackAsync(stream, this as T, ct);
+                    using (var writer = new MsgPackStream(stream)) {
+                        await writer.WriteAsync<T>(this as T, ct);
+                    }
                     break;
                 default:
                     throw new NotSupportedException();

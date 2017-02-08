@@ -629,7 +629,7 @@ static int pal_wsworker_lws_on_header_write(
     const char* headers;
     size_t out_len;
     dbg_assert_ptr(wsclient);
-    dbg_assert(wsclient->wsi == wsi, "Unexpected");
+    (void)wsi;
 
     if (!wsclient->headers)
         return 0;
@@ -968,7 +968,7 @@ static int32_t pal_wsworker_thread(
                     next->last_error = er_ok;
                 }
             }
-            else if (next->wsi)
+            else if (next->wsi && next->state & (1 << pal_wsclient_connected_bit))
             {
                 if (next->can_send)
                 {

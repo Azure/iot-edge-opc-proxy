@@ -119,16 +119,8 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Socket chkClientSocket = Socket;
                 Socket = null;
                 if (chkClientSocket != null) {
-                    try {
-                        chkClientSocket.Shutdown(SocketShutdown.Both);
-                    }
-                    catch (Exception) {
-                        // ignore
-                    }
-                    finally {
-                        chkClientSocket.Dispose();
-                        Socket = null;
-                    }
+                    chkClientSocket.Dispose();
+                    Socket = null;
                 }
                 _cleanedUp = true;
                 GC.SuppressFinalize(this);
