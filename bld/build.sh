@@ -12,6 +12,7 @@ use_zlog=OFF
 
 build_root="${repo_root}"/build
 build_clean=0
+build_pack_only=0
 build_configs=()
 build_nuget_output=$build_root
 
@@ -26,6 +27,7 @@ usage ()
     echo "    --use-zlog               Use zlog as logging framework instead of xlogging"
     echo " 	  --skip-unittests         Skips building and executing unit tests"
 	echo "	  --skip-dotnet            Do not build dotnet core API and packages"
+	echo "    --pack-only              Only creates packages. (Cannot be combined with --clean)"
 	echo " -n --nuget-folder <value>   [/build] Folder to use when outputting nuget packages."
     echo " -x --xtrace                 print a trace of each command"
     exit 1
@@ -63,6 +65,8 @@ process_args ()
 					;;
 				--use-libwebsockets)
 					;;
+				--pack-only)
+					build_pack_only=1;;
 				--skip-unittests)
 					skip_unittests=ON;;
 				--skip-dotnet)
@@ -81,27 +85,29 @@ process_args ()
 # -----------------------------------------------------------------------------
 native_build()
 {
-	echo -e "\033[1mBuilding native...\033[0m"
-	for c in ${build_configs[@]}; do
-		echo -e "\033[1m    ${c}...\033[0m"
-		mkdir -p "${build_root}/cmake/${c}"
-		pushd "${build_root}/cmake/${c}" > /dev/null
-		cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
-				-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
-			return 1 
-		make || \
-			return 1
-		if [ $skip_unittests == ON ]; then
-			echo "Skipping unittests..."
-		else
-			#use doctored (-DPURIFY no-asm) openssl
-			export LD_LIBRARY_PATH=/usr/local/ssl/lib
-			ctest -C "$c" --output-on-failure || \
+	if [ $build_pack_only == 0 ]; then
+		echo -e "\033[1mBuilding native...\033[0m"
+		for c in ${build_configs[@]}; do
+			echo -e "\033[1m    ${c}...\033[0m"
+			mkdir -p "${build_root}/cmake/${c}"
+			pushd "${build_root}/cmake/${c}" > /dev/null
+			cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
+					-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
+				return 1 
+			make || \
 				return 1
-			export LD_LIBRARY_PATH=
-		fi
-		popd > /dev/null
-	done
+			if [ $skip_unittests == ON ]; then
+				echo "Skipping unittests..."
+			else
+				#use doctored (-DPURIFY no-asm) openssl
+				export LD_LIBRARY_PATH=/usr/local/ssl/lib
+				ctest -C "$c" --output-on-failure || \
+					return 1
+				export LD_LIBRARY_PATH=
+			fi
+			popd > /dev/null
+		done
+	fi
 	return 0
 }
 
@@ -115,8 +121,10 @@ managed_build()
 	else
 		if dotnet --version; then
 			pushd "${repo_root}/api/csharp" > /dev/null
-			echo -e "\033[1mBuilding dotnet...\033[0m"
-			dotnet restore || exit 1
+			if [ $build_pack_only == 0 ]; then
+			    echo -e "\033[1mBuilding dotnet...\033[0m"
+			    dotnet restore || exit 1
+			fi
 			for c in ${build_configs[@]}; do
 				echo -e "\033[1m    ${c}...\033[0m"
 
@@ -126,19 +134,21 @@ managed_build()
 				for f in $(find . -type f -name "project.json"); do
 					grep -q netstandard1.3 $f
 					if [ $? -eq 0 ]; then
+						if [ $build_pack_only == 0 ]; then
 							echo -e "\033[1mBuilding ${f} as netstandard1.3\033[0m"
-						dotnet build -c $c -o "${build_root}/${c}" \
-							--framework netstandard1.3 $f \
-							|| return $?
+							dotnet build -c $c -o "${build_root}/${c}" \
+								--framework netstandard1.3 $f \
+								|| return $?
+						fi
 						dotnet pack --no-build -c $c $f \
 							-o "${build_nuget_output}/${c}" \
 							|| return $?
-					else
-						grep -q netcoreapp1.0 $f
+					elif [ $build_pack_only == 0 ]; then
+						grep -q netcoreapp1.1 $f
 						if [ $? -eq 0 ]; then
-							echo -e "\033[1mBuilding ${f} as netcoreapp1.0\033[0m"
+							echo -e "\033[1mBuilding ${f} as netcoreapp1.1\033[0m"
 							dotnet build -c $c -o "${build_root}/${c}" \
-								--framework netcoreapp1.0 $f \
+								--framework netcoreapp1.1 $f \
 								|| return $?
 						fi
 					fi

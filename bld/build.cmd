@@ -23,6 +23,7 @@ set build-configs=
 set build-platform=Win32
 set build-os=Windows
 set build-skip-dotnet=
+set build-pack-only=
 set build-clean=
 
 set CMAKE_skip_unittests=OFF
@@ -48,6 +49,7 @@ if "%1" equ "--platform" goto :arg-build-platform
 if "%1" equ  "-p" goto :arg-build-platform
 if "%1" equ "--skip-unittests" goto :arg-skip-unittests
 if "%1" equ "--skip-dotnet" goto :arg-skip-dotnet
+if "%1" equ "--pack-only" goto :arg-pack-only
 if "%1" equ "--use-zlog" goto :arg-use-zlog
 if "%1" equ "--use-libwebsockets" goto :arg-use-libwebsockets
 if "%1" equ "--use-openssl" goto :arg-use-openssl
@@ -72,6 +74,10 @@ if %build-platform% == x64 (
 ) else if %build-platform% == arm (
     set CMAKE_DIR=arm
 )
+goto :args-continue
+
+:arg-pack-only
+set build-pack-only=1
 goto :args-continue
 
 :arg-skip-dotnet
@@ -129,6 +135,7 @@ goto :args-loop
 if "%build-configs%" == "" set build-configs=Debug Release 
 echo Building %build-configs%...
 if not "%build-clean%" == "" (
+	if not "%build-pack-only%" == "" call :usage && exit /b 1
     echo Cleaning previous build output...
     if exist %build-root% rmdir /s /q %build-root%
 )
@@ -160,10 +167,12 @@ if %build-platform% == x64 (
     cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio 14"
 	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
+if not "%build-pack-only%" == "" goto :eof
 for %%c in (%build-configs%) do call :native-build-and-test %%c
 popd
 goto :eof
 :native-build-and-test
+if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "MinSizeRel" if /I not "%1" == "RelWithDebInfo" goto :eof
 msbuild /m azure-iot-proxy.sln /p:Configuration=%1 /p:Platform=%build-platform%
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 if %build-platform% equ arm goto :eof
@@ -180,21 +189,24 @@ if not "%build-skip-dotnet%" == "" goto :eof
 call dotnet --version
 if not !ERRORLEVEL! == 0 echo No dotnet installed, skipping dotnet build. && goto :eof
 pushd %repo-root%\api\csharp
-call dotnet restore
+if "%build-pack-only%" == "" call dotnet restore
 for %%c in (%build-configs%) do call :dotnet-build-test-and-pack %%c
 popd
 goto :eof
 
 :dotnet-build-test-and-pack
-if /I not "%1" == "Release" if /I not "%1" == "Debug" goto :eof
+if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "Signed" goto :eof
 for /f %%i in ('dir /b /s project.json') do call :dotnet-project-build %1 "%%i"
 for /f %%i in ('dir /b /s project.json') do call :dotnet-project-pack %1 "%%i"
 goto :eof
 :dotnet-project-build
-if not exist "%build-root%\%1" mkdir "%build-root%\%1"
-pushd "%build-root%\%1"
+if not "%build-pack-only%" == "" goto :eof
+if not exist "%build-root%\managed\%1" mkdir "%build-root%\managed\%1"
+pushd "%~dp2"
 echo.
-call dotnet build -c %1 "%2"
+if not "%build-clean%" == "" rmdir /s /q "bin\%1"
+call dotnet build -c %1
+xcopy /e /y /i /q "bin\%1" "%build-root%\managed\%1"
 popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
@@ -269,6 +281,7 @@ echo    --use-openssl            Uses openssl instead of schannel.
 echo    --use-libwebsockets      Uses libwebsockets instead of winhttp on Windows.
 echo    --skip-unittests         Skips building and executing unit tests.
 echo    --skip-dotnet            Skips building dotnet API and packages.
+echo    --pack-only              Only creates packages. (Cannot be combined with --clean)
 echo -n --nuget-folder ^<value^>   [/build] Folder to use when outputting nuget packages.
 echo -p --platform ^<value^>       [Win32] build platform (e.g. Win32, x64, ...).
 goto :eof

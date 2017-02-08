@@ -9,7 +9,7 @@ Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.Azure.Devices.Pro
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Simple", "samples\Simple\Simple.xproj", "{09EE653E-A545-4D4A-8291-DC8B1FBBC62F}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Opc.Ua.Proxy", "samples\Opc-ua\src\Opc.Ua.Proxy\Opc.Ua.Proxy.xproj", "{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.Azure.Devices.Opc.Ua.Proxy", "samples\Opc-ua\src\Microsoft.Azure.Devices.Opc.Ua.Proxy\Microsoft.Azure.Devices.Opc.Ua.Proxy.xproj", "{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Opc.Ua", "Opc.Ua", "{A2C5F44E-4EF3-4E24-8FF7-E2D392A81016}"
 EndProject
@@ -19,7 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{D39B6BF5-F
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Vnc", "Vnc", "{BEEECBE0-E84C-4EB4-9F7C-90C19652D31C}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RemoteViewing", "samples\vnc\src\Client\RemoteViewing.Client.xproj", "{FBFEBD57-7B53-49E4-AEA9-90040936C70F}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RemoteViewing.Client", "samples\vnc\src\Client\RemoteViewing.Client.xproj", "{FBFEBD57-7B53-49E4-AEA9-90040936C70F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{5128A38C-059A-4DA8-B3AD-169C96C03EA3}"
 EndProject
