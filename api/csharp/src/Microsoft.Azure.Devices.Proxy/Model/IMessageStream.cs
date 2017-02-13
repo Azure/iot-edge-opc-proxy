@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// </summary>
     public interface IMessageStream {
 
-        BlockingCollection<Message> ReceiveQueue { get; }
+        ConcurrentQueue<Message> ReceiveQueue { get; }
 
         /// <summary>
         /// Receive a message from stream into queue

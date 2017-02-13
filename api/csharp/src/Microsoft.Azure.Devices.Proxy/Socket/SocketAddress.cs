@@ -344,7 +344,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     }
 
     /// <summary>
-    /// Proxy socket address (pi_address_family_proxy)
+    /// Proxy socket address (prx_address_family_proxy)
     /// </summary>
     [DataContract]
     public class ProxySocketAddress : InetSocketAddress, IEquatable<ProxySocketAddress> {

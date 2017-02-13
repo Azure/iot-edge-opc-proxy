@@ -215,7 +215,7 @@ static int32_t io_cs_parser_callback(
         __io_cs_add_entry(io_cs_entry_shared_access_token)
     else if (string_is_equal_nocase(key, key_len, "GatewayHostName"))
         return er_ok; // Not used
-	else
+    else
         return er_invalid_format;
     return er_ok;
 }
@@ -285,11 +285,11 @@ int32_t io_cs_append_to_STRING(
         cs, io_cs_entry_device_id, "DeviceId=", c_string);
     if (result != er_ok)
         return result;
-	result = io_cs_append_entry_to_STRING(
-		cs, io_cs_entry_endpoint, "Endpoint=", c_string);
-	if (result != er_ok)
-		return result;
-	result = io_cs_append_entry_to_STRING(
+    result = io_cs_append_entry_to_STRING(
+        cs, io_cs_entry_endpoint, "Endpoint=", c_string);
+    if (result != er_ok)
+        return result;
+    result = io_cs_append_entry_to_STRING(
         cs, io_cs_entry_entity, "EntityPath=", c_string);
     if (result != er_ok)
         return result;

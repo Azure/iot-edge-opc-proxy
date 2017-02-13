@@ -49,8 +49,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 throw new ArgumentException("Must provide relay connection string.");
             _iothub = 
                 new IoTHub(iothub);
-            _relay = await ServiceBusRelay.CreateAsync(
-                relay.Entity ?? "__Microsoft_Azure_Devices_Proxy_1__", relay);
+            _relay = await ServiceBusRelay.CreateAsync(relay.Entity ?? 
+                "__Microsoft_Azure_Devices_Proxy_1__", relay).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -65,14 +65,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             if (relay == null)
                 relay = Environment.GetEnvironmentVariable("_SB_CS");
             if (iothub == null)
-                ProxyEventSource.Log.ArgumentNull("iothub", this);
+                throw ProxyEventSource.Log.ArgumentNull("iothub", this);
             if (relay == null)
-                ProxyEventSource.Log.ArgumentNull("relay", this);
+                throw ProxyEventSource.Log.ArgumentNull("relay", this);
             try {
-                await Init(ConnectionString.Parse(iothub), ConnectionString.Parse(relay));
+                await Init(ConnectionString.Parse(iothub),
+                    ConnectionString.Parse(relay)).ConfigureAwait(false);
             }
             catch(Exception e) {
-                ProxyEventSource.Log.Rethrow(e, this);
+                throw ProxyEventSource.Log.Rethrow(e, this);
             }
         }
 

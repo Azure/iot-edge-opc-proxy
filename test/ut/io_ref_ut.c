@@ -185,9 +185,9 @@ TEST_FUNCTION(io_ref_from_string__success_3)
     prx_socket_address_t mock_sa;
     int32_t result;
 
-	mock_sa.un.family = prx_address_family_inet6;
-	mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
-	mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
+    mock_sa.un.family = prx_address_family_inet6;
+    mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
+    mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
     // arrange 
     STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
@@ -275,7 +275,7 @@ TEST_FUNCTION(io_ref_from_prx_socket_address__success)
     prx_socket_address_t mock_sa;
     int32_t result;
 
-	mock_sa.un.family = prx_address_family_inet6;
+    mock_sa.un.family = prx_address_family_inet6;
     mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
     mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
@@ -317,8 +317,8 @@ TEST_FUNCTION(io_ref_from_prx_socket_address__arg_ref_invalid)
     prx_socket_address_t mock_sa;
     int32_t result;
 
-	mock_sa.un.family = prx_address_family_inet6;
-	mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
+    mock_sa.un.family = prx_address_family_inet6;
+    mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
     mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
     // arrange 
@@ -849,22 +849,22 @@ TEST_FUNCTION(io_ref_equals__success_4)
 // 
 TEST_FUNCTION(io_ref_equals__success_not_equal_1)
 {
-	io_ref_t ref1_valid;
-	io_ref_t ref2_valid;
-	bool result;
+    io_ref_t ref1_valid;
+    io_ref_t ref2_valid;
+    bool result;
 
-	ref1_valid.un.u64[0] = 0xaaaaaaaaULL;
-	ref1_valid.un.u64[1] = 0xbbbbbbbaULL;
+    ref1_valid.un.u64[0] = 0xaaaaaaaaULL;
+    ref1_valid.un.u64[1] = 0xbbbbbbbaULL;
 
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
-	ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
+    ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-	// arrange 
+    // arrange 
 
-	// act 
-	result = io_ref_equals(&ref1_valid, &ref2_valid);
+    // act 
+    result = io_ref_equals(&ref1_valid, &ref2_valid);
 
-	// assert 
+    // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
@@ -874,22 +874,22 @@ TEST_FUNCTION(io_ref_equals__success_not_equal_1)
 // 
 TEST_FUNCTION(io_ref_equals__success_not_equal_2)
 {
-	io_ref_t ref1_valid;
-	io_ref_t ref2_valid;
-	bool result;
+    io_ref_t ref1_valid;
+    io_ref_t ref2_valid;
+    bool result;
 
-	ref1_valid.un.u64[0] = 0xaaaaaaa1ULL;
-	ref1_valid.un.u64[1] = 0xbbbbbbbbULL;
+    ref1_valid.un.u64[0] = 0xaaaaaaa1ULL;
+    ref1_valid.un.u64[1] = 0xbbbbbbbbULL;
 
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
-	ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
+    ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-	// arrange 
+    // arrange 
 
-	// act 
-	result = io_ref_equals(&ref1_valid, &ref2_valid);
+    // act 
+    result = io_ref_equals(&ref1_valid, &ref2_valid);
 
-	// assert 
+    // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
@@ -1015,8 +1015,8 @@ TEST_FUNCTION(io_encode_ref__neg_1)
     io_ref_t ref_valid;
     int32_t result;
 
-	ref_valid.un.u64[0] = 1ULL;
-	ref_valid.un.u64[1] = 2ULL;
+    ref_valid.un.u64[0] = 1ULL;
+    ref_valid.un.u64[1] = 2ULL;
 
     // arrange 
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();

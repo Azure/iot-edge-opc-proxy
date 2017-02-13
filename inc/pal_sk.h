@@ -66,9 +66,8 @@ decl_internal_2(int32_t, pal_socket_create,
 //
 // Open a socket - wait for opened event
 //
-decl_internal_2(int32_t, pal_socket_open,
-    pal_socket_t*, sock,
-    void*, op_context
+decl_internal_1(int32_t, pal_socket_open,
+    pal_socket_t*, sock
 );
 
 //
@@ -148,9 +147,8 @@ decl_public_2(int32_t, pal_socket_leave_multicast_group,
 //
 // Close socket - wait for close event before calling free
 //
-decl_internal_2(void, pal_socket_close,
-    pal_socket_t*, socket,
-    void*, op_context
+decl_internal_1(void, pal_socket_close,
+    pal_socket_t*, socket
 );
 
 //

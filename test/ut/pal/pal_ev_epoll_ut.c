@@ -47,6 +47,7 @@ REGISTER_UMOCK_ALIAS_TYPE(pal_event_type, int);
 REGISTER_UMOCK_ALIAS_TYPE(uintptr_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(THREADAPI_RESULT, int);
 REGISTER_UMOCK_ALIAS_TYPE(THREAD_HANDLE, void*);
+REGISTER_UMOCK_ALIAS_TYPE(THREAD_START_FUNC, void*);
 END_DECLARE_TEST_SUITE()
 
 //
@@ -465,29 +466,6 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_2)
 }
 
 // 
-// Test pal_event_select happy path 
-// 
-TEST_FUNCTION(pal_nix_epoll_event_select__success_3)
-{
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
-    static const pal_event_type k_event_type_valid = pal_event_type_write;
-    pal_epoll_event_t ev_data_valid;
-    uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
-    int32_t result;
-
-    ev_data_valid.events = EPOLLOUT;
-
-    // arrange 
-
-    // act 
-    result = pal_event_select(event_handle_valid, k_event_type_valid);
-
-    // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_EXPECTED_CALLS();
-}
-
-// 
 // Test pal_event_select passing as event_handle argument an invalid uintptr_t value 
 // 
 TEST_FUNCTION(pal_nix_epoll_event_select__arg_event_handle_null)
@@ -627,28 +605,6 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_2)
         .ValidateArgumentBuffer(4, &k_events_expected, sizeof(k_events_expected))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
-
-    // act 
-    result = pal_event_clear(event_handle_valid, k_event_type_valid);
-
-    // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_EXPECTED_CALLS();
-}
-
-// 
-// Test pal_event_clear happy path 
-// 
-TEST_FUNCTION(pal_nix_epoll_event_clear__success_3)
-{
-    static const pal_event_type k_event_type_valid = pal_event_type_write;
-    pal_epoll_event_t ev_data_valid;
-    uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
-    int32_t result;
-
-    ev_data_valid.events = EPOLLIN;
-
-    // arrange 
 
     // act 
     result = pal_event_clear(event_handle_valid, k_event_type_valid);

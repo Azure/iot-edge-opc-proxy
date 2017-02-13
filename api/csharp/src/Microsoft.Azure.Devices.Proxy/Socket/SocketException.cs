@@ -6,19 +6,31 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
 
-    public class SocketException : Exception {
+    public class SocketException : System.Net.Sockets.SocketException {
 
         public SocketError Error { get; private set; }
 
+        internal string _message;
+        public override string Message { get { return _message; } }
+
+        internal Exception _innerException;
+        public new Exception InnerException { get { return _innerException; } }
+
+        public SocketException(string message, Exception e,
+            SocketError errorCode)
+            : base() {
+            Error = errorCode;
+            _message = message;
+            _innerException = e;
+        }
+
         public SocketException(string message, Exception e) 
-            : base(message, e) {
-            Error = SocketError.Fatal;
+            : this(message, e, SocketError.Fatal) {
         }
 
         public SocketException(string message, 
             SocketError errorCode = SocketError.Fatal)
-            : base(message) {
-            Error = errorCode;
+            : this(message, null, errorCode) {
         }
 
         public SocketException(SocketError errorCode)

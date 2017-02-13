@@ -60,7 +60,10 @@ static void xio_wsclient_free(
         return; // Called again when closed..
 
     if (ws->websocket)
+    {
         pal_wsclient_close(ws->websocket);
+        return; // Called again when destroyed..
+    }
 
     if (ws->inbound)
         io_queue_free(ws->inbound);
@@ -163,8 +166,12 @@ static void xio_wsclient_deliver_close_result(
 {
     io_queue_buffer_t* buffer;
 
-    // Roll back all buffers
+    xio_wsclient_deliver_inbound_results(ws);
+    xio_wsclient_deliver_outbound_results(ws);
+
+    // Roll back all in progress buffers
     io_queue_rollback(ws->outbound);
+
     while (true)
     {
         buffer = io_queue_pop_ready(ws->outbound);
@@ -393,6 +400,12 @@ static void xio_wsclient_event_handler(
         ws->last_error = error;
         __do_next(ws, xio_wsclient_deliver_close_result);
         break;
+    case pal_wsclient_event_closed:
+        dbg_assert(error == er_ok, "no error expected.");
+        dbg_assert(!buffer && !size && !type, "no buffer expected.");
+        ws->websocket = NULL;
+        __do_next(ws, xio_wsclient_free);
+        break;
     default:
         dbg_assert(0, "Should not be here!");
     }
@@ -527,7 +540,7 @@ static CONCRETE_IO_HANDLE xio_wsclient_create(
         return NULL;
     do
     {
-        ws->log = log_get("xio.websocket");
+        ws->log = log_get("xio_ws");
 
         result = io_queue_create("WS-inbound", &ws->inbound);
         if (result != er_ok)

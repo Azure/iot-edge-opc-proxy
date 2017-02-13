@@ -234,6 +234,12 @@ static void pal_wsclient_free(
     dbg_assert_ptr(wsclient);
     dbg_assert(!wsclient->wsi, "Still open");
 
+    wsclient->cb(wsclient->context, pal_wsclient_event_closed,
+        NULL, NULL, NULL, er_ok);
+
+    wsclient->cb = NULL;
+    wsclient->context = NULL;
+
     if (wsclient->host)
         mem_free(wsclient->host);
     if (wsclient->relative_path)
@@ -350,7 +356,7 @@ static int pal_wsworker_lws_on_verify_certs(
         if (result != er_ok)
         {
             log_error(worker->log, "Failed loading certs (%s)", 
-                pi_error_string(result));
+                prx_err_string(result));
             return -1;
         }
     }
@@ -623,7 +629,7 @@ static int pal_wsworker_lws_on_header_write(
     const char* headers;
     size_t out_len;
     dbg_assert_ptr(wsclient);
-    dbg_assert(wsclient->wsi == wsi, "Unexpected");
+    (void)wsi;
 
     if (!wsclient->headers)
         return 0;
@@ -962,7 +968,7 @@ static int32_t pal_wsworker_thread(
                     next->last_error = er_ok;
                 }
             }
-            else if (next->wsi)
+            else if (next->wsi && next->state & (1 << pal_wsclient_connected_bit))
             {
                 if (next->can_send)
                 {
@@ -1070,7 +1076,7 @@ static int32_t pal_wsworker_pool_attach(
 
         DList_InitializeListHead(&worker->link);
         DList_InitializeListHead(&worker->clients);
-        worker->log = log_get("websocket.proto");
+        worker->log = log_get("pal_ws_proto");
         worker->pool = pool;
         worker->protocols = (struct lws_protocols*)mem_zalloc(
             sizeof(struct lws_protocols) * 2);
@@ -1193,7 +1199,7 @@ static int32_t pal_wsworker_pool_create(
     do
     {
         DList_InitializeListHead(&pool->workers);
-        pool->log = log_get("lws");
+        pool->log = log_get("pal_ws_lws");
         pool->counter = 1;
         result = lock_create(&pool->pool_lock);
         if (result != er_ok)
@@ -1235,7 +1241,7 @@ int32_t pal_wsclient_create(
         return er_out_of_memory;
     do
     {
-        wsclient->log = log_get("websocket");
+        wsclient->log = log_get("pal_ws");
         wsclient->cb = callback;
         wsclient->context = context;
         DList_InitializeListHead(&wsclient->link);
@@ -1374,8 +1380,8 @@ int32_t pal_wsclient_disconnect(
 
     if (!wsclient->worker)
     {
-        wsclient->cb(wsclient->context, pal_wsclient_event_disconnected,
-            NULL, NULL, NULL, wsclient->disconnect_reason);
+       // wsclient->cb(wsclient->context, pal_wsclient_event_disconnected,
+       //     NULL, NULL, NULL, wsclient->disconnect_reason);
         return er_ok;
     }
 

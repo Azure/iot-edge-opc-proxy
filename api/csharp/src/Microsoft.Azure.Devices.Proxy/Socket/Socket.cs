@@ -77,6 +77,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
+        // Remote socket timeout
+        //
+        public static UInt32 RemoteTimeout {
+            get; set;
+        }
+
+        //
         // Create a socket
         //
         public Socket(SocketType socketType, ProtocolType protocolType)
@@ -86,13 +93,21 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Create socket for address family 
         //
-        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) :
+        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, UInt32 keepAlive) :
             this(addressFamily, socketType, protocolType, null) {
             this._internal = ProxySocket.Create(new SocketInfo {
                 Family = addressFamily,
                 Protocol = protocolType,
-                Type = socketType
+                Type = socketType,
+                Timeout = keepAlive
             }, DefaultProvider.Instance);
+        }
+
+        //
+        // Create socket for address family 
+        //
+        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) :
+            this(addressFamily, socketType, protocolType, RemoteTimeout) {
         }
 
         //
@@ -117,7 +132,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Set/get the send timeout
         //
-        public TimeSpan ConnectTimeout { get; set; } = TimeSpan.MaxValue;
+        public TimeSpan ConnectTimeout { get; set; } = TimeSpan.FromSeconds(30);
 
         //
         // Opens the socket and links as active
@@ -133,12 +148,12 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new InvalidOperationException("Socket is listening");
             }
             try {
-                await _internal.ConnectAsync(endpoint, ConnectTimeout, ct).ConfigureAwait(false);
+                await _internal.ConnectAsync(endpoint, ct).ConfigureAwait(false);
                 Connected = true;
                 IsBound = true;
             }
-            catch(Exception e) {
-                throw new SocketException("Exception during Connect", e);
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during Connect", e, e.GetSocketError());
             }
         }
 
@@ -152,7 +167,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Sync connect
         //
         public void Connect(SocketAddress endpoint) =>
-            ConnectAsync(endpoint).Wait();
+            TaskToSync.Run(() => ConnectAsync(endpoint));
 
         //
         // Using host and port
@@ -170,7 +185,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Async, this time with event arg
         //
         public bool ConnectAsync(SocketAsyncEventArgs e) {
-            var task = ConnectAsync(e.Endpoint).ContinueWith(t => e.Complete(this));
+            var task = ConnectAsync(e.Endpoint).ContinueWith(t => {
+                if (t.IsFaulted) {
+                    e.SocketError = t.Exception.GetSocketError();
+                }
+                e.Complete(this);
+            });
             return true;
         }
 
@@ -208,14 +228,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (IsListening) {
                 throw new InvalidOperationException("Socket is listening");
             }
-            try
-            {
-                await _internal.BindAsync(endpoint, ConnectTimeout, ct).ConfigureAwait(false);
+            try {
+                await _internal.BindAsync(endpoint, ct).ConfigureAwait(false);
                 IsBound = true;
             }
-            catch (Exception e)
-            {
-                throw new SocketException("Exception during Bind", e);
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during Bind", e, e.GetSocketError());
             }
         }
 
@@ -229,7 +247,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Bind, sync
         //
         public void Bind(SocketAddress endpoint) =>
-            BindAsync(endpoint).Wait();
+            TaskToSync.Run(() => BindAsync(endpoint));
 
         //
         // With proxy name and port
@@ -247,7 +265,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Bind, this time with event arg
         //
         public bool BindAsync(SocketAsyncEventArgs e) {
-            var task = BindAsync(e.Endpoint).ContinueWith(t => e.Complete(this));
+            var task = BindAsync(e.Endpoint).ContinueWith(t => {
+                if (t.IsFaulted) {
+                    e.SocketError = t.Exception.GetSocketError();
+                }
+                e.Complete(this);
+            });
             return true;
         }
 
@@ -276,15 +299,15 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Places a socket in a listening state.
         //
-        public Task ListenAsync(int backlog, CancellationToken ct) {
+        public async Task ListenAsync(int backlog, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (!IsBound) {
                 throw new InvalidOperationException("Socket is not bound");
             }
-            return _internal.ListenAsync(backlog, ConnectTimeout, ct).ContinueWith(
-                t => IsListening = true);
+            await _internal.ListenAsync(backlog, ct).ConfigureAwait(false);
+            IsListening = true;
         }
 
         //
@@ -297,13 +320,18 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Same, but sync
         //
         public void Listen(int backlog = Int32.MaxValue) =>
-            ListenAsync(backlog).Wait();
+            TaskToSync.Run(() => ListenAsync(backlog));
 
         //
         // Same, this time with event arg
         //
         public bool ListenAsync(SocketAsyncEventArgs e) {
-            var task = ListenAsync(e.Count).ContinueWith(t => e.Complete(this));
+            var task = ListenAsync(e.Count).ContinueWith(t => {
+                if (t.IsFaulted) {
+                    e.SocketError = t.Exception.GetSocketError();
+                }
+                e.Complete(this);
+            });
             return true;
         }
 
@@ -335,43 +363,48 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!IsListening) {
                 throw new InvalidOperationException("Socket is not listening");
             }
-            var cts = new CancellationTokenSource(ConnectTimeout);
-            bool wasCancelled = false;
-            ct.Register(() => {
-                wasCancelled = true;
-                cts.Cancel();
-            });
             try {
-                var result = await _internal.ReceiveAsync(new ArraySegment<byte>(), ct).ContinueWith(
-                    t => new Socket(this, t.Result.Link));
+                var result = await _internal.ReceiveAsync(
+                    new ArraySegment<byte>(), ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
-                return result;
+                return new Socket(this, result.Link);
             }
-            catch (OperationCanceledException e) {
-                if (!wasCancelled)
-                    throw new TimeoutException();
-                throw e;
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during Accept", e, e.GetSocketError());
             }
         }
 
         //
         // Without cancellation token
         //
-        public Task<Socket> AcceptAsync() =>
-            AcceptAsync(CancellationToken.None);
+        public async Task<Socket> AcceptAsync() {
+            var cts = new CancellationTokenSource(ConnectTimeout);
+            try {
+                return await AcceptAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on accept after {ConnectTimeout.ToString()}.");
+            }
+        }
 
         //
         // Same, but sync
         //
-        public Socket Accept() => 
-            AcceptAsync().Result;
+        public Socket Accept() =>
+            TaskToSync.Run(() => AcceptAsync());
 
         //
         // Same, but with async event args
         //
         public bool AcceptAsync(SocketAsyncEventArgs e) {
             AcceptAsync().ContinueWith(t => {
-                e.AcceptSocket = t.Result;
+                try { 
+                    e.AcceptSocket = t.Result;
+                }
+                catch (Exception ex) {
+                    e.SocketError = ex.GetSocketError();
+                }
                 e.Complete(this);
                 return t;
             });
@@ -399,7 +432,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Set/get the send timeout
         //
-        public int SendTimeout { get; set; } = 30000;
+        public int SendTimeout { get; set; } = 10 * 1000;
 
         //
         // Send array segment 
@@ -411,29 +444,29 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            var cts = new CancellationTokenSource(SendTimeout);
-            bool wasCancelled = false;
-            ct.Register(() => {
-                wasCancelled = true;
-                cts.Cancel();
-            });
             try {
-                var result = await _internal.SendAsync(buffer, null, cts.Token).ConfigureAwait(false);
+                var result = await _internal.SendAsync(buffer, null, ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
                 return result;
             }
-            catch (OperationCanceledException e) {
-                if (!wasCancelled)
-                    throw new TimeoutException();
-                throw e;
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during Send", e, e.GetSocketError());
             }
         }
 
         //
         // Send array segment, without cancellation token
         //
-        public Task<int> SendAsync(ArraySegment<byte> buffer) =>
-            SendAsync(buffer, CancellationToken.None);
+        public async Task<int> SendAsync(ArraySegment<byte> buffer) {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                return await SendAsync(buffer, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on send after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Send buffer, with cancellation
@@ -445,13 +478,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Send buffer without cancellation token
         //
         public Task<int> SendAsync(byte[] buffer, int offset, int size) =>
-            SendAsync(buffer, offset, size, CancellationToken.None);
+            SendAsync(CreateArraySegment(buffer, offset, size));
 
         //
         // Send buffer of size
         //
         public Task<int> SendAsync(byte[] buffer, int size) =>
-            SendAsync(buffer, 0, size, CancellationToken.None);
+            SendAsync(buffer, 0, size);
 
         //
         // Same, without offset
@@ -462,7 +495,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Sends a data buffer to a connected socket with up to size bytes
         //
-        public Task<int> SendAsync(IEnumerable<ArraySegment<byte>> buffers, CancellationToken ct) {
+        public async Task<int> SendAsync(IEnumerable<ArraySegment<byte>> buffers, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -472,19 +505,26 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!Connected) {
                 throw new SocketException("Not connected");
             }
-            List<Task<int>> tasks = new List<Task<int>>();
-            foreach(var buffer in buffers)
-                tasks.Add(SendAsync(buffer, ct));
-            return Task.WhenAll(tasks.ToArray()).ContinueWith(t => {
-                return t.Result.Sum();
-            });
+            int sent = 0;
+            foreach (var buffer in buffers) {
+                sent += await SendAsync(buffer, ct).ConfigureAwait(false);
+            }
+            return sent;
         }
 
         //
         // Without cancellation token
         //
-        public Task<int> SendAsync(IEnumerable<ArraySegment<byte>> buffers) =>
-            SendAsync(buffers, CancellationToken.None);
+        public async Task<int> SendAsync(IEnumerable<ArraySegment<byte>> buffers) {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                return await SendAsync(buffers, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on send after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Same, this time with event arg
@@ -501,7 +541,12 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try { 
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex) {
+                    e.SocketError = ex.GetSocketError();
+                }
                 e.Complete(this);
             });
             return true;
@@ -510,14 +555,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Sync send a data buffer to a connected socket with up to size bytes
         //
-        public int Send(ArraySegment<byte> buffer) => 
-            SendAsync(buffer).Result;
+        public int Send(ArraySegment<byte> buffer) =>
+            TaskToSync.Run(() => SendAsync(buffer));
 
         //
         // Sends a data buffer to a connected socket with up to size bytes
         //
         public int Send(IEnumerable<ArraySegment<byte>> buffer) =>
-            SendAsync(buffer).Result;
+            TaskToSync.Run(() => SendAsync(buffer));
 
         //
         // Sends a data buffer from offset to a connected socket with up to size bytes
@@ -576,29 +621,29 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!IsBound) {
                 throw new SocketException("Not bound");
             }
-            var cts = new CancellationTokenSource(SendTimeout);
-            bool wasCancelled = false;
-            ct.Register(() => {
-                wasCancelled = true;
-                cts.Cancel();
-            });
             try {
-                var result = await _internal.SendAsync(buffer, endpoint, cts.Token).ConfigureAwait(false); 
+                var result = await _internal.SendAsync(buffer, endpoint, ct).ConfigureAwait(false); 
                 ct.ThrowIfCancellationRequested();
                 return result;
             }
-            catch (OperationCanceledException e) {
-                if (!wasCancelled)
-                    throw new TimeoutException();
-                throw e;
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during SendTo", e, e.GetSocketError());
             }
         }
 
         //
         // Send array segment, without cancellation token
         //
-        public Task<int> SendToAsync(ArraySegment<byte> buffer, SocketAddress endpoint) =>
-            SendToAsync(buffer, endpoint, CancellationToken.None);
+        public async Task<int> SendToAsync(ArraySegment<byte> buffer, SocketAddress endpoint) {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                return await SendToAsync(buffer, endpoint, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on sendto after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Send buffer, with cancellation
@@ -610,13 +655,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Send buffer without cancellation token
         //
         public Task<int> SendToAsync(byte[] buffer, int offset, int size, SocketAddress endpoint) =>
-            SendToAsync(buffer, offset, size, endpoint, CancellationToken.None);
+            SendToAsync(CreateArraySegment(buffer, offset, size), endpoint);
 
         //
         // Send buffer of size
         //
         public Task<int> SendToAsync(byte[] buffer, int size, SocketAddress endpoint) =>
-            SendToAsync(buffer, 0, size, endpoint, CancellationToken.None);
+            SendToAsync(buffer, 0, size, endpoint);
 
         //
         // Same, without offset
@@ -627,24 +672,34 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Sends a data buffer un unconnected socket with up to size bytes to endpoint
         //
-        public Task<int> SendToAsync(IEnumerable<ArraySegment<byte>> buffers, SocketAddress endpoint, CancellationToken ct) {
+        public async Task<int> SendToAsync(IEnumerable<ArraySegment<byte>> buffers, SocketAddress endpoint, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (buffers == null) {
                 throw new ArgumentNullException("buffers");
             }
-            List<Task<int>> tasks = new List<Task<int>>();
-            foreach (var buffer in buffers)
-                tasks.Add(SendToAsync(buffer, endpoint, ct));
-            return Task.WhenAll(tasks.ToArray()).ContinueWith(t => t.Result.Sum());
+
+            int sent = 0;
+            foreach (var buffer in buffers) {
+                sent += await SendToAsync(buffer, endpoint, ct).ConfigureAwait(false);
+            }
+            return sent;
         }
 
         //
         // Without cancellation token
         //
-        public Task<int> SendToAsync(IEnumerable<ArraySegment<byte>> buffers, SocketAddress endpoint) =>
-            SendToAsync(buffers, endpoint, CancellationToken.None);
+        public async Task<int> SendToAsync(IEnumerable<ArraySegment<byte>> buffers, SocketAddress endpoint) {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                return await SendToAsync(buffers, endpoint, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on sendto after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Same, this time with event arg
@@ -661,7 +716,12 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try { 
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex) {
+                    e.SocketError = ex.GetSocketError();
+                }
                 e.Complete(this);
             });
             return true;
@@ -677,7 +737,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Send to named host and port on unconnected socket
         //
         public Task<int> SendToAsync(ArraySegment<byte> buffer, string host, int port) =>
-            SendToAsync(buffer, new ProxySocketAddress(host, port), CancellationToken.None);
+            SendToAsync(buffer, new ProxySocketAddress(host, port));
 
         //
         // With real buffer
@@ -689,13 +749,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Sync send a data buffer to a connected socket with up to size bytes
         //
         public int SendTo(ArraySegment<byte> buffer, SocketAddress endpoint) =>
-            SendToAsync(buffer, endpoint).Result;
+            TaskToSync.Run(() => SendToAsync(buffer, endpoint));
 
         //
         // Sends a data buffer to a connected socket with up to size bytes
         //
         public int SendTo(IEnumerable<ArraySegment<byte>> buffer, SocketAddress endpoint) =>
-            SendToAsync(buffer, endpoint).Result;
+            TaskToSync.Run(() => SendToAsync(buffer, endpoint));
 
         //
         // Sends a data buffer from offset to a connected socket with up to size bytes
@@ -781,7 +841,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         //  Set/get the timeout for receive calls
         //
-        public int ReceiveTimeout { get; set; } = 30000;
+        public int ReceiveTimeout { get; set; } = 10 * 1000;
 
         #region Receive
 
@@ -795,35 +855,34 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-
-            var cts = new CancellationTokenSource(ReceiveTimeout);
-            bool wasCancelled = false;
-            ct.Register(() => {
-                wasCancelled = true;
-                cts.Cancel();
-            });
             try {
                 var result = await _internal.ReceiveAsync(buffer, ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
                 return result.Count;
             }
-            catch (OperationCanceledException e) {
-                if (!wasCancelled)
-                    throw new TimeoutException();
-                throw e;
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during Receive", e, e.GetSocketError());
             }
         }
 
         //
         // Without cancelation token
         //
-        public Task<int> ReceiveAsync(ArraySegment<byte> buffer) =>
-            ReceiveAsync(buffer, CancellationToken.None);
+        public async Task<int> ReceiveAsync(ArraySegment<byte> buffer) {
+            var cts = new CancellationTokenSource(ReceiveTimeout);
+            try {
+                return await ReceiveAsync(buffer, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on receive after {ReceiveTimeout.ToString()}.");
+            }
+        }
 
         //
         // Receive into buffer vector
         //
-        public Task<int> ReceiveAsync(IEnumerable<ArraySegment<byte>> buffers, CancellationToken ct) {
+        public async Task<int> ReceiveAsync(IEnumerable<ArraySegment<byte>> buffers, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -833,17 +892,26 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!Connected) {
                 throw new SocketException("Not connected");
             }
-            List<Task<int>> tasks = new List<Task<int>>();
-            foreach (var buffer in buffers)
-                tasks.Add(ReceiveAsync(buffer, ct));
-            return Task.WhenAll(tasks.ToArray()).ContinueWith(t => t.Result.Sum());
+            int received = 0;
+            foreach (var buffer in buffers) {
+                received += await ReceiveAsync(buffer, ct).ConfigureAwait(false);
+            }
+            return received;
         }
 
         //
         // Receive into buffer vector
         //
-        public Task<int> ReceiveAsync(IEnumerable<ArraySegment<byte>> buffers) =>
-            ReceiveAsync(buffers, CancellationToken.None);
+        public async Task<int> ReceiveAsync(IEnumerable<ArraySegment<byte>> buffers) {
+            var cts = new CancellationTokenSource(ReceiveTimeout);
+            try {
+                return await ReceiveAsync(buffers, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on receive after {ReceiveTimeout.ToString()}.");
+            }
+        }
 
         //
         // Into buffer
@@ -855,7 +923,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Into buffer without cancellation token
         //
         public Task<int> ReceiveAsync(byte[] buffer, int offset, int size) =>
-            ReceiveAsync(buffer, offset, size, CancellationToken.None);
+            ReceiveAsync(CreateArraySegment(buffer, offset, size));
 
         //
         // No offset
@@ -884,7 +952,12 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.BytesTransferred = t.Result;
+                try { 
+                    e.BytesTransferred = t.Result;
+                }
+                catch (Exception ex) {
+                    e.SocketError = ex.GetSocketError();
+                }
                 e.Complete(this);
             });
             return true;
@@ -894,7 +967,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Receives data from a connected socket 
         //
         public int Receive(ArraySegment<byte> buffer) =>
-            ReceiveAsync(buffer).Result;
+            TaskToSync.Run(() => ReceiveAsync(buffer));
 
         //
         // Receives data from a connected socket 
@@ -918,7 +991,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Receive into list of buffers
         //
         public int Receive(IEnumerable<ArraySegment<byte>> buffers) =>
-            ReceiveAsync(buffers).Result;
+            TaskToSync.Run(() => ReceiveAsync(buffers));
 
         //
         // Begin receive of vector of buffers
@@ -958,30 +1031,29 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!IsBound) {
                 throw new SocketException("Not bound");
             }
-
-            var cts = new CancellationTokenSource(ReceiveTimeout);
-            bool wasCancelled = false;
-            ct.Register(() => {
-                wasCancelled = true;
-                cts.Cancel();
-            });
             try {
                 var result = await _internal.ReceiveAsync(buffer, ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
                 return Tuple.Create(result.Address, result.Count);
             }
-            catch (OperationCanceledException e) {
-                if (!wasCancelled)
-                    throw new TimeoutException();
-                throw e;
+            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
+                throw new SocketException("Exception during ReceiveFrom", e, e.GetSocketError());
             }
         }
 
         //
-        // Without cancelation token
+        // Without cancelation token, but timeout
         //
-        public Task<Tuple<SocketAddress, int>> ReceiveFromAsync(ArraySegment<byte> buffer) =>
-            ReceiveFromAsync(buffer, CancellationToken.None);
+        public async Task<Tuple<SocketAddress, int>> ReceiveFromAsync(ArraySegment<byte> buffer) {
+            var cts = new CancellationTokenSource(ReceiveTimeout);
+            try {
+                return await ReceiveFromAsync(buffer, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on receivefrom after {ReceiveTimeout.ToString()}.");
+            }
+        }
 
         //
         // Into buffer
@@ -993,7 +1065,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Into buffer without cancellation token
         //
         public Task<Tuple<SocketAddress, int>> ReceiveFromAsync(byte[] buffer, int offset, int size) =>
-            ReceiveFromAsync(buffer, offset, size, CancellationToken.None);
+            ReceiveFromAsync(CreateArraySegment(buffer, offset, size));
 
         //
         // No offset
@@ -1022,8 +1094,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                e.Endpoint = t.Result.Item1;
-                e.BytesTransferred = t.Result.Item2;
+                try {
+                    e.Endpoint = t.Result.Item1;
+                    e.BytesTransferred = t.Result.Item2;
+                }
+                catch (Exception ex) {
+                    e.SocketError = ex.GetSocketError();
+                }
                 e.Complete(this);
             });
             return true;
@@ -1033,7 +1110,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Receives data from an unconnected socket 
         //
         public int ReceiveFrom(ArraySegment<byte> buffer, ref SocketAddress address) {
-            var result = ReceiveFromAsync(buffer).Result;
+            var result = TaskToSync.Run(() => ReceiveFromAsync(buffer));
             address = result.Item1;
             return result.Item2;
         }
@@ -1092,20 +1169,28 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
-            await _internal.SetSocketOptionAsync(option, value, ConnectTimeout, ct).ConfigureAwait(false);
+            await _internal.SetSocketOptionAsync(option, value, ct).ConfigureAwait(false);
         }
 
         //
         // Without cancellation token
         //
-        public Task SetSocketOptionAsync(SocketOption option, ulong value) =>
-            SetSocketOptionAsync(option, value, CancellationToken.None);
+        public async Task SetSocketOptionAsync(SocketOption option, ulong value) {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                await SetSocketOptionAsync(option, value, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on send socket option after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Sets the specified option to the specified value.
         //
         public void SetSocketOption(SocketOption option, ulong value) =>
-            SetSocketOptionAsync(option, value).Wait();
+            TaskToSync.Run(() => SetSocketOptionAsync(option, value));
 
         //
         // Begin setting socket options
@@ -1128,20 +1213,28 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
-            return await _internal.GetSocketOptionAsync(option, ConnectTimeout, ct).ConfigureAwait(false);
+            return await _internal.GetSocketOptionAsync(option, ct).ConfigureAwait(false);
         }
 
         //
         // Same without cancellation token
         //
-        public Task<ulong> GetSocketOptionAsync(SocketOption option) =>
-            GetSocketOptionAsync(option, CancellationToken.None);
+        public async Task<ulong> GetSocketOptionAsync(SocketOption option) {
+            var cts = new CancellationTokenSource(ReceiveTimeout);
+            try {
+                return await GetSocketOptionAsync(option, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on receive socket option after {ReceiveTimeout.ToString()}.");
+            }
+        }
 
         //
         // Helper to get the value of a socket option.
         //
         public ulong GetSocketOption(SocketOption option) =>
-            GetSocketOptionAsync(option).Result;
+            TaskToSync.Run(() => GetSocketOptionAsync(option));
 
         //
         // Begin getting socket options
@@ -1170,7 +1263,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Disables sends and receives on a socket.
         //
         public Task ShutdownAsync(SocketShutdown how) =>
-            ShutdownAsync(how);
+            SetSocketOptionAsync(SocketOption.Shutdown, (ulong)how);
 
         //
         // Same, but sync
@@ -1205,20 +1298,28 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return;
             }
             Connected = false;
-            await _internal.CloseAsync(ConnectTimeout, ct).ConfigureAwait(false);
+            await _internal.CloseAsync(ct).ConfigureAwait(false);
         }
 
         //
         // Without cancellation token
         //
-        public Task CloseAsync() =>
-            CloseAsync(CancellationToken.None);
+        public async Task CloseAsync() {
+            var cts = new CancellationTokenSource(SendTimeout);
+            try {
+                await CloseAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on close socket after {SendTimeout.ToString()}.");
+            }
+        }
 
         //
         // Sync close
         //
         public void Close() =>
-            CloseAsync().Wait();
+            TaskToSync.Run(() => CloseAsync());
 
         //
         // Begin Close
@@ -1248,12 +1349,15 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_cleanedUp) {
                 return;
             }
-            try { 
-                Close();
+            _cleanedUp = !Connected;
+            if (!_cleanedUp) {
+                try {
+                    Close();
+                }
+                catch { }
+                _cleanedUp = true;
             }
-            catch (ObjectDisposedException) {
-            }
-            _cleanedUp = true;
+            _internal = null;
         }
 
         //

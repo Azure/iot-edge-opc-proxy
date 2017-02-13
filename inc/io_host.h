@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "prx_host.h"
+#include "prx_sched.h"
 #include "prx_ns.h"
 
 //
@@ -19,6 +20,13 @@ decl_internal_1(io_ref_t*, prx_host_get_id,
 // returns a pointer to the name service  
 //
 decl_internal_1(prx_ns_t*, prx_host_get_ns,
+    prx_host_t*, host
+);
+
+//
+// returns a pointer to the scheduler
+//
+decl_internal_1(prx_scheduler_t*, prx_host_get_scheduler,
     prx_host_t*, host
 );
 

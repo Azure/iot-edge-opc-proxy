@@ -118,66 +118,6 @@ decl_public_8(void, __zlog_error_v,
 //
 // Log debug message implementation
 //
-_inl__ void __zlog_debug(
-    zlog_t log,
-    const char *file,
-    size_t filelen,
-    const char *func,
-    size_t funclen,
-    long line,
-    const char* format,
-    ...
-)
-{
-    va_list va;
-    va_start(va, format);
-    __zlog_debug_v(log, file, filelen, func, funclen, line, format, va);
-    va_end(va);
-}
-
-//
-// Log trace message implementation
-//
-_inl__ void __zlog_info(
-    zlog_t log,
-    const char *file,
-    size_t filelen,
-    const char *func,
-    size_t funclen,
-    long line,
-    const char* format,
-    ...
-)
-{
-    va_list va;
-    va_start(va, format);
-    __zlog_info_v(log, file, filelen, func, funclen, line, format, va);
-    va_end(va);
-}
-
-//
-// Log error message implementation
-//
-_inl__ void  __zlog_error(
-    zlog_t log,
-    const char *file,
-    size_t filelen,
-    const char *func,
-    size_t funclen,
-    long line,
-    const char* format,
-    ...
-)
-{
-    va_list va;
-    va_start(va, format);
-    __zlog_error_v(log, file, filelen, func, funclen, line, format, va);
-    va_end(va);
-}
-
-//
-// Log debug message implementation
-//
 decl_public_8(void, __zlog_debug_b,
     zlog_t, log,
     const char*, file,
@@ -221,23 +161,23 @@ decl_public_8(void, __zlog_error_b,
 // Accumulate a partial log event
 //
 decl_public_3(void, __zlog_info_a,
-	zlog_t, log,
-	const char*, format,
-	va_list, args
+    zlog_t, log,
+    const char*, format,
+    va_list, args
 );
 
 //
 // Flush all partial log events and this one
 //
 decl_public_8(void, __zlog_info_a_flush,
-	zlog_t, log,
-	const char*, file,
-	size_t, filelen,
-	const char*, func,
-	size_t, funclen,
-	long, line,
-	const char*, format,
-	va_list, args
+    zlog_t, log,
+    const char*, file,
+    size_t, filelen,
+    const char*, func,
+    size_t, funclen,
+    long, line,
+    const char*, format,
+    va_list, args
 );
 
 #endif // _util_zlog_h_

@@ -315,7 +315,7 @@ int32_t pal_leave_multicast_group(
         break;
     case prx_address_family_inet6:
         memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8,
-			sizeof(option->address.in6.un.u8));
+            sizeof(option->address.in6.un.u8));
         opt6.ipv6mr_interface = option->interface_index;
         result = setsockopt(
             (fd_t)fd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&opt6, sizeof(opt6));
@@ -354,7 +354,7 @@ int32_t pal_join_multicast_group(
         break;
     case prx_address_family_inet6:
         memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8, 
-			sizeof(option->address.in6.un.u8));
+            sizeof(option->address.in6.un.u8));
         opt6.ipv6mr_interface = option->interface_index;
 #if !defined(IPV6_ADD_MEMBERSHIP) && defined(IPV6_JOIN_GROUP)
 #define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP

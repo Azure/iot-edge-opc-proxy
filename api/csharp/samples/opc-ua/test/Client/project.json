@@ -1,21 +1,27 @@
 {
-    "version": "1.0.0-*",
+    "version": "0.1.5",
     "buildOptions": {
         "emitEntryPoint": true
     },
-
     "dependencies": {
-        "Opc.Ua.Proxy": "0.0.5-*",
-        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.0.9",
-        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.0.9"
+        "Microsoft.Azure.Devices.Opc.Ua.Proxy": "0.1.5",
+        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.5",
+        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.1.5"
     },
-
     "frameworks": {
         "netcoreapp1.0": {
             "dependencies": {
                 "Microsoft.NETCore.App": {
                     "type": "platform",
                     "version": "1.0.0"
+                }
+            }
+        },
+        "netcoreapp1.1": {
+            "dependencies": {
+                "Microsoft.NETCore.App": {
+                    "type": "platform",
+                    "version": "1.1.0"
                 }
             }
         },

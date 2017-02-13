@@ -5,7 +5,7 @@
 # Libmocket shared library target
 #
 #add_library(libmocket SHARED 
-#	${_PROJECT_ROOT}/src/api_mocket.c
+#    ${_PROJECT_ROOT}/src/api_mocket.c
 #    )
 #set_target_properties(libmocket PROPERTIES PREFIX "")
 #

@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="ct"></param>
         /// <returns></returns>
         Task SetSocketOptionAsync(SocketOption option, ulong value,
-            TimeSpan timeout, CancellationToken ct);
+            CancellationToken ct);
 
         /// <summary>
         /// Gets remote socket option (getopt)
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<ulong> GetSocketOptionAsync(SocketOption option,
-            TimeSpan timeout, CancellationToken ct);
+            CancellationToken ct);
 
     }
 }

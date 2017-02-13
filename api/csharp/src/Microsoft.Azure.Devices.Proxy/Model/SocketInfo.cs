@@ -48,15 +48,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public UInt32 Flags { get; set; }
 
         /// <summary>
+        /// Socket timeout
+        /// </summary>
+        [DataMember(Name = "timeout", Order = 5)]
+        public UInt32 Timeout { get; set; }
+
+        /// <summary>
         /// Address to use to open, if proxy address, will be resolved.
         /// </summary>
-        [DataMember(Name = "address", Order = 5)]
+        [DataMember(Name = "address", Order = 6)]
         public SocketAddress Address { get; set; }
 
         /// <summary>
         /// Socket options that apply to the socket
         /// </summary>
-        [DataMember(Name = "options", Order = 6)]
+        [DataMember(Name = "options", Order = 7)]
         public HashSet<SocketOptionValue> Options { get; set; } = new HashSet<SocketOptionValue>();
 
         /// <summary>

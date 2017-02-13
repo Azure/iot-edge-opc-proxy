@@ -19,25 +19,16 @@ prx_host_type_t;
 //
 // Init host
 //
-decl_public_0(int32_t, prx_host_init,
-    void
-);
-
-//
-// Console entry point
-//
-decl_public_3(int32_t, prx_host_console,
-    const char*, config_file,
+decl_public_3(int32_t, prx_host_init,
+    prx_host_type_t, type,
     int32_t, argc,
     char**, argv
 );
 
 //
-// Create host instance
+// Get ref counted global host instance
 //
-decl_public_3(int32_t, prx_host_create,
-    const char*, config_file,
-    prx_host_type_t, type,
+decl_public_1(int32_t, prx_host_get,
     prx_host_t**, host
 );
 
@@ -67,14 +58,6 @@ decl_public_1(int32_t, prx_host_sig_break,
 //
 decl_public_1(int32_t, prx_host_stop,
     prx_host_t*, host
-);
-
-// 
-// Take a reference on the host
-//
-decl_public_2(int32_t, prx_host_clone,
-    prx_host_t*, host,
-    prx_host_t**, cloned
 );
 
 //

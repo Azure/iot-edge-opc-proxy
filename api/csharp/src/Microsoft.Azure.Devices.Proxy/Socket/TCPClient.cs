@@ -120,7 +120,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (_dataStream == null) {
-                _dataStream = new NetworkStream(Socket);
+                _dataStream = new NetworkStream(Socket, false);
             }
             return _dataStream;
         }
@@ -134,19 +134,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             if (disposing) {
                 IDisposable dataStream = _dataStream;
+                _dataStream = null;
                 if (dataStream != null) {
                     dataStream.Dispose();
-                } else {
-                    Socket chkClientSocket = Socket;
-                    if (chkClientSocket != null) {
-                        try {
-                            chkClientSocket.Shutdown(SocketShutdown.Both);
-                        }
-                        finally {
-                            chkClientSocket.Dispose();
-                            Socket = null;
-                        }
-                    }
+                }
+
+                Socket chkClientSocket = Socket;
+                Socket = null;
+                if (chkClientSocket != null) {
+                    chkClientSocket.Dispose();
+                    chkClientSocket = null;
                 }
                 GC.SuppressFinalize(this);
                 _cleanedUp = true;

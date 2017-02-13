@@ -30,33 +30,32 @@ static void zlog_logger_log(
 {
     log_t log;
     va_list args;
-    log = log_get("xlogging");
+    log = log_get("xlog");
 
     va_start(args, format);
     switch (log_category)
     {
-    case LOG_ERROR:
+    case AZ_LOG_ERROR:
         __zlog_error_v(log, file, strlen(file), func, strlen(func), line, format, args);
         break;
-    case LOG_INFO:
-		__zlog_info_v(log, file, strlen(file), func, strlen(func), line, format, args);
-	case LOG_TRACE:
-	default:
+    case AZ_LOG_INFO:
+        __zlog_info_v(log, file, strlen(file), func, strlen(func), line, format, args);
+    case AZ_LOG_TRACE:
+    default:
 #ifndef LINE_BREAK
         (void)options;
         __zlog_info_v(log, file, strlen(file), func, strlen(func), line, format, args);
 #else
-		if (options & LOG_LINE)
-		    __zlog_info_a_flush(log, file, strlen(file), func, strlen(func), line, format, args);
-		else
-		    __zlog_info_a(log, format, args);
+        if (options & LOG_LINE)
+            __zlog_info_a_flush(log, file, strlen(file), func, strlen(func), line, format, args);
+        else
+            __zlog_info_a(log, format, args);
 #endif
-		break;
+        break;
     }
     va_end(args);
 }
 
-#if !defined (NO_ZLOG)
 //
 // Initialize zlog library
 //
@@ -82,7 +81,5 @@ void log_deinit(
     xlogging_set_log_function(NULL);
     zlog_deinit();
 }
-
-#endif
 
 #endif

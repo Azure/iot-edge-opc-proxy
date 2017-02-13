@@ -230,12 +230,12 @@ TEST_FUNCTION(io_ws_connection_create__neg)
 
 #endif // io_ws_connection_create;
 
-#ifdef io_ws_connection_open
+#ifdef io_ws_connection_connect
 
 //
-//Test io_ws_connection_open happy path 
+//Test io_ws_connection_connect happy path 
 // 
-TEST_FUNCTION(io_ws_connection_open__success)
+TEST_FUNCTION(io_ws_connection_connect__success)
 {
     static const io_ws_connection_t* k_connection_valid;
     int32_t result;
@@ -244,7 +244,7 @@ TEST_FUNCTION(io_ws_connection_open__success)
     // ... 
 
     // act 
-    result = io_ws_connection_open(k_connection_valid);
+    result = io_ws_connection_connect(k_connection_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -252,9 +252,9 @@ TEST_FUNCTION(io_ws_connection_open__success)
 }
 
 // 
-// Test io_ws_connection_open passing as connection argument an invalid io_ws_connection_t* value 
+// Test io_ws_connection_connect passing as connection argument an invalid io_ws_connection_t* value 
 // 
-TEST_FUNCTION(io_ws_connection_open__arg_connection_invalid)
+TEST_FUNCTION(io_ws_connection_connect__arg_connection_invalid)
 {
     // ... 
     int32_t result;
@@ -263,7 +263,7 @@ TEST_FUNCTION(io_ws_connection_open__arg_connection_invalid)
     // ... 
 
     // act 
-    handle = io_ws_connection_open();
+    handle = io_ws_connection_connect();
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -272,9 +272,9 @@ TEST_FUNCTION(io_ws_connection_open__arg_connection_invalid)
 }
 
 // 
-// Test io_ws_connection_open unhappy path 
+// Test io_ws_connection_connect unhappy path 
 // 
-TEST_FUNCTION(io_ws_connection_open__neg)
+TEST_FUNCTION(io_ws_connection_connect__neg)
 {
     static const io_ws_connection_t* k_connection_valid;
     int32_t result;
@@ -287,13 +287,13 @@ TEST_FUNCTION(io_ws_connection_open__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = io_ws_connection_open(k_connection_valid);
+    result = io_ws_connection_connect(k_connection_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-#endif // io_ws_connection_open;
+#endif // io_ws_connection_connect;
 
 #ifdef io_ws_connection_send
 

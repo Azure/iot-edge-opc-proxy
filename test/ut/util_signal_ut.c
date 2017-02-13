@@ -73,7 +73,7 @@ TEST_FUNCTION(signal_create__success)
     signal_t* signal_valid;
     int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
     // arrange 
     STRICT_EXPECTED_CALL(h_realloc(sizeof(signal_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -109,7 +109,7 @@ TEST_FUNCTION(signal_create__neg)
     signal_t* signal_valid;
     int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
     // arrange 
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();

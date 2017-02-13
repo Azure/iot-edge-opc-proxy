@@ -11,6 +11,8 @@
 #include "util_string.h"
 #include "os.h"
 
+// #define ASYNC_CONNECT 1
+
 #define MAX_SOCKET_ADDRESS_BYTES 127
 
 static uintptr_t event_port = 0;
@@ -175,6 +177,7 @@ static int32_t pal_socket_connect_finish(
         }
         result = pal_os_to_prx_socket_address(
             (const struct sockaddr*)sa_in, len, &sock->peer);
+           
         break;
     }
 
@@ -194,6 +197,7 @@ static int32_t pal_socket_dummy_cb(
     (void)sock;
     return result;
 }
+
 //
 // Called by event port when event occurred on registered socket
 //
@@ -253,8 +257,10 @@ static int32_t pal_socket_on_connected(
 
     if (sock->state != pal_socket_state_opening)
         return er_bad_state;
-if (result == er_closed)
-return er_ok;
+#if defined(ASYNC_CONNECT)
+    if (result == er_closed)
+        return er_ok;  // TODO: Need to check socket error here...
+#endif
     // Complete connection
     result = pal_socket_connect_finish(sock, result);
     if (result == er_ok)
@@ -267,7 +273,7 @@ return er_ok;
     {
         log_error(sock->log,
             "Failed to connect socket, continue... (%s)",
-            prx_error_string(result));
+            prx_err_string(result));
 
         // Continue with next address
         pal_socket_try_next(sock);
@@ -314,7 +320,7 @@ static int32_t pal_socket_on_accept(
         if (result != er_ok)
         {
             log_error(sock->log, "Failed to create Socket object. (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
 
@@ -331,7 +337,7 @@ static int32_t pal_socket_on_accept(
         if (result != er_ok)
         {
             log_error(NULL, "accept received invalid socket address (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             return er_retry;
         }
 
@@ -408,7 +414,7 @@ static int32_t pal_socket_on_recvfrom(
             if (result != er_retry)
             {
                 log_error(sock->log, "Recvfrom error %s.",
-                    prx_error_string(result));
+                    prx_err_string(result));
             }
             break;
         }
@@ -459,7 +465,9 @@ static int32_t pal_socket_on_recv(
         return pal_socket_on_connected(sock, result);
     else if (sock->state != pal_socket_state_open)
         return er_closed;
-
+    else if (result == er_closed)
+        sock->state = pal_socket_state_closing;
+        
     sock->itf.cb(sock->itf.context, pal_socket_event_begin_recv,
         &buffer, &buf_len, NULL, NULL, er_ok, &context);
     if (!buffer)
@@ -480,7 +488,7 @@ static int32_t pal_socket_on_recv(
             if (result != er_retry)
             {
                 log_error(sock->log, "Recv error %s.",
-                    prx_error_string(result));
+                    prx_err_string(result));
             }
             break;
         }
@@ -548,7 +556,7 @@ static int32_t pal_socket_on_send(
         if (result != er_ok)
         {
             log_error(sock->log, "Send received bad flags %x (%s)",
-                flags, prx_error_string(result));
+                flags, prx_err_string(result));
             break;
         }
 
@@ -560,7 +568,7 @@ static int32_t pal_socket_on_send(
             if (result != er_retry)
             {
                 log_error(sock->log, "Send error %s.", 
-                prx_error_string(result));
+                prx_err_string(result));
             }
             break;
         }
@@ -620,7 +628,7 @@ static int32_t pal_socket_on_sendto(
         if (result != er_ok)
         {
             log_error(sock->log, "Sendto received bad address (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
 
@@ -628,7 +636,7 @@ static int32_t pal_socket_on_sendto(
         if (result != er_ok)
         {
             log_error(sock->log, "Sendto received bad flags %x (%s)",
-                flags, prx_error_string(result));
+                flags, prx_err_string(result));
             break;
         }
 
@@ -640,7 +648,7 @@ static int32_t pal_socket_on_sendto(
             if (result != er_retry)
             {
                 log_error(sock->log, "Sendto error %s.", 
-                    prx_error_string(result));
+                    prx_err_string(result));
             }
             break;
         }
@@ -683,7 +691,7 @@ static int32_t pal_socket_connect(
         if (result != er_ok)
         {
             log_error(sock->log, "Bad address for connect call (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
 
@@ -691,12 +699,13 @@ static int32_t pal_socket_connect(
         (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT, 
             (char*)&timeout, sizeof(timeout));
 
+#if defined(ASYNC_CONNECT)
         // Wait for close, error, or writeable
         result = pal_event_select(sock->event_handle, 
             pal_event_type_close);
         if (result != er_ok)
             break;
-
+#endif
         error = connect(sock->sock_fd, (const struct sockaddr*)sa_in, sa_len);
         if (error < 0)
         {
@@ -714,7 +723,7 @@ static int32_t pal_socket_connect(
             }
             result = pal_os_to_prx_net_error(error);
             log_error(sock->log, "Failed connecting socket (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
         }
         else
         {
@@ -749,22 +758,23 @@ static int32_t pal_socket_bind(
         if (result != er_ok)
         {
             log_error(sock->log, "Bad address for bind call (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
  
-        // Wait for close, error
+#if defined(ASYNC_CONNECT)
+         // Wait for close, error
         result = pal_event_select(sock->event_handle, 
             pal_event_type_close);
         if (result != er_ok)
             break;
- 
+#endif
         error = bind(sock->sock_fd, (const struct sockaddr*)sa_in, sa_len);
         if (error < 0)
         {
             result = pal_os_last_net_error_as_prx_error();
             log_error(sock->log, "Failed binding socket (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
         else
@@ -786,7 +796,7 @@ static int32_t pal_socket_bind(
         {
             result = pal_os_last_net_error_as_prx_error();
             log_error(sock->log, "Failed to set socket to listen (%s)",
-                prx_error_string(result));
+                prx_err_string(result));
             break;
         }
 
@@ -830,11 +840,13 @@ static int32_t pal_socket_try_open(
         }
         log_info(sock->log, "Socket created ... (fd:%d)", sock->sock_fd);
 
+#if defined(ASYNC_CONNECT)
         // This will make socket nonblocking
         result = pal_event_port_register(event_port, sock->sock_fd, 
             pal_socket_event_callback, sock, &sock->event_handle);
         if (result != er_ok)
             break;
+#endif
 
         if ((sock->itf.props.sock_type == prx_socket_type_seqpacket ||
              sock->itf.props.sock_type == prx_socket_type_rdm ||
@@ -856,7 +868,7 @@ static int32_t pal_socket_try_open(
     if (result != er_ok && result != er_waiting)
     {
         log_error(sock->log, "Failed opening socket (%s)!",
-            prx_error_string(result));
+            prx_err_string(result));
 
         pal_socket_clear(sock);
     }
@@ -900,6 +912,23 @@ static void pal_socket_try_next(
         }
         // Success!
         log_info(sock->log, "Socket %d opened synchronously!", sock->sock_fd);
+        
+#if !defined(ASYNC_CONNECT)
+        // Make sure any event is not completing open
+        sock->state = pal_socket_state_open;
+
+        // This will make socket nonblocking
+        result = pal_event_port_register(event_port, sock->sock_fd, 
+            pal_socket_event_callback, sock, &sock->event_handle);
+        if (result != er_ok)
+            break;
+
+        // Wait for close, error, or writeable
+        result = pal_event_select(sock->event_handle, 
+            pal_event_type_close);
+        if (result != er_ok)
+            break;
+#endif
         break;
     }
 
@@ -943,7 +972,7 @@ static int32_t pal_socket_open_by_name(
         if (result != er_ok)
         {
             log_error(sock->log, "pal_getaddrinfo for %s:%s failed (%s).",
-                server ? server : "<null>", port, prx_error_string(result));
+                server ? server : "<null>", port, prx_err_string(result));
             break;
         }
 
@@ -981,8 +1010,7 @@ static int32_t pal_socket_open_by_addr(
 // Open a new socket based on properties passed during create
 //
 int32_t pal_socket_open(
-    pal_socket_t *sock,
-    void* op_context
+    pal_socket_t *sock
 )
 {
     if (!sock)
@@ -994,8 +1022,6 @@ int32_t pal_socket_open(
         "Should not be open.");
 
     sock->state = pal_socket_state_opening;
-    sock->context = op_context;
-
     if (sock->itf.props.address.un.family == prx_address_family_proxy)
         return pal_socket_open_by_name(sock);
 
@@ -1019,7 +1045,7 @@ int32_t pal_socket_create(
         return er_out_of_memory;
  
     sock->state = pal_socket_state_closed;
-	sock->log = log_get("socket");
+    sock->log = log_get("pal_sk");
     sock->sock_fd = _invalid_fd;
     memcpy(&sock->itf, client_itf, sizeof(pal_socket_client_itf_t));
 
@@ -1052,16 +1078,13 @@ int32_t pal_socket_create(
 // Stop streaming, unregister socket from event port
 //
 void pal_socket_close(
-    pal_socket_t *sock,
-    void* context
+    pal_socket_t *sock
 )
 {
     if (!sock)
         return;
 
     sock->state = pal_socket_state_closing;
-    sock->context = context;
-
     // Close the event handle
     if (sock->event_handle != 0)
         pal_event_close(sock->event_handle);

@@ -49,11 +49,21 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public async Task<string> GetConnectionKeyAsync(string name) {
             string response;
             try {
-                response = await GetConnectionAsync(name);
+                response = await GetConnectionAsync(name).ConfigureAwait(false);
                 return GetKeyFromResponseXml(response);
             }
-            catch (Exception) {
+            catch (KeyNotFoundException e) {
+                // Recreate the listener with a new key
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, e);
+                try {
+                    await DeleteConnectionAsync(name).ConfigureAwait(false);
+                }
+                catch { }
                 response = await CreateConnectionAsync(name);
+            }
+            catch (Exception ex) {
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, ex);
+                response = await CreateConnectionAsync(name).ConfigureAwait(false);
             }
             return GetKeyFromResponseXml(response);
         }
@@ -163,6 +173,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         private Task<string> DoRequestAsync(Uri uri, HttpMethod method, string payload) =>
             _http.CallAsync(uri, method, async h => 
-                h.Add(HttpRequestHeader.Authorization.ToString(), await GetSASTokenAsync(3600)), _=> { }, payload);
+                h.Add(HttpRequestHeader.Authorization.ToString(), 
+                    await GetSASTokenAsync(3600).ConfigureAwait(false)), _=> { }, payload);
     }
 }

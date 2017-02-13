@@ -68,6 +68,22 @@ static void io_iot_hub_connection_base_deinit(
 }
 
 //
+// Reconnect handler
+//
+static bool io_iot_hub_connection_base_reconnect_handler(
+    void* context
+)
+{
+    int32_t result;
+    io_iot_hub_connection_t* connection = (io_iot_hub_connection_t*)context;
+    if (!connection->handler_cb)
+        return false;
+    result = connection->handler_cb(
+        connection->handler_cb_ctx, io_connection_reconnecting, NULL);
+    return result == er_ok;
+}
+
+//
 // Initialize connection base
 //
 static int32_t io_iot_hub_connection_base_init(
@@ -373,7 +389,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         return er_out_of_memory;
     do
     {
-        connection->log = log_get("tp.server.umqtt");
+        connection->log = log_get("tp_mqtt");
         result = io_iot_hub_connection_base_init(
             &connection->base, handler_cb, handler_cb_ctx);
         if (result != er_ok)
@@ -431,7 +447,8 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
             break;
 
         // Start connection
-        result = io_mqtt_connection_connect(connection->mqtt_connection);
+        result = io_mqtt_connection_connect(connection->mqtt_connection, 
+            io_iot_hub_connection_base_reconnect_handler, &connection->base);
         if (result != er_ok)
             break;
 
@@ -694,7 +711,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
 {
     int32_t result;
     io_url_t* url = NULL;
-    STRING_HANDLE path = NULL;
+    STRING_HANDLE path = NULL, client_id = NULL;
     io_ref_t id;
     io_iot_hub_ws_connection_t* connection;
     io_cs_t* cs = NULL;
@@ -710,7 +727,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
         return er_out_of_memory;
     do
     {
-        connection->log = log_get("tp.server.ws");
+        connection->log = log_get("tp_ws");
         result = io_iot_hub_connection_base_init(
             &connection->base, handler_cb, handler_cb_ctx);
         if (result != er_ok)
@@ -719,42 +736,48 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
         result = prx_ns_entry_get_cs(entry, &cs);
         if (result != er_ok)
             break;
+        // Create client id
+        result = prx_ns_entry_get_addr(entry, &id);
+        if (result != er_ok)
+            break;
+        client_id = io_ref_to_STRING(&id);
+        if (!client_id)
+        {
+            result = er_out_of_memory;
+            break;
+        }
 
         // wss://{{HostName}}:443/$hc/{{EndpointName}}?
-        //                  sb-hc-action=connect&sb-hc-id={entry_id}
+        //                  sb-hc-action=connect&sb-hc-id={client_id}
         path = STRING_construct("/$hc/");
         if (!path ||
             0 != STRING_concat(path, io_cs_get_endpoint_name(cs)) ||
             0 != STRING_concat(path, 
                 "?sb-hc-action=connect"
-                "&sb-hc-id="))
+                "&sb-hc-id=") ||
+            0 != STRING_concat_with_STRING(path, client_id))
         {
             result = er_out_of_memory;
             break;
         }
-        result = prx_ns_entry_get_addr(entry, &id);
-        if (result != er_ok)
-            break;
-        result = io_ref_append_to_STRING(&id, path);
-        if (result != er_ok)
-            break;
 
         result = io_url_create("wss", io_cs_get_host_name(cs), 443, 
-            STRING_c_str(path), NULL, NULL, &url);
+            STRING_c_str(path), STRING_c_str(client_id), NULL, &url);
         if (result != er_ok)
             break;
-        STRING_delete(path);
         result = io_cs_create_token_provider(cs, &url->token_provider);
         if (result != er_ok)
             break;
 
         // Open connection with token in ServiceBusAuthorization header field
-        result = io_ws_connection_create(url, NULL, "ServiceBusAuthorization",
-            scheduler, io_iot_hub_ws_connection_receive_handler, connection, 
+        // and client id in x-id header field
+        result = io_ws_connection_create(url, "x-Id", "ServiceBusAuthorization", 
+            scheduler, io_iot_hub_ws_connection_receive_handler, connection,
             &connection->ws_connection);
         if (result != er_ok)
             break;
-        result = io_ws_connection_open(connection->ws_connection);
+        result = io_ws_connection_connect(connection->ws_connection,
+            io_iot_hub_connection_base_reconnect_handler, &connection->base);
         if (result != er_ok)
             break;
 
@@ -767,6 +790,8 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
         connection->base.funcs.on_free =
             io_iot_hub_ws_connection_on_free;
 
+        STRING_delete(client_id);
+        STRING_delete(path);
         io_url_free(url);
         io_cs_free(cs);
         *created = &connection->base.funcs;
@@ -780,6 +805,8 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
         io_cs_free(cs);
     if (path)
         STRING_delete(path);
+    if (client_id)
+        STRING_delete(client_id);
 
     if (connection->ws_connection)
         io_ws_connection_close(connection->ws_connection);

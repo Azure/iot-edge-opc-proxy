@@ -33,6 +33,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\deps\getopt\src\getopt.c" />
     <ClCompile Include="..\..\..\src\pal\pal_err_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_file_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_main_win.c" />
@@ -46,6 +47,7 @@
     <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\deps\getopt\src\getopt.h" />
     <ClInclude Include="..\..\..\inc\os_win.h" />
     <ClInclude Include="..\..\..\inc\pal.h" />
     <ClInclude Include="..\..\..\inc\pal_err.h" />
@@ -123,7 +125,7 @@
     <IntDir>$(OutDir)obj\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>libproxy</TargetName>
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)bin\win32\$(PlatformTarget)\$(Configuration)\</OutDir>
@@ -136,15 +138,15 @@
     <IntDir>$(OutDir)obj\$(ProjectName)\</IntDir>
     <CodeAnalysisRuleSet>NativeRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <TargetName>libproxy</TargetName>
-    <LinkIncremental>true</LinkIncremental>
+    <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>API_EXPORT=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LEAK_DETECT;_CRTDBG_MAP_ALLOC;API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -157,8 +159,8 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>API_EXPORT=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>LEAK_DETECT;_CRTDBG_MAP_ALLOC;API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -173,8 +175,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>API_EXPORT=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
@@ -190,8 +192,8 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>API_EXPORT=1;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\uamqp\inc;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/d2MPX %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>

@@ -49,8 +49,8 @@ typedef enum prx_error
     er_prop_get,
     er_prop_set,
     er_reset,
-	er_undelivered,
-    er_token,
+    er_undelivered,
+    er_crypto,
     er_comm,
     er_ok = 0
 }

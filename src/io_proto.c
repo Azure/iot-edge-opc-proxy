@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+// #define DBG_MEM
+
 #include "util_mem.h"
 #include "io_ref.h"
 #include "prx_buffer.h"
@@ -8,7 +10,6 @@
 #include "io_proto.h"
 #undef ENABLE_GLOBAL
 #include "io_types.h"
-
 
 #define VERSION 5
 
@@ -21,6 +22,17 @@ typedef struct io_message_factory
     prx_buffer_factory_t* buffers;     // Dynamic buffers for payload allocs
 }
 io_message_factory_t;
+
+
+#if defined(DBG_MEM)
+#define dbg_assert_msg(m) \
+    do { if (m->buffer) \
+        prx_buffer_get_size(m->owner->buffers, m->buffer); \
+    prx_buffer_get_size(m->owner->messages, m); } while(0)
+#else
+#define dbg_assert_msg(m) \
+    dbg_assert_ptr(m);
+#endif
 
 //
 // Create protocol message factory (actually a type safe fixed buffer pool)
@@ -624,6 +636,7 @@ static int32_t io_encode_message_content(
         return result; \
     } while(0)
     
+    dbg_assert_msg(msg);
     if (msg->is_response)
     {
         /**/ if (msg->type == io_message_type_data)
@@ -666,6 +679,7 @@ static int32_t io_encode_message_content(
         else
             result = er_not_supported;
     }
+    dbg_assert_msg(msg);
     return result;
 }
 
@@ -701,6 +715,7 @@ static int32_t io_decode_message_content(
     } while(0)
 
     // Ensure all types are allocated from buffer pool
+    dbg_assert_msg(msg);
     ctx->user_context = msg;
     ctx->default_allocator = io_message_allocator;
 
@@ -747,6 +762,8 @@ static int32_t io_decode_message_content(
         else
             result = er_not_supported;
     }
+
+    dbg_assert_msg(msg);
     return result;
 }
 
@@ -824,6 +841,7 @@ int32_t io_message_create(
     message->type = type;
     io_ref_copy(source, &message->source_id);
     io_ref_copy(target, &message->target_id);
+    dbg_assert_msg(message);
     *created = message;
     return er_ok;
 }
@@ -840,10 +858,12 @@ int32_t io_message_clone(
     if (!original || !created)
         return er_fault;
 
+    dbg_assert_msg(original);
     message = (io_message_t*)prx_buffer_alloc(
         original->owner->messages, original);
     if (!message)
         return er_out_of_memory;
+    dbg_assert_msg(message);
     if (original->buffer)
     {
         // clone contained buffer
@@ -856,6 +876,7 @@ int32_t io_message_clone(
         }
     }
     message->owner = original->owner;
+    dbg_assert_msg(message);
     *created = message;
     return er_ok;
 }
@@ -874,6 +895,7 @@ int32_t io_message_allocate_buffer(
 
     if (!message || !mem)
         return er_fault;
+    dbg_assert_msg(message);
     if (!size) // No need to free, buffer is freed when message released.
     {
         *mem = NULL;
@@ -896,6 +918,7 @@ int32_t io_message_allocate_buffer(
             return result;
     }
     *mem = &((uint8_t*)message->buffer)[current_size];
+    dbg_assert_msg(message);
     return er_ok;
 }
 
@@ -909,6 +932,7 @@ void io_message_release(
     if (!message)
         return;
     dbg_assert_ptr(message->owner);
+    dbg_assert_msg(message);
 
     if (message->buffer)
         prx_buffer_release(message->owner->buffers, message->buffer);
@@ -927,7 +951,7 @@ int32_t io_encode_message(
     int32_t result;
 
     dbg_assert_ptr(ctx);
-    dbg_assert_ptr(msg);
+    dbg_assert_msg(msg);
 
     __io_encode_type_begin(ctx, msg, 8);
     result = io_encode_uint8(ctx, "version", VERSION);
@@ -947,6 +971,7 @@ int32_t io_encode_message(
         return result;
 
     __io_encode_type_end(ctx);
+    dbg_assert_msg(msg);
     return result;
 }
 
@@ -962,7 +987,7 @@ int32_t io_decode_message(
     uint8_t version;
 
     dbg_assert_ptr(ctx);
-    dbg_assert_ptr(msg);
+    dbg_assert_msg(msg);
 
     __io_decode_type_begin(ctx, msg, 8);
     result = io_decode_uint8(ctx, "version", &version);
@@ -987,6 +1012,8 @@ int32_t io_decode_message(
         return result;
 
     __io_decode_type_end(ctx);
+
+    dbg_assert_msg(msg);
     return result;
 }
 
@@ -997,6 +1024,8 @@ void io_message_as_response(
     io_message_t* message
 )
 {
+    dbg_assert_msg(message);
     io_ref_swap(&message->source_id, &message->target_id);
+    memset(&message->content, 0, sizeof(message->content));
     message->is_response = true;
 }

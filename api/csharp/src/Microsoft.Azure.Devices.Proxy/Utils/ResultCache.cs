@@ -7,6 +7,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
     using System;
     using System.Collections.Concurrent;
+    using System.Threading;
 
     /// <summary>
     /// Helper class to cache delegates. 
@@ -16,17 +17,40 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Concrete func translation to cached func
         /// </summary>
-        private readonly ConcurrentDictionary<Delegate, Delegate> funcs
+        private readonly ConcurrentDictionary<Delegate, Delegate> _funcs
             = new ConcurrentDictionary<Delegate, Delegate>();
 
         /// <summary>
         /// Clear all funcs
         /// </summary>
         public void Invalidate() =>
-            funcs.Clear();
+            _funcs.Clear();
 
-        private static Func<T1, TResult> Cached<T1, TResult>(
-          Func<T1, TResult> func) {
+        /// <summary>
+        /// Start invalidate timer
+        /// </summary>
+        /// <param name="period"></param>
+        public void StartTimer(TimeSpan period) {
+            if (_invalidateTimer != null) {
+                _invalidateTimer.Change(period, period);
+            }
+            else {
+                _invalidateTimer = new Timer(new TimerCallback((o) => Invalidate()), null, period, period);
+            }
+        }
+
+        /// <summary>
+        /// Stop invalidate timer
+        /// </summary>
+        /// <param name="period"></param>
+        public void StopTimer() {
+            if (_invalidateTimer != null) {
+                _invalidateTimer.Dispose();
+                _invalidateTimer = null;
+            }
+        }
+
+        private static Func<T1, TResult> Cached<T1, TResult>(Func<T1, TResult> func) {
             var cache = new ConcurrentDictionary<T1, TResult>();
             return (arg) => cache.GetOrAdd(arg, func(arg));
         }
@@ -40,8 +64,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg"></param>
         /// <returns></returns>
         public TResult Call<T1, TResult>(Func<T1, TResult> func, T1 arg) =>
-            ((Func<T1, TResult>)funcs.GetOrAdd(func, Cached(func)))(arg);
-        
+            ((Func<T1, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg);
+
 
         /// <summary>
         /// Invalidate results
@@ -50,7 +74,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         public void Invalidate<T1, TResult>(Func<T1, TResult> func) =>
-            funcs.TryRemove(func, out tmp);
+            _funcs.TryRemove(func, out _tmp);
 
 
         private static Func<T1, T2, TResult> Cached<T1, T2, TResult>(Func<T1, T2, TResult> func) {
@@ -70,8 +94,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg2"></param>
         /// <returns></returns>
         public TResult Call<T1, T2, TResult>(Func<T1, T2, TResult> func, T1 arg1, T2 arg2) =>
-            ((Func<T1, T2, TResult>)funcs.GetOrAdd(func, Cached(func)))(arg1, arg2);
-        
+            ((Func<T1, T2, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2);
+
         /// <summary>
         /// Invalidate method results
         /// </summary>
@@ -80,7 +104,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         public void Invalidate<T1, T2, TResult>(Func<T1, T2, TResult> func) =>
-            funcs.TryRemove(func, out tmp);
+            _funcs.TryRemove(func, out _tmp);
 
 
         private static Func<T1, T2, T3, TResult> Cached<T1, T2, T3, TResult>(
@@ -103,7 +127,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg3"></param>
         /// <returns></returns>
         public TResult Call<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func, T1 arg1, T2 arg2, T3 arg3) =>
-            ((Func<T1, T2, T3, TResult>)funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3);
+            ((Func<T1, T2, T3, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3);
 
         /// <summary>
         /// Invalidate method results
@@ -114,7 +138,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         public void Invalidate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func) =>
-            funcs.TryRemove(func, out tmp);
+            _funcs.TryRemove(func, out _tmp);
 
         private static Func<T1, T2, T3, T4, TResult> Cached<T1, T2, T3, T4, TResult>(
                 Func<T1, T2, T3, T4, TResult> func) {
@@ -138,7 +162,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg4"></param>
         /// <returns></returns>
         public TResult Call<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4) =>
-            ((Func<T1, T2, T3, T4, TResult>)funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4);
+            ((Func<T1, T2, T3, T4, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4);
 
         /// <summary>
         /// Invalidate method results
@@ -150,7 +174,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         public void Invalidate<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func) =>
-            funcs.TryRemove(func, out tmp);
+            _funcs.TryRemove(func, out _tmp);
 
         private static Func<T1, T2, T3, T4, T5, TResult> Cached<T1, T2, T3, T4, T5, TResult>(
                 Func<T1, T2, T3, T4, T5, TResult> func) {
@@ -176,7 +200,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg5"></param>
         /// <returns></returns>
         public TResult Call<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) =>
-            ((Func<T1, T2, T3, T4, T5, TResult>)funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4, arg5);
+            ((Func<T1, T2, T3, T4, T5, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4, arg5);
 
         /// <summary>
         /// Invalidate method results
@@ -189,8 +213,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         public void Invalidate<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> func) =>
-            funcs.TryRemove(func, out tmp);
+            _funcs.TryRemove(func, out _tmp);
 
-        Delegate tmp;
+        private Delegate _tmp;
+        private Timer _invalidateTimer;
     }
 }

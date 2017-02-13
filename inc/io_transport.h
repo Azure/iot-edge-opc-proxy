@@ -99,7 +99,7 @@ decl_inline_1(void, io_connection_free,
 typedef enum io_connection_event_t
 {
     io_connection_received,               // Send when message received
-    io_connection_error,                       // Send in case of error
+    io_connection_reconnecting,    // Sent when connection reconnecting
     io_connection_closed    // Send when connection successfully closed
 }
 io_connection_event_t;

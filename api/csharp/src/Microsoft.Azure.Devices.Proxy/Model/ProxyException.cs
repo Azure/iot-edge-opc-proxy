@@ -7,21 +7,28 @@
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
-    using System.Runtime.Serialization;
 
-    internal class ProxyException : Exception {
-
-        /// <summary>
-        /// Returns error code
-        /// </summary>
-        public SocketError ErrorCode { get; private set; }
+    internal class ProxyException : SocketException {
 
         /// <summary>
-        /// Constructor
+        /// Constructor taking a socket error.
         /// </summary>
         /// <param name="error"></param>
-        public ProxyException(SocketError error) : base (error.ToString()) {
-            ErrorCode = error;
+        public ProxyException(SocketError error) : base (error) {
+        }
+
+        /// <summary>
+        /// Constructor taking a string
+        /// </summary>
+        /// <param name="message"></param>
+        public ProxyException(string message) : base(message) {
+        }
+
+        /// <summary>
+        /// Constructor taking an exception
+        /// </summary>
+        /// <param name="message"></param>
+        public ProxyException(Exception inner) : base(inner) {
         }
     }
 }

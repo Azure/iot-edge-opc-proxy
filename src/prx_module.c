@@ -3,6 +3,26 @@
 
 #include "util_mem.h"
 #include "prx_module.h"
+#include "prx_server.h"
+#include "io_host.h"
+
+//
+// Proxy module
+//
+struct prx_module
+{
+    prx_host_t* host;
+    prx_server_t* server;
+    broker_handle_t* broker;
+    log_t log;
+};
+
+//
+// Server transport (methods)
+//
+extern io_transport_t* io_iot_hub_mqtt_server_transport(
+    void
+);
 
 //
 // Parse module configuration
@@ -11,8 +31,15 @@ void* prx_module_parse(
     const char* configuration
 )
 {
-    (void)configuration;
-    return (void*)0x1;
+    int32_t result;
+    prx_ns_entry_t* entry;
+
+    // Parse proxy entry
+    result = prx_ns_entry_create_from_string(configuration, &entry);
+    if (result != er_ok)
+        return NULL;
+
+    return entry;
 }
 
 //
@@ -22,95 +49,111 @@ void prx_module_free(
     void* configuration
 )
 {
-    (void)configuration;
+    prx_ns_entry_t* entry = (prx_ns_entry_t*)configuration;
+    if (!entry)
+        return;
+
+    prx_ns_entry_release(entry);
 }
 
 //
-// Creates a proxy host instance to be managed by field gateway
+// Destroys module instance
 //
-static prx_host_t* prx_module_create(
+static void prx_module_destroy(
+    prx_module_t* module
+)
+{
+    if (!module)
+        return;
+
+    if (module->server)
+        prx_server_release(module->server);
+    if (module->host)
+        prx_host_release(module->host);
+
+    mem_free_type(prx_module_t, module);
+}
+
+//
+// Creates a proxy module instance to be managed by field gateway
+//
+static prx_module_t* prx_module_create(
     broker_handle_t* broker,
     const void* configuration
 )
 {
     int32_t result;
-    prx_host_t* host = NULL;
-    (void)configuration, broker;
+    prx_module_t* module;
+    prx_ns_entry_t* entry = (prx_ns_entry_t*)configuration;
+    (void)broker;
 
-    // Always init - todo: ref count..., pass configuration, save broker, etc...
-    (void)prx_host_init();
-
-    // Create host
-    result = prx_host_create(NULL, proxy_type_server, &host);
-    if (result != er_ok)
-    {
-        log_error(NULL, "Failed to create host (%s)!", prx_err_string(result));
+    module = mem_zalloc_type(prx_module_t);
+    if (!module)
         return NULL;
-    }
+    do
+    {
+        module->log = log_get("module");
+        module->broker = broker;
 
-    // Success
-    log_info(NULL, "Proxy module created in GW Host!");
-    return host;
+        // Aquire a host
+        result = prx_host_get(&module->host);
+        if (result != er_ok)
+        {
+            log_error(module->log, "Failed to get host reference (%s)!",
+                prx_err_string(result));
+            break;
+        }
+
+        // Create and start the server
+        result = prx_server_create(io_iot_hub_mqtt_server_transport(),
+            entry, prx_host_get_scheduler(module->host), &module->server);
+        if (result != er_ok)
+        {
+            log_error(module->log, "Failed to create server (%s)!", 
+                prx_err_string(result));
+            break;
+        }
+        // Success
+        log_info(NULL, "Proxy module created in GW Host!");
+        return module;
+    }
+    while (0);
+
+    prx_module_destroy(module);
+    return NULL;
 }
 
 //
-// Destroys proxy host instance
+// Start module
 //
 static void prx_module_start(
-    prx_host_t* host
+    prx_module_t* module
 )
 {
-    int32_t result;
-    if (!host)
-        return;
-    result = prx_host_start(host);
-    if (result != er_ok)
-    {
-        log_error(NULL, "Failed to start host (%s)!", prx_err_string(result));
-    }
+    (void)module;
+    // No-op, we already started the server
 }
 
 //
 // Callback when field gateway received message 
 //
 static void prx_module_receive(
-    prx_host_t* host,
+    prx_module_t* module,
     message_handle_t* message
 )
 {
-    (void)host, message;
+    (void)module, message;
     // No-op at this point since we do not know how to crack the message
 }
 
 //
-// Destroys host instance
+// Export our module module callbacks
 //
-static void prx_module_destroy(
-    prx_host_t* host
-)
-{
-    int32_t result;
-    if (!host)
-        return;
-    result = prx_host_stop(host);
-    if (result != er_ok)
-    {
-        log_error(NULL, "Failed to stop host (%s)!", prx_err_string(result));
-    }
-    prx_host_release(host);
-
-    // Always deinit, todo: ref count before deinit
-    prx_host_deinit();
-}
-
-//
-// Export our host module callbacks
-//
-prx_module_aprx_t* Module_GetAPIS(
+prx_module_api_t* Module_GetAPIS(
     int gw_version
 )
 {
-    static prx_module_aprx_t api = {
+    static prx_module_api_t api = {
         0,  // v1
         prx_module_parse,
         prx_module_free,

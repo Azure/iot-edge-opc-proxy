@@ -8,11 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Microsoft Azure Proxy Client Library")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Properties")]
-[assembly: AssemblyCopyright("Copyright ©  2016")]
-[assembly: AssemblyTrademark("")]
-[assembly: AssemblyCulture("")]
+[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.SafeDirectories)]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
 // to COM components.  If you need to access a type in this assembly from 
@@ -22,12 +18,13 @@ using System.Runtime.InteropServices;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("dce6dda2-2e83-4c7c-a878-bd61c1326cd9")]
 
-// Version information for an assembly consists of the following four values:
-//
-//      Major Version
-//      Minor Version 
-//      Build Number
-//      Revision
-//
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("0.0.7.0")]
+
+#if RELEASE_DELAY_SIGN
+[assembly: AssemblyDelaySign(true)]
+[assembly: AssemblyKeyFile("35MSSharedLib1024.snk")]
+#endif
+
+// Version information for an assembly follows semantic versioning 1.0.0 (because
+// NuGet didn't support semver 2.0.0 before VS 2015). See semver.org for details.
+[assembly: AssemblyInformationalVersion("0.0.7")]

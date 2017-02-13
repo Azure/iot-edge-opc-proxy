@@ -4,6 +4,7 @@ namespace simple_client {
     using System.Collections.Generic;
     using System.Text;
     using System.Threading.Tasks;
+    using System.Linq;
     using Microsoft.Azure.Devices.Proxy;
 
     class Program {
@@ -27,57 +28,54 @@ namespace simple_client {
             // Port 13: daytime http://tools.ietf.org/html/rfc867
             // Port 17: quotd http://tools.ietf.org/html/rfc865
             //
-            for (int i = 0; i < 10; i++) {
+            for (int j = 1; ; j++) {
+                Console.Clear();
+                Console.Out.WriteLine($"#{j} Sync tests...");
+                for (int i = 0; i < j + 1; i++) {
+                    try {
+                        SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
+                        Receive(19);
+                        Receive(13);
+                        Receive(17);
+                        Receive(19);
+                        EchoLoop(j+1);
+                    }
+                    catch (Exception e) {
+                        Console.Out.WriteLine(e.ToString());
+                    }
+                }
+
+                Console.Clear();
+                Console.Out.WriteLine($"#{j} Async tests...");
                 try {
-                    Receive(19);
+                    var tasks = new List<Task>();
+
+                    for (int i = 0; i < j + 1; i++) {
+                        tasks.Add(ReceiveAsync(i, 19));
+                        tasks.Add(ReceiveAsync(i, 13));
+                        tasks.Add(ReceiveAsync(i, 17));
+                        tasks.Add(EchoLoopAsync(i, 5));
+                    }
+                    while (tasks.Any()) {
+                        int index = Task.WaitAny(tasks.ToArray());
+                        var task = tasks.ElementAt(index);
+                        tasks.RemoveAt(index);
+                        if (task.IsFaulted) {
+                            Console.Out.WriteLine(task.Exception.ToString());
+                        }
+                    }
                 }
                 catch (Exception e) {
                     Console.Out.WriteLine(e.ToString());
                 }
             }
-
-            // Sync tests
-            for (int i = 0; i < 3; i++) {
-                try {
-          
-                    SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
-          
-                    Receive(19);
-                    Receive(13);
-                    Receive(17);
-            
-                    EchoLoop(100);
-                }
-                catch (Exception e) {
-                    Console.Out.WriteLine(e.ToString());
-                }
-            }
-
-            // async tests
-            try {
-                var tasks = new List<Task>();
-
-                for (int i = 0; i < 1000; i++) {
-
-                    tasks.Add(ReceiveAsync(19));
-                    tasks.Add(ReceiveAsync(13));
-                    tasks.Add(ReceiveAsync(17));
-
-                    tasks.Add(EchoLoopAsync(100));
-                }
-                Task.WaitAll(tasks.ToArray());
-            }
-            catch (Exception e) {
-                Console.Out.WriteLine(e.ToString());
-            }
-            Console.Out.WriteLine("Done");
         }
 
         public static void Receive(int port) {
             byte[] buffer = new byte[1024];
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine("Connected!.  Receiving...");
+                Console.Out.WriteLine($"Receive: Connected to port {port}!  Receiving...");
                 int count =  s.Receive(buffer);
                 Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, count));
                 s.Close();
@@ -87,10 +85,10 @@ namespace simple_client {
         public static void EchoLoop(int loops) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, 7);
-                Console.Out.WriteLine("Connected!.  Sending ...");
+                Console.Out.WriteLine($"EchoLoop: Connected to port 7!  Sending ...");
 
                 for (int i = 0; i < loops; i++) {
-                    s.Send(Encoding.UTF8.GetBytes(String.Format("{0} sync loop to echo server", i)));
+                    s.Send(Encoding.UTF8.GetBytes($"{i} sync loop to echo server"));
                     byte[] buffer = new byte[1024];
                     Console.Out.WriteLine("Receiving...");
                     int count = s.Receive(buffer);
@@ -103,7 +101,7 @@ namespace simple_client {
         public static void Send(int port, byte[] buffer, int iterations) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine("Connected!.  Sending ...");
+                Console.Out.WriteLine($"Send: Connected to {port}!  Sending ...");
                 for (int i = 0; i < iterations; i++)
                     s.Send(buffer);
                 s.Close();
@@ -113,7 +111,7 @@ namespace simple_client {
         public static void SendReceive(int port, byte[] buffer) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine("Connected!.  Sending ...");
+                Console.Out.WriteLine($"SendReceive: Connected to {port}!  Sending ...");
                 s.Send(buffer);
                 buffer = new byte[1024];
                 Console.Out.WriteLine("Receiving sync...");
@@ -123,43 +121,50 @@ namespace simple_client {
             }
         }
 
-        public static async Task EchoLoopAsync(int loops) {
+        public static async Task EchoLoopAsync(int index, int loops) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 await s.ConnectAsync(host_name, 7);
-                Console.Out.WriteLine("Connected!.  Sending ...");
+                Console.Out.WriteLine($"EchoLoopAsync #{index}: Connected!.  Sending ...");
                 for (int i = 0; i < loops; i++) {
-                    await EchoLoopAsync1(s, i);
+                    await EchoLoopAsync1(index, s, i);
                 }
                 await s.CloseAsync();
             }
+            Console.Out.WriteLine($"EchoLoopAsync #{index}.  Done!");
         }
 
-        public static async Task ReceiveAsync(int port) {
+        public static async Task ReceiveAsync(int index, int port) {
             byte[] buffer = new byte[1024];
             using (TcpClient client = new TcpClient()) {
                 await client.ConnectAsync(host_name, port);
-                NetworkStream str = client.GetStream();
-                int read = await str.ReadAsync(buffer);
-                Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, read));
+                Console.Out.WriteLine($"ReceiveAsync #{index}: Connected to port {port}!.  Read ...");
+                using (NetworkStream str = client.GetStream()) {
+                    int read = await str.ReadAsync(buffer);
+                    Console.Out.WriteLine($"{Encoding.UTF8.GetString(buffer, 0, read)}     #{index}");
+                }
             }
+            Console.Out.WriteLine($"ReceiveAsync #{index} port {port}.  Done!");
         }
 
-        public static async Task SendReceiveAsync(int port, byte[] buffer) {
+        public static async Task SendReceiveAsync(int index, int port, byte[] buffer) {
             using (TcpClient client = new TcpClient()) {
                 await client.ConnectAsync(host_name, port);
+                Console.Out.WriteLine($"SendReceiveAsync #{index}: Connected to port {port}!.  Write ...");
                 NetworkStream str = client.GetStream();
                 await str.WriteAsync(buffer);
                 int read = await str.ReadAsync(buffer);
                 Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, read));
             }
+            Console.Out.WriteLine($"SendReceiveAsync #{index} port {port}.  Done!");
         }
 
-        private static async Task EchoLoopAsync1(Socket s, int i) {
-            var msg = Encoding.UTF8.GetBytes(String.Format("{0,6} async loop to echo server", i));
+        private static async Task EchoLoopAsync1(int index, Socket s, int i) {
+            var msg = Encoding.UTF8.GetBytes(String.Format("{0,6} async loop #{1} to echo server", i, index));
             await s.SendAsync(msg);
             byte[] buffer = new byte[msg.Length];
             int count = await s.ReceiveAsync(buffer);
-            Console.Out.WriteLine("({1,6}) received '{0}' ...", Encoding.UTF8.GetString(buffer, 0, count), i);
+            Console.Out.WriteLine("({1,6}) received '{0}' ... (#{2})",
+                Encoding.UTF8.GetString(buffer, 0, count), i, index);
         }
     }
 }

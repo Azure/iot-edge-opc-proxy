@@ -22,13 +22,13 @@
 // Simple string compare
 //
 static bool string_is_equal_nocase__hook(
-	const char* val,
-	size_t len,
-	const char* to
+    const char* val,
+    size_t len,
+    const char* to
 )
 {
-	(void)len;
-	return 0 == strcmp(val, to);
+    (void)len;
+    return 0 == strcmp(val, to);
 }
 
 //
@@ -48,27 +48,27 @@ DECLARE_TEST_SETUP()
 // Parser mock hook that returns default cs content
 //
 static int32_t string_key_value_parser__hook_1(
-	const char* connection_string,
-	fn_parse_cb_t visitor,
-	char delim,
-	void* ctx
+    const char* connection_string,
+    fn_parse_cb_t visitor,
+    char delim,
+    void* ctx
 )
 {
-	int32_t result;
-	(void)connection_string, delim;
-	result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "DeviceId", 8, "DeviceId", 8);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "SharedAccessKeyName", 19, "SharedAccessKeyName", 19);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "SharedAccessKey", 15, "SharedAccessKey", 15);
-	if (result != er_ok)
-		return result;
-	return result;
+    int32_t result;
+    (void)connection_string, delim;
+    result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "DeviceId", 8, "DeviceId", 8);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "SharedAccessKeyName", 19, "SharedAccessKeyName", 19);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "SharedAccessKey", 15, "SharedAccessKey", 15);
+    if (result != er_ok)
+        return result;
+    return result;
 }
 
 // 
@@ -76,92 +76,92 @@ static int32_t string_key_value_parser__hook_1(
 // 
 TEST_FUNCTION(io_cs_create_from_string__success_1)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)1;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)2;
-	static const char* k_connection_string_valid = "some_connection_string";
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)1;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)2;
+    static const char* k_connection_string_valid = "some_connection_string";
     io_cs_t* cs_valid;
-	int32_t result;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_1);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_1);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
     // arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
-		.SetReturn(k_hostname_string_valid);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
-		.SetReturn(k_device_id_string_valid);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
-		.SetReturn((STRING_HANDLE)3);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
-		.SetReturn((STRING_HANDLE)4);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("Hub.Suffix");
-	STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
-		.SetReturn("DeviceId");
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
+        .SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
+        .SetReturn(k_device_id_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
+        .SetReturn((STRING_HANDLE)3);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
+        .SetReturn((STRING_HANDLE)4);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("Hub.Suffix");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
+        .SetReturn("DeviceId");
 
     // act 
     result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-	ASSERT_ARE_EQUAL(void_ptr, (void*)cs_valid, (void*)UT_MEM);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(void_ptr, (void*)cs_valid, (void*)UT_MEM);
 }
 
 //
 // Parser hook, returns all possible components
 //
 static int32_t string_key_value_parser__hook_2(
-	const char* connection_string,
-	fn_parse_cb_t visitor,
-	char delim,
-	void* ctx
+    const char* connection_string,
+    fn_parse_cb_t visitor,
+    char delim,
+    void* ctx
 )
 {
-	int32_t result;
-	(void)connection_string, delim;
-	result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "Endpoint", 8, "mqtts://Endpoint/", 17);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "DeviceId", 8, "DeviceId", 8);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "EntityPath", 10, "EntityPath", 10);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "SharedAccessKeyName", 19, "SharedAccessKeyName", 19);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "SharedAccessKey", 15, "SharedAccessKey", 15);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "ConsumerGroup", 13, "ConsumerGroup", 13);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "Partitions", 10, "32", 2);
-	if (result != er_ok)
-		return result;
-	return result;
+    int32_t result;
+    (void)connection_string, delim;
+    result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "Endpoint", 8, "mqtts://Endpoint/", 17);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "DeviceId", 8, "DeviceId", 8);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "EntityPath", 10, "EntityPath", 10);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "SharedAccessKeyName", 19, "SharedAccessKeyName", 19);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "SharedAccessKey", 15, "SharedAccessKey", 15);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "ConsumerGroup", 13, "ConsumerGroup", 13);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "Partitions", 10, "32", 2);
+    if (result != er_ok)
+        return result;
+    return result;
 }
 
 // 
@@ -169,100 +169,100 @@ static int32_t string_key_value_parser__hook_2(
 // 
 TEST_FUNCTION(io_cs_create_from_string__success_2)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
-	static const char* k_connection_string_valid = "some_connection_string";
-	static const char* k_endpoint = "mqtts://Endpoint/";
-	static const size_t k_endpoint_len = 17;
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
+    static const char* k_connection_string_valid = "some_connection_string";
+    static const char* k_endpoint = "mqtts://Endpoint/";
+    static const size_t k_endpoint_len = 17;
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_2);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_2);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
+        .SetReturn(k_hostname_string_valid);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
 
     STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_endpoint, k_endpoint_len))
-		.SetReturn((STRING_HANDLE)1);
+        .SetReturn((STRING_HANDLE)1);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
-		.SetReturn(k_device_id_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
+        .SetReturn(k_device_id_string_valid);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("EntityPath", 10))
-		.SetReturn((STRING_HANDLE)2);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("EntityPath", 10))
+        .SetReturn((STRING_HANDLE)2);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
-		.SetReturn((STRING_HANDLE)3);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
+        .SetReturn((STRING_HANDLE)3);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
-		.SetReturn((STRING_HANDLE)4);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
+        .SetReturn((STRING_HANDLE)4);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("ConsumerGroup", 13))
-		.SetReturn((STRING_HANDLE)5);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("ConsumerGroup", 13))
+        .SetReturn((STRING_HANDLE)5);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("32", 2))
-		.SetReturn((STRING_HANDLE)5);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("32", 2))
+        .SetReturn((STRING_HANDLE)5);
 
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("Hub.Suffix");
-	STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
-		.SetReturn("DeviceId");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("Hub.Suffix");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
+        .SetReturn("DeviceId");
 
-	// act 
-	result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-	ASSERT_ARE_EQUAL(void_ptr, (void*)cs_valid, (void*)UT_MEM);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(void_ptr, (void*)cs_valid, (void*)UT_MEM);
 }
 
 // 
@@ -270,8 +270,8 @@ TEST_FUNCTION(io_cs_create_from_string__success_2)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_null)
 {
-	io_cs_t* cs_valid;
-	int32_t result;
+    io_cs_t* cs_valid;
+    int32_t result;
 
     // arrange 
 
@@ -279,29 +279,29 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_null)
     result = io_cs_create_from_string(NULL, &cs_valid);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 //
 // Parser mock hook that returns one item passed as cs arg
 //
 static int32_t string_key_value_parser__hook_connection_string_with_2_components(
-	const char* connection_string,
-	fn_parse_cb_t visitor,
-	char delim,
-	void* ctx
+    const char* connection_string,
+    fn_parse_cb_t visitor,
+    char delim,
+    void* ctx
 )
 {
-	int32_t result;
-	(void)delim;
-	result = visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
-	if (result != er_ok)
-		return result;
-	return result;
+    int32_t result;
+    (void)delim;
+    result = visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
+    if (result != er_ok)
+        return result;
+    return result;
 }
 
 // 
@@ -309,41 +309,41 @@ static int32_t string_key_value_parser__hook_connection_string_with_2_components
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_with_2_components_1)
 {
-	static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "DeviceId";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "DeviceId";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_2_components);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_2_components);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_string_handle_valid);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_string_handle_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -351,66 +351,66 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_with_2_components_
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_with_2_components_2)
 {
-	static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x3824;
-	static const char* k_component = "Endpoint";
-	static size_t k_component_len = 8;
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x3824;
+    static const char* k_component = "Endpoint";
+    static size_t k_component_len = 8;
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_2_components);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_2_components);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, k_component_len))
-		.SetReturn(k_string_handle_valid);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, k_component_len))
+        .SetReturn(k_string_handle_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 //
 // Parser mock hook that returns one item passed as cs arg
 //
 static int32_t string_key_value_parser__hook_connection_string_with_1_component(
-	const char* connection_string,
-	fn_parse_cb_t visitor,
-	char delim,
-	void* ctx
+    const char* connection_string,
+    fn_parse_cb_t visitor,
+    char delim,
+    void* ctx
 )
 {
-	(void)delim;
-	return visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
+    (void)delim;
+    return visitor(ctx, connection_string, strlen(connection_string), connection_string, strlen(connection_string));
 }
 
 // 
@@ -418,39 +418,39 @@ static int32_t string_key_value_parser__hook_connection_string_with_1_component(
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_no_hostname)
 {
-	static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "DeviceId";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "DeviceId";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_string_handle_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_string_handle_valid);
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -458,41 +458,41 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_no_hostname)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_1)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "HostName";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "HostName";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_hostname_string_valid);
 
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn(k_component);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn(k_component);
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -500,41 +500,41 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_1)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_2)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "HostName";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "HostName";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_hostname_string_valid);
 
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.test.com");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.test.com");
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -542,37 +542,37 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_2)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_3)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "HostName";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "HostName";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("-test.test.com");
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("-test.test.com");
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -580,58 +580,58 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_3)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_4)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
-	static const char* k_component = "HostName";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x62423;
+    static const char* k_component = "HostName";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_1_component);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("");
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("");
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_component, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_component, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 //
 // Parser mock hook that returns a device id
 //
 static int32_t string_key_value_parser__hook_connection_string_with_hostname_and_device_id(
-	const char* connection_string,
-	fn_parse_cb_t visitor,
-	char delim,
-	void* ctx
+    const char* connection_string,
+    fn_parse_cb_t visitor,
+    char delim,
+    void* ctx
 )
 {
-	int32_t result;
-	(void)delim, connection_string;
-	result = visitor(ctx, "HostName", 8, "Hub.Suffix", 2);
-	if (result != er_ok)
-		return result;
-	result = visitor(ctx, "DeviceId", 8, "DeviceId", 2);
-	if (result != er_ok)
-		return result;
-	return result;
+    int32_t result;
+    (void)delim, connection_string;
+    result = visitor(ctx, "HostName", 8, "Hub.Suffix", 2);
+    if (result != er_ok)
+        return result;
+    result = visitor(ctx, "DeviceId", 8, "DeviceId", 2);
+    if (result != er_ok)
+        return result;
+    return result;
 }
 
 // 
@@ -639,49 +639,49 @@ static int32_t string_key_value_parser__hook_connection_string_with_hostname_and
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_1)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
-	static const char* k_connection_string_valid = "some_connection_string";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
+    static const char* k_connection_string_valid = "some_connection_string";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
+        .SetReturn(k_hostname_string_valid);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
-		.SetReturn(k_device_id_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
+        .SetReturn(k_device_id_string_valid);
 
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("Hub.Suffix");
-	STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
-		.SetReturn("bad&bada");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("Hub.Suffix");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
+        .SetReturn("bad&bada");
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -689,49 +689,49 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_1)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_2)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
-	static const char* k_connection_string_valid = "some_connection_string";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
+    static const char* k_connection_string_valid = "some_connection_string";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
+        .SetReturn(k_hostname_string_valid);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
-		.SetReturn(k_device_id_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
+        .SetReturn(k_device_id_string_valid);
 
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("Hub.Suffix");
-	STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
-		.SetReturn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn("Hub.Suffix");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
+        .SetReturn("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 // 
@@ -739,66 +739,66 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_2)
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_3)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
-	static const char* k_connection_string_valid = "some_connection_string";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
+    static const char* k_connection_string_valid = "some_connection_string";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_connection_string_with_hostname_and_device_id);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
-		.SetReturn(k_hostname_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
+        .SetReturn(k_hostname_string_valid);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
-		.SetReturn(k_device_id_string_valid);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 2))
+        .SetReturn(k_device_id_string_valid);
 
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn("Hub.Suffix");
-	STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
-		.SetReturn("");
+        .SetReturn("Hub.Suffix");
+    STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
+        .SetReturn("");
 
-	STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
-	STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(STRING_delete(k_hostname_string_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_device_id_string_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
+    // act 
+    result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 // 
 // Test io_cs_create_from_string passing as created argument an invalid io_cs_t** value 
 // 
 TEST_FUNCTION(io_cs_create_from_string__arg_created_null)
 {
-	static const char* k_connection_string_valid = "some_connection_string";
-	int32_t result;
+    static const char* k_connection_string_valid = "some_connection_string";
+    int32_t result;
 
     // arrange 
 
     // act 
-	result = io_cs_create_from_string(k_connection_string_valid, NULL);
+    result = io_cs_create_from_string(k_connection_string_valid, NULL);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -806,105 +806,105 @@ TEST_FUNCTION(io_cs_create_from_string__arg_created_null)
 // 
 TEST_FUNCTION(io_cs_create_from_string__neg)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
-	static const char* k_connection_string_valid = "some_connection_string";
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const STRING_HANDLE k_device_id_string_valid = (STRING_HANDLE)8888;
+    static const char* k_connection_string_valid = "some_connection_string";
     static const char* k_endpoint = "mqtts://Endpoint/";
     static const size_t k_endpoint_len = 17;
     io_cs_t* cs_valid;
-	int32_t result;
+    int32_t result;
 
-	REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_2);
-	REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
+    REGISTER_GLOBAL_MOCK_HOOK(string_key_value_parser, string_key_value_parser__hook_2);
+    REGISTER_GLOBAL_MOCK_RETURNS(string_key_value_parser, er_ok, er_invalid_format);
 
-	// arrange 
-	UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM)
-		.SetFailReturn(NULL);
-	STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
-		.IgnoreArgument(2)
-		.SetFailReturn(er_invalid_format);
+    // arrange 
+    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
+        .IgnoreArgument(2)
+        .SetFailReturn(er_invalid_format);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
-		.SetReturn(k_hostname_string_valid)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
+        .SetReturn(k_hostname_string_valid)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_endpoint, k_endpoint_len))
-		.SetReturn((STRING_HANDLE)1)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_endpoint, k_endpoint_len))
+        .SetReturn((STRING_HANDLE)1)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
-		.SetReturn(k_device_id_string_valid)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("DeviceId", 8))
+        .SetReturn(k_device_id_string_valid)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("EntityPath", 10))
-		.SetReturn((STRING_HANDLE)2)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("EntityPath", 10))
+        .SetReturn((STRING_HANDLE)2)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
-		.SetReturn((STRING_HANDLE)3)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKeyName", 19))
+        .SetReturn((STRING_HANDLE)3)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
-		.SetReturn((STRING_HANDLE)4)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
+        .SetReturn((STRING_HANDLE)4)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("ConsumerGroup", 13))
-		.SetReturn((STRING_HANDLE)5)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("ConsumerGroup", 13))
+        .SetReturn((STRING_HANDLE)5)
+        .SetFailReturn(NULL);
 
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
-	STRICT_EXPECTED_CALL(STRING_safe_construct_n("32", 2))
-		.SetReturn((STRING_HANDLE)5)
-		.SetFailReturn(NULL);
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    STRICT_EXPECTED_CALL(STRING_safe_construct_n("32", 2))
+        .SetReturn((STRING_HANDLE)5)
+        .SetFailReturn(NULL);
 
-	// act 
-	    UMOCK_C_NEGATIVE_TESTS_ACT();
-    	memset(UT_MEM, 0, sizeof(UT_MEM));
-	result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
+    // act 
+        UMOCK_C_NEGATIVE_TESTS_ACT();
+        memset(UT_MEM, 0, sizeof(UT_MEM));
+    result = io_cs_create_from_string(k_connection_string_valid, &cs_valid);
 
-	// assert 
-	UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-		er_out_of_memory,  er_invalid_format, er_invalid_format, er_out_of_memory,  er_invalid_format, 
-		er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, 
-		er_invalid_format, er_out_of_memory,  er_invalid_format, er_invalid_format, er_out_of_memory,  
+    // assert 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+        er_out_of_memory,  er_invalid_format, er_invalid_format, er_out_of_memory,  er_invalid_format, 
+        er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, 
+        er_invalid_format, er_out_of_memory,  er_invalid_format, er_invalid_format, er_out_of_memory,  
         er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format,
         er_invalid_format, er_invalid_format, er_invalid_format, er_out_of_memory,  er_invalid_format, 
         er_invalid_format, er_invalid_format, er_out_of_memory,  er_invalid_format, er_invalid_format, 
@@ -919,40 +919,40 @@ TEST_FUNCTION(io_cs_create_from_string__neg)
 // 
 TEST_FUNCTION(io_cs_create__success)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const char* k_host_name_valid = "host.hub";
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const char* k_host_name_valid = "host.hub";
     static const char* k_device_id_valid = "device";
     static const char* k_shared_access_key_name_valid = "sakn";
     static const char* k_shared_access_key_valid = "sak";
-	io_cs_t* cs_valid;
-	int32_t result;
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_device_id);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn(k_host_name_valid);
-	STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
-		.SetReturn(k_device_id_valid);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_device_id);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn(k_host_name_valid);
+    STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
+        .SetReturn(k_device_id_valid);
 
     // act 
     result = io_cs_create(k_host_name_valid, k_device_id_valid, 
-		k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
+        k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -960,21 +960,21 @@ TEST_FUNCTION(io_cs_create__success)
 // 
 TEST_FUNCTION(io_cs_create__arg_host_name_null)
 {
-	static const char* k_device_id_valid = "device";
-	static const char* k_shared_access_key_name_valid = "sakn";
-	static const char* k_shared_access_key_valid = "sak";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const char* k_device_id_valid = "device";
+    static const char* k_shared_access_key_name_valid = "sakn";
+    static const char* k_shared_access_key_valid = "sak";
+    io_cs_t* cs_valid;
+    int32_t result;
 
     // arrange 
 
     // act 
-	result = io_cs_create(NULL, k_device_id_valid,
-		k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
+    result = io_cs_create(NULL, k_device_id_valid,
+        k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -982,35 +982,35 @@ TEST_FUNCTION(io_cs_create__arg_host_name_null)
 // 
 TEST_FUNCTION(io_cs_create__arg_device_id_null)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const char* k_host_name_valid = "host.hub";
-	static const char* k_shared_access_key_name_valid = "sakn";
-	static const char* k_shared_access_key_valid = "sak";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const char* k_host_name_valid = "host.hub";
+    static const char* k_shared_access_key_name_valid = "sakn";
+    static const char* k_shared_access_key_valid = "sak";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn(k_host_name_valid);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn(k_host_name_valid);
 
-	// act 
-	result = io_cs_create(k_host_name_valid, NULL,
-		k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
+    // act 
+    result = io_cs_create(k_host_name_valid, NULL,
+        k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -1018,36 +1018,36 @@ TEST_FUNCTION(io_cs_create__arg_device_id_null)
 // 
 TEST_FUNCTION(io_cs_create__arg_shared_access_key_name_null)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const char* k_host_name_valid = "host.hub";
-	static const char* k_device_id_valid = "device";
-	static const char* k_shared_access_key_valid = "sak";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const char* k_host_name_valid = "host.hub";
+    static const char* k_device_id_valid = "device";
+    static const char* k_shared_access_key_valid = "sak";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_device_id);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn(k_host_name_valid);
-	STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
-		.SetReturn(k_device_id_valid);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_device_id);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn(k_host_name_valid);
+    STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
+        .SetReturn(k_device_id_valid);
 
-	// act 
-	result = io_cs_create(k_host_name_valid, k_device_id_valid, NULL, k_shared_access_key_valid, &cs_valid);
+    // act 
+    result = io_cs_create(k_host_name_valid, k_device_id_valid, NULL, k_shared_access_key_valid, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -1055,36 +1055,36 @@ TEST_FUNCTION(io_cs_create__arg_shared_access_key_name_null)
 // 
 TEST_FUNCTION(io_cs_create__arg_shared_access_key_null)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
-	static const char* k_host_name_valid = "host.hub";
-	static const char* k_device_id_valid = "device";
-	static const char* k_shared_access_key_name_valid = "sakn";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)9999;
+    static const char* k_host_name_valid = "host.hub";
+    static const char* k_device_id_valid = "device";
+    static const char* k_shared_access_key_name_valid = "sakn";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	memset(UT_MEM, 0, sizeof(UT_MEM));
+    memset(UT_MEM, 0, sizeof(UT_MEM));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM);
-	STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
-		.SetReturn(k_hostname_string_valid);
-	STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_device_id);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
-	STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
-		.SetReturn(k_host_name_valid);
-	STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
-		.SetReturn(k_device_id_valid);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
+        .SetReturn(k_hostname_string_valid);
+    STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_device_id);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
+        .SetReturn(k_host_name_valid);
+    STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
+        .SetReturn(k_device_id_valid);
 
-	// act 
-	result = io_cs_create(k_host_name_valid, k_device_id_valid, k_shared_access_key_name_valid, NULL, &cs_valid);
+    // act 
+    result = io_cs_create(k_host_name_valid, k_device_id_valid, k_shared_access_key_name_valid, NULL, &cs_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -1092,21 +1092,21 @@ TEST_FUNCTION(io_cs_create__arg_shared_access_key_null)
 // 
 TEST_FUNCTION(io_cs_create__arg_created_null)
 {
-	static const char* k_host_name_valid = "host.hub";
-	static const char* k_device_id_valid = "device";
-	static const char* k_shared_access_key_name_valid = "sakn";
-	static const char* k_shared_access_key_valid = "sak";
-	int32_t result;
+    static const char* k_host_name_valid = "host.hub";
+    static const char* k_device_id_valid = "device";
+    static const char* k_shared_access_key_name_valid = "sakn";
+    static const char* k_shared_access_key_valid = "sak";
+    int32_t result;
 
-	// arrange 
+    // arrange 
 
-	// act 
-	result = io_cs_create(k_host_name_valid, k_device_id_valid,
-		k_shared_access_key_name_valid, k_shared_access_key_valid, NULL);
+    // act 
+    result = io_cs_create(k_host_name_valid, k_device_id_valid,
+        k_shared_access_key_name_valid, k_shared_access_key_valid, NULL);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1114,41 +1114,41 @@ TEST_FUNCTION(io_cs_create__arg_created_null)
 // 
 TEST_FUNCTION(io_cs_create__neg)
 {
-	static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x42242;
-	static const char* k_host_name_valid = "host.hub";
-	static const char* k_device_id_valid = "device";
-	static const char* k_shared_access_key_name_valid = "sakn";
-	static const char* k_shared_access_key_valid = "sak";
-	io_cs_t* cs_valid;
-	int32_t result;
+    static const STRING_HANDLE k_hostname_string_valid = (STRING_HANDLE)0x42242;
+    static const char* k_host_name_valid = "host.hub";
+    static const char* k_device_id_valid = "device";
+    static const char* k_shared_access_key_name_valid = "sakn";
+    static const char* k_shared_access_key_valid = "sak";
+    io_cs_t* cs_valid;
+    int32_t result;
 
-	// arrange 
-	UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM)
-		.SetFailReturn(NULL);
-	STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
-		.SetReturn(k_hostname_string_valid)
-		.SetFailReturn(NULL);
-	STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_device_id)
-		.SetFailReturn(NULL);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name)
-		.SetFailReturn(NULL);
-	STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
-		.SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key)
-		.SetFailReturn(NULL);
+    // arrange 
+    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_construct(k_host_name_valid))
+        .SetReturn(k_hostname_string_valid)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_construct(k_device_id_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_device_id)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_name_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
+        .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key)
+        .SetFailReturn(NULL);
 
-	// act 
-	    UMOCK_C_NEGATIVE_TESTS_ACT();
-    	memset(UT_MEM, 0, sizeof(UT_MEM));
-	result = io_cs_create(k_host_name_valid, k_device_id_valid,
-		k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
+    // act 
+        UMOCK_C_NEGATIVE_TESTS_ACT();
+        memset(UT_MEM, 0, sizeof(UT_MEM));
+    result = io_cs_create(k_host_name_valid, k_device_id_valid,
+        k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
 
-	// assert 
-	UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory);
+    // assert 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory);
 }
 
 // 
@@ -1156,32 +1156,32 @@ TEST_FUNCTION(io_cs_create__neg)
 // 
 TEST_FUNCTION(io_cs_clone__success_1)
 {
-	io_cs_t orig_valid;
-	io_cs_t* clone_valid;
-	int32_t result;
+    io_cs_t orig_valid;
+    io_cs_t* clone_valid;
+    int32_t result;
 
-	for (size_t i = 0; i < _countof(orig_valid.entries); i++)
-		orig_valid.entries[i] = (STRING_HANDLE)(0x8000 | i);
+    for (size_t i = 0; i < _countof(orig_valid.entries); i++)
+        orig_valid.entries[i] = (STRING_HANDLE)(0x8000 | i);
 
     // arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM)
-		.SetFailReturn(NULL);
-	for (size_t i = 0; i < _countof(orig_valid.entries); i++)
-	{
-		STRICT_EXPECTED_CALL(STRING_clone((STRING_HANDLE)(0x8000 | i)))
-			.SetReturn((STRING_HANDLE)(0x1000 | i))
-			.SetFailReturn(NULL);
-	}
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
+    for (size_t i = 0; i < _countof(orig_valid.entries); i++)
+    {
+        STRICT_EXPECTED_CALL(STRING_clone((STRING_HANDLE)(0x8000 | i)))
+            .SetReturn((STRING_HANDLE)(0x1000 | i))
+            .SetFailReturn(NULL);
+    }
 
     // act 
     result = io_cs_clone(&orig_valid, &clone_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-	ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)clone_valid);
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)clone_valid);
 }
 
 // 
@@ -1189,25 +1189,25 @@ TEST_FUNCTION(io_cs_clone__success_1)
 // 
 TEST_FUNCTION(io_cs_clone__success_2)
 {
-	io_cs_t orig_valid;
-	io_cs_t* clone_valid;
-	int32_t result;
+    io_cs_t orig_valid;
+    io_cs_t* clone_valid;
+    int32_t result;
 
-	memset(&orig_valid, 0, sizeof(orig_valid));
+    memset(&orig_valid, 0, sizeof(orig_valid));
 
-	// arrange 
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM)
-		.SetFailReturn(NULL);
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
 
-	// act 
-	result = io_cs_clone(&orig_valid, &clone_valid);
+    // act 
+    result = io_cs_clone(&orig_valid, &clone_valid);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-	ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)clone_valid);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)clone_valid);
 }
 
 // 
@@ -1215,8 +1215,8 @@ TEST_FUNCTION(io_cs_clone__success_2)
 // 
 TEST_FUNCTION(io_cs_clone__arg_orig_null)
 {
-	io_cs_t* clone_valid;
-	int32_t result;
+    io_cs_t* clone_valid;
+    int32_t result;
 
     // arrange 
 
@@ -1224,8 +1224,8 @@ TEST_FUNCTION(io_cs_clone__arg_orig_null)
     result = io_cs_clone(NULL, &clone_valid);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1233,20 +1233,20 @@ TEST_FUNCTION(io_cs_clone__arg_orig_null)
 // 
 TEST_FUNCTION(io_cs_clone__arg_cloned_null)
 {
-	io_cs_t orig_valid;
-	int32_t result;
+    io_cs_t orig_valid;
+    int32_t result;
 
-	for (size_t i = 0; i < _countof(orig_valid.entries); i++)
-		orig_valid.entries[i] = (STRING_HANDLE)(0x2000 | i);
+    for (size_t i = 0; i < _countof(orig_valid.entries); i++)
+        orig_valid.entries[i] = (STRING_HANDLE)(0x2000 | i);
 
-	// arrange 
+    // arrange 
 
-	// act 
-	result = io_cs_clone(&orig_valid, NULL);
+    // act 
+    result = io_cs_clone(&orig_valid, NULL);
 
     // assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1254,36 +1254,36 @@ TEST_FUNCTION(io_cs_clone__arg_cloned_null)
 // 
 TEST_FUNCTION(io_cs_clone__neg)
 {
-	io_cs_t orig_valid;
-	io_cs_t* clone_valid;
-	int32_t result;
+    io_cs_t orig_valid;
+    io_cs_t* clone_valid;
+    int32_t result;
 
-	for (size_t i = 0; i < _countof(orig_valid.entries); i++)
-		orig_valid.entries[i] = (STRING_HANDLE)(0x8000 | i);
+    for (size_t i = 0; i < _countof(orig_valid.entries); i++)
+        orig_valid.entries[i] = (STRING_HANDLE)(0x8000 | i);
 
-	// arrange 
-	UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-	STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-		.SetReturn((void*)UT_MEM)
-		.SetFailReturn(NULL);
-	for (size_t i = 0; i < _countof(orig_valid.entries); i++)
-	{
-		STRICT_EXPECTED_CALL(STRING_clone((STRING_HANDLE)(0x8000 | i)))
-			.SetReturn((STRING_HANDLE)(0x1000 | i))
-			.SetFailReturn(NULL);
-	}
-	STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-		.IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    // arrange 
+    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(io_cs_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
+    for (size_t i = 0; i < _countof(orig_valid.entries); i++)
+    {
+        STRICT_EXPECTED_CALL(STRING_clone((STRING_HANDLE)(0x8000 | i)))
+            .SetReturn((STRING_HANDLE)(0x1000 | i))
+            .SetFailReturn(NULL);
+    }
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-	// act 
-	    UMOCK_C_NEGATIVE_TESTS_ACT();
-    	result = io_cs_clone(&orig_valid, &clone_valid);
+    // act 
+        UMOCK_C_NEGATIVE_TESTS_ACT();
+        result = io_cs_clone(&orig_valid, &clone_valid);
 
-	// assert 
-	UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-		er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-		er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
+    // assert 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
+        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_ok);
 }
 
@@ -1292,84 +1292,84 @@ TEST_FUNCTION(io_cs_clone__neg)
 // 
 TEST_FUNCTION(io_cs_append_to_STRING__success)
 {
-	const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
-	io_cs_t connection_string_valid;
-	int32_t result;
+    const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
+    io_cs_t connection_string_valid;
+    int32_t result;
 
-	for (size_t i = 0; i < _countof(connection_string_valid.entries); i++)
-		connection_string_valid.entries[i] = (STRING_HANDLE)(0x80000 | i);
+    for (size_t i = 0; i < _countof(connection_string_valid.entries); i++)
+        connection_string_valid.entries[i] = (STRING_HANDLE)(0x80000 | i);
 
     // arrange 
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "HostName="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "HostName="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_host_name)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "DeviceId="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "DeviceId="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_device_id)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Endpoint="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Endpoint="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_endpoint)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "EntityPath="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "EntityPath="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_entity)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyName="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyName="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key_name)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKey="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKey="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "ConsumerGroup="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "ConsumerGroup="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_consumer_group)))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Partitions="))
-		.SetReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Partitions="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_partition_count)))
-		.SetReturn(0);
+        .SetReturn(0);
     STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
         .SetReturn(1);
     STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
@@ -1394,7 +1394,7 @@ TEST_FUNCTION(io_cs_append_to_STRING__success)
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -1402,8 +1402,8 @@ TEST_FUNCTION(io_cs_append_to_STRING__success)
 // 
 TEST_FUNCTION(io_cs_append_to_STRING__arg_connection_string_null)
 {
-	const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
-	int32_t result;
+    const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
+    int32_t result;
 
     // arrange 
 
@@ -1412,7 +1412,7 @@ TEST_FUNCTION(io_cs_append_to_STRING__arg_connection_string_null)
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1420,17 +1420,17 @@ TEST_FUNCTION(io_cs_append_to_STRING__arg_connection_string_null)
 // 
 TEST_FUNCTION(io_cs_append_to_STRING__arg_string_null)
 {
-	io_cs_t connection_string_valid;
-	int32_t result;
+    io_cs_t connection_string_valid;
+    int32_t result;
 
-	// arrange 
+    // arrange 
 
-	// act 
-	result = io_cs_append_to_STRING(&connection_string_valid, NULL);
+    // act 
+    result = io_cs_append_to_STRING(&connection_string_valid, NULL);
 
-	// assert 
-	ASSERT_EXPECTED_CALLS();
-	ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1438,116 +1438,116 @@ TEST_FUNCTION(io_cs_append_to_STRING__arg_string_null)
 // 
 TEST_FUNCTION(io_cs_append_to_STRING__neg)
 {
-	const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
-	io_cs_t connection_string_valid;
-	int32_t result;
+    const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x23423;
+    io_cs_t connection_string_valid;
+    int32_t result;
 
-	for (size_t i = 0; i < _countof(connection_string_valid.entries); i++)
-		connection_string_valid.entries[i] = (STRING_HANDLE)(0x80000 | i);
+    for (size_t i = 0; i < _countof(connection_string_valid.entries); i++)
+        connection_string_valid.entries[i] = (STRING_HANDLE)(0x80000 | i);
 
-	// arrange 
-	UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(0)
-		.SetFailReturn(0);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "HostName="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+    // arrange 
+    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(0)
+        .SetFailReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "HostName="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_host_name)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "DeviceId="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "DeviceId="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_device_id)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Endpoint="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Endpoint="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_endpoint)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "EntityPath="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "EntityPath="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_entity)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyName="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyName="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key_name)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKey="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKey="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "ConsumerGroup="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "ConsumerGroup="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_consumer_group)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
-		.SetReturn(1)
-		.SetFailReturn(1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Partitions="))
-		.SetReturn(0)
-		.SetFailReturn(-1);
-	STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Partitions="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid, 
         (STRING_HANDLE)(0x80000 | io_cs_entry_partition_count)))
-		.SetReturn(0)
-		.SetFailReturn(-1);
+        .SetReturn(0)
+        .SetFailReturn(-1);
     STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
         .SetReturn(1)
         .SetFailReturn(1);
@@ -1575,16 +1575,16 @@ TEST_FUNCTION(io_cs_append_to_STRING__neg)
         .SetReturn(0)
         .SetFailReturn(-1);
 
-	// act 
-	    UMOCK_C_NEGATIVE_TESTS_ACT();
-    	result = io_cs_append_to_STRING(&connection_string_valid, k_string_valid);
+    // act 
+        UMOCK_C_NEGATIVE_TESTS_ACT();
+        result = io_cs_append_to_STRING(&connection_string_valid, k_string_valid);
 
-	// assert 
-	UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-		er_ok,			  er_out_of_memory,	er_out_of_memory, er_ok,            er_out_of_memory,
-		er_out_of_memory, er_out_of_memory,	er_ok,            er_out_of_memory, er_out_of_memory,
-		er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory, er_out_of_memory,
-		er_ok,			  er_out_of_memory,	er_out_of_memory, er_out_of_memory, er_ok,
+    // assert 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+        er_ok,              er_out_of_memory,    er_out_of_memory, er_ok,            er_out_of_memory,
+        er_out_of_memory, er_out_of_memory,    er_ok,            er_out_of_memory, er_out_of_memory,
+        er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory, er_out_of_memory,
+        er_ok,              er_out_of_memory,    er_out_of_memory, er_out_of_memory, er_ok,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok,            er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory, er_out_of_memory,

@@ -26,63 +26,60 @@ typedef enum service_status
 service_status_t;
 
 typedef void(*on_status_change_t)(
-    prx_host_t* host,
     service_status_t,
     int32_t result
 );
 
-static prx_host_t* host = NULL;
-
 //
 // Called on termination 
 //
+#if _WIN32
 static int32_t signal_handler(
+#else
+static void signal_handler(
+#endif
     int32_t signal
 )
 {
+    int32_t result;
+    prx_host_t* host;
 #if _WIN32
     if (signal != CTRL_C_EVENT)
         return 0;
 #endif
-
-    if (host)
+    result = prx_host_get(&host);
+    if (result == er_ok)
+    {
         prx_host_sig_break(host);
-
+        prx_host_release(host);
+    }
+#if _WIN32
     return 1;
+#endif
 }
 
 //
 // Dummy callback
 //
 static void service_status_cb_dummy(
-    prx_host_t* context,
     service_status_t state,
     int32_t result
 )
 {
-	(void)context, result;
+    (void)result;
     switch (state)
     {
     case service_status_init:
-        printf("Azure IoT Socket Proxy\r\n");
+        printf("=== Azure IoT Proxy Gateway === \n");
         break;
     case service_status_deinit:
-        printf("Proxy exits... Goodbye!\r\n");
+        printf("Proxy exits... Goodbye!\n");
         break;
     case service_status_stopped:
-        printf("Proxy stopped!\r\n");
-        break;
     case service_status_starting:
-        printf("Proxy starting...\r\n");
-        break;
     case service_status_running:
-        printf("Proxy started!\r\n");
-        break;
     case service_status_stopping:
-        printf("Proxy stopping...\r\n");
-        break;
     case service_status_error:
-        printf("!! ERROR !! !\r\n");
         break;
     default:
         break;
@@ -93,50 +90,52 @@ static void service_status_cb_dummy(
 // Main program thread
 //
 static int32_t service_main(
+    int32_t argc,
+    char *argv[],
     on_status_change_t on_status
 )
 {
     int32_t result;
+    prx_host_t* host = NULL;
     if (!on_status)
         on_status = service_status_cb_dummy;
-        
-    on_status(host, service_status_init, 0);
-    result = prx_host_init();
+
+    on_status(service_status_init, 0);
+    result = prx_host_init(proxy_type_server, argc, argv);
     if (result != er_ok)
     {
-        on_status(host, service_status_error, result);
+        on_status(service_status_error, result);
         return result;
     }
     do
     {
-        result = prx_host_create(NULL, proxy_type_server, &host);
+        result = prx_host_get(&host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_starting, 0);
+        on_status(service_status_starting, 0);
         result = prx_host_start(host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_running, 0);
+        on_status(service_status_running, 0);
         result = prx_host_sig_wait(host);
-        on_status(host, service_status_stopping, 0);
+        on_status(service_status_stopping, 0);
 
         result = prx_host_stop(host);
         if (result != er_ok)
             break;
 
-        on_status(host, service_status_stopped, 0);
+        on_status(service_status_stopped, 0);
     } while (0);
 
     if (result != er_ok)
-        on_status(host, service_status_error, result);
+        on_status(service_status_error, result);
 
     if (host)
         prx_host_release(host);
-    prx_host_deinit();
-    host = NULL;
-    on_status(host, service_status_deinit, 0);
+
+    on_status(service_status_deinit, 0);
     return 0;
 }
 
@@ -148,14 +147,12 @@ static SERVICE_STATUS_HANDLE service_status_handle = NULL;
 // Callback when service status changes
 //
 static void service_status_cb(
-    prx_host_t* context,
     service_status_t state,
     int32_t result
 )
 {
     static SERVICE_STATUS service_status;
     static DWORD counter = 1;
-	(void)context;
 
     if (result != er_ok)
     {
@@ -201,7 +198,7 @@ static void service_status_cb(
     }
 
     if (!SetServiceStatus(service_status_handle, &service_status))
-        printf("SetServiceStatus failed with errror code 0x%08X.", GetLastError());
+        printf("SetServiceStatus failed with errror code 0x%08X.\r\n", GetLastError());
 }
 
 //
@@ -232,18 +229,17 @@ DWORD WINAPI ServiceControl(
 //
 void _ext__ WINAPI ServiceMain(
     DWORD argc,
-    LPSTR *pszArgv
+    LPSTR *argv
 )
 {
-	(void)argc, pszArgv;
     service_status_handle = RegisterServiceCtrlHandlerA("proxyd", ServiceControl);
     if (service_status_handle == NULL)
     {
-        printf("RegisterServiceCtrlHandler failed with error code 0x%08X. ",
+        printf("RegisterServiceCtrlHandler failed with error code 0x%08X.\r\n",
             GetLastError());
         return;
     }
-    service_main(service_status_cb);
+    service_main((int32_t)argc, argv, service_status_cb);
 }
 
 #endif // _WIN32
@@ -256,19 +252,20 @@ int32_t main(
     char *argv[]
 )
 {
-    // Check if run as service when no args are passed otherwise run console
-    if (argc > 1)
-        return prx_host_console(NULL, argc, argv);
 #if _WIN32
+    // If called by SCM, then register entry point and start dispatcher
     SERVICE_TABLE_ENTRYA service_table[2] = { { "proxyd", ServiceMain }, 0 };
     if (StartServiceCtrlDispatcherA(service_table))
+    {
+        // Success, running as daemon
         return 0;
+    }
 #endif
     mem_init();
 #if _WIN32
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)signal_handler, TRUE);
 #else
-    signal(SIGINT, (__sighandler_t)signal_handler);
+    signal(SIGINT, signal_handler);
 #endif
-    return service_main(NULL);
+    return service_main(argc, argv, NULL);
 }

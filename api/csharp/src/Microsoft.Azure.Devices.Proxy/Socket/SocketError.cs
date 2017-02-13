@@ -46,8 +46,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         PropSet,
         Reset,
         Undelivered,
-        Token,
+        Crypto,
         Comm,
-        Ok = 0
+        Success = 0
     }
 }

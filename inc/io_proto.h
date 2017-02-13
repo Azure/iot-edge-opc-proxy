@@ -329,10 +329,10 @@ struct io_message
     io_ref_t source_id;             // Source proxy address and
     io_ref_t proxy_id;     // Proxy the message is sent through
     io_ref_t target_id;            // Target address of message
-    int32_t error_code;                             // Exception
-    bool is_response;            // Request or response message?
-    uint32_t type;                // Identifies the content type
-    union {                         // Message content structure
+    int32_t error_code;                            // Exception
+    bool is_response;           // Request or response message?
+    uint32_t type;               // Identifies the content type
+    union {                        // Message content structure
     io_ping_request_t ping_request;
     io_ping_response_t ping_response;
     io_resolve_request_t resolve_request;
@@ -345,11 +345,12 @@ struct io_message
     io_open_request_t open_request;
     io_close_response_t close_response;
     io_data_message_t data_message;
-    } content;                                  // Internal: ...
-    io_message_factory_t* owner;               // Owning factory
-    void* buffer;        // Memory for dynamic allocated content
-    int correlation_id;       // The request response session id
-    DLIST_ENTRY link;         // Link to queue protocol messages
+    } content;                                 // Internal: ...
+    io_message_factory_t* owner;              // Owning factory
+    void* buffer;       // Memory for dynamic allocated content
+    int correlation_id;      // The request response session id
+    void* context;                            // Opaque storage
+    DLIST_ENTRY link;        // Link to queue protocol messages
 };
 
 #endif // _io_proto_h_

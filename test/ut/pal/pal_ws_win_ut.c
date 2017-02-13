@@ -48,11 +48,15 @@ MOCKABLE_FUNCTION(WINAPI, DWORD, WinHttpWebSocketClose,
 MOCKABLE_FUNCTION(WINAPI, int, MultiByteToWideChar,
     UINT, CodePage, DWORD, dwFlags, LPCSTR, lpMultiByteStr, int, cbMultiByte, LPWSTR, lpWideCharStr, int, cchWideChar);
 // Winbase.h
+MOCKABLE_FUNCTION(WINAPI, HMODULE, LoadLibraryA,
+    LPCSTR, lpLibFileName);
 MOCKABLE_FUNCTION(WINAPI, DWORD, FormatMessageA,
     DWORD, dwFlags, LPCVOID, lpSource, DWORD, dwMessageId, DWORD, dwLanguageId,
     LPSTR, lpBuffer, DWORD, nSize, void**, Arguments);
 MOCKABLE_FUNCTION(WINAPI, HLOCAL, LocalFree,
     HLOCAL, hMem);
+MOCKABLE_FUNCTION(WINAPI, BOOL, FreeLibrary,
+    HMODULE, hLibModule);
 MOCKABLE_FUNCTION(WINAPI, DWORD, GetLastError);
 
 //
@@ -91,6 +95,7 @@ REGISTER_UMOCK_ALIAS_TYPE(LPCWSTR, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LPWSTR, void*);
 REGISTER_UMOCK_ALIAS_TYPE(BOOL, bool);
 REGISTER_UMOCK_ALIAS_TYPE(STRING_HANDLE, void*);
+REGISTER_UMOCK_ALIAS_TYPE(HMODULE, void*);
 END_DECLARE_TEST_SUITE()
 
 //
@@ -104,6 +109,7 @@ DECLARE_TEST_SETUP()
 TEST_FUNCTION(pal_win_wsclient_create__success)
 {
     static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
+    static prx_scheduler_t* k_scheduler_child_valid = (prx_scheduler_t*)0x2323423;
     static const char* k_protocol_name_valid = "rpotadf";
     static const char* k_host_valid = "lkjafsd";
     static const uint16_t k_port_valid = 10;
@@ -115,11 +121,16 @@ TEST_FUNCTION(pal_win_wsclient_create__success)
     int32_t result;
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
+    _scheduler = (prx_scheduler_t*)0x2343;
 
     // arrange 
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pal_wsclient_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
+
+    STRICT_EXPECTED_CALL(prx_scheduler_create(_scheduler, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_scheduler(&k_scheduler_child_valid, sizeof(k_scheduler_child_valid))
+        .SetReturn(er_ok);
 
     STRICT_EXPECTED_CALL(STRING_new())
         .SetReturn(k_string_valid);
@@ -275,6 +286,7 @@ TEST_FUNCTION(pal_win_wsclient_create__arg_wsclient_invalid)
 TEST_FUNCTION(pal_win_wsclient_create__neg_1)
 {
     static wchar_t* k_wide_char_valid = (wchar_t*)0x2444;
+    static prx_scheduler_t* k_scheduler_child_valid = (prx_scheduler_t*)0x2323423;
     static const char* k_host_valid = "lkjafsd";
     static const uint16_t k_port_valid = 10;
     static const char* k_path_valid = "/9845/sadkf";
@@ -283,11 +295,16 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_1)
     int32_t result;
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
+    _scheduler = (prx_scheduler_t*)0x2343;
 
     // arrange 
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pal_wsclient_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
+
+    STRICT_EXPECTED_CALL(prx_scheduler_create(_scheduler, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_scheduler(&k_scheduler_child_valid, sizeof(k_scheduler_child_valid))
+        .SetReturn(er_ok);
 
     STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_host_valid, -1, NULL, 0))
         .SetReturn(10);
@@ -299,6 +316,7 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_1)
     STRICT_EXPECTED_CALL(h_free((void*)k_wide_char_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
+    STRICT_EXPECTED_CALL(prx_scheduler_release(k_scheduler_child_valid, (void*)UT_MEM));
 
     STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
@@ -318,6 +336,7 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_1)
 TEST_FUNCTION(pal_win_wsclient_create__neg_2)
 {
     static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
+    static prx_scheduler_t* k_scheduler_child_valid = (prx_scheduler_t*)0x2323423;
     static const char* k_protocol_name_valid = "rpotadf";
     static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x234;
     static const char* k_host_valid = "lkjafsd";
@@ -328,7 +347,7 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
     pal_wsclient_t* wsclient_valid;
     int32_t result;
 
-    REGISTER_GLOBAL_MOCK_RETURNS(pal_os_last_error_as_prx_error, er_out_of_memory, er_out_of_memory);
+    _scheduler = NULL;
 
     // arrange 
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
@@ -336,7 +355,12 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM)
         .SetFailReturn(NULL);
-        
+
+    STRICT_EXPECTED_CALL(prx_scheduler_create(NULL, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_scheduler(&k_scheduler_child_valid, sizeof(k_scheduler_child_valid))
+        .SetReturn(er_ok)
+        .SetFailReturn(er_out_of_memory);
+
     STRICT_EXPECTED_CALL(STRING_new())
         .SetReturn(k_string_valid)
         .SetFailReturn(NULL);
@@ -396,10 +420,10 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
         k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_fatal,         er_out_of_memory, er_fatal,         er_fatal, 
-        er_out_of_memory, er_fatal,         er_out_of_memory);
+        er_out_of_memory, er_out_of_memory, er_fatal,         er_out_of_memory, er_fatal,
+        er_fatal,         er_out_of_memory, er_fatal,         er_ok);
 }
 
 // 
@@ -702,6 +726,7 @@ TEST_FUNCTION(pal_win_wsclient_connect__neg_2)
     static HINTERNET k_h_connection_valid = (HINTERNET)0x235;
     static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
     static const char* k_headers_ptr = "headers";
+    static const char* k_message = "Error";
     STRING_HANDLE k_headers_valid = (STRING_HANDLE)0x11;
     pal_wsclient_t wsclient_valid;
     int32_t result;
@@ -752,8 +777,14 @@ TEST_FUNCTION(pal_win_wsclient_connect__neg_2)
 
     STRICT_EXPECTED_CALL(WinHttpSendRequest(k_h_request_valid, NULL, 0, NULL, 0, 0, 0))
         .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
-        .SetReturn(er_connecting);
+    STRICT_EXPECTED_CALL(GetLastError())
+        .SetReturn(ERROR_WINHTTP_CONNECTION_ERROR);
+    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, IGNORED_PTR_ARG, ERROR_WINHTTP_CONNECTION_ERROR, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
+        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(4)
+        .CopyOutArgumentBuffer_lpBuffer(&k_message, sizeof(const char*))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(LocalFree((HLOCAL)k_message))
+        .SetReturn((HLOCAL)NULL);
 
     STRICT_EXPECTED_CALL(WinHttpCloseHandle(k_h_request_valid))
         .SetReturn(TRUE);
@@ -765,94 +796,9 @@ TEST_FUNCTION(pal_win_wsclient_connect__neg_2)
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_connecting, result);
+    ASSERT_ARE_EQUAL(int32_t, er_comm, result);
     ASSERT_IS_NULL(wsclient_valid.h_connection);
     ASSERT_IS_NULL(wsclient_valid.h_request);
-}
-
-// 
-// Test pal_wsclient_connect unhappy path 
-// 
-TEST_FUNCTION(pal_win_wsclient_connect__neg_3)
-{
-    static HINTERNET k_h_request_valid = (HINTERNET)0x666;
-    static HINTERNET k_h_session_valid = (HINTERNET)0x2345;
-    static HINTERNET k_h_connection_valid = (HINTERNET)0x235;
-    static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
-    static const char* k_headers_ptr = "headers";
-    STRING_HANDLE k_headers_valid = (STRING_HANDLE)0x11;
-    pal_wsclient_t wsclient_valid;
-    int32_t result;
-
-    memset(&wsclient_valid, 0xff, sizeof(wsclient_valid));
-    wsclient_valid.h_session = k_h_session_valid;
-    wsclient_valid.host = L"test";
-    wsclient_valid.relative_path = L"foo";
-    wsclient_valid.headers = k_headers_valid;
-    wsclient_valid.port = 10;
-
-    REGISTER_GLOBAL_MOCK_RETURNS(pal_os_last_error_as_prx_error, er_out_of_memory, er_out_of_memory);
-
-    // arrange 
-    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL(WinHttpConnect(k_h_session_valid, IGNORED_PTR_ARG, 10, 0))
-        .IgnoreArgument(2)
-        .SetReturn(k_h_connection_valid)
-        .SetFailReturn(NULL);
-    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_connection_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
-        .IgnoreArgument(3)
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(WinHttpOpenRequest(k_h_connection_valid, IGNORED_PTR_ARG, IGNORED_PTR_ARG, NULL, NULL, NULL, WINHTTP_FLAG_SECURE))
-        .IgnoreArgument(2).IgnoreArgument(3)
-        .SetReturn(k_h_request_valid)
-        .SetFailReturn(NULL);
-    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
-        .IgnoreArgument(3)
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0))
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET, NULL, 0))
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(WinHttpSetTimeouts(k_h_request_valid, 0, 0, 0, 0))
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(STRING_c_str(k_headers_valid))
-        .SetReturn(k_headers_ptr)
-        .SetFailReturn(k_headers_ptr);
-    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_headers_ptr, -1, NULL, 0))
-        .SetReturn(10)
-        .SetFailReturn(-1);
-    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)k_wide_char_valid)
-        .SetFailReturn(NULL);
-    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_headers_ptr, -1, k_wide_char_valid, 10))
-        .SetReturn(10)
-        .SetFailReturn(-1);
-    STRICT_EXPECTED_CALL(WinHttpAddRequestHeaders(k_h_request_valid, k_wide_char_valid, (DWORD)-1, WINHTTP_ADDREQ_FLAG_ADD | WINHTTP_ADDREQ_FLAG_REPLACE))
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-    STRICT_EXPECTED_CALL(h_free((void*)k_wide_char_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(WinHttpSendRequest(k_h_request_valid, NULL, 0, NULL, 0, 0, 0))
-        .SetReturn(TRUE)
-        .SetFailReturn(FALSE);
-
-    // act 
-    UMOCK_C_NEGATIVE_TESTS_ACT();
-    wsclient_valid.h_connection = NULL;
-    wsclient_valid.h_request = NULL;
-    result = pal_wsclient_connect(&wsclient_valid);
-
-    // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, 
-        er_out_of_memory, er_out_of_memory, er_ok,            er_fatal,         er_out_of_memory,
-        er_fatal,         er_out_of_memory, er_ok,            er_out_of_memory);
 }
 
 // 
@@ -971,15 +917,15 @@ TEST_FUNCTION(pal_win_wsclient_can_recv__neg)
     STRICT_EXPECTED_CALL(WinHttpWebSocketReceive(k_h_wsclient_valid, k_buffer_ptr, (DWORD)k_length_valid, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn(ERROR_WINHTTP_OPERATION_CANCELLED);
-    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, NULL, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
-        .IgnoreArgument(1).IgnoreArgument(4)
+    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, IGNORED_PTR_ARG, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
+        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(4)
         .CopyOutArgumentBuffer_lpBuffer(&k_message, sizeof(const char*))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(LocalFree((HLOCAL)k_message))
         .SetReturn((HLOCAL)NULL);
-    STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_end_recv, IGNORED_PTR_ARG, IGNORED_PTR_ARG, NULL, er_aborted))
+    STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_end_recv, IGNORED_PTR_ARG, IGNORED_PTR_ARG, IGNORED_PTR_ARG, er_aborted))
         .ValidateArgumentBuffer(3, &k_buffer_ptr, sizeof(k_buffer_ptr))
-        .IgnoreArgument(4);
+        .IgnoreArgument(4).IgnoreArgument(5);
 
     // act 
     result = pal_wsclient_can_recv(&wsclient_valid, true);
@@ -1106,8 +1052,8 @@ TEST_FUNCTION(pal_win_wsclient_can_send__neg)
         .CopyOutArgumentBuffer_type(&k_type_valid, sizeof(k_type_valid));
     STRICT_EXPECTED_CALL(WinHttpWebSocketSend(k_h_wsclient_valid, WINHTTP_WEB_SOCKET_BINARY_MESSAGE_BUFFER_TYPE, k_buffer_ptr, (DWORD)k_length_valid))
         .SetReturn(ERROR_WINHTTP_OPERATION_CANCELLED);
-    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, NULL, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
-        .IgnoreArgument(1).IgnoreArgument(4)
+    STRICT_EXPECTED_CALL(FormatMessageA(IGNORED_NUM_ARG, IGNORED_PTR_ARG, ERROR_WINHTTP_OPERATION_CANCELLED, IGNORED_NUM_ARG, IGNORED_PTR_ARG, 0, NULL))
+        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(4)
         .CopyOutArgumentBuffer_lpBuffer(&k_message, sizeof(const char*))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(LocalFree((HLOCAL)k_message))
@@ -1135,6 +1081,7 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_1)
     wsclient_valid.h_request = NULL;
     wsclient_valid.h_connection = NULL;
     wsclient_valid.h_websocket = NULL;
+    wsclient_valid.h_closing = (HINTERNET)-1;
     wsclient_valid.cur_send_buffer = NULL;
     wsclient_valid.cur_recv_buffer = NULL;
     wsclient_valid.cb = pal_wsclient_event_handler_mock;
@@ -1142,7 +1089,6 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_1)
     wsclient_valid.state = 0;
 
     // arrange 
-    STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_disconnected, NULL, NULL, NULL, er_ok));
 
     // act 
     result = pal_wsclient_disconnect(&wsclient_valid);
@@ -1163,6 +1109,7 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_2)
     wsclient_valid.h_request = NULL;
     wsclient_valid.h_connection = NULL;
     wsclient_valid.h_websocket = NULL;
+    wsclient_valid.h_closing = NULL;
     wsclient_valid.cur_send_buffer = NULL;
     wsclient_valid.cur_recv_buffer = NULL;
     wsclient_valid.cb = pal_wsclient_event_handler_mock;
@@ -1190,6 +1137,7 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_3)
     int32_t result;
 
     wsclient_valid.h_websocket = k_h_wsclient_valid;
+    wsclient_valid.h_closing = NULL;
     wsclient_valid.cur_send_buffer = (uint8_t*)0x2;
     wsclient_valid.cur_recv_buffer = (uint8_t*)0x3;
     wsclient_valid.cb = pal_wsclient_event_handler_mock;
@@ -1222,6 +1170,7 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_4)
     int32_t result;
 
     wsclient_valid.h_websocket = k_h_wsclient_valid;
+    wsclient_valid.h_closing = NULL;
     wsclient_valid.cur_send_buffer = (uint8_t*)0x2;
     wsclient_valid.cur_recv_buffer = (uint8_t*)0x3;
     wsclient_valid.cb = pal_wsclient_event_handler_mock;
@@ -1256,6 +1205,7 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_5)
 
     wsclient_valid.h_request = k_h_request_valid;
     wsclient_valid.h_connection = k_h_connection_valid;
+    wsclient_valid.h_closing = NULL;
     wsclient_valid.h_websocket = NULL;
     wsclient_valid.cur_send_buffer = NULL;
     wsclient_valid.cur_recv_buffer = NULL;
@@ -1266,12 +1216,8 @@ TEST_FUNCTION(pal_win_wsclient_disconnect__success_5)
     // arrange 
     STRICT_EXPECTED_CALL(WinHttpCloseHandle(k_h_request_valid))
         .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(GetLastError())
-        .SetReturn(ERROR_WINHTTP_INCORRECT_HANDLE_TYPE);
     STRICT_EXPECTED_CALL(WinHttpCloseHandle(k_h_connection_valid))
         .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(GetLastError())
-        .SetReturn(ERROR_WINHTTP_INCORRECT_HANDLE_TYPE);
     STRICT_EXPECTED_CALL(pal_wsclient_event_handler_mock((void*)0x1, pal_wsclient_event_disconnected, NULL, NULL, NULL, er_ok));
 
     // act 
@@ -1344,8 +1290,6 @@ TEST_FUNCTION(pal_win_wsclient_close__success_2)
     // arrange 
     STRICT_EXPECTED_CALL(WinHttpCloseHandle(k_h_session_valid))
         .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(GetLastError())
-        .SetReturn(ERROR_WINHTTP_INCORRECT_HANDLE_TYPE);
     STRICT_EXPECTED_CALL(STRING_delete((STRING_HANDLE)0x4));
     STRICT_EXPECTED_CALL(h_free((void*)0x2, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
@@ -1397,33 +1341,99 @@ TEST_FUNCTION(pal_win_wsclient_close__arg_wsclient_invalid)
 // 
 // Test pal_wsclient_deinit happy path 
 // 
-TEST_FUNCTION(pal_win_wsclient_deinit__success)
+TEST_FUNCTION(pal_win_wsclient_deinit__success_1)
 {
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
+    static prx_scheduler_t* k_valid_scheduler = (prx_scheduler_t*)0x4321;
+    _scheduler = k_valid_scheduler;
+    _winhttp = k_valid_dll;
+
     // arrange 
+    STRICT_EXPECTED_CALL(prx_scheduler_release(k_valid_scheduler, NULL));
+    STRICT_EXPECTED_CALL(FreeLibrary(k_valid_dll))
+        .SetReturn(TRUE);
 
     // act 
     pal_wsclient_deinit();
 
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(_winhttp == NULL);
+    ASSERT_IS_TRUE(_scheduler == NULL);
 }
 
+// 
+// Test pal_wsclient_deinit happy path 
+// 
+TEST_FUNCTION(pal_win_wsclient_deinit__success_2)
+{
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
+    _scheduler = NULL;
+    _winhttp = k_valid_dll;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(FreeLibrary(k_valid_dll))
+        .SetReturn(TRUE);
+
+    // act 
+    pal_wsclient_deinit();
+
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(_winhttp == NULL);
+    ASSERT_IS_TRUE(_scheduler == NULL);
+}
 
 // 
 // Test pal_wsclient_init happy path 
 // 
 TEST_FUNCTION(pal_win_wsclient_init__success)
 {
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
+    static prx_scheduler_t* k_valid_scheduler = (prx_scheduler_t*)0x4321;
     int32_t result;
 
+    _scheduler = NULL;
+    _winhttp = NULL;
+
     // arrange 
+    STRICT_EXPECTED_CALL(prx_scheduler_create(NULL, &_scheduler))
+        .CopyOutArgumentBuffer_scheduler(&k_valid_scheduler, sizeof(k_valid_scheduler))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(LoadLibraryA("WINHTTP.DLL"))
+        .SetReturn(k_valid_dll);
 
     // act 
     result = pal_wsclient_init();
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_TRUE(_winhttp == k_valid_dll);
+    ASSERT_IS_TRUE(_scheduler == k_valid_scheduler);
 }
 
+// 
+// Test pal_wsclient_init unhappy path 
+// 
+TEST_FUNCTION(pal_win_wsclient_init__neg)
+{
+    static HMODULE k_valid_dll = (HMODULE)0x1234;
+    int32_t result;
+
+    _scheduler = NULL;
+    _winhttp = NULL;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(prx_scheduler_create(NULL, IGNORED_PTR_ARG))
+        .IgnoreArgument(2)
+        .SetReturn(er_out_of_memory);
+
+    // act 
+    result = pal_wsclient_init();
+
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+    ASSERT_IS_TRUE(_scheduler == NULL);
+    ASSERT_IS_TRUE(_winhttp == NULL);
+}
 
 //
 // 5. Teardown tests and test suite

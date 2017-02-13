@@ -17,11 +17,12 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class NetworkStream : Stream {
 
         private volatile bool _cleanedUp = false;
+        private bool _ownsSocket = false;
 
         //
-        // Creates a new NetworkStream class
+        // Create stream with socket, and declare socket ownership
         //
-        public NetworkStream(Socket socket) {
+        public NetworkStream(Socket socket, bool ownsSocket) {
             if (socket == null) {
                 throw new ArgumentNullException("socket");
             }
@@ -33,8 +34,17 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
 
             Socket = socket;
+            _ownsSocket = ownsSocket;
+
             Readable = true;
             Writeable = true;
+        }
+
+        //
+        // Creates a new NetworkStream class
+        //
+        public NetworkStream(Socket socket) : 
+            this(socket, false) {
         }
 
         //
@@ -484,22 +494,15 @@ namespace Microsoft.Azure.Devices.Proxy {
             bool cleanedUp = _cleanedUp;
             _cleanedUp = true;
             if (!cleanedUp && disposing) {
-                // The only resource we need to free is the network stream, since this
-                // is based on the client socket, closing the stream will cause us
-                // to flush the data to the network, close the stream and (in the
-                // NetoworkStream code) close the socket as well.
-                if (Socket != null) {
-                    Readable = false;
-                    Writeable = false;
+                Socket chkStreamSocket = Socket;
+                Socket = null;
+                Readable = false;
+                Writeable = false;
 
-                    // If we own the Socket (false by default), close it
-                    // ignoring possible exceptions (eg: the user told us
-                    // that we own the Socket but it closed at some point of time,
-                    // here we would get an ObjectDisposedException)
-                    Socket chkStreamSocket = Socket;
-                    if (chkStreamSocket != null) {
-                        chkStreamSocket.Shutdown(SocketShutdown.Both);
-                        chkStreamSocket.Close();
+                if (chkStreamSocket != null) {
+                    if (_ownsSocket) {
+                        chkStreamSocket.Dispose();
+                        chkStreamSocket = null;
                     }
                 }
             }

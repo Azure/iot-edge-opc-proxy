@@ -75,9 +75,14 @@ decl_internal_1(void, prx_scheduler_at_exit,
 //
 // Schedule immediate execution 
 //
+#if !defined(UNIT_TEST)
 #define __do_next_s(s, t, o) \
     prx_scheduler_queue(s, #t, (prx_task_t)t, o, \
         0, __func__, __LINE__)
+#else
+#define __do_next_s(s, t, o) \
+    do { prx_task_t _t = (prx_task_t)t; _t(o); } while(0)
+#endif
 
 //
 // Schedule immediate execution, scheduler is part of object
@@ -88,10 +93,15 @@ decl_internal_1(void, prx_scheduler_at_exit,
 //
 // Schedule delayed task execution, clearing all previous ones
 //
+#if !defined(UNIT_TEST)
 #define __do_later_s(s, t, o, d) \
     prx_scheduler_clear(s, (prx_task_t)t, o); \
     prx_scheduler_queue(s, #t, (prx_task_t)t, o, \
         d, __func__, __LINE__)
+#else
+#define __do_later_s(s, t, o, d) \
+    do { prx_task_t _t = (prx_task_t)t; _t(o); } while(0)
+#endif
 
 //
 // Schedule later, scheduler is part of object
@@ -103,7 +113,12 @@ decl_internal_1(void, prx_scheduler_at_exit,
 // Assert we are on scheduler thread
 //
 #ifndef dbg_assert_is_task
+#if !defined(UNIT_TEST)
+#define dbg_assert_is_task(s) /* TODO */
+#else
 #define dbg_assert_is_task(s)
 #endif
+#endif
+
 
 #endif // _prx_sched_h_

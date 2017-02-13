@@ -39,14 +39,14 @@ io_queue_buffer_t;
 decl_internal_2(int32_t, io_queue_create,
     const char*, name,
     io_queue_t**, queue
-	);
+    );
 
 //
 // free the queue
 //
 decl_internal_1(void, io_queue_free,
     io_queue_t*, queue
-	);
+    );
 
 //
 // Whether ready buffers are present
@@ -60,7 +60,7 @@ decl_internal_1(bool, io_queue_has_ready,
 //
 decl_internal_1(io_queue_buffer_t*, io_queue_pop_ready,
     io_queue_t*, queue
-	);
+    );
 
 //
 // Whether in progress buffers are present
@@ -74,7 +74,7 @@ decl_internal_1(bool, io_queue_has_inprogress,
 //
 decl_internal_1(io_queue_buffer_t*, io_queue_pop_inprogress,
     io_queue_t*, queue
-	);
+    );
 
 //
 // Whether completed buffers are present
@@ -94,8 +94,8 @@ decl_internal_1(io_queue_buffer_t*, io_queue_pop_done,
 // Move all in progress messages back to ready state
 //
 decl_internal_1(void, io_queue_rollback,
-	io_queue_t*, queue
-	);
+    io_queue_t*, queue
+);
 
 //
 // Abort all messages in the queue

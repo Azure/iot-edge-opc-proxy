@@ -23,7 +23,8 @@ typedef enum pal_wsclient_event
     pal_wsclient_event_end_recv,   // Sent when buffer was filled
     pal_wsclient_event_begin_send,    // Requests a filled buffer
     pal_wsclient_event_end_send,        // Filled buffer was sent
-    pal_wsclient_event_disconnected               // Disconnected
+    pal_wsclient_event_disconnected,              // Disconnected
+    pal_wsclient_event_closed                           // Closed
 }
 pal_wsclient_event_t;
 
@@ -105,7 +106,7 @@ decl_public_1(int32_t, pal_wsclient_disconnect,
 );
 
 //
-// Close websocket client
+// Close websocket client - will cause closed event to be sent
 //
 decl_public_1(void, pal_wsclient_close,
     pal_wsclient_t*, wsclient

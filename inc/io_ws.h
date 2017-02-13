@@ -30,10 +30,19 @@ decl_public_7(int32_t, io_ws_connection_create,
 );
 
 //
-// Open connection -- must be called from scheduler
+// Reconnect callback
 //
-decl_public_1(int32_t, io_ws_connection_open,
-    io_ws_connection_t*, connection
+typedef bool (*io_ws_connection_reconnect_t)(
+    void* context
+);
+
+//
+// Connect -- must be called from scheduler
+//
+decl_public_3(int32_t, io_ws_connection_connect,
+    io_ws_connection_t*, connection,
+    io_ws_connection_reconnect_t, reconnect_cb,
+    void*, reconnect_ctx
 );
 
 //

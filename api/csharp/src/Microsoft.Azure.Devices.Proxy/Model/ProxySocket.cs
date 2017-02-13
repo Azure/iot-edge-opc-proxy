@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Receive queue for all links
         /// </summary>
-        public BlockingCollection<Message> ReceiveQueue { get; } = new BlockingCollection<Message>();
+        public ConcurrentQueue<Message> ReceiveQueue { get; } = new ConcurrentQueue<Message>();
 
         /// <summary>
         /// Constructor
@@ -68,46 +68,18 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Receives ping responses and handles them one by one through a producer/consumer queue
+        /// Receives ping responses and handles them one by one through a handler callback.
         /// </summary>
-        /// <param name="handler">Handler that reads the responding proxy records from blocking collection.</param>
-        /// <param name="timeout">Timeout for broadcast method calls</param>
-        /// <param name="ct">Cancels operation</param>
+        /// <param name="address"></param>
+        /// <param name="handler"></param>
+        /// <param name="last"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task PingAsync(SocketAddress address,
-            Func<BlockingCollection<INameRecord>, Task> handler,
-            TimeSpan timeout, CancellationToken ct) {
-
-            // Producer / consumer queue for ping responses, ensures linking on response one at a time
-            var queue = new BlockingCollection<INameRecord>(); // Default is queue
-
-            var cts = new CancellationTokenSource();
-            ct.Register(() => {
-                cts.Cancel();
-                queue.CompleteAdding();
-            });
-
-            var task = Provider.ControlChannel.BroadcastAsync(
-                    new Message(Id, Reference.Null, new PingRequest(address)),
-                (m, r) => {
-                    queue.Add(r);
-                    return Task.FromResult(false);
-                },
-                timeout, cts.Token).ContinueWith(t => {
-                    if (t.IsCompleted) {
-                        queue.CompleteAdding();
-                    }
-                });
-
-            await handler(queue);
-            try {
-                cts.Cancel();   // Cancel all other broadcast no matter what..
-                await task;
-            }
-            catch(Exception) {
-                return;
-            }
-        }
+        public Task PingAsync(SocketAddress address,
+            Func<Message, INameRecord, CancellationToken, Task<Disposition>> handler,
+            Action<Exception> last, CancellationToken ct) =>
+            Provider.ControlChannel.BroadcastAsync(new Message(
+                Id, Reference.Null, new PingRequest(address)), handler, last, ct);
 
 
         /// <summary>
@@ -115,34 +87,29 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="proxies">The proxies (interfaces) to bind the link on</param>
         /// <param name="address">Address to connect to, or null if proxy bound</param>
-        /// <param name="timeout">Method timeout</param>
         /// <param name="ct">Cancels operation</param>
         /// <returns></returns>
-        public async Task<bool> LinkAllAsync(
-            IEnumerable<INameRecord> proxies, SocketAddress address, 
-            TimeSpan timeout, CancellationToken ct) {
+        public async Task<bool> LinkAllAsync(IEnumerable<INameRecord> proxies, SocketAddress address, 
+            CancellationToken ct) {
 
             // Complete socket info
             Info.Address = address ?? new NullSocketAddress();
             Info.Flags = address != null ? 0 : (uint)SocketFlags.Passive;
             Info.Options.UnionWith(_optionCache.Select(p => new SocketOptionValue(p.Key, p.Value)));
 
-            var cts = new CancellationTokenSource();
-            ct.Register(() => {
-                cts.Cancel();
-                });
             var tasks = new List<Task<IProxyLink>>();
             foreach (var proxy in proxies) {
                 if (proxy == null)
                     break;
-                tasks.Add(CreateLinkAsync(proxy, timeout, cts.Token));
+                tasks.Add(CreateLinkAsync(proxy, ct));
             }
             try {
-                var results = await Task.WhenAll(tasks.ToArray());
+                var results = await Task.WhenAll(tasks.ToArray()).ConfigureAwait(false);
                 Links.AddRange(results.Where(v => v != null));
                 return results.Any();
             }
             catch (Exception) {
+                // continue...
             }
             return false;
         }
@@ -153,36 +120,25 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="proxies">The proxies (interfaces) to bind the link on</param>
         /// <param name="address">Address to connect to, or null if proxy bound</param>
-        /// <param name="timeout">Method timeout</param>
         /// <param name="ct">Cancels operation</param>
         /// <returns></returns>
-        public async Task<bool> LinkAsync(
-            IEnumerable<INameRecord> proxies, SocketAddress address,
-            TimeSpan timeout, CancellationToken ct) {
+        public async Task<bool> LinkAsync(INameRecord proxy, SocketAddress address, 
+            CancellationToken ct) {
 
             // Complete socket info
             Info.Address = address ?? new NullSocketAddress();
             Info.Flags = address != null ? 0 : (uint)SocketFlags.Passive;
             Info.Options.UnionWith(_optionCache.Select(p => new SocketOptionValue(p.Key, p.Value)));
 
-            var cts = new CancellationTokenSource();
-            ct.Register(() => {
-                cts.Cancel();
-            });
-            var tasks = new List<Task<IProxyLink>>();
-            foreach (var proxy in proxies) {
-                if (proxy == null)
-                    break;
-                try {
-                    var link = await CreateLinkAsync(proxy, timeout, cts.Token);
-                    if (link == null)
-                        continue;
+            try {
+                var link = await CreateLinkAsync(proxy, ct).ConfigureAwait(false);
+                if (link != null) {
                     Links.Add(link);
                     return true;
                 }
-                catch(Exception) {
-                    // continue...
-                }
+            }
+            catch(Exception) {
+                // continue...
             }
             return false;
         }
@@ -196,18 +152,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Link one remote endpoint
         /// </summary>
         /// <param name="proxy"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         private async Task<IProxyLink> CreateLinkAsync(INameRecord proxy, 
-            TimeSpan timeout, CancellationToken ct) {
+            CancellationToken ct) {
             // Create link, i.e. perform bind, connect, listen, etc. on proxy
             Message response = await Provider.ControlChannel.CallAsync(proxy,
                 new Message(Id, Reference.Null, new LinkRequest {
                     Properties = Info
-                }),
-                timeout, ct);
-            if (response == null || response.Error != (int)SocketError.Ok) {
+                }), ct);
+            if (response == null || response.Error != (int)SocketError.Success) {
                 return null;
             }
 
@@ -218,20 +172,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 linkResponse.LocalAddress, linkResponse.PeerAddress);
             try {
                 // Broker connection string to proxy
-                var openRequest = await link.BeginOpenAsync(timeout, ct);
+                var openRequest = await link.BeginOpenAsync(ct).ConfigureAwait(false);
 
                 response = await Provider.ControlChannel.CallAsync(proxy,
-                    new Message(Id, linkResponse.LinkId, openRequest), timeout, ct).ConfigureAwait(false);
+                    new Message(Id, linkResponse.LinkId, openRequest), ct).ConfigureAwait(false);
 
-                if (response == null || response.Error == (int)SocketError.Ok) {
+                if (response == null || response.Error == (int)SocketError.Success) {
                     // Wait until remote side opens stream connection
-                    if (await link.TryCompleteOpenAsync(ct))
+                    bool success = await link.TryCompleteOpenAsync(ct).ConfigureAwait(false);
+                    if (success)
                         return link;
                 }
             }
             catch (Exception e) {
                 // Try to close remote side
-                await link.CloseAsync(timeout, CancellationToken.None);
+                await link.CloseAsync(CancellationToken.None).ConfigureAwait(false);
                 ProxyEventSource.Log.HandledExceptionAsError(this, e);
             }
             return null;
@@ -247,11 +202,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             SocketAddress address, CancellationToken ct) {
             if (address.Family == AddressFamily.Proxy) {
                 return await Provider.NameService.LookupAsync(
-                    ((ProxySocketAddress)address).Host, RecordType.Proxy, ct);
+                    ((ProxySocketAddress)address).Host, 
+                        RecordType.Proxy, ct).ConfigureAwait(false);
             }
             else if (address.Family == AddressFamily.InterNetworkV6) {
                 return await Provider.NameService.LookupAsync(
-                    ((Inet6SocketAddress)address).ToReference(), RecordType.Proxy, ct);
+                    ((Inet6SocketAddress)address).ToReference(), 
+                        RecordType.Proxy, ct).ConfigureAwait(false);
             }
             else {
                 throw new NotSupportedException("Can only bind to proxy reference");
@@ -272,7 +229,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return address;
             }
 
-            var records = await LookupRecordsForAddressAsync(address, ct);
+            var records = await LookupRecordsForAddressAsync(address, ct).ConfigureAwait(false);
             if (!records.Any()) {
                 return address; // Try our luck with the original address
             }
@@ -285,16 +242,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="option"></param>
         /// <param name="value"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
-        public async Task SetSocketOptionAsync(
-            SocketOption option, ulong value, TimeSpan timeout, CancellationToken ct) {
+        public async Task SetSocketOptionAsync(SocketOption option, ulong value, 
+            CancellationToken ct) {
             if (!Links.Any()) {
                 _optionCache[option] = value;
             }
             try {
                 await Task.WhenAll(Links.Select(
-                    i => i.SetSocketOptionAsync(option, value, timeout, ct)));
+                    i => i.SetSocketOptionAsync(option, value, ct))).ConfigureAwait(false);
             }
             catch (Exception e) {
                 throw new SocketException(e);
@@ -305,25 +261,24 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Get socket option
         /// </summary>
         /// <param name="option"></param>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<ulong> GetSocketOptionAsync(
-            SocketOption option, TimeSpan timeout, CancellationToken ct) {
+        public async Task<ulong> GetSocketOptionAsync(SocketOption option, 
+            CancellationToken ct) {
             if (!Links.Any()) {
                 return _optionCache.ContainsKey(option) ? _optionCache[option] : 0;
             }
-            var cts = new CancellationTokenSource(timeout);
+            var cts = new CancellationTokenSource();
             ct.Register(() => {
                 cts.Cancel();
             });
             var tasks = Links.Select(
-                i => i.GetSocketOptionAsync(option, timeout, cts.Token)).ToList();
+                i => i.GetSocketOptionAsync(option, cts.Token)).ToList();
             Exception e = null;
             while (tasks.Count > 0) {
-                var result = await Task.WhenAny(tasks);
+                var result = await Task.WhenAny(tasks).ConfigureAwait(false);
                 try {
-                    ulong value = await result;
+                    ulong value = await result.ConfigureAwait(false);
                     cts.Cancel(); // Cancel the rest
                     return value;
                 }
@@ -338,12 +293,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Close all socket streams and thus this socket
         /// </summary>
-        /// <param name="timeout"></param>
         /// <param name="ct"></param>
-        public Task CloseAsync(TimeSpan timeout, CancellationToken ct) {
+        public async Task CloseAsync(CancellationToken ct) {
             try {
-                return Task.WhenAll(Links.Select(
-                    i => i.CloseAsync(timeout, ct)));
+                await Task.WhenAll(Links.Select(i => i.CloseAsync(ct))).ConfigureAwait(false);
             }
             catch (Exception e) {
                 throw new SocketException(e);
@@ -359,11 +312,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="endpoint"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<int> SendAsync(ArraySegment<byte> buffer,
-            SocketAddress endpoint, CancellationToken ct) {
+        public async Task<int> SendAsync(ArraySegment<byte> buffer, SocketAddress endpoint, 
+            CancellationToken ct) {
             if (_stream == null)
                 throw new SocketException("Socket not ready for sending");
-            return await _stream.SendAsync(buffer, endpoint, ct);
+            return await _stream.SendAsync(buffer, endpoint, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -372,11 +325,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="buffer"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<ProxyAsyncResult> ReceiveAsync(
-            ArraySegment<byte> buffer, CancellationToken ct) {
+        public async Task<ProxyAsyncResult> ReceiveAsync(ArraySegment<byte> buffer, 
+            CancellationToken ct) {
             if (_stream == null)
                 throw new SocketException("Socket not ready for receiving");
-            return await _stream.ReceiveAsync(buffer, ct);
+            return await _stream.ReceiveAsync(buffer, ct).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -393,17 +346,37 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             // replenish it from all streams...
             Message message;
             while (true) {
-                if (-1 != BlockingCollection<Message>.TryTakeFromAny(
-                    Links.Select(i => i.ReceiveQueue).ToArray(), out message, 0, ct)) {
-                    ReceiveQueue.Add(message);
+                foreach (var link in Links) {
+                    while (link.ReceiveQueue.TryDequeue(out message)) {
+                        if (message.TypeId == MessageContent.Close) {
+                            // Remote side closed, close link
+                            Links.Remove(link);
+                            try {
+                                await link.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+                            }
+                            catch { }
+
+                            if (!Links.Any()) {
+                                throw new SocketException("Remote side closed",
+                                    null, SocketError.Closed);
+                            }
+                        }
+                        else {
+                            ReceiveQueue.Enqueue(message);
+                        }
+                    }
+                }
+                if (ReceiveQueue.Any()) { 
                     return;
                 }
                 else {
                     try {
-                        await Task.WhenAll(Links.Select(i => i.ReceiveAsync(ct)));
+                        var tasks = Links.Select(i => i.ReceiveAsync(ct));
+                        await Task.WhenAny(tasks).ConfigureAwait(false);
                     }
-                    catch(AggregateException e) {
-                        throw new SocketException(e);
+                    catch(AggregateException ae) {
+                        throw new SocketException("Receive await failed", 
+                            ae, ae.GetSocketError());
                     }
                 }
             }
@@ -428,13 +401,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
         
         public abstract Task BindAsync(
-            SocketAddress endpoint, TimeSpan timeout, CancellationToken ct);
+            SocketAddress endpoint, CancellationToken ct);
 
         public abstract Task ConnectAsync(
-            SocketAddress address, TimeSpan timeout, CancellationToken ct);
+            SocketAddress address, CancellationToken ct);
 
         public abstract Task ListenAsync(
-            int backlog, TimeSpan timeout, CancellationToken ct);
+            int backlog, CancellationToken ct);
 
 
         //
@@ -445,7 +418,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 throw new SocketException(SocketError.Fatal);
             }
             SocketError errorCode = (SocketError)response.Error;
-            if (errorCode != SocketError.Ok &&
+            if (errorCode != SocketError.Success &&
                 errorCode != SocketError.Timeout) {
                 throw new SocketException(errorCode);
             }

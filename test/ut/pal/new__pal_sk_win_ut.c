@@ -61,17 +61,24 @@ MOCKABLE_FUNCTION(WSAAPI, void, GetAcceptExSockAddrs, PVOID, lpOutputBuffer, DWO
 MOCKABLE_FUNCTION(WSAAPI, int, WSAGetLastError);
 MOCKABLE_FUNCTION(WSAAPI, int, WSACleanup);
 // Winbase.h
+MOCKABLE_FUNCTION(WINAPI, HMODULE, LoadLibraryA,
+    LPCSTR, lpLibFileName);
 MOCKABLE_FUNCTION(WINAPI, DWORD, FormatMessageA,
     DWORD, dwFlags, LPCVOID, lpSource, DWORD, dwMessageId, DWORD, dwLanguageId,
     LPSTR, lpBuffer, DWORD, nSize, void**, Arguments);
 MOCKABLE_FUNCTION(WINAPI, HLOCAL, LocalFree,
     HLOCAL, hMem);
-MOCKABLE_FUNCTION(WINAPI, BOOL, BindIoCompletionCallback, 
+MOCKABLE_FUNCTION(WINAPI, BOOL, FreeLibrary,
+    HMODULE, hLibModule);
+MOCKABLE_FUNCTION(WINAPI, BOOL, BindIoCompletionCallback,
     HANDLE, FileHandle, LPOVERLAPPED_COMPLETION_ROUTINE, Function, ULONG, Flags);
 MOCKABLE_FUNCTION(WINAPI, DWORD, GetLastError);
 // ioapiset.h
 MOCKABLE_FUNCTION(WINAPI, BOOL, CancelIoEx, 
     HANDLE, hFile, LPOVERLAPPED, lpOverlapped);
+// Custom
+MOCKABLE_FUNCTION(WINAPI, BOOL, HasOverlappedIoCompleted,
+    LPOVERLAPPED, lpOverlapped);
 
 //
 // 2. Include unit under test
@@ -86,9 +93,9 @@ MOCKABLE_FUNCTION(WINAPI, BOOL, CancelIoEx,
 //
 BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(ULONG, unsigned long);
-REGISTER_UMOCK_ALIAS_TYPE(PULONG, unsigned long*);
+REGISTER_UMOCK_ALIAS_TYPE(PULONG, void*);
 REGISTER_UMOCK_ALIAS_TYPE(DWORD, unsigned int);
-REGISTER_UMOCK_ALIAS_TYPE(LPDWORD, unsigned int*);
+REGISTER_UMOCK_ALIAS_TYPE(LPDWORD, void*);
 REGISTER_UMOCK_ALIAS_TYPE(WORD, unsigned short);
 REGISTER_UMOCK_ALIAS_TYPE(HANDLE, void*);
 REGISTER_UMOCK_ALIAS_TYPE(socklen_t, int);
@@ -99,9 +106,11 @@ REGISTER_UMOCK_ALIAS_TYPE(SOCKET, void*);
 REGISTER_UMOCK_ALIAS_TYPE(PVOID, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LPVOID, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LPSTR, char*);
+REGISTER_UMOCK_ALIAS_TYPE(LPCSTR, char*);
 REGISTER_UMOCK_ALIAS_TYPE(BOOL, bool);
 REGISTER_UMOCK_ALIAS_TYPE(LPCVOID, void*);
 REGISTER_UMOCK_ALIAS_TYPE(HLOCAL, void*);
+REGISTER_UMOCK_ALIAS_TYPE(HMODULE, void*);
 END_DECLARE_TEST_SUITE()
 
 //
@@ -1119,14 +1128,13 @@ TEST_FUNCTION(pal_socket_leave_multicast_group__neg)
 TEST_FUNCTION(pal_socket_close__success)
 {
     static const pal_socket_t* k_socket_valid;
-    static const void* k_op_context_valid;
     void result;
 
     // arrange 
     // ... 
 
     // act 
-    result = pal_socket_close(k_socket_valid, k_op_context_valid);
+    result = pal_socket_close(k_socket_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void, er_ok, result);
@@ -1154,32 +1162,11 @@ TEST_FUNCTION(pal_socket_close__arg_socket_invalid)
 }
 
 // 
-// Test pal_socket_close passing as op_context argument an invalid void* value 
-// 
-TEST_FUNCTION(pal_socket_close__arg_op_context_invalid)
-{
-    // ... 
-    int32_t result;
-
-    // arrange 
-    // ... 
-
-    // act 
-    handle = pal_socket_close();
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
-}
-
-// 
 // Test pal_socket_close unhappy path 
 // 
 TEST_FUNCTION(pal_socket_close__neg)
 {
     static const pal_socket_t* k_socket_valid;
-    static const void* k_op_context_valid;
     void result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -1190,7 +1177,7 @@ TEST_FUNCTION(pal_socket_close__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_socket_close(k_socket_valid, k_op_context_valid);
+    result = pal_socket_close(k_socket_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);

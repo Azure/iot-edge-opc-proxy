@@ -349,6 +349,8 @@ intptr_t prx_scheduler_queue(
 #ifdef DEBUG
     entry->func = func;
     entry->line = line;
+#else
+    (void)func, line;
 #endif
     rw_lock_enter_w(scheduler->lock);
     if (!delay)
@@ -459,8 +461,7 @@ void prx_scheduler_release(
     if (!scheduler)
         return;
 
-    log_info(scheduler->log, "Releasing queue for %p", context);
-
+    log_debug(scheduler->log, "Releasing scheduler queue for %p", context);
 #ifdef LOG_VERBOSE
     prx_scheduler_log_queue(scheduler->log, &scheduler->now);
     prx_scheduler_log_queue(scheduler->log, &scheduler->later);
