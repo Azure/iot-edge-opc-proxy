@@ -6,7 +6,6 @@
 #include "pal_types.h"
 #include "pal_err.h"
 #include "util_string.h"
-#include "azure_c_shared_utility/tlsio_openssl.h"
 #include "os_posix.h"
 
 

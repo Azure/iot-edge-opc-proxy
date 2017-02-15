@@ -7,7 +7,7 @@ env:
   matrix:
     - proxy=default build_args="--use-zlog"
     - proxy=no_zlog build_args=""
-language: generic
+language: c
+compiler: gcc
 dotnet: 1.0.0-preview2-003121
-install: "./bld/travis_install.sh"
-script: "./bld/build.sh -c $build_args"
+script: "bash bld/build.sh -c $build_args"

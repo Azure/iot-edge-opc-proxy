@@ -109,16 +109,16 @@ if (${use_lws})
         set(CMAKE_STATIC_LINKER_FLAGS_PREV ${CMAKE_MODULE_STATIC_FLAGS})
 
         set(CMAKE_EXE_LINKER_FLAGS 
-            "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4006 /IGNORE:4221"
+            "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
         set(CMAKE_SHARED_LINKER_FLAGS 
-            "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4006 /IGNORE:4221"
+            "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
         set(CMAKE_MODULE_LINKER_FLAGS 
-            "${CMAKE_MODULE_LINKER_FLAGS} /IGNORE:4006 /IGNORE:4221"
+            "${CMAKE_MODULE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
         set(CMAKE_STATIC_LINKER_FLAGS 
-            "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4006 /IGNORE:4221"
+            "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
 
         remove_definitions(/WX)
@@ -218,6 +218,7 @@ if(${use_lws})
     target_link_libraries(libproxy PRIVATE websockets_shared)
 endif()
 if(${use_openssl})
+	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy PRIVATE ${OPENSSL_LIBRARIES})
 endif()
 
@@ -277,5 +278,6 @@ if (${use_lws})
     target_link_libraries(libproxy-static PUBLIC websockets_shared)
 endif()
 if(${use_openssl})
+	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()

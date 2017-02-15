@@ -44,7 +44,7 @@ MOCKABLE_FUNCTION(WSAAPI, int, getaddrinfo,
     PCSTR, pNodeName, PCSTR, pServiceName, const ADDRINFOA*, pHints, PADDRINFOA*, ppResult);
 MOCKABLE_FUNCTION(WSAAPI, void, freeaddrinfo, PADDRINFOA, pAddrInfo);
 // Winbase.h
-MOCKABLE_FUNCTION(WINBASEAPI, BOOL, GetComputerNameA, 
+MOCKABLE_FUNCTION(WINAPI, BOOL, GetComputerNameA, 
     LPSTR, lpBuffer, LPDWORD, nSize);
 MOCKABLE_FUNCTION(WINAPI, DWORD, FormatMessageA,
     DWORD, dwFlags, LPCVOID, lpSource, DWORD, dwMessageId, DWORD, dwLanguageId,

@@ -244,7 +244,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_close__arg_port_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__success)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xabab;
+    static const fd_t k_socket_valid = (fd_t)0xabab;
     static void* k_context_valid = (void*)0x12;
     static const uint32_t k_events_expected = EPOLLET;
     pal_epoll_port_t port_valid;
@@ -278,7 +278,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__success)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_port_invalid)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xabab;
+    static const fd_t k_socket_valid = (fd_t)0xabab;
     static void* k_context_valid = (void*)0x12;
     uintptr_t event_handle_valid;
     int32_t result;
@@ -294,7 +294,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_port_invalid)
 }
 
 // 
-// Test pal_event_port_register passing as socket argument an invalid intptr_t value 
+// Test pal_event_port_register passing as socket argument an invalid fd_t value 
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_socket_invalid)
 {
@@ -319,7 +319,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_socket_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_cb_invalid)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xabab;
+    static const fd_t k_socket_valid = (fd_t)0xabab;
     static void* k_context_valid = (void*)0x12;
     pal_epoll_port_t port_valid;
     uintptr_t k_port_valid = (uintptr_t)&port_valid;
@@ -341,7 +341,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_cb_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_event_handle_invalid)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xabab;
+    static const fd_t k_socket_valid = (fd_t)0xabab;
     static void* k_context_valid = (void*)0x12;
     pal_epoll_port_t port_valid;
     uintptr_t k_port_valid = (uintptr_t)&port_valid;
@@ -362,7 +362,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__arg_event_handle_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_port_register__neg)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xabab;
+    static const fd_t k_socket_valid = (fd_t)0xabab;
     static void* k_context_valid = (void*)0x12;
     static const uint32_t k_events_expected = EPOLLET;
     pal_epoll_port_t port_valid;
@@ -402,7 +402,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_register__neg)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_select__success_1)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_write;
     static const uint32_t k_events_expected = EPOLLOUT | EPOLLIN | EPOLLET;
     pal_epoll_port_t port_valid;
@@ -436,7 +436,7 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_1)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_select__success_2)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_read;
     static const uint32_t k_events_expected = EPOLLOUT | EPOLLIN | EPOLLET;
     pal_epoll_port_t port_valid;
@@ -489,7 +489,7 @@ TEST_FUNCTION(pal_nix_epoll_event_select__arg_event_handle_null)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_select__arg_event_type_invalid)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_invalid = (pal_event_type)0x44444;
     pal_epoll_event_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
@@ -512,7 +512,7 @@ TEST_FUNCTION(pal_nix_epoll_event_select__arg_event_type_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_select__neg)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_write;
     static const uint32_t k_events_expected = EPOLLOUT | EPOLLIN | EPOLLET;
     pal_epoll_port_t port_valid;
@@ -551,7 +551,7 @@ TEST_FUNCTION(pal_nix_epoll_event_select__neg)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_clear__success_1)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_read;
     static const uint32_t k_events_expected = EPOLLET | EPOLLOUT;
     pal_epoll_port_t port_valid;
@@ -585,7 +585,7 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_1)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_clear__success_2)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_write;
     static const uint32_t k_events_expected = EPOLLET;
     pal_epoll_port_t port_valid;
@@ -637,7 +637,7 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__arg_event_handle_null)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_clear__arg_event_type_invalid)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_invalid = (pal_event_type)0x245;
     pal_epoll_event_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
@@ -660,7 +660,7 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__arg_event_type_invalid)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_clear__neg)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type k_event_type_valid = pal_event_type_read;
     static const uint32_t k_events_expected = EPOLLET | EPOLLOUT;
     pal_epoll_port_t port_valid;
@@ -699,7 +699,7 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__neg)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_close__success)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static void* k_context_valid = (void*)0x254;
     static const int k_valid_fd = 1234;
     static const uint32_t k_events_expected = 0;
@@ -754,7 +754,7 @@ TEST_FUNCTION(pal_nix_epoll_event_close__arg_event_handle_null)
 // 
 TEST_FUNCTION(pal_nix_epoll_event_close__neg)
 {
-    static const intptr_t k_socket_valid = (intptr_t)0xbaba;
+    static const fd_t k_socket_valid = (fd_t)0xbaba;
     static void* k_context_valid = (void*)0x254;
     static const int k_valid_fd = 8888;
     static const uint32_t k_events_expected = 0;

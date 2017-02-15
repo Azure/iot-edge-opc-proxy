@@ -518,6 +518,11 @@ enum __ERRORS
     WIN_ERRORS_RANGE_END = NTSTATUS_ERRORS_RANGE_END
 };
 
+#define TerminateProcess __TerminateProcess
+#define MultiByteToWideChar __MultiByteToWideChar
+#define GetLastError __GetLastError
+#define FreeLibrary __FreeLibrary
+
 #define CP_UTF8 1
 
 #define FORMAT_MESSAGE_ALLOCATE_BUFFER 0x1

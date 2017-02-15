@@ -64,18 +64,15 @@ if(NOT "${compile_options_CXX}" STREQUAL "OFF")
     set(CMAKE_CXX_FLAGS "${compile_options_CXX} ${CMAKE_CXX_FLAGS}")
 endif()
 
-#
-# Macro to direct target source to be compiled as c'99
-#
-macro(compileAsC99)
-    if (CMAKE_VERSION VERSION_LESS "3.1")
-        if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-            set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
-        endif()
-    else()
-        set (CMAKE_C_STANDARD 99)
-    endif()
-endmacro(compileAsC99)
+if (CMAKE_VERSION VERSION_LESS "3.1")
+	if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+		set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+	endif()
+else()
+	set (CMAKE_C_STANDARD 99)
+    set (CMAKE_CXX_STANDARD 11)
+endif()
 
 #
 # Macro to direct msvc target to be linked with static crt

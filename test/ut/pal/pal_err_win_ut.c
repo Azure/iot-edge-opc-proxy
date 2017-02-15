@@ -11,9 +11,9 @@
 #include "prx_err.h"
 
 // Winbase.h
-MOCKABLE_FUNCTION(WINBASEAPI, void, SetLastError,
+MOCKABLE_FUNCTION(WINAPI, void, SetLastError,
     DWORD, dwErrCode);
-MOCKABLE_FUNCTION(WINBASEAPI, DWORD, GetLastError);
+MOCKABLE_FUNCTION(WINAPI, DWORD, GetLastError);
 MOCKABLE_FUNCTION(WINAPI, DWORD, FormatMessageA,
     DWORD, dwFlags, LPCVOID, lpSource, DWORD, dwMessageId, DWORD, dwLanguageId,
     LPSTR, lpBuffer, DWORD, nSize, void**, Arguments);

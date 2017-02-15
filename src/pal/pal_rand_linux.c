@@ -30,24 +30,42 @@ int32_t pal_rand_fill(
     size_t len
 )
 {
-    int result;
+    int32_t result;
+	int returned;
+#if !defined(SYS_getrandom)
+	int fd = open("/dev/urandom", O_RDONLY);
+	if (fd < 0)
+	{
+		result = errno;
+		return pal_os_to_prx_error(result);
+	}
+#endif
+	result = er_ok;
     while (len > 0)
     {
-        result = (int)syscall(SYS_getrandom, buf, len, 0);
-        if (result < 1)
+#if !defined(SYS_getrandom)
+        returned = read(fd, buf, len);
+#else
+        returned = (int)syscall(SYS_getrandom, buf, len, 0);
+#endif
+        if (returned < 1)
         {
-            result = errno;
-            if (result != EAGAIN &&
-                result != EINTR)
+            returned = errno;
+            if (returned != EAGAIN &&
+                returned != EINTR)
             {
-                return pal_os_to_prx_error(result);
+                result = pal_os_to_prx_error(returned);
+				break;
             }
             continue;
         }
-        len -= result;
-        buf = ((char*)buf) + result;
+        len -= returned;
+        buf = ((char*)buf) + returned;
     }
-    return er_ok;
+#if !defined(SYS_getrandom)
+	close(fd);
+#endif
+    return result;
 }
 
 //

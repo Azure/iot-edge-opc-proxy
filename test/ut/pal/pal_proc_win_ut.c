@@ -10,18 +10,18 @@
 #include "os.h"
 
 // synchapi.h
-MOCKABLE_FUNCTION(WINBASEAPI, DWORD, WaitForSingleObject,
+MOCKABLE_FUNCTION(WINAPI, DWORD, WaitForSingleObject,
     HANDLE, hHandle, DWORD, dwMilliseconds);
 // processthreadsapi.h
-MOCKABLE_FUNCTION(WINBASEAPI, BOOL, CreateProcess,
+MOCKABLE_FUNCTION(WINAPI, BOOL, CreateProcess,
     LPCSTR, lpApplicationName, LPSTR, lpCommandLine, LPSECURITY_ATTRIBUTES, lpProcessAttributes,
     LPSECURITY_ATTRIBUTES, lpThreadAttributes, BOOL, bInheritHandles, DWORD, dwCreationFlags,
     LPVOID, lpEnvironment, LPCSTR, lpCurrentDirectory, LPSTARTUPINFO, lpStartupInfo,
     LPPROCESS_INFORMATION, lpProcessInformation);
-MOCKABLE_FUNCTION(WINBASEAPI, BOOL, TerminateProcess,
+MOCKABLE_FUNCTION(WINAPI, BOOL, TerminateProcess,
     HANDLE, hProcess, UINT, uExitCode);
 // handleapi.h
-MOCKABLE_FUNCTION(WINBASEAPI, BOOL, CloseHandle, 
+MOCKABLE_FUNCTION(WINAPI, BOOL, CloseHandle,
     HANDLE, hObject);
 
 //

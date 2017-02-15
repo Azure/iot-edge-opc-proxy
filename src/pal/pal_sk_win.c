@@ -1644,6 +1644,24 @@ void pal_socket_free(
     mem_free_type(pal_socket_t, sock);
 }
 
+#if defined(USE_OPENSSL)
+#include "azure_c_shared_utility/tlsio_openssl.h"
+#else
+#include "azure_c_shared_utility/tlsio_schannel.h"
+#endif
+
+//
+// Return default tls implentation
+//
+const IO_INTERFACE_DESCRIPTION* platform_get_default_tlsio(void)
+{
+#if defined(USE_OPENSSL)
+    return tlsio_openssl_get_interface_description();
+#else
+    return tlsio_schannel_get_interface_description();
+#endif
+}
+
 //
 // Initialize the winsock layer and retrieve function pointers
 //
@@ -1666,7 +1684,9 @@ int32_t pal_socket_init(
     result = prx_scheduler_create(NULL, &_scheduler);
     if (result != er_ok)
         return result;
-
+#if defined(USE_OPENSSL)
+    (void)tlsio_openssl_init();
+#endif
     // To format NTSTATUS errors
     _ntdll = LoadLibraryA("NTDLL.DLL");
     error = WSAStartup(MAKEWORD(2, 2), &wsd);
@@ -1723,6 +1743,9 @@ void pal_socket_deinit(
     error = WSACleanup();
     if (error != 0)
         (void)pal_socket_from_os_error(error);
+#if defined(USE_OPENSSL)
+    tlsio_openssl_deinit();
+#endif
     if (_scheduler)
         prx_scheduler_release(_scheduler, NULL);
     if (_ntdll)

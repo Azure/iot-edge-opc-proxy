@@ -7,15 +7,6 @@
 #include "pal_err.h"
 #include "util_string.h"
 #include "os_win.h"
-#include "azure_c_shared_utility/tlsio_schannel.h"
-
-//
-// Return default tls implentation
-//
-const IO_INTERFACE_DESCRIPTION* platform_get_default_tlsio(void)
-{
-    return tlsio_schannel_get_interface_description();
-}
 
 //
 // Returns a networking stack error as pal error

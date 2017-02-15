@@ -8,9 +8,9 @@ set(libpal_ut_include
     ${_PROJECT_INC} 
     ${_PROJECT_SRC}/pal 
     ${_IOTSDK_INC} 
-    ${UMOCK_C_INC_FOLDER} 
-    ${TESTRUNNERSWITCHER_INC_FOLDER} 
-    ${CTEST_INC_FOLDER}
+    ${_UMOCKC_INC} 
+    ${_TRUNNER_INC} 
+    ${_CTEST_INC}
 )
 
 #

@@ -107,17 +107,17 @@ goto :args-continue
 
 :arg-use-libwebsockets
 set CMAKE_use_lws=ON
-echo 	... with libwebsockets
+echo     ... with libwebsockets
 goto :args-continue
 
 :arg-use-openssl
 set CMAKE_use_openssl=ON
-echo 	... with openssl
+echo     ... with openssl
 goto :args-continue
 
 :arg-use-zlog
 set CMAKE_use_zlog=ON
-echo 	... with zlog
+echo     ... with zlog
 goto :args-continue
 
 :arg-build-root
@@ -135,7 +135,7 @@ goto :args-loop
 if "%build-configs%" == "" set build-configs=Debug Release 
 echo Building %build-configs%...
 if not "%build-clean%" == "" (
-	if not "%build-pack-only%" == "" call :usage && exit /b 1
+    if not "%build-pack-only%" == "" call :usage && exit /b 1
     echo Cleaning previous build output...
     if exist %build-root% rmdir /s /q %build-root%
 )
@@ -152,32 +152,36 @@ rem -- build natively with CMAKE and run tests
 rem -----------------------------------------------------------------------------
 
 :native-build
-if not exist %build-root%\cmake mkdir %build-root%\cmake
-pushd %build-root%\cmake
+if not exist %build-root%\cmake\%build-platform% mkdir %build-root%\cmake\%build-platform%
+pushd %build-root%\cmake\%build-platform%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
-    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -A %build-platform% -G "Visual Studio 14 Win64"
-	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio 14 Win64"
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == arm (
     echo ***Running CMAKE for ARM***
-    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -A %build-platform% -G "Visual Studio 14 ARM"
-	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+    cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio 14 ARM"
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else (
     echo ***Running CMAKE for Win32***
     cmake -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio 14"
-	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
+popd
 if not "%build-pack-only%" == "" goto :eof
 for %%c in (%build-configs%) do call :native-build-and-test %%c
-popd
-goto :eof
+
 :native-build-and-test
 if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "MinSizeRel" if /I not "%1" == "RelWithDebInfo" goto :eof
+pushd %build-root%\cmake\%build-platform%
 msbuild /m azure-iot-proxy.sln /p:Configuration=%1 /p:Platform=%build-platform%
+popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 if %build-platform% equ arm goto :eof
 if "%CMAKE_skip_unittests%" equ "ON" goto :eof
+pushd %build-root%\cmake\%build-platform%
 ctest -C "%1" -V
+popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 
@@ -226,7 +230,7 @@ call docker --version
 if not !errorlevel!==0 call :docker-install-prompt && exit /b 1
 rem filter build args to pass to build.sh
 call :docker-build-args %*
-echo 	... azure-iot-proxy:build-%build-os% %docker-run-args%
+echo     ... azure-iot-proxy:build-%build-os% %docker-run-args%
 rem make image and run
 call :docker-build-image
 call :docker-build-run

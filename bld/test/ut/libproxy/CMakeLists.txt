@@ -63,28 +63,8 @@ set(_PROXY_UNITS_UNDER_TEST
 # Builds a unit tests for each component 
 #
 foreach(unit ${_PROXY_UNITS_UNDER_TEST})
-    set(libproxy_ut_files ${libproxy_ut_files} ${_PROJECT_TEST}/ut/${unit}_ut.c)
-
     set(${unit}_ut_test_includes ${libproxy_ut_include})
     set(${unit}_ut_test_files ${_PROJECT_TEST}/ut/${unit}_ut.c)
 
     build_ut(${unit}_ut "proxy_tests")
 endforeach()
-
-#
-# On windows, build vstest dll
-#
-if(WIN32)
-    link_directories($ENV{VCInstallDir}UnitTest/lib)
-    add_library(libproxy_ut SHARED 
-        ${libproxy_ut_files}
-    )
-    set_target_properties(libproxy_ut PROPERTIES FOLDER "proxy_tests") 
-
-    target_compile_definitions(libproxy_ut PUBLIC -DCPP_UNITTEST)
-    target_compile_options(libproxy_ut PUBLIC /TP /EHsc)
-
-    target_include_directories(libproxy_ut PUBLIC $ENV{VCInstallDir}UnitTest/include ${libproxy_ut_include})
-    target_link_libraries(libproxy_ut libtest)
-endif()
-

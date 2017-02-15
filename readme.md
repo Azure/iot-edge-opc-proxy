@@ -17,6 +17,11 @@ without providing edge protocol translation.  But please note that using the Pro
 Visit http://azure.com/iotdev to learn more about developing applications for Azure IoT.
 
 # Setup and build
+
+|Branch|Status|
+|------|-------------|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/uqfxbl22ofhbk20h/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-gateway-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-gateway-proxy)|
+
 The Azure IoT Field Gateway Proxy module depends on several components which are included as submodules. Hence, if you did
 not specify the ```--recursive``` option when using ```git clone``` to clone this repo, you need to first run ```git submodule update --init```
 in a console or terminal window before continuing...
@@ -34,7 +39,8 @@ Run the build script with the ```--help``` option to see all configuration optio
 The Proxy module was successfully built and tested on Windows 10 with Visual Studio 2015.
 - Install [Visual Studio 2015](https://www.visualstudio.com/downloads/).
 - Install CMAKE from [here](https://cmake.org/).  
-- Run ```<repo-root>\bld\build.cmd```.  After a successful build, all proxy binaries can be found under the \build\cmake\bin folder.
+- Run ```<repo-root>\bld\build.cmd```.  After a successful build, all proxy binaries can be found under the 
+\build\cmake\<platform>\bin folder.
 
 Run the build script with the ```--help``` option to see all configuration options available.
 

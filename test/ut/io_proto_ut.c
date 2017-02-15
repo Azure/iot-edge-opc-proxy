@@ -1232,7 +1232,7 @@ TEST_FUNCTION(io_encode_data_message__neg)
 // 
 TEST_FUNCTION(io_decode_data__success)
 {
-    static const size_t k_read_valid = 10;
+    static const prx_size_t k_read_valid = 10;
     static void* k_value_valid = UT_MEM;
     static io_codec_ctx_t k_ctx_valid;
     io_data_message_t message_valid;

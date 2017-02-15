@@ -12,7 +12,7 @@
 #include "util_string.h"
 
 // processenv.h
-MOCKABLE_FUNCTION(WINBASEAPI, DWORD, GetCurrentDirectoryA,
+MOCKABLE_FUNCTION(WINAPI, DWORD, GetCurrentDirectoryA,
     DWORD, nBufferLength, LPSTR, lpBuffer);
 
 //
