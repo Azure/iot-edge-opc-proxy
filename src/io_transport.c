@@ -12,7 +12,7 @@
 #include "util_string.h"
 
 //
-// Client type and our version
+// Client type and version
 //
 #define CLIENT_TYPE "iotproxy"
 #define CLIENT_VERSION "0.0.6"
@@ -415,7 +415,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
             0 != STRING_concat(path, io_cs_get_device_id(cs)) ||
             0 != STRING_concat(path,
                 "/api-version=" API_VERSION 
-                "&DeviceClientType=" CLIENT_TYPE "%2F" CLIENT_VERSION))
+                "&DeviceClientType=" MODULE_NAME "%2F" MODULE_VERSION))
         {
             result = er_out_of_memory;
             break;

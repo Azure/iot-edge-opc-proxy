@@ -1113,7 +1113,7 @@ static int32_t prx_ns_iot_hub_rest_call(
             0 != HTTPHeaders_AddHeaderNameValuePair(
                 req_headers, "Request-Id", STRING_c_str(request_id)) ||
             0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "User-Agent", "Microsoft.Azure.Devices/1.0.0") ||
+                req_headers, "User-Agent", MODULE_NAME "/" MODULE_VERSION) ||
             0 != HTTPHeaders_AddHeaderNameValuePair(
                 req_headers, "Content-Type", "application/json; charset=utf-8"))
             break;

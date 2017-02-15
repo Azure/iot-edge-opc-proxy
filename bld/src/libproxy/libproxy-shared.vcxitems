@@ -70,6 +70,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_signal.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_string.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_ut.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\version.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\xio_sk.h" />
   </ItemGroup>
   <ItemGroup>

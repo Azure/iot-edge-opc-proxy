@@ -11,7 +11,7 @@
 #undef ENABLE_GLOBAL
 #include "io_types.h"
 
-#define VERSION 5
+#define VERSION MODULE_MAJ_VER + 5
 
 //
 // Protocol factory creates protocol messages from pool memory

@@ -11,4 +11,5 @@
 #include <string.h>
 
 #include "api.h"
+#include "version.h"
 #include "prx_err.h"
