@@ -13,3 +13,6 @@
 /**/zlog.lock
 /.vscode/**
 /build/**
+*.user
+# Ignore editor backup files
+*~
