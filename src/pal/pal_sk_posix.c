@@ -1195,7 +1195,7 @@ int32_t pal_socket_getsockopt(
     int32_t opt_lvl, opt_name;
     socklen_t opt_len;
     int32_t opt_val;
-    u_long avail;
+    prx_size_t avail;
 
     if (!value)
         return er_fault;
@@ -1208,7 +1208,7 @@ int32_t pal_socket_getsockopt(
         error = ioctl(sock->sock_fd, FIONREAD, &avail);
         if (error == -1)
             return pal_os_last_net_error_as_prx_error();
-        *value = (prx_size_t)avail;
+        *value = avail;
         return er_ok;
     }
 
