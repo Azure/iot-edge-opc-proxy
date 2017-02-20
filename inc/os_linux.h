@@ -9,6 +9,7 @@
 //
 #define _GNU_SOURCE
 #define __USE_GNU
+#define __USE_MISC // needed for SOL_TCP in <netinet/tcp.h>
 #include "os_posix.h"
 
 #endif // _os_linux_h_
