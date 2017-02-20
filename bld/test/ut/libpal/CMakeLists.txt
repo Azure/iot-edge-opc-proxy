@@ -1,6 +1,22 @@
 #Copyright (c) Microsoft. All rights reserved.
 #Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+if (CMAKE_VERSION VERSION_LESS "3.1")
+	if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+          # Adding --std=c99 to CMAKE_C_FLAGS breaks compilation of several subprojects!
+          # e.g libwebsockets but ${_SHARED_ROOT} needs it!
+	  set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
+          set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+          # Macro _POSIX_C_SOURCE is needed by ${_SHARED_ROOT}
+          set (CMAKE_C_FLAGS "-D_POSIX_C_SOURCE=200112L ${CMAKE_C_FLAGS}")
+	endif()
+else()
+	set (CMAKE_C_STANDARD 99)
+    set (CMAKE_CXX_STANDARD 11)
+          # Macro _POSIX_C_SOURCE is needed by ${_SHARED_ROOT}
+          set (CMAKE_C_FLAGS "-D_POSIX_C_SOURCE=200112L ${CMAKE_C_FLAGS}")
+endif()
+
 #
 # Unit test includes
 #
