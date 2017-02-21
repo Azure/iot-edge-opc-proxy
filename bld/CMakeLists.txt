@@ -247,4 +247,10 @@ function(build_ut cur_test folder)
     endif()
 endfunction()
 
+# Check for header files which needs to be included, if they exist
+# to avoid conflicting type definitions.
+CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
+set (CMAKE_GENERATED_INC ${CMAKE_CURRENT_BINARY_DIR}/inc/)
+CONFIGURE_FILE(${_PROJECT_INC}/test_config.h.in ${CMAKE_GENERATED_INC}/test_config.h)
+
 add_subdirectory(test)

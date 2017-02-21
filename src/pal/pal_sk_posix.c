@@ -1389,9 +1389,7 @@ void pal_socket_free(
     mem_free_type(pal_socket_t, sock);
 }
 
-#ifndef USE_CTEST // avoid conflicting definition of clockid_t in os_mock.h:882 and /usr/include/time.h
 #include "azure_c_shared_utility/tlsio_openssl.h"
-#endif
 
 //
 // Return default tls implentation

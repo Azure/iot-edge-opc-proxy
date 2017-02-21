@@ -27,6 +27,7 @@ set(libpal_ut_include
     ${_UMOCKC_INC} 
     ${_TRUNNER_INC} 
     ${_CTEST_INC}
+    ${CMAKE_GENERATED_INC}
 )
 
 #

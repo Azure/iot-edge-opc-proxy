@@ -1,0 +1,7 @@
+// -*- c++ -*-
+#ifndef _TEST_CONFIG_H_IN_
+#define _TEST_CONFIG_H_IN_
+
+#cmakedefine HAVE_TIME_H 1
+
+#endif // _TEST_CONFIG_H_IN_
