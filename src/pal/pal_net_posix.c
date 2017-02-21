@@ -1129,9 +1129,6 @@ int32_t pal_ntop(
     prx_size_t addr_string_size
 )
 {
-#ifndef NI_MAXSERV
-#  define NI_MAXSERV 32 // use same definition as in os_mock.h if not defined
-#endif
     char svc[NI_MAXSERV];
     return pal_getnameinfo(
         address, addr_string, addr_string_size, svc, NI_MAXSERV, prx_ni_flag_numeric);
