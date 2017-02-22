@@ -25,8 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{5128A38C-0
 EndProject
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RemoteViewing.Server", "samples\vnc\test\Server\RemoteViewing.Server.xproj", "{B651D952-FDEC-4E46-8BA6-9C19B6766984}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Opc.Ua.Core", "..\..\..\opc-ua\UA-.NETStandardLibrary\Stack\Opc.Ua.Core\Opc.Ua.Core.xproj", "{99A94D4A-810D-49EF-B043-7F560E654A41}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,18 +107,6 @@ Global
 		{B651D952-FDEC-4E46-8BA6-9C19B6766984}.Release|x64.Build.0 = Release|Any CPU
 		{B651D952-FDEC-4E46-8BA6-9C19B6766984}.Release|x86.ActiveCfg = Release|Any CPU
 		{B651D952-FDEC-4E46-8BA6-9C19B6766984}.Release|x86.Build.0 = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|x64.Build.0 = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Debug|x86.Build.0 = Debug|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|Any CPU.Build.0 = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|x64.ActiveCfg = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|x64.Build.0 = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|x86.ActiveCfg = Release|Any CPU
-		{99A94D4A-810D-49EF-B043-7F560E654A41}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
