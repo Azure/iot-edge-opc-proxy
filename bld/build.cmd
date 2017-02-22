@@ -283,9 +283,9 @@ if exist %build-root%\%docker-build-os%.done goto :eof
 echo     ... azure-iot-proxy:build-%docker-build-os% %build-docker-args% %build-commit-env%
 docker build -f Dockerfile.%docker-build-os% -t azure-iot-proxy:build-%docker-build-os% .
 docker run -ti %build-commit-env% azure-iot-proxy:build-%docker-build-os% %build-docker-args%
+if !ERRORLEVEL! == 0 echo %docker-build-os% >> %build-root%\%docker-build-os%.done
 set docker-build-os=
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-echo %docker-build-os% >> %build-root%\%docker-build-os%.done
 goto :eof
 :docker-install-prompt
 echo Install docker from https://docs.docker.com/docker-for-windows for option --os %build-os%
