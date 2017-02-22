@@ -21,10 +21,12 @@ rem ----------------------------------------------------------------------------
 rem // default build options
 set build-configs=
 set build-platform=Win32
+if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set build-platform=x64
 set build-os=Windows
 set build-skip-dotnet=
 set build-pack-only=
 set build-clean=
+set build-docker-args=
 
 set CMAKE_skip_unittests=OFF
 set CMAKE_use_openssl=OFF
@@ -94,10 +96,25 @@ if "%1" equ "" call :usage && exit /b 1
 set build-os=%1
 if /I "%build-os%" == "Windows" goto :args-continue
 if /I "%build-os%" == "Linux" set build-os=
-if not exist %current-path%\docker\%build-os% call :usage && exit /b 1
+pushd %current-path%\docker
+dir /b /s Dockerfile.%build-os%* > nul 2> nul
+popd
+if not !ERRORLEVEL! == 0 goto :arg-docker-err
+call :arg-docker-loop %*
 call :docker-build
 if not !ERRORLEVEL! == 0 echo ERROR during docker build... && exit /b !ERRORLEVEL!
 goto :build-done
+:arg-docker-loop
+if "%1" equ "" goto :eof
+if "%1" equ "--os" shift && shift && goto :arg-docker-loop
+set build-docker-args=%build-docker-args% %1
+shift
+goto :arg-docker-loop
+:arg-docker-err
+echo No OS image definitions for %build-os% found!
+call :usage 
+exit /b 1
+goto :args-done
 
 :arg-build-nuget-folder
 shift
@@ -137,7 +154,7 @@ echo Building %build-configs%...
 if not "%build-clean%" == "" (
     if not "%build-pack-only%" == "" call :usage && exit /b 1
     echo Cleaning previous build output...
-    if exist %build-root% rmdir /s /q %build-root%
+    call :rmdir-force %build-root%
 )
 if not exist %build-root% mkdir %build-root%
 
@@ -153,6 +170,7 @@ rem ----------------------------------------------------------------------------
 
 :native-build
 if not exist %build-root%\cmake\%build-platform% mkdir %build-root%\cmake\%build-platform%
+:native-configure-all
 pushd %build-root%\cmake\%build-platform%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
@@ -168,20 +186,23 @@ if %build-platform% == x64 (
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
+:native-build-all
 if not "%build-pack-only%" == "" goto :eof
-for %%c in (%build-configs%) do call :native-build-and-test %%c
+for %%c in (%build-configs%) do (
+    pushd %build-root%\cmake\%build-platform%
+    call :native-build-and-test %%c
+    popd
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+)
+goto :eof
 
 :native-build-and-test
 if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "MinSizeRel" if /I not "%1" == "RelWithDebInfo" goto :eof
-pushd %build-root%\cmake\%build-platform%
 msbuild /m azure-iot-proxy.sln /p:Configuration=%1 /p:Platform=%build-platform%
-popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 if %build-platform% equ arm goto :eof
 if "%CMAKE_skip_unittests%" equ "ON" goto :eof
-pushd %build-root%\cmake\%build-platform%
 ctest -C "%1" -V
-popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 
@@ -192,10 +213,18 @@ rem ----------------------------------------------------------------------------
 if not "%build-skip-dotnet%" == "" goto :eof
 call dotnet --version
 if not !ERRORLEVEL! == 0 echo No dotnet installed, skipping dotnet build. && goto :eof
+if not "%build-pack-only%" == "" goto :dotnet-build-test-and-pack-all
 pushd %repo-root%\api\csharp
-if "%build-pack-only%" == "" call dotnet restore
-for %%c in (%build-configs%) do call :dotnet-build-test-and-pack %%c
+call dotnet restore
+if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 popd
+:dotnet-build-test-and-pack-all
+for %%c in (%build-configs%) do (
+    pushd %repo-root%\api\csharp
+    call :dotnet-build-test-and-pack %%c
+    popd
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+)
 goto :eof
 
 :dotnet-build-test-and-pack
@@ -208,7 +237,7 @@ if not "%build-pack-only%" == "" goto :eof
 if not exist "%build-root%\managed\%1" mkdir "%build-root%\managed\%1"
 pushd "%~dp2"
 echo.
-if not "%build-clean%" == "" rmdir /s /q "bin\%1"
+if not "%build-clean%" == "" call :rmdir-force "bin\%1"
 call dotnet build -c %1
 xcopy /e /y /i /q "bin\%1" "%build-root%\managed\%1"
 popd
@@ -221,43 +250,44 @@ call dotnet pack --no-build -c %1 -o "%build-nuget-output%\%1" "%2"
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 
-
 rem -----------------------------------------------------------------------------
 rem -- build all in Docker container
 rem -----------------------------------------------------------------------------
 :docker-build
 call docker --version
-if not !errorlevel!==0 call :docker-install-prompt && exit /b 1
-rem filter build args to pass to build.sh
-call :docker-build-args %*
-echo     ... azure-iot-proxy:build-%build-os% %docker-run-args%
-rem make image and run
-call :docker-build-image
-call :docker-build-run
-set docker-run-args=
-goto :eof
-
-:docker-build-args
-:docker-build-args-loop
-if "%1" equ "" goto :eof
-if "%1" equ "--os" shift && shift && goto :docker-build-args-loop
-set docker-run-args=%docker-run-args% %1
-shift
-goto :docker-build-args-loop
-:docker-build-image
-set docker-file-path=%current-path%\docker\%build-os%
-for %%i in ("%docker-file-path%") do set docker-file-path=%%~fi
-
-if "%build-os%" equ "" set build-os=ubuntu
+if not !ERRORLEVEL! == 0 call :docker-install-prompt && exit /b 1
+rem set tracking branch and remote
+for /f "tokens=2* delims=/" %%r in ('git symbolic-ref HEAD') do set build-branch=%%s
+if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
+for /f "delims=" %%r in ('git config "branch.%build-branch%.remote"') do set build-remote=%%r
+if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
+for /f "tokens=2* delims=/" %%r in ('git config "branch.%build-branch%.merge"') do set build-branch=%%s
+if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
+for /f "delims=" %%r in ('git remote get-url %build-remote%') do set build-remote=%%r
+if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
+set build-commit-env=-e COMMIT_ID=%build-branch% -e PROXY_REPO=%build-remote%
+set build-remote=
+set build-branch=
+:docker-build-and-run-all
 pushd %current-path%\docker
-docker build -f %docker-file-path%\Dockerfile -t azure-iot-proxy:build-%build-os% .
+for /f %%i in ('dir /b /s Dockerfile.%build-os%*') do (
+    call :docker-build-and-run %%i
+    if not !ERRORLEVEL! == 0 popd && exit /b !ERRORLEVEL!
+)
 popd
+goto :eof
+:docker-build-and-run
+for /f "tokens=1* delims=." %%i in ("%~nx1") do set docker-build-os=%%j
+echo     ... azure-iot-proxy:build-%docker-build-os% %build-docker-args% %build-commit-env%
+rem make image and run
+docker build -f Dockerfile.%docker-build-os% -t azure-iot-proxy:build-%docker-build-os% .
+if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+call :docker-build-run %docker-build-os%
+set docker-build-os=
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 :docker-build-run
-if "%build-os%" equ "" set build-os=ubuntu
-for /f "delims=" %%r in ('git rev-parse HEAD') do set build-commit-env=-e COMMIT_ID=%%r
-docker run -ti %build-commit-env% azure-iot-proxy:build-%build-os% %docker-run-args%
+docker run -ti %build-commit-env% azure-iot-proxy:build-%1 %build-docker-args%
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 :docker-install-prompt
@@ -268,6 +298,19 @@ goto :eof
 rem -----------------------------------------------------------------------------
 rem -- subroutines
 rem -----------------------------------------------------------------------------
+
+:rmdir-force
+set _attempt=0
+:try-rmdir
+if not exist %1 goto :done-rmdir
+set /a _attempt+=1
+if _attempt == 30 goto :done-rmdir
+echo Removing %~1 (%_attempt%)...
+rmdir /s /q %1
+goto :try-rmdir
+:done-rmdir
+set _attempt=
+goto :eof
 
 :build-done
 echo ... Success!

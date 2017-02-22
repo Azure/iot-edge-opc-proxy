@@ -28,7 +28,7 @@ MOCKABLE_FUNCTION(, int, listen,
     fd_t, s, int, backlog);
 // ioctl
 MOCKABLE_FUNCTION(, int, ioctl, 
-    fd_t, fd, unsigned int, cmd, u_long*, arg);
+    fd_t, fd, unsigned int, cmd, int*, arg);
 // unistd.h
 MOCKABLE_FUNCTION(, int, close,
     fd_t, s);

@@ -137,11 +137,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 try {
 #if !STREAM_FRAGMENT_BUG_FIXED
                     // Poor man's buffered stream.  
-                    var stream = new MemoryStream();
-                    message.Encode(stream, CodecId.Mpack);
-                    var buffered = stream.ToArray();
-                    await _codec.Stream.WriteAsync(
-                        buffered, 0, buffered.Length, ct).ConfigureAwait(false);
+                    using (var stream = new MemoryStream()) {
+                        message.Encode(stream, CodecId.Mpack);
+                        var buffered = stream.ToArray();
+                        await _codec.Stream.WriteAsync(
+                            buffered, 0, buffered.Length, ct).ConfigureAwait(false);
+                    }
 #else
                     await _codec.WriteAsync(message, ct).ConfigureAwait(false);
 #endif

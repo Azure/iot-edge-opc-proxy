@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
+#include "os.h"
 #include "util_mem.h"
 #include "pal_err.h"
 #include "pal_types.h"
-#include "os_win.h"
 
 #if !defined(UNIT_TEST)
 static LPTOP_LEVEL_EXCEPTION_FILTER old_filter;

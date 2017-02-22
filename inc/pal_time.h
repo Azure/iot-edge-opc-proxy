@@ -4,8 +4,8 @@
 #ifndef _pal_time_h
 #define _pal_time_h
 
-#include "common.h"
 #include "os.h"  // for ticks_t
+#include "common.h"
 
 #include "azure_c_shared_utility/agenttime.h"
 

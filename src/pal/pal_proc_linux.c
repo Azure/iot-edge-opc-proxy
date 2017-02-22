@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "util_string.h"
 #include "pal_proc.h"
 #include "pal_mt.h"
 
 #include <stdio.h>
-#include "os_linux.h"
 #if !defined(UNIT_TEST)
 #include <sys/wait.h>
 #include <signal.h>

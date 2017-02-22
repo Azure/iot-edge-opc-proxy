@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "util_string.h"
 #include "pal_proc.h"
-
-#include "os_win.h"
 
 //
 // Process object

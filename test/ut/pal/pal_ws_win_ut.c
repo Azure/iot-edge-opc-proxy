@@ -620,6 +620,7 @@ TEST_FUNCTION(pal_win_wsclient_connect__success)
     wsclient_valid.h_session = k_h_session_valid;
     wsclient_valid.h_connection = NULL;
     wsclient_valid.h_request = NULL;
+    wsclient_valid.h_websocket = NULL;
     wsclient_valid.host = L"test";
     wsclient_valid.state = 0;
     wsclient_valid.relative_path = L"foo";

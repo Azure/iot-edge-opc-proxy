@@ -12,6 +12,7 @@ use_zlog=OFF
 
 build_root="${repo_root}"/build
 build_clean=0
+build_os=
 build_pack_only=0
 build_configs=()
 build_nuget_output=$build_root
@@ -49,6 +50,9 @@ process_args ()
 		elif [ $save_next_arg == 3 ]; then
 			build_nuget_output="$arg"
 			save_next_arg=0
+		elif [ $save_next_arg == 4 ]; then
+			build_os=="$arg"
+			save_next_arg=0
 		else
 			case "$arg" in
 				-x | --xtrace)
@@ -71,6 +75,8 @@ process_args ()
 					skip_unittests=ON;;
 				--skip-dotnet)
 					skip_dotnet=1;;
+				--os)
+					save_next_arg=4;;
 				-n | --nuget-folder)
 					save_next_arg=3;;
 				*)

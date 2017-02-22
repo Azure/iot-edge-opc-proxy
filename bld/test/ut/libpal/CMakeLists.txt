@@ -52,6 +52,8 @@ set(_LINUX_PAL_UNITS_UNDER_TEST
     pal_rand_linux
 )
 
+compileAsC99()
+
 #
 # Builds a unit tests for each component 
 #

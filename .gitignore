@@ -3,7 +3,6 @@
 /**/.vs
 /**/bin/**
 /**/csx/**
-/**/packages/**
 /**/ecf/**
 /**/*.log
 /**/*.err
@@ -11,9 +10,6 @@
 /**/*.opendb
 /**/*.opensdf
 /**/*.vc.db
-/**/*ns.local.json
 /**/zlog.lock
-/**/log.config.ini
 /.vscode/**
 /build/**
-*.user

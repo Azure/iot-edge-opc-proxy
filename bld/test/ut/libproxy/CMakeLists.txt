@@ -59,6 +59,8 @@ set(_PROXY_UNITS_UNDER_TEST
     new__xio_ws
 )
 
+compileAsC99()
+
 #
 # Builds a unit tests for each component 
 #

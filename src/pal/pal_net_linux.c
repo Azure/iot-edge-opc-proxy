@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "pal_net.h"
 #include "pal_types.h"
 #include "pal_err.h"
 #include "util_string.h"
-#include "os_posix.h"
 
 
 //
@@ -411,7 +411,7 @@ int32_t pal_get_available(
 )
 {
     int32_t result;
-    u_long val;
+    int val;
     if (!available)
         return er_fault;
     result = ioctl((fd_t)fd, FIONREAD, &val);

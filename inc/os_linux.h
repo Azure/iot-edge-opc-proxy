@@ -5,10 +5,17 @@
 #define _os_linux_h_
 
 //
-// OS layer api, used by pal implementation and clients
+// Linux OS api used in PAL implementation
 //
-#define _GNU_SOURCE
-#define __USE_GNU
+#define _DEFAULT_SOURCE 1
+#define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
+#define _XOPEN_SOURCE 600
+#define _GNU_SOURCE 1
+#define _FORTIFY_SOURCE 1
+#define _ISOC99_SOURCE 1
+#include <features.h>
+
 #include "os_posix.h"
 
 #endif // _os_linux_h_

@@ -18,7 +18,7 @@
         "releaseNotes": "https://github.com/Azure/iot-gateway-proxy/releases",
         "requireLicenseAcceptance": true,
         "repository": {
-            "url": "https://github.com/Azure/azure-iot-proxy"
+            "url": "https://github.com/Azure/iot-gateway-proxy"
         }
     },
     "dependencies": {

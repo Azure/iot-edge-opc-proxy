@@ -29,11 +29,18 @@ set(source_c_files
     ${_UAMQP_ROOT}/src/session.c
 )
 
+compileAsC99()
+
 #
 # Library target
 #
 add_library(libuamqp OBJECT ${source_c_files})
 set_property(TARGET libuamqp PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(WIN32)
+else()
+	target_compile_definitions(libuamqp PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
 
 target_include_directories(libuamqp 
     PUBLIC ${_IOTSDK_INC}

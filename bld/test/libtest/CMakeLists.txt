@@ -32,6 +32,8 @@ if(WIN32)
     )
 endif()
 
+compileAsC99()
+
 #
 # Object Library target
 #

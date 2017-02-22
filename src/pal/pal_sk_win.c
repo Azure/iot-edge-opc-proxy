@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "util_string.h"
 #include "pal.h"
@@ -10,7 +11,6 @@
 #include "pal_types.h"
 #include "pal_err.h"
 #include "prx_sched.h"
-#include "os_win.h"
 
 static LPFN_CONNECTEX _ConnectEx = NULL;
 static LPFN_ACCEPTEX _AcceptEx = NULL;

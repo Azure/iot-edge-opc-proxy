@@ -19,11 +19,13 @@ else
 fi
 
 git submodule update --init
-pushd bld
+cd bld
 chmod +x build.sh
-
 if ./build.sh "$@"; then
-	echo "Success"
+	echo "Success" 
 else
 	echo "Failure building"
+	mkdir -p /build
+	cd /build
+	echo "ERROR" >> build.err
 fi

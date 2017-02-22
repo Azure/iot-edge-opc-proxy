@@ -1,7 +1,11 @@
 {
     "projects": [
         "src",
+		"test",
+		"samples/vnc/src",
+		"samples/vnc/test",
         "samples/opc-ua/src",
+        "samples/opc-ua/test",
         "samples/simple"
     ]
 }
