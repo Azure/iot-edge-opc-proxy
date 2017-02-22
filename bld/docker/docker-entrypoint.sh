@@ -28,4 +28,5 @@ else
 	mkdir -p /build
 	cd /build
 	echo "ERROR" >> build.err
+	exit $?
 fi

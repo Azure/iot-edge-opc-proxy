@@ -272,23 +272,20 @@ set build-branch=
 pushd %current-path%\docker
 for /f %%i in ('dir /b /s Dockerfile.%build-os%*') do (
     call :docker-build-and-run %%i
-    if not !ERRORLEVEL! == 0 popd && exit /b !ERRORLEVEL!
+    if not !ERRORLEVEL! == 0 popd 
+	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
 goto :eof
 :docker-build-and-run
 for /f "tokens=1* delims=." %%i in ("%~nx1") do set docker-build-os=%%j
+if exist %build-root%\%docker-build-os%.done goto :eof
 echo     ... azure-iot-proxy:build-%docker-build-os% %build-docker-args% %build-commit-env%
-rem make image and run
 docker build -f Dockerfile.%docker-build-os% -t azure-iot-proxy:build-%docker-build-os% .
-if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-call :docker-build-run %docker-build-os%
+docker run -ti %build-commit-env% azure-iot-proxy:build-%docker-build-os% %build-docker-args%
 set docker-build-os=
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-goto :eof
-:docker-build-run
-docker run -ti %build-commit-env% azure-iot-proxy:build-%1 %build-docker-args%
-if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+echo %docker-build-os% >> %build-root%\%docker-build-os%.done
 goto :eof
 :docker-install-prompt
 echo Install docker from https://docs.docker.com/docker-for-windows for option --os %build-os%
