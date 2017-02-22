@@ -66,11 +66,13 @@ endif()
 
 if (CMAKE_VERSION VERSION_LESS "3.1")
 	if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-		set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
-        set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+          # Adding --std=c99 to CMAKE_C_FLAGS breaks compilation of several subprojects!
+          # e.g libwebsockets
+	  # set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
+          set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
 	endif()
 else()
-	set (CMAKE_C_STANDARD 99)
+	#set (CMAKE_C_STANDARD 99)
     set (CMAKE_CXX_STANDARD 11)
 endif()
 
@@ -244,5 +246,11 @@ function(build_ut cur_test folder)
         endif()
     endif()
 endfunction()
+
+# Check for header files which needs to be included, if they exist
+# to avoid conflicting type definitions.
+CHECK_INCLUDE_FILES (time.h HAVE_TIME_H)
+set (CMAKE_GENERATED_INC ${CMAKE_CURRENT_BINARY_DIR}/inc/)
+CONFIGURE_FILE(${_PROJECT_INC}/test_config.h.in ${CMAKE_GENERATED_INC}/test_config.h)
 
 add_subdirectory(test)

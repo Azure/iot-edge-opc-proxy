@@ -94,7 +94,8 @@ native_build()
 			cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
 					-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
 				return 1 
-			make || \
+                        # Use all available CPU cores for make in silent mode. But be verbose if something goes wrong
+			make -j`nproc` || make VERBOSE=1 || \
 				return 1
 			if [ $skip_unittests == ON ]; then
 				echo "Skipping unittests..."

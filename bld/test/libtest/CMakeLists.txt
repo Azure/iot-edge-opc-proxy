@@ -6,6 +6,15 @@
 # not want to pull in submodules for umock, etc.
 #
 
+if(WIN32)
+else()
+    check_include_file("stdint.h" HAVE_STDINT_H)
+    if(HAVE_STDINT_H)
+      # Define macro needed at least by deps/ctest/src/ctest.c
+        add_definitions(-DCTEST_USE_STDINT)
+    endif()
+endif()
+
 #
 # Source
 #

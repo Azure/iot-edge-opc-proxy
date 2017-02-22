@@ -17,3 +17,5 @@
 /.vscode/**
 /build/**
 *.user
+# Ignore editor backup files
+*~

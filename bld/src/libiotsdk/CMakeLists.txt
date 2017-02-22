@@ -6,6 +6,23 @@
 # a subset and replace other parts in the public shared sdk, e.g. logging.
 #
 
+if (CMAKE_VERSION VERSION_LESS "3.1")
+	if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+          # Adding --std=c99 to CMAKE_C_FLAGS breaks compilation of several subprojects!
+          # e.g libwebsockets but ${_SHARED_ROOT} needs it!
+	  set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
+          set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+	endif()
+else()
+	set (CMAKE_C_STANDARD 99)
+    set (CMAKE_CXX_STANDARD 11)
+endif()
+
+if (LINUX)
+  # Macro _POSIX_C_SOURCE is needed by ${_SHARED_ROOT}
+  set (CMAKE_C_FLAGS "-D_POSIX_C_SOURCE=200112L ${CMAKE_C_FLAGS}")
+endif()
+
 #
 # Source
 #

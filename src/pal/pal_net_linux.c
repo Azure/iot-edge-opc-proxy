@@ -411,13 +411,13 @@ int32_t pal_get_available(
 )
 {
     int32_t result;
-    u_long val;
+    prx_size_t val;
     if (!available)
         return er_fault;
     result = ioctl((fd_t)fd, FIONREAD, &val);
     if (result == -1)
         return pal_os_last_net_error_as_prx_error();
-    *available = (prx_size_t)val;
+    *available = val;
     return er_ok;
 }
 
