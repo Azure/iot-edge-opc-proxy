@@ -5,10 +5,38 @@
 #define _os_linux_h_
 
 //
-// OS layer api, used by pal implementation and clients
+// Linux OS api used in PAL implementation
 //
-#define _GNU_SOURCE
-#define __USE_GNU
+
+// Include default apis ...
+#if !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1
+#define _BSD_SOURCE 1
+#define _SVID_SOURCE 1
+#endif
+
+// ... plus xopen and posix apis 
+#if !defined(_XOPEN_SOURCE) || (_XOPEN_SOURCE < 600)
+#undef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 600
+#endif
+
+// ... and any linux specific ones
+#if !defined(_GNU_SOURCE)
+#define _GNU_SOURCE 1
+#endif
+
+// Ensure safe string manipulation ...
+#if !defined(_FORTIFY_SOURCE)
+#define _FORTIFY_SOURCE 1
+#endif
+
+// ... and C'99 compliant source
+#if !defined(_ISOC99_SOURCE)
+#define _ISOC99_SOURCE 1
+#endif
+
+#include <features.h>
 #include "os_posix.h"
 
 #endif // _os_linux_h_

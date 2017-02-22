@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "pal_ev.h"
 #include "pal_net.h"
 #include "pal_mt.h"
 #include "pal.h"
-#include "os.h"
 #include "util_misc.h"
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/threadapi.h"

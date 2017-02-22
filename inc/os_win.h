@@ -8,9 +8,8 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #endif
 
-
 //
-// OS layer implementation, used by pal implementation and clients
+// Windows OS layer api, used by mostly pal, and c client
 //
 #define WIN32_LEAN_AND_MEAN
 #define NONAMELESSUNION 1

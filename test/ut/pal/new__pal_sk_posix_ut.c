@@ -43,7 +43,7 @@ MOCKABLE_FUNCTION(, int32_t, close,
     fd_t, fd);
 // ioctl
 MOCKABLE_FUNCTION(, int, ioctl,
-    fd_t, fd, unsigned int, cmd, u_long*, arg);
+    fd_t, fd, unsigned int, cmd, int*, arg);
 // errno
 #undef errno
 MOCKABLE_FUNCTION(, int*, errno_mock);

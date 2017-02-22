@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "pal.h"
 #include "pal_sk.h"
@@ -9,7 +10,6 @@
 #include "pal_mt.h"
 #include "pal_types.h"
 #include "util_string.h"
-#include "os.h"
 
 // #define ASYNC_CONNECT 1
 
@@ -1195,7 +1195,7 @@ int32_t pal_socket_getsockopt(
     int32_t opt_lvl, opt_name;
     socklen_t opt_len;
     int32_t opt_val;
-    u_long avail;
+    int avail;
 
     if (!value)
         return er_fault;

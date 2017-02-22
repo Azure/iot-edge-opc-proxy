@@ -72,6 +72,8 @@ elseif(${use_wolfssl})
 	)
 endif()
 
+compileAsC99()
+
 #
 # Object Library target
 #
@@ -81,6 +83,7 @@ endif()
 if(WIN32)
     target_include_directories(libiotsdk PUBLIC ${_IOTSDK_INC})
 else()
+    target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
     target_include_directories(libiotsdk 
         PUBLIC ${_IOTSDK_INC}

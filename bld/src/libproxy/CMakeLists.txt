@@ -120,7 +120,6 @@ if (${use_lws})
         set(CMAKE_STATIC_LINKER_FLAGS 
             "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
-
         remove_definitions(/WX)
     endif()
         add_subdirectory(${_LIBWEBSOCKETS_ROOT} ${CMAKE_BINARY_DIR}/libwebsockets)
@@ -140,6 +139,8 @@ endif()
 if(${use_openssl})
     include(FindOpenSSL)
 endif()
+
+compileAsC99()
 
 #
 # proxy shared library target
@@ -192,6 +193,7 @@ if(${use_openssl})
 endif()
 
     target_compile_definitions(libproxy
+		PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
@@ -252,6 +254,7 @@ if(${use_openssl})
 endif()
 
     target_compile_definitions(libproxy-static
+		PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )

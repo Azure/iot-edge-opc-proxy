@@ -6,7 +6,6 @@
 
 #include "common.h"
 #include "prx_types.h"
-#include "os.h"
 
 //
 // Convert platform independent addressinfo flags to OS flags

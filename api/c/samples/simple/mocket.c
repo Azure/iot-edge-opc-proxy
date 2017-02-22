@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -9,7 +11,6 @@
 
 #include "api_host.h"
 #include "api_errors.h"
-#include "os.h"
 #include "pal_proc.h"
 
 //

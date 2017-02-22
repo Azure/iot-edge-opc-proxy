@@ -875,11 +875,11 @@ WINHTTP_ASYNC_RESULT, *LPWINHTTP_ASYNC_RESULT;
 #define F_GETFL 1 
 #define O_NONBLOCK 0x1
 
-typedef enum clockid
-{
-    CLOCK_MONOTONIC = 4
-}
-clockid_t;
+// time.h
+#define CLOCK_MONOTONIC 4
+#if !defined(__clockid_t_defined)
+typedef int clockid_t;
+#endif
 
 // sys/types.h
 typedef int pid_t;

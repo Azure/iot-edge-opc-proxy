@@ -5,7 +5,7 @@
 #define _os_posix_h_
 
 //
-// OS layer socket api, used by pal implementation and clients
+// OS apis, used mostly by pal implementation
 //
 
 #include <sys/ioctl.h>

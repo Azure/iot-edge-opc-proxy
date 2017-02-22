@@ -10,11 +10,18 @@ set(source_c_files
     ${_UMQTT_ROOT}/src/mqtt_message.c
 )
 
+compileAsC99()
+
 #
 # Library target
 #
 add_library(libumqtt OBJECT ${source_c_files})
 set_property(TARGET libumqtt PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+if(WIN32)
+else()
+	target_compile_definitions(libumqtt PRIVATE _POSIX_C_SOURCE=200112L)
+endif()
 
 target_include_directories(libumqtt 
     PUBLIC ${_IOTSDK_INC}

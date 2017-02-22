@@ -1,12 +1,12 @@
 {
-    "version": "0.1.5",
+    "version": "0.1.6",
     "buildOptions": {
         "emitEntryPoint": true
     },
     "dependencies": {
-        "Microsoft.Azure.Devices.Opc.Ua.Proxy": "0.1.5",
-        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.5",
-        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.1.5"
+        "Microsoft.Azure.Devices.Opc.Ua.Proxy": "0.1.6",
+        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.6",
+        "OPCFoundation.NetStandard.Opc.Ua.SDK": "0.1.6"
     },
     "frameworks": {
         "netcoreapp1.0": {

@@ -6,6 +6,8 @@
 #define WINSOCK_API_LINKAGE __declspec(dllexport)
 #endif
 
+#include "os.h"
+
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -13,7 +15,6 @@
 
 #include "api_proxy.h"
 #include "api_mocket.h"
-#include "os.h"
 #include "pal_errors.h"
 #include "pal_types.h"
 #include "util_misc.h"

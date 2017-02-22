@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
-#include "os_win.h"
 #include "pal_mt.h"
 
 #include "azure_c_shared_utility/lock.h"

@@ -1,12 +1,12 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "pal_file.h"
 #include "pal_err.h"
 #include "util_string.h"
 #include "util_misc.h"
-#include "os_win.h"
 
 const char* k_sep = "\\";
 static char* working_dir = NULL;

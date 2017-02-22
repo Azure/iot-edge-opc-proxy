@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#include "os.h"
 #include "util_mem.h"
 #include "pal_net.h"
 #include "pal.h"
@@ -8,7 +9,6 @@
 #include "pal_err.h"
 #include "util_misc.h"
 #include "util_string.h"
-#include "os.h"
 
 #define MAX_SOCKET_ADDRESS_BYTES 127
 

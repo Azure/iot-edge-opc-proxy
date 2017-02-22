@@ -1,4 +1,4 @@
-FROM ubuntu:latest
+FROM debian:jessie
 
 ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
 ENV COMMIT_ID master
@@ -7,8 +7,9 @@ RUN \
 		set -ex \
 	&& \
 		apt-get update && apt-get install -y \
-			apt-transport-https \
 			curl \
+			libunwind8 \
+			gettext\
 			build-essential \
 			libcurl4-openssl-dev \
 			git \
@@ -17,12 +18,11 @@ RUN \
 			valgrind \
 			libglib2.0-dev \
 	&& \
-		sh -c 'echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/dotnet-release/ xenial main" > /etc/apt/sources.list.d/dotnetdev.list' \
+		curl -sSL -o dotnet.tar.gz https://go.microsoft.com/fwlink/?LinkID=835021  \
 	&& \
-		apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893 \
+		mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet \
 	&& \
-		apt-get update && apt-get install -y \
-			dotnet-dev-1.0.0-preview2.1-003177
+		ln -s /opt/dotnet/dotnet /usr/local/bin
 
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
