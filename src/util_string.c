@@ -2,12 +2,16 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "os.h"
+
 #include "util_mem.h"
 #include "util_string.h"
 #include "pal_rand.h"
 
 #include <ctype.h>
 #include <string.h>
+#if !defined(_WIN32)
+#include <strings.h>
+#endif
 #include <stdio.h>
 
 #include "azure_c_shared_utility/base64.h"

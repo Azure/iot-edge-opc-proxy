@@ -8,7 +8,6 @@
 // OS apis, used mostly by pal implementation
 //
 
-#include <strings.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>          
 #include <sys/socket.h>
