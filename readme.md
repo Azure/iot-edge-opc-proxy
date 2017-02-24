@@ -32,7 +32,7 @@ install the required build dependencies: ```sudo apt-get install bash git cmake 
 - (Optional) To build the dotnet samples and API, follow the instructions [here](https://www.microsoft.com/net/core#linuxubuntu) to
 install .net Core.
 - Run ```bash <repo-root>/bld/build.sh```.  After a successful build, all proxy binaries can be found under the /build/cmake/bin folder.
-- (Optional) To install run the usual ```make install``` in directory <repo-root>/build/cmake/Release or <repo-root>/build/cmake/Debug.
+- (Optional) To install run the usual ```make install``` in directory build/cmake/Release or build/cmake/Debug.
              For a test install to /tmp/azure you could use for example the following: ```make -C <repo-root>/build/cmake/Debug  DESTDIR=/tmp/azure install```. Then run the proxy: ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/azure/usr/local/lib /tmp/azure/usr/local/bin/proxyd --help```
 
 Run the build script with the ```--help``` option to see all configuration options available.
