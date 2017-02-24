@@ -181,7 +181,7 @@ option(skip_unittests "set skip_unittests to ON to skip unittests (default is OF
 # Build a test
 #
 function(build_ut cur_test folder)
-    if (${skip_unittests})
+    if (${skip_unittests} OR CMAKE_CROSSCOMPILING)
         # Skipping tests
     else()
         add_executable(${cur_test}_exe ${${cur_test}_test_files} 
