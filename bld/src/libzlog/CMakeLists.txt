@@ -59,3 +59,6 @@ else()
         target_compile_definitions(libzlog PRIVATE _HAVE_PTHREAD_H=1)
     endif()
 endif()
+
+
+install (TARGETS libzlog LIBRARY DESTINATION lib )

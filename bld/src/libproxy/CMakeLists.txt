@@ -284,3 +284,5 @@ if(${use_openssl})
 	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
+
+install (TARGETS libproxy LIBRARY DESTINATION lib )

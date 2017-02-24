@@ -50,3 +50,5 @@ if(CMAKE_CROSSCOMPILING)
     target_link_libraries(proxyd ${FFI_LIBRARY})
   endif()
 endif()
+
+install (TARGETS proxyd RUNTIME DESTINATION bin )
