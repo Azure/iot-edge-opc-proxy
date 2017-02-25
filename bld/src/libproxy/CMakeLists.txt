@@ -285,4 +285,6 @@ if(${use_openssl})
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
 
-install (TARGETS libproxy LIBRARY DESTINATION lib )
+if(LINUX)
+	install (TARGETS libproxy LIBRARY DESTINATION lib )
+endif()

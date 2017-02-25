@@ -51,4 +51,6 @@ if(CMAKE_CROSSCOMPILING)
   endif()
 endif()
 
-install (TARGETS proxyd RUNTIME DESTINATION bin )
+if(LINUX)
+    install (TARGETS proxyd RUNTIME DESTINATION bin )
+endif()

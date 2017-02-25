@@ -60,5 +60,6 @@ else()
     endif()
 endif()
 
-
-install (TARGETS libzlog LIBRARY DESTINATION lib )
+if(LINUX)
+	install (TARGETS libzlog LIBRARY DESTINATION lib )
+endif()
