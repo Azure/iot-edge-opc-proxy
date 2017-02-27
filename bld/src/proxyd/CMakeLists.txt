@@ -51,6 +51,8 @@ if(CMAKE_CROSSCOMPILING)
   endif()
 endif()
 
-if(LINUX)
+if(WIN32)
+  # Place here the install rule for win32
+elseif(LINUX)
     install (TARGETS proxyd RUNTIME DESTINATION bin )
 endif()
