@@ -50,3 +50,9 @@ if(CMAKE_CROSSCOMPILING)
     target_link_libraries(proxyd ${FFI_LIBRARY})
   endif()
 endif()
+
+if(WIN32)
+  # Place here the install rule for win32
+elseif(LINUX)
+    install (TARGETS proxyd RUNTIME DESTINATION bin )
+endif()

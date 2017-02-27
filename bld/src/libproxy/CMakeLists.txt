@@ -284,3 +284,9 @@ if(${use_openssl})
 	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
+
+if(WIN32)
+  # Place here the install rule for win32
+elseif(LINUX)
+	install (TARGETS libproxy LIBRARY DESTINATION lib )
+endif()

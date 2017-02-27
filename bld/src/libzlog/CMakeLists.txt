@@ -59,3 +59,9 @@ else()
         target_compile_definitions(libzlog PRIVATE _HAVE_PTHREAD_H=1)
     endif()
 endif()
+
+if(WIN32)
+  # Place here the install rule for win32
+elseif(LINUX)
+	install (TARGETS libzlog LIBRARY DESTINATION lib )
+endif()
