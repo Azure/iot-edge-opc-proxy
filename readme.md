@@ -1,18 +1,15 @@
 This project has adopted the Microsoft Open Source Code of Conduct. For more information see the Code of Conduct FAQ or contact opencode@microsoft.com with any additional questions or comments.
 
-# Azure IoT Field Gateway Proxy Module
+# Azure IoT OPC UA Gateway Proxy Module
 
-This module is a stream proxy for Azure IoT written in C and intended to be hosted in an Edge Gateway built using the
+This module is a stream proxy for OPC UA written in C and intended to be hosted in an Edge Gateway built using the
 [Azure IoT Gateway SDK](https://github.com/Azure/azure-iot-gateway-sdk).  
 
-It can tunnel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local
-network gateways to a server in the local network.  It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name 
-service provider, and only requires port 443 (outgoing) open to Azure.
+It can tunnel OPC UA binary, from a cloud service via one or more local network gateways to an OPC UA server in the local network.  It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name service provider, and only requires port 443 (outgoing) open to Azure.
 
-This allows cloud applications to send and receive raw buffers to and from IoT server devices that are accessible on the local
-gateway network.  Using the proxy API you can quickly implement streaming command and control scenarios from a cloud application 
-without providing edge protocol translation.  But please note that using the Proxy to access a device requires a data connection
-(Websocket) between Gateway and Azure and precludes any edge intelligence scenarios on the exchanged data.   
+Using the proxy API you can quickly implement OPC UA command and control scenarios from a cloud application 
+without providing edge protocol translation. But please note that using the Proxy to access a device requires a data connection
+(Websocket) between the gateway and Azure and precludes any edge intelligence scenarios on the exchanged data.   
 
 Visit http://azure.com/iotdev to learn more about developing applications for Azure IoT.
 
