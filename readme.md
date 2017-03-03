@@ -1,6 +1,6 @@
 This project has adopted the Microsoft Open Source Code of Conduct. For more information see the Code of Conduct FAQ or contact opencode@microsoft.com with any additional questions or comments.
 
-# Azure IoT OPC UA Gateway Proxy Module
+# OPC UA Gateway Proxy Module
 
 This module is a stream proxy for OPC UA written in C and intended to be hosted in an Edge Gateway built using the
 [Azure IoT Gateway SDK](https://github.com/Azure/azure-iot-gateway-sdk).  
