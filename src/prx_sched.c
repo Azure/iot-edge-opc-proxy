@@ -350,7 +350,8 @@ intptr_t prx_scheduler_queue(
     entry->func = func;
     entry->line = line;
 #else
-    (void)func, line;
+    (void)func;
+    (void)line;
 #endif
     rw_lock_enter_w(scheduler->lock);
     if (!delay)

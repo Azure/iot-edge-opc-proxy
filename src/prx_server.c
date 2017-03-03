@@ -531,16 +531,17 @@ static void prx_server_socket_on_end_receive(
 {
     io_message_t* message;
 
-    dbg_assert_ptr(server_sock);
-    dbg_assert_ptr(buffer);
     dbg_assert_ptr(op_context);
     dbg_assert_ptr(size);
+    dbg_assert_ptr(server_sock);
+    dbg_assert_ptr(buffer);
 
     message = *(io_message_t**)op_context;
     dbg_assert_ptr(message);
     dbg_assert(message->content.data_message.buffer == *buffer, "Bad buffer");
     do
     {
+        (void)buffer;
         if (result != er_ok)
         {
             if (result == er_aborted || // Abort is returned during close
@@ -657,6 +658,9 @@ static void prx_server_socket_on_end_send(
 
     message = *(io_message_t**)op_context;
     dbg_assert_ptr(message);
+
+    (void)buffer;
+    (void)size;
 
     /**/ if (result == er_retry)
     {
@@ -780,6 +784,8 @@ static void prx_server_socket_on_end_accept(
 
         dbg_assert(*size == sizeof(pal_socket_t*), 
             "Expected size of socket pointer");
+        (void)size;
+
         dbg_assert_ptr(*buffer);
         accepted_sock->sock = *(pal_socket_t**)buffer;
         message = accepted_sock->link_message;

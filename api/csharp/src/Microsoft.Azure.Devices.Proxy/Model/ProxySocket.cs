@@ -149,6 +149,36 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         protected List<IProxyLink> Links { get; } = new List<IProxyLink>();
 
         /// <summary>
+        /// Returns an address representing the proxy address
+        /// </summary>
+        public SocketAddress ProxyAddress {
+            get {
+                return SocketAddressCollection.Create(
+                    Links.Where(l => l.ProxyAddress != null).Select(l => l.ProxyAddress));
+            }
+        }
+
+        /// <summary>
+        /// Returns an address representing the address bound on proxy
+        /// </summary>
+        public SocketAddress LocalAddress {
+            get {
+                return SocketAddressCollection.Create(
+                    Links.Where(l => l.LocalAddress != null).Select(l => l.LocalAddress));
+            }
+        }
+
+        /// <summary>
+        /// Returns an address representing the peer
+        /// </summary>
+        public SocketAddress PeerAddress {
+            get {
+                return SocketAddressCollection.Create(
+                    Links.Where(l => l.PeerAddress != null).Select(l => l.PeerAddress));
+            }
+        }
+
+        /// <summary>
         /// Link one remote endpoint
         /// </summary>
         /// <param name="proxy"></param>

@@ -190,8 +190,8 @@ uint32_t io_ref_hash(
 )
 {
     return 
-        (ref->un.u32[0] ^      ( ref->un.u32[1] << 16 | 
-         ref->un.u32[2] << 24) | ref->un.u32[3]);
+        ((ref->un.u32[0] ^      ( ref->un.u32[1] << 16 | 
+         ref->un.u32[2] << 24)) | ref->un.u32[3]);
 }
 
 //

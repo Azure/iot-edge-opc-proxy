@@ -220,8 +220,8 @@ static const char* io_passthru_token_provider_on_get_property(
     io_token_property_id_t id
 )
 {
-    io_passthru_token_provider_t* provider = (io_passthru_token_provider_t*)context;
-    dbg_assert_ptr(provider);
+    dbg_assert_ptr(context);
+    (void)context;
     switch (id)
     {
     case io_token_property_type:

@@ -18,62 +18,51 @@ int32_t pal_file_init(
     void
 )
 {
-    int32_t result;
-    char *cur, buf[4096];
-    buf[0] = 0;
-    cur = getcwd(buf, sizeof(buf)-1);
-    if (cur)
-        result = string_clone(cur, &working_dir);
-    else
-        result = er_ok;
-    return result;
+    return er_ok;
+}
+
+//
+// Test whether file exists
+//
+bool pal_file_exists(
+    const char* file_name
+)
+{
+    return -1 != access(file_name, F_OK);
 }
 
 //
 // Get Full path of a file name
 //
-const char* pal_create_full_path(
-    const char* file_name
+int32_t pal_get_real_path(
+    const char* file_name, 
+    const char** path
 )
 {
-    char* path;
-    size_t path_len;
-    if (!file_name)
-        return NULL;
-
-    path_len = strlen(file_name) + 1;
-    if (working_dir)
-    {
-        path_len += strlen(working_dir);
-        path_len += strlen(k_sep);
-    }
-
-    path = (char*)mem_alloc(path_len);
-    if (!path)
-        return NULL;
-    path[0] = 0;
-
-    if (working_dir)
-    {
-        strcat(path, working_dir);
-        strcat(path, k_sep);
-    }
-    strcat(path, file_name);
-    return path;
-}
-
-//
-// Set working dir
-//
-int32_t pal_set_working_dir(
-    const char* dir
-)
-{
-    if (!dir)
+    const char* real;
+    long path_max;
+    char *buf = NULL;
+    if (!file_name || !path)
         return er_fault;
-    if (working_dir)
-        pal_free_path(working_dir);
-    return string_clone(dir, &working_dir);
+
+    //
+    // Get max path, if this fails, then it is 
+    // assumed that realpath will malloc
+    //
+    path_max = pathconf(".", _PC_PATH_MAX);
+    if (path_max > 0)
+        buf = (char*)crt_alloc(path_max + 1);
+
+    // Get real path
+    real = realpath(file_name, buf);
+    if (!real)
+    {
+        if (buf)
+            crt_free(buf);
+        return pal_os_last_error_as_prx_error();
+    }
+    *path = real;
+    return er_ok;
 }
 
 //
@@ -85,7 +74,7 @@ void pal_free_path(
 {
     if (!path)
         return;
-    mem_free((char*)path);
+    crt_free((char*)path);
 }
 
 //
@@ -95,9 +84,5 @@ void pal_file_deinit(
     void
 )
 {
-    if (working_dir)
-    {
-        pal_free_path(working_dir);
-        working_dir = NULL;
-    }
+    // no-op
 }

@@ -223,7 +223,9 @@ static void pal_wsclient_log_winhttp_callback_status(
     LPVOID info
 )
 {
-    (void)wsclient, info, status;
+    (void)wsclient;
+    (void)info;
+    (void)status;
 #if defined(_MSC_VER)
 #define __case(v, fmt, ...) \
     case v: log_info(wsclient->log, #v fmt, __VA_ARGS__); break;
@@ -827,6 +829,7 @@ int32_t pal_wsclient_create(
 )
 {
     int32_t result;
+    DWORD max_conns;
     pal_wsclient_t* wsclient;
 
     if (!host || !path || !created || !callback)
@@ -868,8 +871,12 @@ int32_t pal_wsclient_create(
             break;
         }
 
+        max_conns = 1;
+
         if (!WinHttpSetOption(wsclient->h_session, 
-            WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)) ||
+                WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)) ||
+            !WinHttpSetOption(wsclient->h_session,
+                WINHTTP_OPTION_MAX_CONNS_PER_SERVER, &max_conns, sizeof(DWORD)) ||
             !WinHttpSetTimeouts(wsclient->h_session, 0, 0, 0, 0))
         {
             result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
@@ -917,6 +924,7 @@ int32_t pal_wsclient_connect(
 {
     int32_t result;
     LPWSTR headers = NULL;
+    DWORD max_retries = 10;
 
     if (!wsclient)
         return er_fault;
@@ -939,7 +947,7 @@ int32_t pal_wsclient_connect(
         }
 
         if (!WinHttpSetOption(wsclient->h_connection,
-            WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)))
+                WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)))
         {
             result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
             log_error(wsclient->log, "Error setting option on connection (%s).",
@@ -961,6 +969,8 @@ int32_t pal_wsclient_connect(
                 WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)) ||
             !WinHttpSetOption(wsclient->h_request, 
                 WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0) ||
+            !WinHttpSetOption(wsclient->h_request,
+                WINHTTP_OPTION_CONNECT_RETRIES, &max_retries, sizeof(DWORD)) ||
             !WinHttpSetOption(wsclient->h_request, 
                 WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET, NULL, 0) ||
             !WinHttpSetTimeouts(wsclient->h_request, 0, 0, 0, 0))

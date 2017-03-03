@@ -1,5 +1,5 @@
 {
-    "version": "0.1.6",
+    "version": "0.2.0",
     "name": "Microsoft.Azure.Devices.Opc.Ua.Proxy",
     "title": "Microsoft Azure Devices Opc-UA Reference Stack Proxy Transport",
     "description": "Implements a custom transport for the OPC Foundation reference stack using Microsoft Azure Device Proxy Service API.",
@@ -23,8 +23,8 @@
     },
     "dependencies": {
         "Microsoft.Azure.Devices.Proxy": "0.0.7",
-        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.1.6",
-        "NETStandard.Library": "1.6.1"
+        "NETStandard.Library": "1.6.1",
+        "OPCFoundation.NetStandard.Opc.Ua.Core": "0.2.0"
     },
     "frameworks": {
         "net46": {

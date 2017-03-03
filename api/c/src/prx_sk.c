@@ -420,7 +420,8 @@ struct servent * _std_call getservbyport(
     const char * proto
 )
 {
-    (void)port, proto;
+    (void)port;
+    (void)proto;
     return NULL;
 }
 
@@ -429,7 +430,8 @@ struct servent * _std_call getservbyname(
     const char * proto
 )
 {
-    (void)name, proto;
+    (void)name;
+    (void)proto;
     return NULL;
 }
 
@@ -1213,8 +1215,13 @@ int _std_call WSAConnect(
     LPQOS lpGQOS
 )
 {
-    (void)s, name, namelen, lpCallerData, lpCalleeData;
-    (void)lpSQOS, lpGQOS;
+    (void)s;
+    (void)name;
+    (void)namelen;
+    (void)lpCallerData;
+    (void)lpCalleeData;
+    (void)lpSQOS;
+    (void)lpGQOS;
     return SOCKET_ERROR;
 }
 
@@ -1256,7 +1263,12 @@ HANDLE _std_call WSAAsyncGetServByName(
     int buflen
 )
 {
-    (void)hWnd, wMsg, name, proto, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)name;
+    (void)proto;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1269,7 +1281,12 @@ HANDLE _std_call WSAAsyncGetServByPort(
     int buflen
 )
 {
-    (void)hWnd, wMsg, port, proto, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)port;
+    (void)proto;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1281,7 +1298,11 @@ HANDLE _std_call WSAAsyncGetProtoByName(
     int buflen
 )
 {
-    (void)hWnd, wMsg, name, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)name;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1293,7 +1314,11 @@ HANDLE _std_call WSAAsyncGetProtoByNumber(
     int buflen
 )
 {
-    (void)hWnd, wMsg, number, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)number;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1305,7 +1330,11 @@ HANDLE _std_call WSAAsyncGetHostByName(
     int buflen
 )
 {
-    (void)hWnd, wMsg, name, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)name;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1319,7 +1348,13 @@ HANDLE _std_call WSAAsyncGetHostByAddr(
     int buflen
 )
 {
-    (void)hWnd, wMsg, address, len, type, buf, buflen;
+    (void)hWnd;
+    (void)wMsg;
+    (void)address;
+    (void)len;
+    (void)type;
+    (void)buf;
+    (void)buflen;
     return NULL;
 }
 
@@ -1338,7 +1373,10 @@ int _std_call WSAAsyncSelect(
     long lEvent
 )
 {
-    (void)s, hWnd, wMsg, lEvent;
+    (void)s;
+    (void)hWnd;
+    (void)wMsg;
+    (void)lEvent;
     return SOCKET_ERROR;
 }
 
@@ -1350,7 +1388,11 @@ SOCKET _std_call WSAAccept(
     DWORD_PTR dwCallbackData
 )
 {
-    (void)s, address, addrlen, lpfnCondition, dwCallbackData;
+    (void)s;
+    (void)address;
+    (void)addrlen;
+    (void)lpfnCondition;
+    (void)dwCallbackData;
     return INVALID_SOCKET;
 }
 
@@ -1373,8 +1415,15 @@ int _std_call WSAConnectByNameA(
     LPWSAOVERLAPPED Reserved
 )
 {
-    (void)s, nodename, servicename, LocalAddressLength, LocalAddress;
-    (void)RemoteAddressLength, RemoteAddress, timeout, Reserved;
+    (void)s;
+    (void)nodename;
+    (void)servicename;
+    (void)LocalAddressLength;
+    (void)LocalAddress;
+    (void)RemoteAddressLength;
+    (void)RemoteAddress;
+    (void)timeout;
+    (void)Reserved;
     return FALSE;
 }
 
@@ -1389,8 +1438,14 @@ int _std_call WSAConnectByList(
     LPWSAOVERLAPPED Reserved
 )
 {
-    (void)s, address, LocalAddressLength, LocalAddress, RemoteAddressLength;
-    (void)RemoteAddress, timeout, Reserved;
+    (void)s;
+    (void)address;
+    (void)LocalAddressLength;
+    (void)LocalAddress;
+    (void)RemoteAddressLength;
+    (void)RemoteAddress;
+    (void)timeout;
+    (void)Reserved;
     return FALSE;
 }
 
@@ -1407,7 +1462,9 @@ int _std_call WSADuplicateSocketA(
     LPWSAPROTOCOL_INFOA lpProtocolInfo
 )
 {
-    (void)s, dwProcessId, lpProtocolInfo;
+    (void)s;
+    (void)dwProcessId;
+    (void)lpProtocolInfo;
     return SOCKET_ERROR;
 }
 
@@ -1417,7 +1474,9 @@ int _std_call WSAEnumNetworkEvents(
     LPWSANETWORKEVENTS lpNetworkEvents
 )
 {
-    (void)s, hEventObject, lpNetworkEvents;
+    (void)s;
+    (void)hEventObject;
+    (void)lpNetworkEvents;
     return SOCKET_ERROR;
 }
 
@@ -1427,7 +1486,9 @@ int _std_call WSAEnumProtocolsA(
     LPDWORD lpdwBufferLength
 )
 {
-    (void)lpiProtocols, lpProtocolBuffer, lpdwBufferLength;
+    (void)lpiProtocols;
+    (void)lpProtocolBuffer;
+    (void)lpdwBufferLength;
     return SOCKET_ERROR;
 }
 
@@ -1437,7 +1498,9 @@ int _std_call WSAEventSelect(
     long lNetworkEvents
 )
 {
-    (void)s, hEventObject, lNetworkEvents;
+    (void)s;
+    (void)hEventObject;
+    (void)lNetworkEvents;
     return SOCKET_ERROR;
 }
 
@@ -1449,7 +1512,11 @@ int _std_call WSAGetOverlappedResult(
     LPDWORD lpdwFlags
 )
 {
-    (void)s, lpOverlapped, lpcbTransfer, fWait, lpdwFlags;
+    (void)s;
+    (void)lpOverlapped;
+    (void)lpcbTransfer;
+    (void)fWait;
+    (void)lpdwFlags;
     return FALSE;
 }
 
@@ -1459,7 +1526,9 @@ int _std_call WSAGetQOSByName(
     LPQOS lpQOS
 )
 {
-    (void)s, lpQOSName, lpQOS;
+    (void)s;
+    (void)lpQOSName;
+    (void)lpQOS;
     return FALSE;
 }
 
@@ -1475,8 +1544,15 @@ int _std_call WSAIoctl(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, dwIoControlCode, lpvInBuffer, cbInBuffer, lpcbBytesReturned;
-    (void)lpvOutBuffer, cbOutBuffer, lpOverlapped, lpCompletionRoutine;
+    (void)s;
+    (void)dwIoControlCode;
+    (void)lpvInBuffer;
+    (void)cbInBuffer;
+    (void)lpcbBytesReturned;
+    (void)lpvOutBuffer;
+    (void)cbOutBuffer;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
     return SOCKET_ERROR;
 }
 
@@ -1491,8 +1567,14 @@ SOCKET _std_call WSAJoinLeaf(
     DWORD dwFlags
 )
 {
-    (void)s, name, namelen, lpCallerData, lpCalleeData;
-    (void)lpSQOS, lpGQOS, dwFlags;
+    (void)s;
+    (void)name;
+    (void)namelen;
+    (void)lpCallerData;
+    (void)lpCalleeData;
+    (void)lpSQOS;
+    (void)lpGQOS;
+    (void)dwFlags;
     return INVALID_SOCKET;
 }
 
@@ -1506,8 +1588,13 @@ int _std_call WSARecv(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd;
-    (void)lpOverlapped, lpCompletionRoutine, lpFlags;
+    (void)s;
+    (void)lpBuffers;
+    (void)dwBufferCount;
+    (void)lpNumberOfBytesRecvd;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
+    (void)lpFlags;
     return SOCKET_ERROR;
 }
 
@@ -1516,7 +1603,8 @@ int _std_call WSARecvDisconnect(
     LPWSABUF lpInboundDisconnectData
 )
 {
-    (void)s, lpInboundDisconnectData;
+    (void)s;
+    (void)lpInboundDisconnectData;
     return SOCKET_ERROR;
 }
 
@@ -1532,8 +1620,15 @@ int _std_call WSARecvFrom(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpBuffers, dwBufferCount, lpNumberOfBytesRecvd;
-    (void)lpOverlapped, lpCompletionRoutine, lpFlags, lpFrom, lpFromlen;
+    (void)s;
+    (void)lpBuffers;
+    (void)dwBufferCount;
+    (void)lpNumberOfBytesRecvd;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
+    (void)lpFlags;
+    (void)lpFrom;
+    (void)lpFromlen;
     return SOCKET_ERROR;
 }
 
@@ -1545,8 +1640,11 @@ int _std_call WSARecvMsg(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpMsg, lpdwNumberOfBytesRecvd;
-    (void)lpOverlapped, lpCompletionRoutine;
+    (void)s;
+    (void)lpMsg;
+    (void)lpdwNumberOfBytesRecvd;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
     return SOCKET_ERROR;
 }
 
@@ -1567,8 +1665,13 @@ int _std_call WSASend(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpBuffers, dwBufferCount, lpNumberOfBytesSent;
-    (void)lpOverlapped, lpCompletionRoutine, dwFlags;
+    (void)s;
+    (void)lpBuffers;
+    (void)dwBufferCount;
+    (void)lpNumberOfBytesSent;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
+    (void)dwFlags;
     return SOCKET_ERROR;
 }
 
@@ -1581,8 +1684,12 @@ int _std_call WSASendMsg(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpMsg, dwFlags, lpNumberOfBytesSent;
-    (void)lpOverlapped, lpCompletionRoutine;
+    (void)s;
+    (void)lpMsg;
+    (void)dwFlags;
+    (void)lpNumberOfBytesSent;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
     return SOCKET_ERROR;
 }
 
@@ -1591,7 +1698,8 @@ int _std_call WSASendDisconnect(
     LPWSABUF lpOutboundDisconnectData
 )
 {
-    (void)s, lpOutboundDisconnectData;
+    (void)s;
+    (void)lpOutboundDisconnectData;
     return SOCKET_ERROR;
 }
 
@@ -1607,8 +1715,15 @@ int _std_call WSASendTo(
     LPWSAOVERLAPPED_COMPLETION_ROUTINE lpCompletionRoutine
 )
 {
-    (void)s, lpBuffers, dwBufferCount, lpNumberOfBytesSent;
-    (void)lpOverlapped, lpCompletionRoutine, dwFlags, lpTo, iTolen;
+    (void)s;
+    (void)lpBuffers;
+    (void)dwBufferCount;
+    (void)lpNumberOfBytesSent;
+    (void)lpOverlapped;
+    (void)lpCompletionRoutine;
+    (void)dwFlags;
+    (void)lpTo;
+    (void)iTolen;
     return SOCKET_ERROR;
 }
 
@@ -1628,7 +1743,9 @@ SOCKET _std_call WSASocketA(
     DWORD dwFlags
 )
 {
-    (void)lpProtocolInfo, g, dwFlags;
+    (void)lpProtocolInfo;
+    (void)g;
+    (void)dwFlags;
     return socket(family, type, protocol);
 }
 
@@ -1652,8 +1769,11 @@ int _std_call WSAAddressToStringA(
     LPDWORD lpdwAddressStringLength
 )
 {
-    (void)lpsaAddress, dwAddressLength, lpProtocolInfo;
-    (void)lpszAddressString, lpdwAddressStringLength;
+    (void)lpsaAddress;
+    (void)dwAddressLength;
+    (void)lpProtocolInfo;
+    (void)lpszAddressString;
+    (void)lpdwAddressStringLength;
     return SOCKET_ERROR;
 }
 
@@ -1665,8 +1785,11 @@ int _std_call WSAStringToAddressA(
     int* lpAddressLength
 )
 {
-    (void)AddressString, AddressFamily, lpProtocolInfo;
-    (void)lpAddress, lpAddressLength;
+    (void)AddressString;
+    (void)AddressFamily;
+    (void)lpProtocolInfo;
+    (void)lpAddress;
+    (void)lpAddressLength;
     return SOCKET_ERROR;
 }
 

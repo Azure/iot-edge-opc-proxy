@@ -16,6 +16,7 @@
         ${_UMOCKC_ROOT}/src/umockcall.c
         ${_UMOCKC_ROOT}/src/umockcallpairs.c
         ${_UMOCKC_ROOT}/src/umockcallrecorder.c
+        ${_UMOCKC_ROOT}/src/umockstring.c
         ${_UMOCKC_ROOT}/src/umocktypename.c
         ${_UMOCKC_ROOT}/src/umocktypes.c
         ${_UMOCKC_ROOT}/src/umocktypes_bool.c

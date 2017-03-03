@@ -16,7 +16,6 @@ using Microsoft.Azure.Devices.Proxy;
 
 namespace Opc.Ua.Bindings.Proxy
 {
-
     /// <summary>
     /// Creates a new ProxyTransportChannel with ITransportChannel interface.
     /// </summary>
@@ -157,6 +156,10 @@ namespace Opc.Ua.Bindings.Proxy
     /// </summary>
     public class ProxyMessageSocket : IMessageSocket
     {
+        /// <summary>
+        /// The proxy socket
+        /// </summary>
+        public Socket ProxySocket { get; set; }
 
         #region Constructors
         /// <summary>
@@ -170,7 +173,7 @@ namespace Opc.Ua.Bindings.Proxy
             if (bufferManager == null) throw new ArgumentNullException("bufferManager");
 
             m_sink = sink;
-            m_socket = null;
+            ProxySocket = null;
             m_bufferManager = bufferManager;
             m_receiveBufferSize = receiveBufferSize;
             m_incomingMessageSize = -1;
@@ -190,7 +193,7 @@ namespace Opc.Ua.Bindings.Proxy
             if (bufferManager == null) throw new ArgumentNullException("bufferManager");
 
             m_sink = sink;
-            m_socket = socket;
+            ProxySocket = socket;
             m_bufferManager = bufferManager;
             m_receiveBufferSize = receiveBufferSize;
             m_incomingMessageSize = -1;
@@ -214,7 +217,7 @@ namespace Opc.Ua.Bindings.Proxy
         {
             if (disposing)
             {
-                m_socket.Dispose();
+                ProxySocket.Dispose();
             }
         }
         #endregion
@@ -228,9 +231,9 @@ namespace Opc.Ua.Bindings.Proxy
         {
             get
             {
-                if (m_socket != null)
+                if (ProxySocket != null)
                 {
-                    return m_socket.GetHashCode();
+                    return ProxySocket.GetHashCode();
                 }
 
                 return -1;
@@ -246,7 +249,7 @@ namespace Opc.Ua.Bindings.Proxy
 
             if (endpointUrl == null) throw new ArgumentNullException("endpointUrl");
 
-            if (m_socket != null)
+            if (ProxySocket != null)
             {
                 throw new InvalidOperationException("The socket is already connected.");
             }
@@ -255,11 +258,11 @@ namespace Opc.Ua.Bindings.Proxy
             args.UserToken = state;
             args.m_args.SocketError = SocketError.Host_unknown;
 
-            m_socket = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            ProxySocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                await m_socket.ConnectAsync(endpointUrl.DnsSafeHost, endpointUrl.Port);
+                await ProxySocket.ConnectAsync(endpointUrl.DnsSafeHost, endpointUrl.Port);
                 args.m_args.SocketError = SocketError.Success;
                 result = true;
             }
@@ -288,8 +291,8 @@ namespace Opc.Ua.Bindings.Proxy
 
             lock (m_socketLock)
             {
-                socket = m_socket;
-                m_socket = null;
+                socket = ProxySocket;
+                ProxySocket = null;
             }
 
             // shutdown the socket.
@@ -486,7 +489,7 @@ namespace Opc.Ua.Bindings.Proxy
             // check if already closed.
             lock (m_socketLock)
             {
-                if (m_socket == null)
+                if (ProxySocket == null)
                 {
                     if (m_receiveBuffer != null)
                     {
@@ -497,7 +500,7 @@ namespace Opc.Ua.Bindings.Proxy
                     return;
                 }
 
-                socket = m_socket;
+                socket = ProxySocket;
 
                 // avoid stale ServiceException when socket is disconnected
                 if (!socket.Connected)
@@ -551,12 +554,12 @@ namespace Opc.Ua.Bindings.Proxy
             {
                 throw new ArgumentNullException("args");
             }
-            if (m_socket == null)
+            if (ProxySocket == null)
             {
                 throw new InvalidOperationException("The socket is not connected.");
             }
             eventArgs.m_args.SocketError = SocketError.Unknown;
-            return m_socket.SendAsync(eventArgs.m_args);
+            return ProxySocket.SendAsync(eventArgs.m_args);
         }
         #endregion
         #region Event factory
@@ -572,8 +575,6 @@ namespace Opc.Ua.Bindings.Proxy
         private EventHandler<SocketAsyncEventArgs> m_ReadComplete;
 
         private object m_socketLock = new object();
-        private Socket m_socket;
-
         private object m_readLock = new object();
         private byte[] m_receiveBuffer;
         private int m_bytesReceived;

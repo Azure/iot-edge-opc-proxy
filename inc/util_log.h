@@ -24,7 +24,8 @@
 #define   log_t               void*
 #define   log_entry_t         void
 #define   log_register(t, c)  er_ok
-#define   log_configure(x)    er_ok
+#define   log_read_config(x)  er_not_supported
+#define   log_set_log_file(x) er_not_supported
 #define   log_unregister(t)   er_ok
 #define   log_get(x)          NULL
 
@@ -131,7 +132,8 @@
 #define   log_entry_t         zlog_entry_t
 #define   log_cb_t            zlog_cb_t
 #define   log_register        zlog_register
-#define   log_configure       zlog_configure
+#define   log_read_config     zlog_read_config
+#define   log_set_log_file    zlog_set_log_file
 #define   log_get             zlog_get
 #define   log_unregister      zlog_unregister
 

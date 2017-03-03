@@ -6,6 +6,7 @@
 		"samples/vnc/test",
         "samples/opc-ua/src",
         "samples/opc-ua/test",
-        "samples/simple"
+        "samples/simple",
+        "../../../opc-ua/UA-.NETStandardLibrary/Stack"
     ]
 }

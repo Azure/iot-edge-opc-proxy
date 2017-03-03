@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             public override object ReadJson(JsonReader reader, Type objectType, 
                 object existingValue, JsonSerializer serializer) {
                 JObject jsonObject = JObject.Load(reader);
-                AddressFamily family = (AddressFamily)jsonObject.Value<Int32>("family");
+                AddressFamily family = (AddressFamily)jsonObject.Value<int>("family");
                 switch(family) {
                     case AddressFamily.Unspecified:
                         return new NullSocketAddress();

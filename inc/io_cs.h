@@ -30,6 +30,14 @@ decl_internal_2(int32_t, io_cs_create_from_string,
 );
 
 //
+// Create connection cs from raw content of file
+//
+decl_internal_2(int32_t, io_cs_create_from_raw_file,
+    const char*, file_name,
+    io_cs_t**, created
+);
+
+//
 // Create new connection connection string
 //
 decl_internal_5(int32_t, io_cs_create,

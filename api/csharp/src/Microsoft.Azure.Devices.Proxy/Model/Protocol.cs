@@ -36,22 +36,22 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// </summary>
     public static class MessageContent {
 
-        public static readonly UInt32 Ping            = 10;
-        public static readonly UInt32 Resolve         = 11;
-        public static readonly UInt32 Link            = 12;
-        public static readonly UInt32 SetOpt          = 13;
-        public static readonly UInt32 GetOpt          = 14;
-        public static readonly UInt32 Open            = 20;
-        public static readonly UInt32 Close           = 21;
-        public static readonly UInt32 Data            = 30;
-        public static readonly UInt32 Custom          =  0;
+        public static readonly uint Ping            = 10;
+        public static readonly uint Resolve         = 11;
+        public static readonly uint Link            = 12;
+        public static readonly uint SetOpt          = 13;
+        public static readonly uint GetOpt          = 14;
+        public static readonly uint Open            = 20;
+        public static readonly uint Close           = 21;
+        public static readonly uint Data            = 30;
+        public static readonly uint Custom          =  0;
 
         /// <summary>
         /// Returns id for type
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public static UInt32 GetId(IMessageContent content) {
+        public static uint GetId(IMessageContent content) {
             /**/ if (content is DataMessage)
                 return Data;
             else if (content is PingRequest)
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="content"></param>
         /// <returns></returns>
-        public static Type TypeOf(UInt32 type, bool isResponse) {
+        public static Type TypeOf(uint type, bool isResponse) {
             if (type == Ping)
                 return isResponse ? typeof(PingResponse) : typeof(PingRequest);
             if (type == Resolve)
@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Time ping took
         /// </summary>
         [DataMember(Name = "time_ms", Order = 3)]
-        public UInt32 TimeMs { get; set; }
+        public uint TimeMs { get; set; }
 
 
         /// <summary>
@@ -271,19 +271,19 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Resolution flags
         /// </summary>
         [DataMember(Name = "flags", Order = 2)]
-        public UInt32 Flags { get; set; }
+        public uint Flags { get; set; }
 
         /// <summary>
         /// Service port to resolve, or 0
         /// </summary>
         [DataMember(Name = "port", Order = 3)]
-        public UInt16 Port { get; set; }
+        public ushort Port { get; set; }
 
         /// <summary>
         /// Host name to resolve
         /// </summary>
         [DataMember(Name = "host", Order = 4)]
-        public String Host { get; set; }
+        public string Host { get; set; }
 
         /// <summary>
         /// Default constructor
@@ -517,7 +517,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Option and Value to set
         /// </summary>
         [DataMember(Name = "so_val", Order = 1)]
-        SocketOptionValue OptionValue { get; set; }
+        public SocketOptionValue OptionValue { get; set; }
 
         /// <summary>
         /// Default constructor
@@ -833,25 +833,25 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// How long the link was open
         /// </summary>
         [DataMember(Name = "time_open", Order = 1)]
-        public UInt64 TimeOpenInMilliseconds { get; set; }
+        public ulong TimeOpenInMilliseconds { get; set; }
 
         /// <summary>
         /// How many bytes were sent
         /// </summary>
         [DataMember(Name = "bytes_sent", Order = 2)]
-        public UInt64 BytesSent { get; set; }
+        public ulong BytesSent { get; set; }
 
         /// <summary>
         /// How many received
         /// </summary>
         [DataMember(Name = "bytes_received", Order = 3)]
-        public UInt64 BytesReceived { get; set; }
+        public ulong BytesReceived { get; set; }
 
         /// <summary>
         /// Last error code on the link, e.g. reason link closed.
         /// </summary>
         [DataMember(Name = "error_code", Order = 4)]
-        public Int32 ErrorCode { get; set; }
+        public int ErrorCode { get; set; }
 
         /// <summary>
         /// Comparison

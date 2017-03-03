@@ -11,15 +11,14 @@
 //
 // A tristate - ready, in progress, completed - queue of buffers for IO
 //
-typedef struct io_queue
+struct io_queue
 {
     lock_t queue_lock;
     prx_buffer_factory_t* factory;      // Factory used to create buffer
     DLIST_ENTRY ready;   // queue_buffers that are ready for processing
     DLIST_ENTRY inprogress;       // queue_buffers that are in progress
     DLIST_ENTRY done;           // queue_buffers that are in done state
-}
-io_queue_t;
+};
 
 
 #if defined(DBG_MEM)
@@ -181,7 +180,7 @@ int32_t io_queue_create_buffer(
     int32_t result = er_out_of_memory;
     io_queue_buffer_t* queue_buffer;
 
-    if (!created || length < 0 || !queue)
+    if (!created || !queue)
         return er_fault;
 
     queue_buffer = (io_queue_buffer_t*)prx_buffer_new(
@@ -274,10 +273,10 @@ int32_t io_queue_buffer_write(
     if (!queue_buffer)
         return er_fault;
     dbg_assert_buf(queue_buffer);
-    if (len < 0)
-        return er_fault;
     if (len == 0)
         return er_ok;
+    if (!buf)
+        return er_fault;
 
     write = min(queue_buffer->length - queue_buffer->write_offset, len);
 

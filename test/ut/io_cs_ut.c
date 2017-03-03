@@ -55,7 +55,8 @@ static int32_t string_key_value_parser__hook_1(
 )
 {
     int32_t result;
-    (void)connection_string, delim;
+    (void)connection_string;
+    (void)delim;
     result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
     if (result != er_ok)
         return result;
@@ -136,7 +137,8 @@ static int32_t string_key_value_parser__hook_2(
 )
 {
     int32_t result;
-    (void)connection_string, delim;
+    (void)connection_string;
+    (void)delim;
     result = visitor(ctx, "HostName", 8, "Hub.Suffix", 14);
     if (result != er_ok)
         return result;
@@ -624,7 +626,8 @@ static int32_t string_key_value_parser__hook_connection_string_with_hostname_and
 )
 {
     int32_t result;
-    (void)delim, connection_string;
+    (void)delim;
+    (void)connection_string;
     result = visitor(ctx, "HostName", 8, "Hub.Suffix", 2);
     if (result != er_ok)
         return result;
@@ -912,6 +915,262 @@ TEST_FUNCTION(io_cs_create_from_string__neg)
         er_invalid_format, er_invalid_format, er_invalid_format, er_out_of_memory,  er_invalid_format, 
         er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, er_invalid_format, 
         er_out_of_memory,  er_invalid_format);
+}
+
+// 
+// Test io_cs_create_from_raw_file passing as file_name argument an invalid const char* value 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__arg_file_name_null)
+{
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = io_cs_create_from_raw_file(NULL, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file passing as created argument an invalid const char* value 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__arg_created_null)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, NULL);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_1)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .IgnoreArgument(2)
+        .SetReturn(er_not_found);
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_2)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(false);
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_3)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+        .IgnoreArgument(1)
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_reading, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_4)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_stream_t* k_stream_valid = (io_stream_t*)0x1343;
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+        .IgnoreArgument(1)
+        .SetReturn(k_stream_valid);
+    STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
+        .SetReturn(4000);
+    STRICT_EXPECTED_CALL(io_stream_close(k_stream_valid));
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_reading, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_5)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_stream_t* k_stream_valid = (io_stream_t*)0x1343;
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+        .IgnoreArgument(1)
+        .SetReturn(k_stream_valid);
+    STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(io_stream_close(k_stream_valid));
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_reading, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_6)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_stream_t* k_stream_valid = (io_stream_t*)0x1343;
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+        .IgnoreArgument(1)
+        .SetReturn(k_stream_valid);
+    STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
+        .SetReturn(400);
+    STRICT_EXPECTED_CALL(h_realloc(400 + 1, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(io_stream_close(k_stream_valid));
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+}
+
+// 
+// Test io_cs_create_from_raw_file unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_from_raw_file__neg_7)
+{
+    static const char* k_file_name_valid = "cs.txt";
+    static const char* k_real_name_valid = "/cs.txt";
+    io_stream_t* k_stream_valid = (io_stream_t*)0x1343;
+    io_cs_t* cs_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_get_real_path(k_file_name_valid, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_path(&k_real_name_valid, sizeof(&k_real_name_valid))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+        .IgnoreArgument(1)
+        .SetReturn(k_stream_valid);
+    STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
+        .SetReturn(400);
+    STRICT_EXPECTED_CALL(h_realloc(400 + 1, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(io_stream_read(k_stream_valid, UT_MEM, 400, IGNORED_PTR_ARG))
+        .IgnoreArgument(4)
+        .SetReturn(er_reading);
+    STRICT_EXPECTED_CALL(io_stream_close(k_stream_valid));
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
+
+    // act 
+    result = io_cs_create_from_raw_file(k_file_name_valid, &cs_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_reading, result);
 }
 
 // 

@@ -17,19 +17,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public interface IProxyLink : IProxyOptions, IMessageStream {
 
         /// <summary>
-        /// Local address on the proxy the socket is bound to.  
-        /// </summary>
-        SocketAddress LocalAddress { get; }
-
-        /// <summary>
         /// Remote id of this socket
         /// </summary>
         Reference RemoteId { get; }
-
-        /// <summary>
-        /// Peer address the socket is connected to on the proxy side. 
-        /// </summary>
-        SocketAddress PeerAddress { get; }
 
         /// <summary>
         /// Begin connect sequence, returns connection string to

@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Version validation field
         /// </summary>
         [DataMember(Name = "version", Order = 1)]
-        public UInt16 Version { get; set; } = 0x5;
+        public ushort Version { get; set; } = 0x5;
 
         /// <summary>
         /// Source address
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Error code if this is an error message
         /// </summary>
         [DataMember(Name = "error_code", Order = 5)]
-        public Int32 Error { get; set; }
+        public int Error { get; set; }
 
         /// <summary>
         /// Whether the message is response to a request
@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Content type
         /// </summary>
         [DataMember(Name = "type", Order = 7)]
-        public UInt32 TypeId { get; set; }
+        public uint TypeId { get; set; }
 
         /// <summary>
         /// Content type

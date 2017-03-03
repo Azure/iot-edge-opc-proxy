@@ -204,29 +204,36 @@ static int32_t prx_host_init_from_command_line(
     io_cs_t *cs = NULL;
     const char *server_name = NULL;
     const char *log_config = NULL;
+    const char *log_file = NULL;
     const char *ns_registry = NULL;
+
     char buffer[128];
     bool is_install = false;
     bool is_uninstall = false;
     bool should_exit = false;
-    bool is_adhoc = false;
+    bool is_test = false;
     int loops = 1;
-    io_ref_t adhoc;
+    io_ref_t test;
 
     static struct option long_options[] =
     {
         { "hidden",                     no_argument,            NULL, 'h' },
         { "install",                    no_argument,            NULL, 'i' },
         { "uninstall",                  no_argument,            NULL, 'u' },
-        { "ad-hoc",                     required_argument,      NULL, 'a' },
+#if defined(DEBUG)
+        { "test",                       required_argument,      NULL, 't' },
+#endif
         { "name",                       required_argument,      NULL, 'n' },
         { "connection-string",          required_argument,      NULL, 'c' },
-        { "connection-string-file",     required_argument,      NULL, 'C' },
+        { "log-file",                   required_argument,      NULL, 'l' },
+
         { "log-config-file",            required_argument,      NULL, 'L' },
-        { "ns-db-file",                 required_argument,      NULL, 'd' },
+        { "connection-string-file",     required_argument,      NULL, 'C' },
+        { "hub-config-file",            required_argument,      NULL, 'H' },
+        { "ns-db-file",                 required_argument,      NULL, 'D' },
         { 0,                            0,                      NULL,  0  }
     };
-    
+
     do
     {
         result = er_ok;
@@ -234,7 +241,7 @@ static int32_t prx_host_init_from_command_line(
         while (result == er_ok)
         {
             c = getopt_long(
-                argc, argv, "hiuc:a:n:L:C:d:", long_options, &option_index);
+                argc, argv, "hiuc:t:n:L:l:C:d:", long_options, &option_index);
             if (c == -1)
                 break;
 
@@ -251,56 +258,71 @@ static int32_t prx_host_init_from_command_line(
                 should_exit = true;
                 is_uninstall = true;
                 break;
-            case 'a':
-                is_adhoc = true;
+#if defined(DEBUG)
+            case 't':
+                is_test = true;
                 if (!optarg)
                     break;
                 loops = atoi(optarg);
                 if (!loops)
                 {
-                    printf("Bad arg for -ad-hoc option (%s). \n\n",
+                    printf("ERROR: Bad arg for --test option (%s). \n\n",
                         optarg ? optarg : "");
                     result = er_arg;
                 }
                 break;
+#endif
             case 'n':
                 server_name = optarg;
                 if (!server_name)
                 {
-                    printf("Missing arg for -name option. \n\n");
+                    printf("ERROR: Missing arg for --name option. \n\n");
                     result = er_arg;
                 }
                 break;
             case 'c':
                 result = io_cs_create_from_string(optarg, &cs);
                 if (result != er_ok)
-                    printf("Malformed --connection-string argument. \n\n");
+                    printf("ERROR: Malformed --connection-string argument. \n\n");
                 break;
-            case 'd':
+            case 'D':
                 ns_registry = optarg;
                 if (!ns_registry)
                 {
-                    printf("Missing arg for --ns-db-file option. \n\n");
+                    printf("ERROR: Missing arg for --ns-db-file option. \n\n");
                     result = er_arg;
                 }
                 break;
             case 'C':
+                result = io_cs_create_from_raw_file(optarg, &cs);
+                if (result != er_ok)
+                    printf("ERROR: Failed to load iothubowner connection string from "
+                        "--connection-string-file '%s' arg. \n\n", optarg ? optarg : "");
+                break;
+            case 'H':
                 result = prx_ns_iot_hub_create(optarg, &host->remote);
                 if (result != er_ok)
-                    printf("Failed to load iot hub registry from "
-                        "--connection-string-file '%s' arg. \n\n", 
-                            optarg ? optarg : "");
+                    printf("ERROR: Failed to load iot hub registry from "
+                        "--hub-config-file '%s' arg. \n\n", optarg ? optarg : "");
                 break;
             case 'L':
                 log_config = optarg;
                 if (!log_config)
                 {
-                    printf("Missing arg for --log-config-file option. \n\n");
+                    printf("ERROR: Missing arg for --log-config-file option. \n\n");
+                    result = er_arg;
+                }
+                break;
+            case 'l':
+                log_file = optarg;
+                if (!log_file)
+                {
+                    printf("ERROR: Missing arg for --log-file option. \n\n");
                     result = er_arg;
                 }
                 break;
             default:
-                printf("Unrecognized option %c\n\n", (char)c);
+                printf("ERROR: Unrecognized option %c\n\n", (char)c);
                 // Fall through
             case '?':
                 result = er_arg;
@@ -312,38 +334,52 @@ static int32_t prx_host_init_from_command_line(
             break;
 
         if ((is_install && is_uninstall) ||
-            (is_adhoc && is_install) ||
-            (is_adhoc && is_uninstall))
+            (is_test && is_install) ||
+            (is_test && is_uninstall))
         {
-            printf("Cannot use --install and --uninstall and --adhoc together...");
+            printf("ERROR: Cannot use --install and --uninstall together...");
             result = er_arg;
             break;
         }
 
-        // Configure logging
-        log_config = pal_create_full_path(log_config ? log_config : "log.config");
-        if (!log_config)
-        {
-            result = er_out_of_memory;
-        }
-        else
+        if (log_config && log_file) 
+            printf("WARNING: --log-file overrides --log-config-file option...");
+
+        if (log_config)
         {
             // Configure logging
-            result = log_configure(log_config);
+            result = pal_get_real_path(
+                log_config ? log_config : "log.config", &log_config);
+            if (result != er_ok)
+                break;
+
+            result = log_read_config(log_config);
             if (result != er_ok)
             {
-                printf("Logging config file %s not found. \r\n", log_config);
+                printf("WARNING: Logging config file %s was not found. \n\n", 
+                    log_config);
             }
-        
+
             pal_free_path(log_config);
             log_config = NULL;
+        }
+
+        if (log_file)
+        {
+            result = log_set_log_file(log_file);
+            if (result != er_ok)
+            {
+                printf("ERROR: Failed to configure logging to use log file %s. \n\n",
+                    log_file);
+                break;
+            }
         }
 
         // Load registry from file or create in memory one if no file specified
         result = prx_ns_generic_create(ns_registry, &host->local);
         if (result != er_ok)
         {
-            printf("Failed to create local registry. \n\n");
+            printf("ERROR: Failed to create local registry. \n\n");
             break;
         }
 
@@ -358,7 +394,7 @@ static int32_t prx_host_init_from_command_line(
             // If we want to install or uninstall we will need secrets
             if (!cs && (is_install || is_uninstall))
             {
-                printf("Missing --connection-string option. \n\n");
+                printf("ERROR: Missing --connection-string option. \n\n");
                 result = er_arg;
                 break;
             }
@@ -368,14 +404,14 @@ static int32_t prx_host_init_from_command_line(
                 result = prx_ns_iot_hub_create_from_cs(cs, &host->remote);
                 if (result != er_ok)
                 {
-                    printf("Failed to create iothub registry from "
+                    printf("ERROR: Failed to create iothub registry from "
                         "--connection-string supplied connection string. \n\n");
                     break;
                 }
             }
         }
 
-        if (!ns_registry && !is_install && !is_uninstall && !is_adhoc)
+        if (!ns_registry && !is_install && !is_uninstall && !is_test)
         {
             if (host->remote)
                 is_install = true; // Always install without args
@@ -383,31 +419,31 @@ static int32_t prx_host_init_from_command_line(
                 should_exit = true;  // Always exit
         }
 
-        if (is_adhoc)
+        if (is_test)
         {
             if (loops > 1 && server_name)
                 loops = 1;
             host->uninstall_on_exit = true;
         }
 
-        if (is_install || is_uninstall || is_adhoc)
+        if (is_install || is_uninstall || is_test)
         {
             for (int i = 0; i < loops; i++)
             {
                 // Ensure we have a name
                 if (!server_name)
                 {
-                    if (!is_adhoc)
+                    if (!is_test)
                         result = pal_gethostname(buffer, _countof(buffer));
                     else
                     {
-                        result = io_ref_new(&adhoc);
+                        result = io_ref_new(&test);
                         if (result != er_ok)
                         {
-                            printf("Failed making ad-hoc id for proxy server. \n\n");
+                            printf("ERROR: Failed making test id for proxy server. \n\n");
                             break;
                         }
-                        result = io_ref_to_string(&adhoc, buffer, _countof(buffer));
+                        result = io_ref_to_string(&test, buffer, _countof(buffer));
                     }
                     if (result != er_ok)
                         break;
@@ -417,14 +453,14 @@ static int32_t prx_host_init_from_command_line(
                     server_name = NULL;  // Remove all!
 
                 // Run install/uninstall
-                /**/ if (is_install || is_adhoc)
+                /**/ if (is_install || is_test)
                     result = prx_host_install_server(host, server_name);
                 else if (is_uninstall)
                     result = prx_host_uninstall_server(host, server_name);
 
                 if (result != er_ok)
                 {
-                    printf("FAILURE %s: %s failed! Check parameters...",
+                    printf("ERROR: %s %s failed! Check parameters...",
                         prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                     break;
                 }
@@ -445,36 +481,48 @@ static int32_t prx_host_init_from_command_line(
         return result;
 
 printf(" Proxy command line options:                                       \n\n");
-printf(" -L, --log-config-file                                               \n");
-printf("                    Log configuration file to use. Defaults to       \n");
-printf("                    ./log.config.                                    \n");
-printf(" -d, --ns-db-file                                                    \n");
-printf("                    Local name service database file to use.         \n");
-printf("                    If not provided keeps ns in memory.              \n");
-printf(" -c, --connection-string <string>                                    \n");
-printf("                    iothubowner connection string for install or     \n");
-printf("                    uninstall. Required for -i, -u, or -a            \n");
-printf(" -C, --connection-string-file <file-name>                            \n");
-printf("                    same as above but read from file.                \n");
-printf(" -n, --name <string>                                                 \n");
-printf("                    Name of servers to install or uninstall.         \n");
 printf(" -i, --install                                                       \n");
 printf("                    Installs a proxy server in the IoT Hub device    \n");
 printf("                    registry and creates a local database entry,     \n");
-printf("                    then exits. Requires -c or -C.                   \n");
-printf("                    If -n is not specified, uses hostname.           \n");
+printf("                    then exits. Requires -c or -C, or $_HUB_CS.      \n");
 printf(" -u, --uninstall                                                     \n");
 printf("                    Uninstalls proxy server on Iot Hub and removes   \n");
 printf("                    the entry from the local database file, then     \n");
-printf("                    exits. Requires -c or -C.                        \n");
-printf("                    If -n is not specified, uses hostname.           \n");
-printf(" -a, --ad-hoc                                                        \n");
-printf("                    Installs a proxy server under a random name on   \n");
-printf("                    startup and removes it on clean(!) exit.         \n");
-printf("                    Requires -c or -C.                               \n");
+printf("                    exits. Requires -c or -C, or $_HUB_CS.           \n");
+printf(" -n, --name <string>                                                 \n");
+printf("                    Name of server to install or uninstall.          \n");
+printf("                    If -n is not specified, hostname is used.        \n");
+printf(" -c, --connection-string <string>                                    \n");
+printf("                    iothubowner connection string for install or     \n");
+printf("                    uninstall.                                       \n");
+printf(" -C, --connection-string-file <file-name>                            \n");
+printf("                    same as above but read from file.                \n");
+printf("                    If -c or C are not provided, connection string   \n");
+printf("                    is read from _HUB_CS environment variable.       \n");
+printf(" -D, --ns-db-file <file-name>                                        \n");
+printf("                    Local name service database file to use.         \n");
+printf("                    If not provided keeps ns in memory.              \n");
+#if !defined(NO_ZLOG)
+printf(" -L, --log-config-file                                               \n");
+printf("                    Log configuration file to use. Defaults to       \n");
+printf("                    ./log.config.                                    \n");
+printf(" -l, --log-file                                                      \n");
+printf("                    Or simpler, the log file to write logs to using  \n");
+printf("                    standard formatting.                             \n");
+#endif
+#if defined(EXPERIMENTAL)
+printf(" -H, --hub-config-file <file-name>                                   \n");
+printf("                    JSON encoded list of iot hub entries for a multi \n");
+printf("                    hub proxy. Each hub is loaded into a composite   \n");
+printf("                    iot hub name service.                            \n");
+printf(" -t, --test <number>                                                 \n");
+printf("                    Creates <number> of test proxy instances on the  \n");
+printf("                    configured IotHub, starts a server for each, and \n");
+printf("                    deletes them on clean (!) shutdown.              \n");
 printf(" -h, --hidden                                                        \n");
 printf("                    Runs the proxy as a service/daemon, otherwise    \n");
 printf("                    runs proxy host process as console process.      \n");
+#endif
     return er_arg;
 }
 

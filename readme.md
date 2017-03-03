@@ -1,18 +1,17 @@
 This project has adopted the Microsoft Open Source Code of Conduct. For more information see the Code of Conduct FAQ or contact opencode@microsoft.com with any additional questions or comments.
 
-# Azure IoT Field Gateway Proxy Module
+# Azure IoT Field Gateway OPC-UA-Proxy Module
 
-This module is a stream proxy for Azure IoT written in C and intended to be hosted in an Edge Gateway built using the
+This module is a OPC-UA command and control proxy for Azure IoT written in C and intended to be hosted in an Edge Gateway built using the
 [Azure IoT Gateway SDK](https://github.com/Azure/azure-iot-gateway-sdk).  
 
-It can tunnel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local
+It can tunnel binary channel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local
 network gateways to a server in the local network.  It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name 
 service provider, and only requires port 443 (outgoing) open to Azure.
 
-This allows cloud applications to send and receive raw buffers to and from IoT server devices that are accessible on the local
-gateway network.  Using the proxy API you can quickly implement streaming command and control scenarios from a cloud application 
-without providing edge protocol translation.  But please note that using the Proxy to access a device requires a data connection
-(Websocket) between Gateway and Azure and precludes any edge intelligence scenarios on the exchanged data.   
+This allows cloud OPC-UA applications to send and receive raw buffers to and from IoT server devices that are accessible on the local
+gateway network.  Using the API one can quickly implement command and control scenarios from a cloud application 
+without providing edge command/control translation.   
 
 Visit http://azure.com/iotdev to learn more about developing applications for Azure IoT.
 
@@ -59,7 +58,15 @@ git clone -b "2016-12-16" --recursive https://github.com/Azure/azure-iot-gateway
 All samples require an Azure IoT Hub and a Service Bus Hybrid Connection Namespace to be provisioned in Azure.  All of them also
 need access to the ```iothubowner```, as well as Service Bus ```RootManageSharedAccessKey``` (manage, read, and write claims)
 policy connection strings.  
-These can be retrieved from the Azure portal under ```Shared access policies``` in the respective menus.  
+
+For simplicity, all samples read connection strings from the  ```_HUB_CS ``` and  ```_SB_CS ``` environment variables respectively.  
+
+Connection strings can be retrieved from the Azure portal under ```Shared access policies``` in the respective menus.  
+For more information, check out the following resources: 
+
+- [Set up IoT Hub](https://github.com/Azure/azure-iot-sdks/blob/master/doc/setup_iothub.md) describes how to configure your Azure IoT Hub service.
+- [Manage IoT Hub](https://github.com/Azure/azure-iot-sdks/blob/master/doc/manage_iot_hub.md) describes how to provision devices in your Azure IoT Hub service.
+- [Set up a Relay](https://docs.microsoft.com/en-us/azure/service-bus-relay/relay-hybrid-connections-dotnet-get-started) describes how to set up a relay listener.
 
 Please note: the Service Bus Hybrid Connection Namespace connection string needs to have the name of the application instance appended
 as follows:
@@ -76,12 +83,8 @@ In this case, either run a .net 4.5 or .net 4.6 sample first, or manually provis
 doing so, ensure that "Requires client authentication" is checked, and a "Shared Access Policy" with the name "proxy" and 
 "send" and "listen" claims is added.
 
-For simplicity, the proxy executable (unless provided otherwise, e.g. through command line), as well as the samples, read 
-connection strings from the  ```_HUB_CS ``` and  ```_SB_CS ``` environment variables respectively, .  
-
-Note that if you use the  ```_SB_CS ``` environment variable to configure the samples, you will only be able to run one instance of the
-sample at a time.  
-If you want to run several samples simultaneously, you will need to provide each sample instance with its own Service Bus Hybrid 
+Also note that if you use the  ```_SB_CS ``` environment variable to configure the samples, you will only be able to run 
+one instance of the sample at a time.  If you want to run several samples simultaneously, you will need to provide each sample instance with its own Service Bus Hybrid 
 Connection connection string containing a unique <application-instance-name>.
 
 ## Proxy Module Host Sample
@@ -99,32 +102,6 @@ install docker on your machine, then in a terminal or console window, run:
 docker build -t <tag> https://github.com/Azure/iot-gateway-proxy
 docker run -e _HUB_CS=<iothubowner-connection-string> <tag>
 ```
-
-## Simple TCP/IP Client Sample
-
-This C# sample is a Simple TCP/IP Services client that connects / sends / receives both synchronously and asynchronously through 
-the proxy. 
-
-On Windows, the Simple TCP/IP services can be installed in:
-```
-Programs and Features -> Turn Windows Features on or off -> [X] Simple TCPIP Services (i.e. echo, daytime, etc.)
-```
-
-Once installed, start the ```proxyd``` host sample, then run the ```simple``` sample.  
-
-The sample accepts a host name, or defaults to the host name of the machine it is running on.  Though not recommended,
-if you run the proxyd sample on a different machine than the one you installed the services on, then a inbound firewall rule
-needs to be added for ports 7, 13, 17, and 19.  
-
-## VNC Client Sample
-
-The C# VNC sample uses the [RemoteViewing](https://www.zer7.com/software/remoteviewing) nuget package.  
-It is included for demonstration purposes only.  Due to its dependency on WinForms it only works on Windows and does not
-support essential Features such as keyboard and mouse. 
-
-To run the sample, start the ```proxyd``` executable and VNC Server (included in ```api/csharp/samples/VNC/Test```
-folder, then start ```RemoteViewing.Client``` WinForms App., enter the host name the VNC server runs on, and the password
-of the server (e.g. ```test```), and click connect.
 
 ## OPC-UA Client Sample
 
@@ -149,6 +126,12 @@ folder into the ```OPC Foundation\CertificateStores\UA Applications\certs``` fol
 The Azure IoT Field Gateway Proxy module is licensed under the [MIT License](https://github.com/Azure/iot-gateway-proxy/blob/master/LICENSE).  
 You can find license information for all third party dependencies [here](https://github.com/Azure/iot-gateway-proxy/blob/master/thirdpartynotice.txt). 
 Note that not all of these dependencies need to be utilized, depending on your build configuration, or your choice of platform.
+
+# Support
+
+If you are having issues compiling or using the code in this project please feel free to log an issue in the [issues section](https://github.com/Azure/iot-gateway-proxy/issues) of this project.
+For other issues, such as Connectivity issues or problems with the portal, or issues using the Azure IoT Hub service the Microsoft Customer Support team will try and help out on a best effort basis.
+To engage Microsoft support, you can create a support ticket directly from the [Azure portal](https://ms.portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade).
 
 # Contributing
 

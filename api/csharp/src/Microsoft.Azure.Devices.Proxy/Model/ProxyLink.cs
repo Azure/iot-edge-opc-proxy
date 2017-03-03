@@ -38,6 +38,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public INameRecord Proxy { get; private set; }
 
         /// <summary>
+        /// Proxy the socket is bound on.  
+        /// </summary>
+        public SocketAddress ProxyAddress {
+            get {
+                return Proxy.Address.ToSocketAddress();
+            }
+        }
+
+        /// <summary>
         /// Constructor for proxy link object
         /// </summary>
         /// <param name="socket">Owning proxy link</param>

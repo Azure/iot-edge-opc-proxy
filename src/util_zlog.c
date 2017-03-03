@@ -30,14 +30,62 @@ int32_t zlog_initialize(
 }
 
 //
+// Set log file
+//
+int32_t zlog_set_log_file(
+    const char* file_name
+)
+{
+    int32_t result;
+    STRING_HANDLE config;
+
+    config = STRING_construct(
+        "[global]\n"
+        "strict init = true\n"
+        "buffer min = 1024\n"
+        "buffer max = 0\n"
+        "rotate lock file = zlog.lock\n"
+        "default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n"
+        "[rules]\n"
+        "*.info >stdout\n"
+        "*.error >stderr\n"
+        "*.* \""
+    );
+    if (!config)
+        return er_out_of_memory;
+    do
+    {
+        if (0 != STRING_concat(config, file_name) ||
+            0 != STRING_concat(config, "\",1M*3 \n"))
+        {
+            result = er_out_of_memory;
+            break;
+        }
+
+        if (0 != zlog_reload_from_string(STRING_c_str(config)))
+        {
+            result = er_reading;
+            break;
+        }
+
+        result = er_ok;
+        break;
+    }
+    while (0);
+    STRING_delete(config);
+    return result;
+}
+
+//
 // Configure logging facilities
 //
-int32_t zlog_configure(
+int32_t zlog_read_config(
     const char* file_name
 )
 {
     if (!init_called)
         zlog_initialize();
+
     if (0 != zlog_reload(file_name))
         return er_reading;
     return er_ok;

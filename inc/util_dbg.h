@@ -62,7 +62,7 @@ extern "C"
     if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, ## args); dbg_brk(); }
 #endif
 #else
-#define dbg_assert(...) (void)(__VA_ARGS__)
+#define dbg_assert(...)
 #endif
 #endif // dbg_assert
 
