@@ -15,10 +15,18 @@ decl_public_0(int32_t, pal_file_init,
 );
 
 //
-// Get Full path of a file name
+// Returns whether file exists
 //
-decl_public_1(const char*, pal_create_full_path,
+decl_public_1(bool, pal_file_exists,
     const char*, file_name
+);
+
+//
+// Get real/absolute path of a file name
+//
+decl_public_2(int32_t, pal_get_real_path,
+    const char*, file_name,
+    const char**, path
 );
 
 //
@@ -26,20 +34,6 @@ decl_public_1(const char*, pal_create_full_path,
 //
 decl_public_1(void, pal_free_path,
     const char*, path
-);
-
-//
-// Change working dir
-//
-decl_public_1(int32_t, pal_set_working_dir,
-    const char*, dir
-);
-
-//
-// Get working dir
-//
-decl_public_0(const char*, pal_get_working_dir,
-    void
 );
 
 //

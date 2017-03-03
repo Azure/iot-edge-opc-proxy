@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         _tags["type"].ToString());
                 }
                 set {
-                    _tags["type"] = ((Int32)value).ToString();
+                    _tags["type"] = ((int)value).ToString();
                     // No support for bit queries ...
                     if (0 == (value & RecordType.Proxy))
                         _tags["proxy"] = null;
@@ -435,23 +435,30 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             var uri = new UriBuilder("https", _hubConnectionString.HostName);
             uri.Path = $"/twins/{WebUtility.UrlEncode(message.DeviceId)}/methods";
             uri.Query = "api-version=" + _apiVersion;
-            var stream = await _http.StreamAsync(uri.Uri, HttpMethod.Post, async h => {
-                h.Add(HttpRequestHeader.Authorization.ToString(), 
-                    await GetSASTokenAsync(3600).ConfigureAwait(false));
-                h.Add(HttpRequestHeader.UserAgent.ToString(), _clientId);
-            }, _ => {}, ct, Encoding.UTF8.GetString(buffer.ToArray()), 
-                "application/json").ConfigureAwait(false);
-            using (stream) {
-                var response = MethodCallResponse.Decode(stream, CodecId.Json);
-                if (response.Status != 200) {
-                    if (response.Status == 0) {
-                        throw new ProxyException($"Remote proxy not connected!");
-                    }
-                    throw ProxyEventSource.Log.Rethrow(
-                        new ProxyException($"Unexpected status {response.Status}"));
+            MethodCallResponse response;
+            try {
+                var stream = await _http.StreamAsync(uri.Uri, HttpMethod.Post, async h => {
+                    h.Add(HttpRequestHeader.Authorization.ToString(),
+                        await GetSASTokenAsync(3600).ConfigureAwait(false));
+                    h.Add(HttpRequestHeader.UserAgent.ToString(), _clientId);
+                }, _ => { }, ct, Encoding.UTF8.GetString(buffer.ToArray()),
+                    "application/json").ConfigureAwait(false);
+
+                using (stream) {
+                    response = MethodCallResponse.Decode(stream, CodecId.Json);
                 }
-                return response.Payload;
             }
+            catch (Exception ex) {
+                throw ProxyEventSource.Log.Rethrow(ex);
+            }
+            if (response.Status != 200) {
+                if (response.Status == 0) {
+                    throw new ProxyException($"Remote proxy not connected!");
+                }
+                throw ProxyEventSource.Log.Rethrow(
+                    new ProxyException($"Unexpected status {response.Status}"));
+            }
+            return response.Payload;
         }
 
         /// <summary>
@@ -484,11 +491,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     record, request, timeout, ct).ConfigureAwait(false);
             }
             catch (ProxyException) {
+                return null;
             }
             catch (Exception e) {
                 ProxyEventSource.Log.HandledExceptionAsWarning(this, e);
+                return null;
             }
-            return null;
         }
 
         /// <summary>

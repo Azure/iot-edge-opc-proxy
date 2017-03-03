@@ -164,9 +164,10 @@ static int32_t pal_socket_connect_finish(
         }
 
         // Reset timeout on socket
+#if defined(TCP_USER_TIMEOUT)
         (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT, 
             (char*)&error, sizeof(error));
-
+#endif
         // Get peer address
         len = sizeof(sa_in);
         error = getpeername(sock->sock_fd, (struct sockaddr*)sa_in, &len);
@@ -233,9 +234,11 @@ static int32_t pal_socket_event_callback(
         sock->sock_fd = _invalid_fd;
         pal_socket_complete_close(sock);
         return er_ok;
+    case pal_event_type_unknown:
+    default:
+        dbg_assert(0, "Unknown event type %d", event_type);
+        return er_bad_state;
     }
-    dbg_assert(0, "Unknown event type");
-    return er_bad_state;
 }
 
 //
@@ -696,9 +699,10 @@ static int32_t pal_socket_connect(
         }
 
         log_info(sock->log, "Socket connecting ... (fd:%d)", sock->sock_fd);
-        (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT, 
+#if defined(TCP_USER_TIMEOUT)
+        (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT,
             (char*)&timeout, sizeof(timeout));
-
+#endif
 #if defined(ASYNC_CONNECT)
         // Wait for close, error, or writeable
         result = pal_event_select(sock->event_handle, 

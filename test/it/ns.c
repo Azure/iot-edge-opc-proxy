@@ -150,7 +150,8 @@ int main(int argc, char *argv[])
     io_cs_t* cs;
     char buffer[64];
 
-    (void)argc, argv;
+    (void)argc;
+    (void)argv;
     mem_init();
 
     result = log_init();

@@ -164,6 +164,9 @@ TEST_FUNCTION(pal_win_wsclient_create__success)
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
         .IgnoreArgument(3)
         .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_MAX_CONNS_PER_SERVER, IGNORED_PTR_ARG, sizeof(DWORD)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetTimeouts(k_session_handle_valid, 0, 0, 0, 0))
         .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetStatusCallback(k_session_handle_valid, pal_wsclient_winhttp_cb, (DWORD)-1, 0))
@@ -406,6 +409,10 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
         .IgnoreArgument(3)
         .SetReturn(TRUE)
         .SetFailReturn(FALSE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_MAX_CONNS_PER_SERVER, IGNORED_PTR_ARG, sizeof(DWORD)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE)
+        .SetFailReturn(FALSE);
     STRICT_EXPECTED_CALL(WinHttpSetTimeouts(k_session_handle_valid, 0, 0, 0, 0))
         .SetReturn(TRUE)
         .SetFailReturn(FALSE);
@@ -643,6 +650,9 @@ TEST_FUNCTION(pal_win_wsclient_connect__success)
         .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0))
         .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CONNECT_RETRIES, NULL, sizeof(DWORD)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET, NULL, 0))
         .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetTimeouts(k_h_request_valid, 0, 0, 0, 0))
@@ -756,6 +766,9 @@ TEST_FUNCTION(pal_win_wsclient_connect__neg_2)
         .IgnoreArgument(3)
         .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0))
+        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_CONNECT_RETRIES, NULL, sizeof(DWORD)))
+        .IgnoreArgument(3)
         .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_h_request_valid, WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET, NULL, 0))
         .SetReturn(TRUE);

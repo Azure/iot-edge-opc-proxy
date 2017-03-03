@@ -75,7 +75,8 @@ namespace simple_client {
             byte[] buffer = new byte[1024];
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine($"Receive: Connected to port {port}!  Receiving...");
+                Console.Out.WriteLine($"Receive: Connected to {s.RemoteEndPoint} on {s.InterfaceEndPoint} via {s.LocalEndPoint}!");
+                Console.Out.WriteLine("Receive: Receiving sync...");
                 int count =  s.Receive(buffer);
                 Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, count));
                 s.Close();
@@ -85,12 +86,12 @@ namespace simple_client {
         public static void EchoLoop(int loops) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, 7);
-                Console.Out.WriteLine($"EchoLoop: Connected to port 7!  Sending ...");
+                Console.Out.WriteLine($"EchoLoop: Connected to {s.RemoteEndPoint} on {s.InterfaceEndPoint} via {s.LocalEndPoint}!");
 
                 for (int i = 0; i < loops; i++) {
-                    s.Send(Encoding.UTF8.GetBytes($"{i} sync loop to echo server"));
+                    s.Send(Encoding.UTF8.GetBytes($"EchoLoop: {i} sync loop to echo server"));
                     byte[] buffer = new byte[1024];
-                    Console.Out.WriteLine("Receiving...");
+                    Console.Out.WriteLine($"EchoLoop: {i}:        Receiving sync...");
                     int count = s.Receive(buffer);
                     Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, count));
                 }
@@ -101,7 +102,8 @@ namespace simple_client {
         public static void Send(int port, byte[] buffer, int iterations) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine($"Send: Connected to {port}!  Sending ...");
+                Console.Out.WriteLine($"Send: Connected to {s.RemoteEndPoint} on {s.InterfaceEndPoint} via {s.LocalEndPoint}!");
+                Console.Out.WriteLine("Send: Sending sync ...");
                 for (int i = 0; i < iterations; i++)
                     s.Send(buffer);
                 s.Close();
@@ -111,10 +113,11 @@ namespace simple_client {
         public static void SendReceive(int port, byte[] buffer) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 s.Connect(host_name, port);
-                Console.Out.WriteLine($"SendReceive: Connected to {port}!  Sending ...");
+                Console.Out.WriteLine($"SendReceive: Connected to {s.RemoteEndPoint} on {s.InterfaceEndPoint} via {s.LocalEndPoint}!");
+                Console.Out.WriteLine("SendReceive: Sending sync ...");
                 s.Send(buffer);
                 buffer = new byte[1024];
-                Console.Out.WriteLine("Receiving sync...");
+                Console.Out.WriteLine("SendReceive: Receiving sync...");
                 int count = s.Receive(buffer);
                 Console.Out.WriteLine(Encoding.UTF8.GetString(buffer, 0, count));
                 s.Close();
@@ -124,7 +127,7 @@ namespace simple_client {
         public static async Task EchoLoopAsync(int index, int loops) {
             using (Socket s = new Socket(SocketType.Stream, ProtocolType.Tcp)) {
                 await s.ConnectAsync(host_name, 7);
-                Console.Out.WriteLine($"EchoLoopAsync #{index}: Connected!.  Sending ...");
+                Console.Out.WriteLine($"EchoLoopAsync #{index}: Connected!");
                 for (int i = 0; i < loops; i++) {
                     await EchoLoopAsync1(index, s, i);
                 }
@@ -159,7 +162,7 @@ namespace simple_client {
         }
 
         private static async Task EchoLoopAsync1(int index, Socket s, int i) {
-            var msg = Encoding.UTF8.GetBytes(String.Format("{0,6} async loop #{1} to echo server", i, index));
+            var msg = Encoding.UTF8.GetBytes(string.Format("{0,6} async loop #{1} to echo server", i, index));
             await s.SendAsync(msg);
             byte[] buffer = new byte[msg.Length];
             int count = await s.ReceiveAsync(buffer);

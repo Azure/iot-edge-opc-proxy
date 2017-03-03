@@ -925,7 +925,8 @@ int32_t pal_os_from_prx_addrinfo(
     struct addrinfo* ai
 )
 {
-    (void)prx_ai, ai;
+    (void)prx_ai;
+    (void)ai;
     return er_not_impl;
 }
 

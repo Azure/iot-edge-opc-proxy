@@ -58,6 +58,12 @@
     c_realloc(size, NULL, __FILE__, sizeof(__FILE__)-1, __LINE__) 
 
 //
+// Re-allocate memory 
+//
+#define crt_realloc(p, size) \
+    c_realloc(size, p,  __FILE__, sizeof(__FILE__)-1, __LINE__) 
+
+//
 // Free crt memory
 //
 #define crt_free(p) \
@@ -79,6 +85,7 @@
 #undef mem_realloc
 #undef mem_free
 #undef crt_alloc
+#undef crt_realloc
 #undef crt_free
 
 #undef mem_zalloc
@@ -94,18 +101,19 @@
 
 #include <crtdbg.h>
 #define _CRTDBG_FLAGS \
-  /* _CRTDBG_ALLOC_MEM_DF | */ \
-  /* _CRTDBG_CHECK_CRT_DF | */ \
-  /* _CRTDBG_LEAK_CHECK_DF | */ \
-    _CRTDBG_DELAY_FREE_MEM_DF | \
+  /* _CRTDBG_ALLOC_MEM_DF | */     \
+  /* _CRTDBG_CHECK_CRT_DF | */     \
+    _CRTDBG_LEAK_CHECK_DF |        \
+    _CRTDBG_DELAY_FREE_MEM_DF |    \
   /* _CRTDBG_CHECK_EVERY_1024_DF | */ \
-    _CRTDBG_CHECK_ALWAYS_DF | \
+    _CRTDBG_CHECK_ALWAYS_DF |      \
     0
 #define mem_init()              _CrtSetDbgFlag(_CRTDBG_FLAGS)
 #define mem_alloc               malloc
 #define mem_realloc             realloc
 #define mem_free                free
 #define crt_alloc               malloc
+#define crt_realloc             realloc
 #define crt_free                free
 
 #define mem_zalloc(size)        calloc(1, size) 
@@ -126,6 +134,7 @@
 #define mem_realloc             gballoc_realloc
 #define mem_free                gballoc_free
 #define crt_alloc               gballoc_malloc
+#define crt_realloc             gballoc_realloc
 #define crt_free                gballoc_free
 
 #define mem_zalloc(size)        gballoc_calloc(1, size) 

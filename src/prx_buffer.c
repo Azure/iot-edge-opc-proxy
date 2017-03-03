@@ -96,7 +96,8 @@ static void prx_buffer_available_dummy_callback(
     bool empty
 )
 {
-    (void)context, empty;
+    (void)context;
+    (void)empty;
 }
 
 //
@@ -376,7 +377,7 @@ static int32_t prx_dynamic_buffer_set_size(
     int32_t result;
     prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     prx_buffer_t* buf, *orig;
-    if (size < 0 || !buffer || !*buffer)
+    if (!buffer || !*buffer)
         return er_fault;
 
     orig = __prx_buffer(*buffer);
@@ -560,7 +561,10 @@ static int32_t prx_fixed_buffer_set_size(
     size_t size
 )
 {
-    (void)context, buffer, size;
+    (void)context;
+    (void)buffer;
+    (void)size;
+
     dbg_assert(0, "Unsupported");
     return er_not_supported;
 }

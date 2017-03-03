@@ -15,6 +15,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Opc.Ua;
 using Opc.Ua.Client;
+using Opc.Ua.Bindings;
 using Opc.Ua.Bindings.Proxy;
 
 using System.Security.Cryptography.X509Certificates;
@@ -139,6 +140,12 @@ namespace NetCoreConsoleClient
             var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
             endpoint.Update(selectedEndpoint);
             var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, null, null);
+
+            // Access underlying proxy socket
+            var channel = session.TransportChannel as IMessageSocketChannel;
+            var socket = channel.Socket as ProxyMessageSocket;
+            var proxySocket = socket.ProxySocket;
+            Console.WriteLine("    Connected through proxy {0}.", proxySocket.LocalEndPoint.ToString());
 
             Console.WriteLine("4 - Browse the OPC UA server namespace.");
             ReferenceDescriptionCollection references;

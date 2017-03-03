@@ -1629,7 +1629,8 @@ int32_t prx_client_poll(
 
     // TODO: not supported yet, we will just wait for activity and let
     // caller figure it out...
-    (void)num, sockets;
+    (void)num;
+    (void)sockets;
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1906,7 +1907,8 @@ int32_t prx_client_sendto(
 {
     int32_t result;
     prx_client_socket_t* sock;
-    (void)key, flags;
+    (void)key;
+    (void)flags;
 
     if (!buf || !sent)
         return er_fault;
@@ -1934,7 +1936,8 @@ int32_t prx_client_send(
 {
     int32_t result;
     prx_client_socket_t* sock;
-    (void)key, flags;
+    (void)key;
+    (void)flags;
 
     if (!buf || !sent)
         return er_fault;
@@ -1963,7 +1966,8 @@ int32_t prx_client_recvfrom(
 {
     int32_t result;
     prx_client_socket_t* sock;
-    (void)key, flags;
+    (void)key;
+    (void)flags;
 
     if (!buf || !received)
         return er_fault;
@@ -1991,7 +1995,8 @@ int32_t prx_client_recv(
 {
     int32_t result;
     prx_client_socket_t* sock;
-    (void)key, flags;
+    (void)key;
+    (void)flags;
 
     if (!buf || !received)
         return er_fault;

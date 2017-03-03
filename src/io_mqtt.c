@@ -878,14 +878,6 @@ static void io_mqtt_connection_complete_disconnect(
 
     connection->status = io_mqtt_status_reset;
 
-    if (connection->client)
-    {
-        mqtt_client_deinit(connection->client);
-        connection->client = NULL;
-
-        log_info(connection->log, "Client disconnected.");
-    }
-
     if (connection->socket_io)
     {
         xio_close(connection->socket_io, NULL, NULL);
@@ -893,6 +885,14 @@ static void io_mqtt_connection_complete_disconnect(
         connection->socket_io = NULL;
 
         log_info(connection->log, "Socket disconnected.");
+    }
+
+    if (connection->client)
+    {
+        mqtt_client_deinit(connection->client);
+        connection->client = NULL;
+
+        log_info(connection->log, "Client disconnected.");
     }
 
     // Reset send queue

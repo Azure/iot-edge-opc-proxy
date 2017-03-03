@@ -7,11 +7,17 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Diagnostics;
 
     /// <summary>
     /// Endpoint to read arbitrary sized buffers from
     /// </summary>
     internal class SequentialStream : PacketStream {
+
+#if VERBOSE
+        private long _transferred;
+        private Stopwatch _watch = Stopwatch.StartNew();
+#endif
 
         /// <summary>
         /// Constructor
@@ -65,6 +71,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 if (result.Count > 0)
                     break;
             }
+#if VERBOSE
+            _transferred += result.Count;
+            Console.CursorLeft = 0; Console.CursorTop = 0;
+            Console.WriteLine($"{ _transferred / _watch.ElapsedMilliseconds * 1000} b/sec");
+#endif
             return result;
         }
 

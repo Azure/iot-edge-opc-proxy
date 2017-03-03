@@ -42,7 +42,7 @@ io_ws_stream_t;
 //
 // Represents a websocket based, scheduler bound connection
 //
-typedef struct io_ws_connection
+struct io_ws_connection
 {
     io_url_t* address;
     STRING_HANDLE user_header_key;
@@ -62,8 +62,7 @@ typedef struct io_ws_connection
     int32_t back_off_in_seconds;       // Delay until next connect attempt
     io_ws_connection_status_t status;
     log_t log;
-}
-io_ws_connection_t;
+};
 
 
 //
@@ -632,6 +631,7 @@ static void io_ws_connection_on_end_send(
     dbg_assert_ptr(connection);
     dbg_assert_ptr(length);
 
+    (void)length;
     buffer = io_queue_buffer_from_ptr(*buf);
     if (!buffer)
         return;

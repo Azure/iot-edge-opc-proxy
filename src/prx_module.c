@@ -142,7 +142,8 @@ static void prx_module_receive(
     message_handle_t* message
 )
 {
-    (void)module, message;
+    (void)module;
+    (void)message;
     // No-op at this point since we do not know how to crack the message
 }
 

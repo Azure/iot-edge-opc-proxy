@@ -152,7 +152,8 @@ static void pal_wsclient_lws_log(
     }
 #endif
 #else
-    (void)level, msg;
+    (void)level;
+    (void)msg;
 #endif
 }
 
@@ -377,6 +378,7 @@ static int pal_wsworker_lws_on_error(
     if (!error)
         error = "<Unknown lws error>";
 
+    (void)wsi;
     // TODO: Do this based on current state (e.g. connecting, sending, etc.)
     // wsclient->last_error = er_unknown;
 

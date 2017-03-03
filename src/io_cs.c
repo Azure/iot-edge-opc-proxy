@@ -3,7 +3,9 @@
 
 #include "util_mem.h"
 #include "util_string.h"
+#include "util_stream.h"
 #include "io_cs.h"
+#include "pal_file.h"
 #include "azure_c_shared_utility/sastoken.h"
 
 //
@@ -375,6 +377,68 @@ int32_t io_cs_create_from_string(
 }
 
 //
+// Create connection cs from raw content of file
+//
+int32_t io_cs_create_from_raw_file(
+    const char* file_name,
+    io_cs_t** created
+)
+{
+    int32_t result;
+    io_file_stream_t fs;
+    io_stream_t* stream = NULL;
+    const char* real_file = NULL;
+    size_t read;
+    char* buf = NULL;
+
+    if (!file_name || !created)
+        return er_fault;
+    result = pal_get_real_path(file_name, &real_file);
+    if (result != er_ok)
+        return result;
+    do
+    {
+        if (!pal_file_exists(real_file))
+        {
+            result = er_not_found;
+            break;
+        }
+        stream = io_file_stream_init(&fs, real_file, "r");
+        if (!stream)
+        {
+            result = er_reading;
+            break;
+        }
+        read = io_stream_readable(stream);
+        if (!read || read > 2048)
+        {
+            result = er_reading;
+            break;
+        }
+        buf = (char*)mem_alloc(read + 1);
+        if (!buf)
+        {
+            result = er_out_of_memory;
+            break;
+        }
+        result = io_stream_read(stream, buf, read, &read);
+        if (result != er_ok)
+            break;
+        buf[read] = 0;
+        string_trim_back(buf, "\r\n ");
+        result = io_cs_create_from_string(buf, created);
+        break;
+    } 
+    while (0);
+    if (stream)
+        io_stream_close(stream);
+    if (buf)
+        mem_free(buf);
+    pal_free_path(real_file);
+    return result;
+}
+
+//
 // Create new connection cs
 //
 int32_t io_cs_create(
@@ -480,7 +544,7 @@ const char* io_cs_get_entry(
     io_cs_entry_t id
 )
 {
-    if (id < 0 || id >= io_cs_entry_max || !cs || !cs->entries[id])
+    if (id >= io_cs_entry_max || !cs || !cs->entries[id])
         return NULL;
     return STRING_c_str(cs->entries[id]);
 }
@@ -658,7 +722,7 @@ int32_t io_cs_set_entry(
 {
     if (!cs)
         return er_fault;
-    if (id < 0 || id >= io_cs_entry_max)
+    if (id >= io_cs_entry_max)
         return er_arg;
     if (cs->entries[id])
         STRING_delete(cs->entries[id]);

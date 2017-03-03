@@ -16,6 +16,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         InterNetworkV6 = 23,
 
         // Non standard first come first serve af for proxy
-        Proxy = 28165
+        Proxy = 28165,
+        Collection = 28166
     }
 }

@@ -431,7 +431,8 @@ static int32_t json_write_type_begin(
     size_t members
 )
 {
-    (void)ctx, members;
+    (void)ctx;
+    (void)members;
     return er_ok;
 }
 
@@ -1095,7 +1096,7 @@ static int32_t mpack_write_array(
 // Check each read
 //
 #define mpack_read_begin(ctx) \
-    if (ctx->index == 0) { \
+    (void)name; if (ctx->index == 0) { \
         dbg_assert(0, "Expected another item of name %s", name); \
         log_error(ctx->log, "Missing item %s during decoding!", name); \
         return er_invalid_format; \
@@ -1320,6 +1321,7 @@ static int32_t mpack_read_type_end(
 )
 {
     dbg_assert(ctx->index == 0, "Missing properties");
+    (void)ctx;
     return er_ok;
 }
 
@@ -1384,7 +1386,8 @@ static int32_t mpack_fini_ctx(
     bool flush
 )
 {
-    (void)stream, flush;
+    (void)stream;
+    (void)flush;
     mem_free_type(cmp_ctx_t, ctx->context);
     return er_ok;
 }
@@ -1489,7 +1492,8 @@ static int32_t fixed_validator(
     size_t* mem_size
 )
 {
-    (void)mem, ctx;
+    (void)mem;
+    (void)ctx;
     if (*mem_size >= size)
     {
         *mem_size = size;

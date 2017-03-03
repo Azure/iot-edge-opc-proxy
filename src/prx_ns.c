@@ -282,7 +282,8 @@ static int32_t prx_ns_generic_entry_get_routes(
     prx_ns_result_t** routes
 )
 {
-    (void)context, routes;
+    (void)context;
+    (void)routes;
     return er_not_found;
 }
 
@@ -294,7 +295,8 @@ static int32_t prx_ns_generic_entry_add_route(
     prx_ns_entry_t* route
 )
 {
-    (void)context, route;
+    (void)context;
+    (void)route;
     return er_not_supported;
 }
 
@@ -1379,7 +1381,8 @@ static int32_t prx_ns_iot_hub_twin_entry_add_route(
     prx_ns_entry_t* route
 )
 {
-    (void)context, route;
+    (void)context;
+    (void)route;
     return er_not_impl;
 }
 
@@ -1391,7 +1394,8 @@ static int32_t prx_ns_iot_hub_twin_entry_get_routes(
     prx_ns_result_t** routes
 )
 {
-    (void)context, routes;
+    (void)context;
+    (void)routes;
     return er_not_found;
 }
 
@@ -2327,19 +2331,20 @@ int32_t prx_ns_generic_create(
             return er_ok;
         }
 
-        registry->file_name = pal_create_full_path(file_name);
-        if (!registry->file_name)
-        {
-            result = er_out_of_memory;
-            break;
-        }
-
-        result = prx_ns_generic_registry_load(registry);
+        result = pal_get_real_path(file_name, &registry->file_name);
         if (result != er_ok)
+            break;
+
+        if (pal_file_exists(registry->file_name))
         {
-            log_error(registry->log,
-                "Failed to load registry from file %s (%s)",
-                registry->file_name, prx_err_string(result));
+            result = prx_ns_generic_registry_load(registry);
+            if (result != er_ok)
+            {
+                log_error(registry->log,
+                    "Failed to load registry from file %s (%s)",
+                    registry->file_name, prx_err_string(result));
+                break;
+            }
         }
         *created = &registry->itf;
         return er_ok;
@@ -2410,22 +2415,14 @@ int32_t prx_ns_iot_hub_create(
 )
 {
     int32_t result;
-    io_cs_t* cs;
     io_codec_ctx_t ctx;
     io_file_stream_t fs;
     io_stream_t* stream = NULL;
     prx_ns_iot_hub_composite_t* registry;
     const char* file_name = NULL;
 
-    if (!config)
+    if (!config || !created)
         return er_fault;
-
-    if (er_ok == io_cs_create_from_string(config, &cs))
-    {
-        result = prx_ns_iot_hub_create_from_cs(cs, created);
-        io_cs_free(cs);
-        return result;
-    }
 
     registry = mem_zalloc_type(prx_ns_iot_hub_composite_t);
     if (!registry)
@@ -2435,18 +2432,22 @@ int32_t prx_ns_iot_hub_create(
         registry->log = log_get("ns_composite");
         DList_InitializeListHead(&registry->hubs);
 
-        file_name = pal_create_full_path(config);
-        if (!file_name)
+        result = pal_get_real_path(config, &file_name);
+        if (result != er_ok)
+            break;
+
+        if (!pal_file_exists(file_name))
         {
-            result = er_out_of_memory;
+            result = er_not_found;
             break;
         }
+
         stream = io_file_stream_init(&fs, file_name, "r");
         if (!stream)
         {
             log_error(registry->log,
-                "Could not find file %s to load registry from.", file_name);
-            result = er_not_found;
+                "Could not load registry from %s.", file_name);
+            result = er_reading;
             break;
         }
 
@@ -2467,8 +2468,6 @@ int32_t prx_ns_iot_hub_create(
             break;
         }
 
-        pal_free_path(file_name);
-
         registry->itf.context =
             registry;
         registry->itf.create =
@@ -2486,6 +2485,7 @@ int32_t prx_ns_iot_hub_create(
         registry->itf.close =
             prx_ns_iot_hub_composite_close;
 
+        pal_free_path(file_name);
         *created = &registry->itf;
         return er_ok;
     } while (0);

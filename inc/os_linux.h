@@ -39,4 +39,8 @@
 #include <features.h>
 #include "os_posix.h"
 
+#if !defined(TCP_USER_TIMEOUT)
+#define TCP_USER_TIMEOUT 18
+#endif
+
 #endif // _os_linux_h_

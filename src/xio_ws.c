@@ -516,6 +516,9 @@ static void xio_wsclient_destroy(
     if (!ws)
         return;
 
+    // Detach any callbacks from buffers
+    io_queue_abort(ws->outbound);
+
     // Signal any in progress disconnect to also destroy
     __do_next(ws, xio_wsclient_free);
 }
