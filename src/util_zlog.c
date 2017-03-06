@@ -51,7 +51,7 @@ int32_t zlog_set_log_file(
     static const char* post_config =
         "\",1M*3 \n";
 
-    config = (char*)mem_alloc(
+    config = (char*)malloc(
         strlen(pre_config) + strlen(file_name) + strlen(post_config) + 1);
     if (!config)
         return er_out_of_memory;
@@ -71,7 +71,7 @@ int32_t zlog_set_log_file(
         break;
     }
     while (0);
-    mem_free(config);
+    free(config);
     return result;
 }
 
