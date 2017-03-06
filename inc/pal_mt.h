@@ -31,6 +31,8 @@ typedef volatile long atomic_t;
 #elif defined(__GNUC__)
 typedef volatile long atomic_t;
 
+#if (__GNUC__ >= 4) && (__GNUC_MINOR__ >= 7) // Use C'11 atomics
+
 #define set_atomic(var, val) \
     __atomic_exchange_n(&(var), val, __ATOMIC_ACQ_REL)
 #define set_atomic_ptr(ptr, val) \
@@ -43,6 +45,23 @@ typedef volatile long atomic_t;
     __atomic_fetch_or(&(var), (1 << index), __ATOMIC_ACQ_REL) & (1 << index)
 #define atomic_bit_clear(var, index) \
     __atomic_fetch_and(&(var), ~(1 << index), __ATOMIC_ACQ_REL) & (1 << index)
+
+#else // Use legacy atomic ops
+
+#define set_atomic(var, val) \
+    __sync_lock_test_and_set(&(var), val); __sync_lock_release (&(var))
+#define set_atomic_ptr(ptr, val) \
+    __sync_lock_test_and_set(&(ptr), val); __sync_lock_release (&(ptr))
+#define atomic_inc(var) \
+    __sync_fetch_and_add (&(var), 1)
+#define atomic_dec(var) \
+    __sync_sub_and_fetch (&(var), 1)
+#define atomic_bit_set(var, index) \
+    __sync_fetch_and_or(&(var), (1 << index)) & (1 << index)
+#define atomic_bit_clear(var, index) \
+    __sync_fetch_and_and(&(var), ~(1 << index)) & (1 << index)
+
+#endif // __GNUC > 4.7.0
 
 #elif !defined (UNIT_TEST) // pal
 typedef volatile long atomic_t;

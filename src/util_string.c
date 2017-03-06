@@ -319,7 +319,7 @@ bool string_is_equal_nocase(
 {
     if (!val && !to)
         return true;
-    if (!val || !to || len < 0)
+    if (!val || !to)
         return false;
     return len == strlen(to) &&
 #ifdef _WIN32
@@ -385,7 +385,7 @@ bool string_is_equal(
 {
     if (!val && !to)
         return true;
-    if (!val || !to || len < 0)
+    if (!val || !to)
         return false;
     return len == strlen(to) && 0 == strncmp(val, to, len);
 }
@@ -424,9 +424,9 @@ int32_t STRING_compare_nocase(
     STRING_HANDLE compare_to
 )
 {
-    if (!string || !compare_to)
+    if (!compare_to)
         return er_fault;
-    return string_compare_nocase(STRING_c_str(string), STRING_c_str(compare_to));
+    return STRING_compare_c_str_nocase(string, STRING_c_str(compare_to));
 }
 
 // 
@@ -515,7 +515,7 @@ STRING_HANDLE STRING_safe_construct_n(
     STRING_HANDLE result;
     char* copy;
 
-    if (!buffer || len < 0)
+    if (!buffer)
         return NULL;
 
     //
@@ -550,7 +550,7 @@ int32_t STRING_concat_n(
     int32_t result = er_ok;
     STRING_HANDLE tmp;
 
-    if (!string || !buffer || len < 0)
+    if (!string || !buffer)
         return er_fault;
 
     tmp = STRING_safe_construct_n(buffer, len);
@@ -591,9 +591,9 @@ const char* STRING_find(
     STRING_HANDLE to_find
 )
 {
-    if (!string || !to_find)
+    if (!to_find)
         return NULL;
-    return string_find(STRING_c_str(string), STRING_c_str(to_find));
+    return STRING_find_c_str(string, STRING_c_str(to_find));
 }
 
 //
@@ -604,9 +604,9 @@ const char* STRING_find_nocase(
     STRING_HANDLE to_find
 )
 {
-    if (!string || !to_find)
+    if (!to_find)
         return NULL;
-    return string_find_nocase(STRING_c_str(string), STRING_c_str(to_find));
+    return STRING_find_c_str_nocase(string, STRING_c_str(to_find));
 }
 
 //

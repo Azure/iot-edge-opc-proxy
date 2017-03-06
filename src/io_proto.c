@@ -16,12 +16,11 @@
 //
 // Protocol factory creates protocol messages from pool memory
 //
-typedef struct io_message_factory
+struct io_message_factory
 {
     prx_buffer_factory_t* messages;    // Pool of fixed size message objects
     prx_buffer_factory_t* buffers;     // Dynamic buffers for payload allocs
-}
-io_message_factory_t;
+};
 
 
 #if defined(DBG_MEM)

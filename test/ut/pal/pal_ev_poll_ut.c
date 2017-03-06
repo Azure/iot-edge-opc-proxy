@@ -191,9 +191,6 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_1)
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
     STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(DList_IsListEmpty(IGNORED_PTR_ARG))
-        .IgnoreArgument(1)
-        .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
     STRICT_EXPECTED_CALL(lock_free((lock_t)0x1));
     STRICT_EXPECTED_CALL(h_free((void*)&port_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -228,9 +225,6 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_2)
         .CopyOutArgumentBuffer_res(&k_thread_result_valid, sizeof(k_thread_result_valid))
         .SetReturn(THREADAPI_OK);
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(DList_IsListEmpty(IGNORED_PTR_ARG))
-        .IgnoreArgument(1)
-        .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
     STRICT_EXPECTED_CALL(lock_free((lock_t)0x1));
     STRICT_EXPECTED_CALL(h_free((void*)&port_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))

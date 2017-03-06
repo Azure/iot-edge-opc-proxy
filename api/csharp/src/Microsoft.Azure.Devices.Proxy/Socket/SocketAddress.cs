@@ -8,8 +8,10 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Linq;
+    using System.Collections.Generic;
     using System.Runtime.Serialization;
     using Model;
+    using System.Text;
 
     /// <summary>
     /// Socket address base class
@@ -74,6 +76,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return "null";
+        }
+
+        /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
         /// <returns></returns>
@@ -106,7 +116,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Path to the unix pipe
         /// </summary>
         [DataMember(Name = "path", Order = 2)]
-        public String Path { get; set; } = "";
+        public string Path { get; set; } = "";
 
         /// <summary>
         /// Comparison
@@ -132,6 +142,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return Path;
+        }
+
+        /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
         /// <returns></returns>
@@ -150,13 +168,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Flow
         /// </summary>
         [DataMember(Name = "flow", Order = 2)]
-        public UInt32 Flow { get; set; }
+        public uint Flow { get; set; }
 
         /// <summary>
         /// Port in host byte order
         /// </summary>
         [DataMember(Name = "port", Order = 3)]
-        public UInt16 Port { get; set; }
+        public ushort Port { get; set; }
 
         /// <summary>
         /// Comparison
@@ -190,14 +208,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Sets property values
         /// </summary>
-        public Inet4SocketAddress(UInt32 address, UInt16 port, UInt32 flow) : 
+        public Inet4SocketAddress(uint address, ushort port, uint flow) :
             this(BitConverter.GetBytes(address), port, flow) {
         }
 
         /// <summary>
         /// Sets property values
         /// </summary>
-        public Inet4SocketAddress(byte[] address, UInt16 port, UInt32 flow) : this() {
+        public Inet4SocketAddress(byte[] address, ushort port, uint flow) : this() {
             Address = address;
             Port = port;
             Flow = flow;
@@ -213,7 +231,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Returns address as 32 bit int
         /// </summary>
         /// <returns></returns>
-        public UInt32 ToUInt32() => BitConverter.ToUInt32(Address, 0);
+        public uint ToUInt32() => BitConverter.ToUInt32(Address, 0);
 
         /// <summary>
         /// Comparison
@@ -236,6 +254,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override bool Equals(Object that) {
             return Equals(that as Inet4SocketAddress);
+        }
+
+        /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}:{Port}";
         }
 
         /// <summary>
@@ -266,7 +292,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Sets property values
         /// </summary>
         public Inet6SocketAddress(byte[] address,
-            UInt16 port, UInt32 flow, UInt32 scopeId) : this() {
+            ushort port, uint flow, uint scopeId) : this() {
             Address = address;
             Port = port;
             Flow = flow;
@@ -293,7 +319,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Scope id
         /// </summary>
         [DataMember(Name = "scope_id", Order = 5)]
-        public UInt32 ScopeId { get; set; }
+        public uint ScopeId { get; set; }
 
         /// <summary>
         /// Converts this socket address to a address
@@ -325,6 +351,39 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override bool Equals(Object that) {
             return Equals(that as Inet6SocketAddress);
+        }
+
+        /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            if (Port == 0 && ScopeId == 0 && Flow == 0) {
+                // This is actually a proxy reference id
+                return ToReference().ToString();
+            }
+            else {
+                var str = new StringBuilder();
+                if (Port != 0) {
+                    str.Append("[");
+                }
+                for (int i = 0; i < Address.Length; i += 2) {
+                    if (i != 0) {
+                        str.Append(":");
+                    }
+                    // Omit any fancy ipv6 formatting, it is not needed...
+                    str.Append(BitConverter.ToUInt16(Address, i).ToString("X"));
+                }
+                if (ScopeId != 0) {
+                    str.Append("/");
+                    str.Append(ScopeId);
+                }
+                if (Port != 0) {
+                    str.Append("]:");
+                    str.Append(Port);
+                }
+                return str.ToString();
+            }
         }
 
         /// <summary>
@@ -369,14 +428,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentNullException("port");
             }
             Host = host;
-            Port = (UInt16)port;
+            Port = (ushort)port;
             Flow = 0;
         }
 
         /// <summary>
         /// Sets property values
         /// </summary>
-        public ProxySocketAddress(string host, UInt16 port, UInt32 flow) : this() {
+        public ProxySocketAddress(string host, ushort port, uint flow) : this() {
             Port = port;
             Flow = flow;
             Host = host;
@@ -386,7 +445,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Host name to use
         /// </summary>
         [DataMember(Name = "host", Order = 4)]
-        public String Host { get; set; } = "";
+        public string Host { get; set; } = "";
 
         /// <summary>
         /// Comparison
@@ -412,6 +471,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return $"{Host}:{Port}";
+        }
+
+        /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
         /// <returns></returns>
@@ -420,6 +487,107 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Host.GetHashCode() ^
                 Port.GetHashCode() ^
                 Flow.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// A list of proxy addresses
+    /// </summary>
+    [DataContract]
+    public class SocketAddressCollection : SocketAddress, IEquatable<SocketAddressCollection> {
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public SocketAddressCollection() {
+            base.Family = AddressFamily.Collection;
+        }
+
+        /// <summary>
+        /// Create an address from a list
+        /// </summary>
+        /// <param name="addresses"></param>
+        /// <returns></returns>
+        public static SocketAddress Create(IEnumerable<SocketAddress> addresses) {
+            if (!addresses.Any()) {
+                return null;
+            } else {
+                var address = new SocketAddressCollection {
+                    Inner = new HashSet<SocketAddress>(addresses)
+                };
+                try {
+                    return address.Addresses().Single();
+                } catch {
+                    return address;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Storage of socket addresses
+        /// </summary>
+        [DataMember(Name = "includes", Order = 2)]
+        HashSet<SocketAddress> Inner { get; set; }
+
+        /// <summary>
+        /// Return flattened list of addresses
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<SocketAddress> Addresses() {
+            foreach(var address in Inner) {
+                if (address is SocketAddressCollection) {
+                    foreach (var r in ((SocketAddressCollection)address).Addresses()) {
+                        yield return r;
+                    }
+                }
+                else if (!(address is NullSocketAddress)) {
+                    yield return address;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public bool Equals(SocketAddressCollection that) {
+            if (that == null) {
+                return false;
+            }
+            return
+                this.Equals(that as SocketAddress) &&
+                this.Inner.SetEquals(that.Inner);
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public override bool Equals(Object that) {
+            return Equals(that as SocketAddressCollection);
+        }
+
+        /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            var bld = new StringBuilder();
+            foreach(var a in Addresses()) {
+                bld.AppendLine(a.ToString());
+            }
+            return bld.ToString();
+        }
+
+        /// <summary>
+        /// Returns hash for efficient lookup in list
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() {
+            return
+                Inner.GetHashCode();
         }
     }
 }

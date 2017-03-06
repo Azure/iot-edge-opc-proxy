@@ -121,7 +121,9 @@ int32_t pal_os_from_prx_ifaddrinfo(
     ifaddr_t* iaddr
 )
 {
-    (void)prx_ifa, ifinfo, iaddr;
+    (void)prx_ifa;
+    (void)ifinfo;
+    (void)iaddr;
     return er_not_impl;
 }
 
@@ -262,7 +264,10 @@ int32_t pal_getifnameinfo(
     uint64_t *if_index
 )
 {
-    (void)if_address, if_name, if_name_length, if_index;
+    (void)if_address;
+    (void)if_name;
+    (void)if_name_length;
+    (void)if_index;
     return er_not_impl;
 }
 

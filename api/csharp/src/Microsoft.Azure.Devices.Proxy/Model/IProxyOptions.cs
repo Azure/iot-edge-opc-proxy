@@ -4,8 +4,6 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
-
-    using System;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -15,6 +13,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// are themselves links.
     /// </summary>
     public interface IProxyOptions {
+
+        /// <summary>
+        /// Proxy the socket is bound on.  
+        /// </summary>
+        SocketAddress ProxyAddress { get; }
+
+        /// <summary>
+        /// Local bound address on the proxy.
+        /// </summary>
+        SocketAddress LocalAddress { get; }
+
+        /// <summary>
+        /// Peer address the socket is connected to on the proxy side. 
+        /// </summary>
+        SocketAddress PeerAddress { get; }
 
         /// <summary>
         /// Sets remote socket option (setopt)
@@ -36,6 +49,5 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         Task<ulong> GetSocketOptionAsync(SocketOption option,
             CancellationToken ct);
-
     }
 }

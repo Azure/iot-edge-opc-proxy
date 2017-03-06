@@ -94,27 +94,7 @@ goto :args-continue
 shift
 if "%1" equ "" call :usage && exit /b 1
 set build-os=%1
-if /I "%build-os%" == "Windows" goto :args-continue
-if /I "%build-os%" == "Linux" set build-os=
-pushd %current-path%\docker
-dir /b /s Dockerfile.%build-os%* > nul 2> nul
-popd
-if not !ERRORLEVEL! == 0 goto :arg-docker-err
-call :arg-docker-loop %*
-call :docker-build
-if not !ERRORLEVEL! == 0 echo ERROR during docker build... && exit /b !ERRORLEVEL!
-goto :build-done
-:arg-docker-loop
-if "%1" equ "" goto :eof
-if "%1" equ "--os" shift && shift && goto :arg-docker-loop
-set build-docker-args=%build-docker-args% %1
-shift
-goto :arg-docker-loop
-:arg-docker-err
-echo No OS image definitions for %build-os% found!
-call :usage 
-exit /b 1
-goto :args-done
+goto :args-continue
 
 :arg-build-nuget-folder
 shift
@@ -157,7 +137,7 @@ if not "%build-clean%" == "" (
     call :rmdir-force %build-root%
 )
 if not exist %build-root% mkdir %build-root%
-
+if /I not "%build-os%" == "Windows" goto :docker-build
 call :native-build
 if not !ERRORLEVEL! == 0 echo Failures during native build... && exit /b !ERRORLEVEL!
 call :dotnet-build
@@ -256,6 +236,13 @@ rem ----------------------------------------------------------------------------
 :docker-build
 call docker --version
 if not !ERRORLEVEL! == 0 call :docker-install-prompt && exit /b 1
+if /I "%build-os%" == "Linux" set build-os=
+pushd %current-path%\docker
+dir /b /s Dockerfile.%build-os%* > nul 2> nul
+popd
+if not !ERRORLEVEL! == 0 call :docker-build-os-not-found && exit /b 1
+call :docker-build-args %*
+:docker-build-get-git-tag
 rem set tracking branch and remote
 for /f "tokens=2* delims=/" %%r in ('git symbolic-ref HEAD') do set build-branch=%%s
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
@@ -276,7 +263,8 @@ for /f %%i in ('dir /b /s Dockerfile.%build-os%*') do (
 	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
-goto :eof
+if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+goto :build-done
 :docker-build-and-run
 for /f "tokens=1* delims=." %%i in ("%~nx1") do set docker-build-os=%%j
 if exist %build-root%\%docker-build-os%.done goto :eof
@@ -287,9 +275,19 @@ if !ERRORLEVEL! == 0 echo %docker-build-os% >> %build-root%\%docker-build-os%.do
 set docker-build-os=
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
+:docker-build-args
+if "%1" equ "" goto :eof
+if "%1" equ "--os" shift && shift && goto :docker-build-args
+set build-docker-args=%build-docker-args% %1
+shift
+goto :docker-build-args
 :docker-install-prompt
 echo Install docker from https://docs.docker.com/docker-for-windows for option --os %build-os%
 call :usage
+goto :eof
+:docker-build-os-not-found
+echo No OS image definitions for %build-os% found!
+call :usage 
 goto :eof
 
 rem -----------------------------------------------------------------------------

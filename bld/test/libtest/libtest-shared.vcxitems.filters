@@ -64,6 +64,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umocktypes_stdint.c">
       <Filter>src\umock_c</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockstring.c">
+      <Filter>src\umock_c</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testmutex.h">
@@ -115,6 +118,12 @@
       <Filter>inc\umock_c</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umocktypes_stdint.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\macro_utils.h">
+      <Filter>inc\umock_c</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockstring.h">
       <Filter>inc\umock_c</Filter>
     </ClInclude>
   </ItemGroup>

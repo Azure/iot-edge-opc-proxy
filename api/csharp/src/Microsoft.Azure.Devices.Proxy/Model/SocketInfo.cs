@@ -9,6 +9,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
     using System.Collections.Generic;
     using System.Runtime.Serialization;
+    using System.Text;
 
     /// <summary>
     /// Flags for socket properties, determine how socket is opened
@@ -45,13 +46,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Socket flags
         /// </summary>
         [DataMember(Name = "flags", Order = 4)]
-        public UInt32 Flags { get; set; }
+        public uint Flags { get; set; }
 
         /// <summary>
         /// Socket timeout
         /// </summary>
         [DataMember(Name = "timeout", Order = 5)]
-        public UInt32 Timeout { get; set; }
+        public uint Timeout { get; set; }
 
         /// <summary>
         /// Address to use to open, if proxy address, will be resolved.
@@ -90,6 +91,22 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public override bool Equals(Object that) {
             return Equals(that as SocketInfo);
+        }
+
+        /// <summary>
+        /// As string
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            var str = new StringBuilder();
+              str.Append("Type:     "); str.Append(Type);
+            str.Append("\nProtocol: "); str.Append(Protocol);
+            str.Append("\nFamily:   "); str.Append(Family);
+            str.Append("\nAddress:  "); str.Append(Address);
+            str.Append("\nFlags:    "); str.Append(Flags);
+            str.Append("\nOptions:\n"); str.Append(Options);
+            str.Append("\n");
+            return str.ToString();
         }
 
         /// <summary>

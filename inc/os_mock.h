@@ -172,7 +172,9 @@ enum __SO
     TCP_NODELAY,
 
 #define SOL_TCP 23
-    TCP_USER_TIMEOUT,
+
+    _TCP_USER_TIMEOUT,
+#define TCP_USER_TIMEOUT _TCP_USER_TIMEOUT
 
     SO_RANGE_END
 };
@@ -535,6 +537,9 @@ enum __ERRORS
 #define SUBLANG_DEFAULT 2
 #define MAKELANGID(a, b) (DWORD)((a << 16) + b)
 
+#define INVALID_FILE_ATTRIBUTES 0xffff
+#define FILE_ATTRIBUTE_DIRECTORY 0x2
+
 // synchapi.h
 typedef int SRWLOCK, *PSRWLOCK;
 
@@ -649,7 +654,6 @@ typedef struct _WSABUF
     char *buf; 
 } 
 WSABUF, *LPWSABUF;
-
 
 struct ip_mreq 
 {
@@ -848,6 +852,8 @@ WINHTTP_WEB_SOCKET_STATUS;
 
 #define WINHTTP_OPTION_CONTEXT_VALUE            45
 #define WINHTTP_OPTION_CLIENT_CERT_CONTEXT      47
+#define WINHTTP_OPTION_CONNECT_RETRIES          53
+#define WINHTTP_OPTION_MAX_CONNS_PER_SERVER     55
 #define WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET   114
 #define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY      4
 #define WINHTTP_QUERY_STATUS_CODE               19 
@@ -874,6 +880,9 @@ WINHTTP_ASYNC_RESULT, *LPWINHTTP_ASYNC_RESULT;
 #define F_SETFL 1 
 #define F_GETFL 1 
 #define O_NONBLOCK 0x1
+
+#define _PC_PATH_MAX 100
+#define F_OK 5
 
 // time.h
 #define CLOCK_MONOTONIC 4

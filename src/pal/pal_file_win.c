@@ -9,7 +9,6 @@
 #include "util_misc.h"
 
 const char* k_sep = "\\";
-static char* working_dir = NULL;
 
 //
 // Initialize 
@@ -18,68 +17,47 @@ int32_t pal_file_init(
     void
 )
 {
-    if (working_dir)
-        return er_ok;
-
-    working_dir = (char*)mem_alloc(MAX_PATH);
-    if (!working_dir)
-        return er_out_of_memory;
-
-    if (0 == GetCurrentDirectoryA(MAX_PATH, working_dir))
-    {
-        pal_free_path(working_dir);
-        working_dir = NULL;
-        // ok
-    }
     return er_ok;
+}
+
+//
+// Test whether file exists
+//
+bool pal_file_exists(
+    const char* file_name
+)
+{
+    DWORD attributes = GetFileAttributesA(file_name);
+    return 
+         (attributes != INVALID_FILE_ATTRIBUTES &&
+        !(attributes & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 //
 // Get Full path of a file name
 //
-const char* pal_create_full_path(
-    const char* file_name
-)
+int32_t pal_get_real_path(
+    const char* file_name,
+    const char** path
+) 
 {
-    char* path;
-    size_t path_len = 1024;
-
-    if (!file_name)
-        return NULL;
-
-    path_len = strlen(file_name) + 1;
-    if (working_dir)
-    {
-        path_len += strlen(working_dir);
-        path_len += strlen(k_sep);
-    }
-
-    path = (char*)mem_alloc(path_len);
-    if (!path)
-        return NULL;
-    path[0] = 0;
-
-    if (working_dir)
-    {
-        strcat(path, working_dir);
-        strcat(path, k_sep);
-    }
-    strcat(path, file_name);
-    return path;
-}
-
-//
-// Set working dir
-//
-int32_t pal_set_working_dir(
-    const char* dir
-)
-{
-    if (!dir)
+    DWORD copied;
+    char *buf = NULL;
+    if (!file_name || !path)
         return er_fault;
-    if (working_dir)
-        pal_free_path(working_dir);
-    return string_clone(dir, &working_dir);
+
+    buf = (char*)mem_alloc(MAX_PATH);
+    if (!buf)
+        return er_out_of_memory;
+
+    copied = GetFullPathNameA(file_name, MAX_PATH, buf, NULL);
+    if (!copied || copied > MAX_PATH)
+    {
+        mem_free(buf);
+        return copied ? er_fatal : pal_os_last_error_as_prx_error();
+    }
+    *path = buf;
+    return er_ok;
 }
 
 //
@@ -101,9 +79,5 @@ void pal_file_deinit(
     void
 )
 {
-    if (working_dir)
-    {
-        pal_free_path(working_dir);
-        working_dir = NULL;
-    }
+    // no-op
 }

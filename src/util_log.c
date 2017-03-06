@@ -12,7 +12,6 @@
 #include <stdarg.h>
 
 #if !defined(NO_ZLOG)
-
 #define LINE_BREAK
 
 //

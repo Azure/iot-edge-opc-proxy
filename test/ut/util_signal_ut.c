@@ -25,7 +25,8 @@ static COND_RESULT Condition_Wait__set_hook(
     int timeout_milliseconds
 )
 {
-    (void)timeout_milliseconds, lock;
+    (void)timeout_milliseconds;
+    (void)lock;
     ((signal_t*)handle)->state = signal_state_set;
     return COND_OK;
 }
@@ -39,7 +40,8 @@ static COND_RESULT Condition_Wait__clear_hook(
     int timeout_milliseconds
 )
 {
-    (void)timeout_milliseconds, lock;
+    (void)timeout_milliseconds;
+    (void)lock;
     ((signal_t*)handle)->state = signal_state_clear;
     return COND_TIMEOUT;
 }

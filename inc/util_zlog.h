@@ -44,9 +44,16 @@ decl_public_2(int32_t, zlog_register,
 );
 
 //
-// Configure logging facilities
+// Configure log file
 //
-decl_public_1(int32_t, zlog_configure,
+decl_public_1(int32_t, zlog_set_log_file,
+    const char*, file_name
+);
+
+//
+// Configure logging facilities from configuration file
+//
+decl_public_1(int32_t, zlog_read_config,
     const char*, file_name
 );
 

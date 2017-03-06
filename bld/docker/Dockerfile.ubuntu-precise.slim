@@ -1,4 +1,4 @@
-FROM debian:wheezy
+FROM ubuntu:precise
 
 ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
 ENV COMMIT_ID master
@@ -9,10 +9,9 @@ RUN \
 		apt-get update && apt-get install -y \
 			wget \
 			build-essential \
-			libcurl4-openssl-dev \
 			git \
 			libssl-dev \
-			valgrind \
+			libcurl4-openssl-dev \
 	&& \
 		wget https://cmake.org/files/v3.6/cmake-3.6.3.tar.gz \
 	&& \

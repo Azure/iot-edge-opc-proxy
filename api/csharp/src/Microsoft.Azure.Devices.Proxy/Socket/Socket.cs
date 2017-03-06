@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Remote socket timeout
         //
-        public static UInt32 RemoteTimeout {
+        public static uint RemoteTimeout {
             get; set;
         }
 
@@ -93,7 +93,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Create socket for address family 
         //
-        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, UInt32 keepAlive) :
+        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, uint keepAlive) :
             this(addressFamily, socketType, protocolType, null) {
             this._internal = ProxySocket.Create(new SocketInfo {
                 Family = addressFamily,
@@ -125,6 +125,28 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         internal Socket(Socket original, IProxySocket internalSocket) :
             this(original.AddressFamily, original.SocketType, original.ProtocolType, internalSocket) {
+        }
+
+
+        /// <summary>
+        /// Returns the address of the proxy the socket is connected through
+        /// </summary>
+        public SocketAddress LocalEndPoint {
+            get { return _internal?.ProxyAddress; }
+        }
+
+        /// <summary>
+        /// Returns the address the proxy itself is connected to (peer)
+        /// </summary>
+        public SocketAddress RemoteEndPoint {
+            get { return _internal?.PeerAddress; }
+        }
+
+        /// <summary>
+        /// Returns the interface the proxy bound the remote connection to.
+        /// </summary>
+        public SocketAddress InterfaceEndPoint {
+            get { return _internal?.LocalAddress; }
         }
 
         #region Connect
@@ -313,13 +335,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Without cancellation token
         //
-        public Task ListenAsync(int backlog = Int32.MaxValue) =>
+        public Task ListenAsync(int backlog = int.MaxValue) =>
             ListenAsync(backlog, CancellationToken.None);
 
         //
         // Same, but sync
         //
-        public void Listen(int backlog = Int32.MaxValue) =>
+        public void Listen(int backlog = int.MaxValue) =>
             TaskToSync.Run(() => ListenAsync(backlog));
 
         //
@@ -1336,6 +1358,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         #endregion
+
+        /// <summary>
+        /// Convert to string
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return _internal.Info.ToString();
+        }
 
         #region internal
 

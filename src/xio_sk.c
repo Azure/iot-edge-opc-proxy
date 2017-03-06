@@ -378,6 +378,7 @@ static void xio_socket_event_handler(
 
     dbg_assert(!addr, "no address expected.");
     (void)op_context;
+    (void)addr;
 
     switch (ev)
     {
@@ -524,6 +525,10 @@ static void xio_socket_destroy(
     xio_socket_t* sk = (xio_socket_t*)handle;
     if (!sk)
         return;
+
+    // Detach any callbacks from buffers
+    io_queue_abort(sk->outbound);
+
     // Signal any in progress disconnect to also destroy
     __do_next(sk, xio_socket_free);
 }

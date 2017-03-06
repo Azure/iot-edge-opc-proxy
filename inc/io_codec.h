@@ -258,7 +258,7 @@ typedef int32_t (*io_codec_fini_ctx_t)(
 //
 // Codec interface
 //
-typedef struct io_codec
+struct io_codec
 {
     io_codec_id_t id;
 
@@ -286,8 +286,7 @@ typedef struct io_codec
 
     io_codec_init_ctx_t init_ctx;
     io_codec_fini_ctx_t fini_ctx;
-}
-io_codec_t;
+};
 
 
 //

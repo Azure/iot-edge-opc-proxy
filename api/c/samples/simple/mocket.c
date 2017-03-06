@@ -158,8 +158,8 @@ bool test_printer(
     const void* context
 )
 {
-    (void)buf_len, context;
-
+    (void)buf_len;
+    (void)context;
     (void)buffer;
     printf("RECEIVED: %s\n", buffer);
     return true;

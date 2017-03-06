@@ -17,7 +17,7 @@
     // Must define UNIT_UNDER_TEST to enable unit test functionality here...
 #else
 
-#include "azure_c_shared_utility/macro_utils.h"
+#include "macro_utils.h"
 
 #define UNIT_TEST C2(UNIT_UNDER_TEST,_ut)
 
@@ -75,7 +75,8 @@ static void on_umock_c_error(
     case UMOCK_C_CAPTURE_RETURN_ALREADY_USED: ASSERT_FAIL("CAPTURE_RETURN_ALREADY_USED");
     case UMOCK_C_NULL_ARGUMENT:               ASSERT_FAIL("NULL_ARGUMENT");
     case UMOCK_C_INVALID_PAIRED_CALLS:        ASSERT_FAIL("INVALID_PAIRED_CALLS");
-  //  case UMOCK_C_ERROR:                       ASSERT_FAIL("ERROR");
+    case UMOCK_C_REGISTER_TYPE_FAILED:        ASSERT_FAIL("UMOCK_C_REGISTER_TYPE_FAILED");
+    case UMOCK_C_ERROR:                       break; // ASSERT_FAIL("ERROR"); 
     }
 }
 

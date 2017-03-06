@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Canonical name
         /// </summary>
         [DataMember(Name = "name", Order = 2)]
-        public String CanonicalName { get; set; } = "";
+        public string CanonicalName { get; set; } = "";
 
         /// <summary>
         /// Comparison
@@ -110,13 +110,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Name of interface entry, e.g. eth0:
         /// </summary>
         [DataMember(Name = "name", Order = 4)]
-        public String Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
         /// <summary>
         /// Index of interface 
         /// </summary>
         [DataMember(Name = "index", Order = 5)]
-        public Int32 Index { get; set; }
+        public int Index { get; set; }
 
         /// <summary>
         /// Broadcast address for this interface

@@ -14,7 +14,9 @@ void* c_realloc(
     int32_t line_number
 )
 {
-    (void)file, file_len, line_number;
+    (void)file;
+    (void)file_len;
+    (void)line_number;
     return realloc(ptr, size);
 }
 
@@ -28,7 +30,9 @@ void c_free(
     int32_t line_number
 )
 {
-    (void)file, file_len, line_number;
+    (void)file;
+    (void)file_len;
+    (void)line_number;
     free(ptr);
 }
 
@@ -45,7 +49,9 @@ void* h_realloc(
 )
 {
     void* result;
-    (void)file, file_len, line_number;
+    (void)file;
+    (void)file_len;
+    (void)line_number;
     result = realloc(ptr, size);
     if (!result || !zero_mem)
         return result;
@@ -63,6 +69,8 @@ void h_free(
     int32_t line_number
 )
 {
-    (void)file, file_len, line_number;
+    (void)file;
+    (void)file_len;
+    (void)line_number;
     free(ptr);
 }

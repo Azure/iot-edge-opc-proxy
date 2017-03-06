@@ -156,9 +156,9 @@ TEST_FUNCTION(zlog_register__neg)
 
 
 // 
-// Test zlog_configure happy path 
+// Test zlog_read_config happy path 
 // 
-TEST_FUNCTION(zlog_configure__success)
+TEST_FUNCTION(zlog_read_config__success)
 {
     static const char* k_file_name_valid;
 
@@ -166,7 +166,7 @@ TEST_FUNCTION(zlog_configure__success)
     // ... 
 
     // act 
-    result = zlog_configure(k_file_name_valid);
+    result = zlog_read_config(k_file_name_valid);
 
     // assert 
     // ... 
@@ -174,9 +174,9 @@ TEST_FUNCTION(zlog_configure__success)
 }
 
 // 
-// Test zlog_configure passing as file_name argument an invalid const char* value 
+// Test zlog_read_config passing as file_name argument an invalid const char* value 
 // 
-TEST_FUNCTION(zlog_configure__arg_file_name_invalid)
+TEST_FUNCTION(zlog_read_config__arg_file_name_invalid)
 {
     // ... 
 
@@ -184,7 +184,7 @@ TEST_FUNCTION(zlog_configure__arg_file_name_invalid)
     // ... 
 
     // act 
-    result = zlog_configure();
+    result = zlog_read_config();
 
     // assert 
     // ... 
@@ -192,9 +192,9 @@ TEST_FUNCTION(zlog_configure__arg_file_name_invalid)
 }
 
 // 
-// Test zlog_configure unhappy path 
+// Test zlog_read_config unhappy path 
 // 
-TEST_FUNCTION(zlog_configure__neg)
+TEST_FUNCTION(zlog_read_config__neg)
 {
     static const char* k_file_name_valid;
 
@@ -204,7 +204,7 @@ TEST_FUNCTION(zlog_configure__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = zlog_configure(k_file_name_valid);
+    result = zlog_read_config(k_file_name_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, 0, result);

@@ -50,9 +50,9 @@ TEST_FUNCTION(STRING_safe_construct_n__success)
     result = STRING_safe_construct_n(in, 2);
 
     // assert
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, "te", UT_MEM);
     ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -66,21 +66,7 @@ TEST_FUNCTION(STRING_safe_construct_n__arg_buffer_invalid)
     result = STRING_safe_construct_n(NULL, 4);
 
     // assert
-    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
-}
-
-// 
-// Test STRING_safe_construct_n passing as len argument an invalid size_t value 
-// 
-TEST_FUNCTION(STRING_safe_construct_n__arg_len_invalid)
-{
-    static char in[8] = { 't', 'e', 's', 't', 't', 'e', 's', 't' };
-    STRING_HANDLE result;
-
-    // act
-    result = STRING_safe_construct_n(in, (size_t)-1);
-
-    // assert
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void_ptr, NULL, result);
 }
 
@@ -105,9 +91,9 @@ TEST_FUNCTION(STRING_safe_construct_n__neg__STRING_new_with_memory_fails)
     result = STRING_safe_construct_n(in, 4);
 
     // assert
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, "test", UT_MEM);
     ASSERT_ARE_EQUAL(void_ptr, NULL, result);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -132,8 +118,8 @@ TEST_FUNCTION(STRING_safe_construct_n__neg)
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_safe_construct_n(in, 6);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_safe_construct_n(in, 6);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);
@@ -161,8 +147,8 @@ TEST_FUNCTION(STRING_construct_trim__success)
     result = STRING_construct_trim(k_val_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
 }
 
 // 
@@ -182,8 +168,8 @@ TEST_FUNCTION(STRING_construct_trim__success_trim_chars_null)
     result = STRING_construct_trim(k_val_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
 }
 
 // 
@@ -204,8 +190,8 @@ TEST_FUNCTION(STRING_construct_trim__success_trim_chars_empty)
     result = STRING_construct_trim(k_val_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
 }
 
 // 
@@ -222,8 +208,8 @@ TEST_FUNCTION(STRING_construct_trim__arg_val_invalid)
     result = STRING_construct_trim(NULL, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
 }
 
 // 
@@ -248,8 +234,8 @@ TEST_FUNCTION(STRING_construct_trim__neg)
         .SetFailReturn(&UT_MEM[3]);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_construct_trim(k_val_valid, k_trim_chars_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_construct_trim(k_val_valid, k_trim_chars_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL, k_string_handle_valid);
@@ -384,8 +370,8 @@ TEST_FUNCTION(STRING_construct_utf8__success)
     result = STRING_construct_utf8(k_buf_valid, k_buf_len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
 }
 
 // 
@@ -401,8 +387,8 @@ TEST_FUNCTION(STRING_construct_utf8__arg_buf_invalid)
     result = STRING_construct_utf8(NULL, 14);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
 }
 
 // 
@@ -419,8 +405,8 @@ TEST_FUNCTION(STRING_construct_utf8__arg_buf_len_invalid)
     result = STRING_construct_utf8(k_buf_valid, 0);
 
     // assert 
-    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
 }
 
 // 
@@ -447,8 +433,8 @@ TEST_FUNCTION(STRING_construct_utf8__neg)
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_construct_utf8(k_buf_valid, k_buf_len_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_construct_utf8(k_buf_valid, k_buf_len_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL, NULL, k_string_handle_valid);
@@ -479,8 +465,8 @@ TEST_FUNCTION(STRING_concat_n__success)
     result = STRING_concat_n(k_string_in_valid, k_buffer_valid, k_len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -496,8 +482,8 @@ TEST_FUNCTION(STRING_concat_n__arg_string_invalid)
     result = STRING_concat_n(NULL, "testtest", 4);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -514,8 +500,8 @@ TEST_FUNCTION(STRING_concat_n__arg_buffer_invalid)
     result = STRING_concat_n(k_string_in_valid, NULL, 4);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -546,8 +532,8 @@ TEST_FUNCTION(STRING_concat_n__neg)
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_concat_n(k_string_in_valid, k_buffer_valid, k_len_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_concat_n(k_string_in_valid, k_buffer_valid, k_len_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok);
@@ -571,8 +557,8 @@ TEST_FUNCTION(STRING_concat_int__success)
     result = STRING_concat_int(k_string_valid, k_value_valid, k_radix_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -588,8 +574,8 @@ TEST_FUNCTION(STRING_concat_int__arg_string_invalid)
     result = STRING_concat_int(NULL, 10, 10);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -606,8 +592,8 @@ TEST_FUNCTION(STRING_concat_int__arg_radix_invalid)
     result = STRING_concat_int(k_string_valid, 10, 0);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 // 
@@ -627,8 +613,8 @@ TEST_FUNCTION(STRING_concat_int__neg)
         .SetFailReturn(-1);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_concat_int(k_string_valid, k_value_valid, k_radix_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_concat_int(k_string_valid, k_value_valid, k_radix_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory);
@@ -655,8 +641,8 @@ TEST_FUNCTION(STRING_update__success)
     result = STRING_update(k_string_valid, k_val_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -676,8 +662,8 @@ TEST_FUNCTION(STRING_update__success_equal_value)
     result = STRING_update(k_string_valid, k_val_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 // 
@@ -693,8 +679,8 @@ TEST_FUNCTION(STRING_update__arg_string_invalid)
     result = STRING_update(NULL, "test");
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -711,8 +697,8 @@ TEST_FUNCTION(STRING_update__arg_val_invalid)
     result = STRING_update(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -737,8 +723,8 @@ TEST_FUNCTION(STRING_update__neg)
         .SetFailReturn(-1);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = STRING_update(k_string_valid, k_val_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_update(k_string_valid, k_val_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok, er_out_of_memory);
@@ -763,8 +749,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_equal_diff_case)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -786,8 +772,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_equal_same_case)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -809,8 +795,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_equal_empty_string)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -832,8 +818,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_not_equal)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -855,8 +841,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_not_equal_diff_length_1)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -878,8 +864,8 @@ TEST_FUNCTION(STRING_compare_nocase__success_not_equal_diff_length_2)
     result = STRING_compare_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -891,13 +877,15 @@ TEST_FUNCTION(STRING_compare_nocase__arg_string_invalid)
     int32_t result;
 
     // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn("ABCD");
 
     // act 
     result = STRING_compare_nocase(NULL, k_string_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -914,8 +902,8 @@ TEST_FUNCTION(STRING_compare_nocase__arg_compare_to_invalid)
     result = STRING_compare_nocase(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -935,8 +923,8 @@ TEST_FUNCTION(STRING_compare_c_str__success_equal)
     result = STRING_compare_c_str(k_string_valid, k_compare_to_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -956,8 +944,8 @@ TEST_FUNCTION(STRING_compare_c_str__success_not_equal)
     result = STRING_compare_c_str(k_string_valid, k_compare_to_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -973,8 +961,8 @@ TEST_FUNCTION(STRING_compare_c_str__arg_string_invalid)
     result = STRING_compare_c_str(NULL, "test");
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -993,8 +981,8 @@ TEST_FUNCTION(STRING_compare_c_str__arg_compare_to_invalid)
     result = STRING_compare_c_str(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1014,8 +1002,8 @@ TEST_FUNCTION(STRING_compare_c_str_nocase__success_equal_case)
     result = STRING_compare_c_str_nocase(k_string_valid, k_compare_to_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1035,8 +1023,8 @@ TEST_FUNCTION(STRING_compare_c_str_nocase__success_equal_nocase)
     result = STRING_compare_c_str_nocase(k_string_valid, k_compare_to_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1056,8 +1044,8 @@ TEST_FUNCTION(STRING_compare_c_str_nocase__success_not_equal_nocase)
     result = STRING_compare_c_str_nocase(k_string_valid, k_compare_to_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1073,8 +1061,8 @@ TEST_FUNCTION(STRING_compare_c_str_nocase__arg_string_invalid)
     result = STRING_compare_c_str_nocase(NULL, "Test");
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1093,8 +1081,8 @@ TEST_FUNCTION(STRING_compare_c_str_nocase__arg_compare_to_invalid)
     result = STRING_compare_c_str_nocase(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -1116,8 +1104,8 @@ TEST_FUNCTION(STRING_find__success_found)
     result = STRING_find(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
 }
 
 // 
@@ -1139,8 +1127,8 @@ TEST_FUNCTION(STRING_find__success_not_found1)
     result = STRING_find(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1162,8 +1150,8 @@ TEST_FUNCTION(STRING_find__success_not_found2)
     result = STRING_find(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1175,13 +1163,15 @@ TEST_FUNCTION(STRING_find__arg_string_invalid)
     const char* result;
 
     // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn("ABCD");
 
     // act 
     result = STRING_find(NULL, k_string_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1198,8 +1188,8 @@ TEST_FUNCTION(STRING_find__arg_to_find_invalid)
     result = STRING_find(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1221,8 +1211,8 @@ TEST_FUNCTION(STRING_find_nocase__success_case)
     result = STRING_find_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
 }
 
 // 
@@ -1244,8 +1234,8 @@ TEST_FUNCTION(STRING_find_nocase__success_nocase)
     result = STRING_find_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "ABCDEFG", result);
 }
 
 // 
@@ -1267,8 +1257,8 @@ TEST_FUNCTION(STRING_find_nocase__success_not_found1)
     result = STRING_find_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1290,8 +1280,8 @@ TEST_FUNCTION(STRING_find_nocase__success_not_found2)
     result = STRING_find_nocase(k_string1_valid, k_string2_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1303,13 +1293,15 @@ TEST_FUNCTION(STRING_find_nocase__arg_string_invalid)
     const char* result;
 
     // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn("ABCD");
 
     // act 
     result = STRING_find_nocase(NULL, k_string_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1326,8 +1318,8 @@ TEST_FUNCTION(STRING_find_nocase__arg_to_find_invalid)
     result = STRING_find_nocase(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1346,8 +1338,8 @@ TEST_FUNCTION(STRING_find_c_str__success_found)
     result = STRING_find_c_str(k_string_valid, "ab");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
 }
 
 // 
@@ -1366,8 +1358,8 @@ TEST_FUNCTION(STRING_find_c_str__success_notfound)
     result = STRING_find_c_str(k_string_valid, "AB");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1384,8 +1376,8 @@ TEST_FUNCTION(STRING_find_c_str__arg_string_invalid)
     result = STRING_find_c_str(NULL, "ab");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1404,8 +1396,8 @@ TEST_FUNCTION(STRING_find_c_str__arg_to_find_invalid)
     result = STRING_find_c_str(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1424,8 +1416,8 @@ TEST_FUNCTION(STRING_find_c_str_nocase__success)
     result = STRING_find_c_str_nocase(k_string_valid, "AB");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
 }
 
 // 
@@ -1444,8 +1436,8 @@ TEST_FUNCTION(STRING_find_c_str_nocase__success_not_found)
     result = STRING_find_c_str_nocase(k_string_valid, "abdefg");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1462,8 +1454,8 @@ TEST_FUNCTION(STRING_find_c_str_nocase__arg_string_invalid)
     result = STRING_find_c_str_nocase(NULL, "ab");
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1482,8 +1474,8 @@ TEST_FUNCTION(STRING_find_c_str_nocase__arg_to_find_invalid)
     result = STRING_find_c_str_nocase(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1511,9 +1503,9 @@ TEST_FUNCTION(STRING_clone_c_str__success)
     result = STRING_clone_c_str(k_string_valid, &copy_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "abcdefghij", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -1530,8 +1522,8 @@ TEST_FUNCTION(STRING_clone_c_str__arg_string_invalid)
     result = STRING_clone_c_str(NULL, &copy_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1548,8 +1540,8 @@ TEST_FUNCTION(STRING_clone_c_str__arg_copy_invalid)
     result = STRING_clone_c_str(k_string_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1578,8 +1570,8 @@ TEST_FUNCTION(STRING_clone_c_str__neg)
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        strcpy(UT_MEM, k_string_c_str);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    strcpy(UT_MEM, k_string_c_str);
     result = STRING_clone_c_str(k_string_valid, &copy_valid);
 
     // assert 
@@ -1604,9 +1596,9 @@ TEST_FUNCTION(string_clone__success)
     result = string_clone(k_string_c_str, &copy_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "0123456789", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -1623,8 +1615,8 @@ TEST_FUNCTION(string_clone__arg_string_invalid)
     result = string_clone(NULL, &copy_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1641,8 +1633,8 @@ TEST_FUNCTION(string_clone__arg_copy_invalid)
     result = string_clone(k_string_c_str, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1662,8 +1654,8 @@ TEST_FUNCTION(string_clone__neg)
         .SetFailReturn(NULL);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = string_clone(k_string_c_str, &copy_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = string_clone(k_string_c_str, &copy_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory);
@@ -1686,9 +1678,9 @@ TEST_FUNCTION(string_from_int__success)
     result = string_from_int(k_value_valid, k_radix_valid, int_string_valid, int_string_len_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "1234567", int_string_valid);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -1707,8 +1699,8 @@ TEST_FUNCTION(string_from_int__arg_radix_invalid)
     result = string_from_int(k_value_valid, 0, int_string_valid, int_string_len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 // 
@@ -1726,8 +1718,8 @@ TEST_FUNCTION(string_from_int__arg_string_invalid)
     result = string_from_int(k_value_valid, k_radix_valid, NULL, 256);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -1745,9 +1737,9 @@ TEST_FUNCTION(string_trim_scheme__success)
     result = string_trim_scheme(k_host_name_valid, &name_len_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, "testhost.azure.com/https://test", result);
     ASSERT_ARE_EQUAL(size_t, 18, name_len_valid);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -1764,8 +1756,8 @@ TEST_FUNCTION(string_trim_scheme__success_name_len_invalid)
     result = string_trim_scheme(k_host_name_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "testhost.azure.com", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "testhost.azure.com", result);
 }
 
 // 
@@ -1782,8 +1774,8 @@ TEST_FUNCTION(string_trim_scheme__arg_host_name_invalid)
     result = string_trim_scheme(NULL, &name_len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -1802,8 +1794,8 @@ TEST_FUNCTION(string_trim_back_len__success)
     result = string_trim_back_len(k_val_valid, k_val_len_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(size_t, 7, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, 7, result);
 }
 
 // 
@@ -1821,8 +1813,8 @@ TEST_FUNCTION(string_trim_back_len__arg_val_invalid)
     result = string_trim_back_len(NULL, k_val_len_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(size_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, 0, result);
 }
 
 // 
@@ -1840,8 +1832,8 @@ TEST_FUNCTION(string_trim_back_len__arg_trim_chars_invalid)
     result = string_trim_back_len(k_val_valid, k_val_len_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(size_t, k_val_len_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, k_val_len_valid, result);
 }
 
 // 
@@ -1859,8 +1851,8 @@ TEST_FUNCTION(string_is_equal_nocase__success)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "test");
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -1878,8 +1870,8 @@ TEST_FUNCTION(string_is_equal_nocase__success_nocase)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "TEST");
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -1895,8 +1887,8 @@ TEST_FUNCTION(string_is_equal_nocase__success_both_null)
     result = string_is_equal_nocase(NULL, 0, NULL);
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -1914,8 +1906,8 @@ TEST_FUNCTION(string_is_equal_nocase__success_notequal_nocase)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "TEST ");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -1933,8 +1925,8 @@ TEST_FUNCTION(string_is_equal_nocase__success_notequal_case)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "test ");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -1950,8 +1942,8 @@ TEST_FUNCTION(string_is_equal_nocase__arg_val_invalid)
     result = string_is_equal_nocase(NULL, 12, "test");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -1967,8 +1959,8 @@ TEST_FUNCTION(string_is_equal_nocase__arg_to_invalid)
     result = string_is_equal_nocase("test", 4, NULL);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -1986,8 +1978,8 @@ TEST_FUNCTION(string_is_equal__success)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "test");
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -2003,8 +1995,8 @@ TEST_FUNCTION(string_is_equal_success_both_null)
     result = string_is_equal(NULL, 0, NULL);
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -2022,8 +2014,8 @@ TEST_FUNCTION(string_is_equal__success_not_equal)
     result = string_is_equal(k_val_valid, k_len_valid, "TEST");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2041,8 +2033,8 @@ TEST_FUNCTION(string_is_equal__success_not_equal_empty)
     result = string_is_equal_nocase(k_val_valid, k_len_valid, "");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2058,8 +2050,8 @@ TEST_FUNCTION(string_is_equal__arg_val_invalid)
     result = string_is_equal(NULL, 4, "test");
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 
@@ -2076,8 +2068,8 @@ TEST_FUNCTION(string_is_equal__arg_to_invalid)
     result = string_is_equal("test", 4, NULL);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2095,8 +2087,8 @@ TEST_FUNCTION(string_compare__success_same)
     result = string_compare(k_val_valid, k_to_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2114,8 +2106,8 @@ TEST_FUNCTION(string_compare__success_notsame)
     result = string_compare(k_val_valid, k_to_valid);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2131,8 +2123,8 @@ TEST_FUNCTION(string_compare__arg_val_invalid)
     result = string_compare(NULL, "1");
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2148,8 +2140,8 @@ TEST_FUNCTION(string_compare__arg_to_invalid)
     result = string_compare("1", NULL);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2167,8 +2159,8 @@ TEST_FUNCTION(string_compare_nocase__success)
     result = string_compare_nocase(k_val_valid, k_to_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2184,8 +2176,8 @@ TEST_FUNCTION(string_compare_nocase__arg_val_invalid)
     result = string_compare_nocase(NULL, "abcD");
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2201,8 +2193,8 @@ TEST_FUNCTION(string_compare_nocase__arg_to_invalid)
     result = string_compare_nocase("abcD", NULL);
 
     // assert 
-    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_NOT_EQUAL(int32_t, 0, result);
 }
 
 // 
@@ -2220,8 +2212,8 @@ TEST_FUNCTION(string_starts_with_nocase__success_nocase)
     result = string_starts_with_nocase(k_val_valid, k_find_valid);
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -2239,8 +2231,8 @@ TEST_FUNCTION(string_starts_with_nocase__success_case)
     result = string_starts_with_nocase(k_val_valid, k_find_valid);
 
     // assert 
-    ASSERT_IS_TRUE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_TRUE(result);
 }
 
 // 
@@ -2258,8 +2250,8 @@ TEST_FUNCTION(string_starts_with_nocase__success_case_notfound)
     result = string_starts_with_nocase(k_val_valid, k_find_valid);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2277,8 +2269,8 @@ TEST_FUNCTION(string_starts_with_nocase__success_nocase_notfound)
     result = string_starts_with_nocase(k_val_valid, k_find_valid);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2295,8 +2287,8 @@ TEST_FUNCTION(string_starts_with_nocase__arg_val_invalid)
     result = string_starts_with_nocase(NULL, k_find_valid);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2313,8 +2305,8 @@ TEST_FUNCTION(string_starts_with_nocase__arg_find_invalid)
     result = string_starts_with_nocase(k_val_valid, NULL);
 
     // assert 
-    ASSERT_IS_FALSE(result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_FALSE(result);
 }
 
 // 
@@ -2332,8 +2324,8 @@ TEST_FUNCTION(string_remove_nocase__success_nocase)
     string_remove_nocase(UT_MEM, k_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "aaaaaaa", UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "aaaaaaa", UT_MEM);
 }
 
 // 
@@ -2351,8 +2343,8 @@ TEST_FUNCTION(string_remove_nocase__success_case)
     string_remove_nocase(UT_MEM, k_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "bbbbbbb", UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "bbbbbbb", UT_MEM);
 }
 
 // 
@@ -2370,8 +2362,8 @@ TEST_FUNCTION(string_remove_nocase__success_notfound)
     string_remove_nocase(UT_MEM, k_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
 }
 
 // 
@@ -2422,8 +2414,8 @@ TEST_FUNCTION(string_find__success)
     result = string_find(k_value_valid, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "34567890", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "34567890", result);
 }
 
 // 
@@ -2441,8 +2433,8 @@ TEST_FUNCTION(string_find__success_notfound)
     result = string_find(k_value_valid, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2459,8 +2451,8 @@ TEST_FUNCTION(string_find__arg_value_invalid)
     result = string_find(NULL, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2477,8 +2469,8 @@ TEST_FUNCTION(string_find__arg_to_find_invalid)
     result = string_find(k_value_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2496,8 +2488,8 @@ TEST_FUNCTION(string_find_nocase__success_case)
     result = string_find_nocase(k_value_valid, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
 }
 
 // 
@@ -2515,8 +2507,8 @@ TEST_FUNCTION(string_find_nocase__success_nocase)
     result = string_find_nocase(k_value_valid, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "abcdefg", result);
 }
 
 // 
@@ -2533,8 +2525,8 @@ TEST_FUNCTION(string_find_nocase__arg_value_invalid)
     result = string_find_nocase(NULL, k_to_find_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2551,8 +2543,8 @@ TEST_FUNCTION(string_find_nocase__arg_to_find_invalid)
     result = string_find_nocase(k_value_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2570,8 +2562,8 @@ TEST_FUNCTION(string_trim_front__success)
     result = string_trim_front(k_val_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "efgabcd", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "efgabcd", result);
 }
 
 // 
@@ -2589,8 +2581,8 @@ TEST_FUNCTION(string_trim_front__success_notfound)
     result = string_trim_front(k_val_valid, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
 }
 
 // 
@@ -2607,8 +2599,8 @@ TEST_FUNCTION(string_trim_front__arg_val_invalid)
     result = string_trim_front(NULL, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2625,8 +2617,8 @@ TEST_FUNCTION(string_trim_front__arg_trim_chars_invalid)
     result = string_trim_front(k_val_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
 }
 
 // 
@@ -2645,8 +2637,8 @@ TEST_FUNCTION(string_trim_back__success)
     string_trim_back(UT_MEM, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "eabcdabcdabcdefg", UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "eabcdabcdabcdefg", UT_MEM);
 }
 
 // 
@@ -2665,8 +2657,8 @@ TEST_FUNCTION(string_trim_back__success_not_found)
     string_trim_back(UT_MEM, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
 }
 
 // 
@@ -2700,8 +2692,8 @@ TEST_FUNCTION(string_trim_back__arg_trim_chars_invalid)
     string_trim_back(UT_MEM, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, UT_MEM);
 }
 
 // 
@@ -2721,8 +2713,8 @@ TEST_FUNCTION(string_trim__success)
     result = string_trim(UT_MEM, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, "efg", result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "efg", result);
 }
 
 // 
@@ -2742,8 +2734,8 @@ TEST_FUNCTION(string_trim__success_not_found)
     result = string_trim(UT_MEM, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
 }
 
 // 
@@ -2760,8 +2752,8 @@ TEST_FUNCTION(string_trim__arg_val_invalid)
     result = string_trim(NULL, k_trim_chars_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
 // 
@@ -2780,8 +2772,8 @@ TEST_FUNCTION(string_trim__arg_trim_chars_invalid)
     result = string_trim(UT_MEM, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, result);
 }
 
 //
@@ -2795,7 +2787,8 @@ static int32_t string_key_value_parser__success_accum(
     size_t val_len
 )
 {
-    (void)key, key_len;
+    (void)key;
+    (void)key_len;
     strncat((char*)ctx, val, val_len);
     return er_ok;
 }
@@ -2818,9 +2811,9 @@ TEST_FUNCTION(string_key_value_parser__success_1)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "123", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2841,9 +2834,9 @@ TEST_FUNCTION(string_key_value_parser__success_2)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "123", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2864,9 +2857,9 @@ TEST_FUNCTION(string_key_value_parser__success_3)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "1", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2887,9 +2880,9 @@ TEST_FUNCTION(string_key_value_parser__success_4)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "3", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2910,9 +2903,9 @@ TEST_FUNCTION(string_key_value_parser__success_5)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "3", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2933,9 +2926,9 @@ TEST_FUNCTION(string_key_value_parser__success_6)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2956,9 +2949,9 @@ TEST_FUNCTION(string_key_value_parser__success_7)
     result = string_key_value_parser(k_connection_string_valid, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, "", UT_MEM);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -2978,8 +2971,8 @@ TEST_FUNCTION(string_key_value_parser__arg_connection_string_invalid)
     result = string_key_value_parser(NULL, k_visitor_valid, k_delim_valid, UT_MEM);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -2999,8 +2992,8 @@ TEST_FUNCTION(string_key_value_parser__arg_visitor_invalid)
     result = string_key_value_parser(k_connection_string_valid, NULL, k_delim_valid, UT_MEM);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -3008,7 +3001,7 @@ TEST_FUNCTION(string_key_value_parser__arg_visitor_invalid)
 // 
 TEST_FUNCTION(string_to_byte_array__success_1)
 {
-    static const char* k_val_valid = "abcdefghijklmnop!\"§$%/&()=äöü@ÄÖ#";
+    static const char* k_val_valid = "abcdefghijklmnop!\"$%/&()=#";
     unsigned char* buffer_valid;
     size_t len_valid;
     int32_t result;
@@ -3016,7 +3009,7 @@ TEST_FUNCTION(string_to_byte_array__success_1)
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
     // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(33, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(h_realloc(26, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
 
@@ -3024,9 +3017,9 @@ TEST_FUNCTION(string_to_byte_array__success_1)
     result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)buffer_valid);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -3050,9 +3043,9 @@ TEST_FUNCTION(string_to_byte_array__success_2)
     result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
 
     // assert 
+    ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_val_valid, (const char*)buffer_valid);
-    ASSERT_EXPECTED_CALLS();
 }
 
 // 
@@ -3070,8 +3063,8 @@ TEST_FUNCTION(string_to_byte_array__arg_val_invalid)
     result = string_to_byte_array(NULL, &buffer_valid, &len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -3090,8 +3083,8 @@ TEST_FUNCTION(string_to_byte_array__arg_val_empty)
     result = string_to_byte_array(k_val_invalid, &buffer_valid, &len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 // 
@@ -3099,7 +3092,7 @@ TEST_FUNCTION(string_to_byte_array__arg_val_empty)
 // 
 TEST_FUNCTION(string_to_byte_array__arg_buffer_invalid)
 {
-    static const char* k_val_valid = "0123456789!\"§$%/&()=äöü@ÄÖ#";
+    static const char* k_val_valid = "0123456789!\"$%/&()=+-";
     size_t len_valid;
     int32_t result;
 
@@ -3109,8 +3102,8 @@ TEST_FUNCTION(string_to_byte_array__arg_buffer_invalid)
     result = string_to_byte_array(k_val_valid, NULL, &len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -3118,7 +3111,7 @@ TEST_FUNCTION(string_to_byte_array__arg_buffer_invalid)
 // 
 TEST_FUNCTION(string_to_byte_array__arg_len_invalid)
 {
-    static const char* k_val_valid = "0123456789!\"§$%/&()=äöü@ÄÖ#";
+    static const char* k_val_valid = "0123456789!\"$%/&()=#";
     unsigned char* buffer_valid;
     int32_t result;
 
@@ -3128,8 +3121,8 @@ TEST_FUNCTION(string_to_byte_array__arg_len_invalid)
     result = string_to_byte_array(k_val_valid, &buffer_valid, NULL);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
 // 
@@ -3151,8 +3144,8 @@ TEST_FUNCTION(string_to_byte_array__neg)
     result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
 
     // assert 
-    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
 // 

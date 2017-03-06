@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="option"></param>
         /// <param name="value"></param>
-        public SocketOptionValue(SocketOption option, UInt64 value) {
+        public SocketOptionValue(SocketOption option, ulong value) {
             Option = option;
             Value = value;
         }
@@ -90,7 +90,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Option value
         /// </summary>
         [DataMember(Name = "value", Order = 2)]
-        public UInt64 Value { get; set; }
+        public ulong Value { get; set; }
 
         /// <summary>
         /// Comparison

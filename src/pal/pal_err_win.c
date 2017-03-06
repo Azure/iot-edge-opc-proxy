@@ -6,49 +6,6 @@
 #include "pal_err.h"
 #include "pal_types.h"
 
-#if !defined(UNIT_TEST)
-static LPTOP_LEVEL_EXCEPTION_FILTER old_filter;
-
-//
-// Handle exceptions
-//
-static LONG WINAPI pal_exception_handler(
-    EXCEPTION_POINTERS * ExceptionInfo
-)
-{
-#define _case_error(e) \
-    case e: log_error(NULL, #e); break
-    switch (ExceptionInfo->ExceptionRecord->ExceptionCode)
-    {
-    _case_error(EXCEPTION_ACCESS_VIOLATION);
-    _case_error(EXCEPTION_ARRAY_BOUNDS_EXCEEDED);
-    _case_error(EXCEPTION_BREAKPOINT);
-    _case_error(EXCEPTION_DATATYPE_MISALIGNMENT);
-    _case_error(EXCEPTION_FLT_DENORMAL_OPERAND);
-    _case_error(EXCEPTION_FLT_DIVIDE_BY_ZERO);
-    _case_error(EXCEPTION_FLT_INEXACT_RESULT);
-    _case_error(EXCEPTION_FLT_INVALID_OPERATION);
-    _case_error(EXCEPTION_FLT_OVERFLOW);
-    _case_error(EXCEPTION_FLT_STACK_CHECK);
-    _case_error(EXCEPTION_FLT_UNDERFLOW);
-    _case_error(EXCEPTION_ILLEGAL_INSTRUCTION);
-    _case_error(EXCEPTION_IN_PAGE_ERROR);
-    _case_error(EXCEPTION_INT_DIVIDE_BY_ZERO);
-    _case_error(EXCEPTION_INT_OVERFLOW);
-    _case_error(EXCEPTION_INVALID_DISPOSITION);
-    _case_error(EXCEPTION_NONCONTINUABLE_EXCEPTION);
-    _case_error(EXCEPTION_PRIV_INSTRUCTION);
-    _case_error(EXCEPTION_SINGLE_STEP);
-    _case_error(EXCEPTION_STACK_OVERFLOW);
-    default:
-        log_error(NULL, "Unrecognized Exception");
-        break;
-    }
-    return ExceptionInfo->ExceptionRecord->ExceptionFlags ? 
-        EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_EXECUTION;
-}
-#endif
-
 //
 // Convert an error code
 //
@@ -157,11 +114,6 @@ int32_t pal_err_init(
     void
 )
 {
-#if !defined(UNIT_TEST)
-    if (old_filter)
-        return er_bad_state;
-    old_filter = SetUnhandledExceptionFilter(pal_exception_handler);
-#endif
     return er_ok;
 }
 
@@ -172,9 +124,5 @@ void pal_err_deinit(
     void
 )
 {
-#if !defined(UNIT_TEST)
-    if (!old_filter)
-        return;
-    SetUnhandledExceptionFilter(old_filter);
-#endif
+    // no-op
 }

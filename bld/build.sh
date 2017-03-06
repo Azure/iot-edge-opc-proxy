@@ -4,6 +4,7 @@
 
 set -e
 
+current_root=$(pwd)
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 
 skip_unittests=OFF
@@ -103,7 +104,8 @@ native_build()
 		for c in ${build_configs[@]}; do
 			echo -e "\033[1m    ${c}...\033[0m"
 			mkdir -p "${build_root}/cmake/${c}"
-			pushd "${build_root}/cmake/${c}" > /dev/null
+			cd "${build_root}/cmake/${c}" > /dev/null
+
 			cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
 					-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
 				return 1 
@@ -121,7 +123,6 @@ native_build()
 					return 1
 				export LD_LIBRARY_PATH=
 			fi
-			popd > /dev/null
 		done
 	fi
 	return 0
@@ -136,7 +137,7 @@ managed_build()
 		echo "Skipping dotnet..."
 	else
 		if dotnet --version; then
-			pushd "${repo_root}/api/csharp" > /dev/null
+			cd "${repo_root}/api/csharp" > /dev/null
 			if [ $build_pack_only == 0 ]; then
 			    echo -e "\033[1mBuilding dotnet...\033[0m"
 			    dotnet restore || exit 1
@@ -170,7 +171,6 @@ managed_build()
 					fi
 				done
 			done
-			popd > /dev/null
 		else
 			echo "No dotnet installed, skipping dotnet build."
 		fi
@@ -179,27 +179,42 @@ managed_build()
 }
 
 # -----------------------------------------------------------------------------
-# -- build in container
+# -- build in docker container
 # -----------------------------------------------------------------------------
 #container_build()
 #{
 # todo
 #}
 
-pushd "$repo_root" > /dev/null
-process_args $*
-if [ -z "$build_configs" ]; then
-	build_configs=(Debug Release)
-fi
-echo "Building ${build_configs[@]}..."
-if [ $build_clean == 1 ]; then
-    echo "Cleaning previous build output..."
-    rm -r -f "${build_root}"
-fi
-mkdir -p "${build_root}"
-native_build || exit 1
-managed_build || exit 1
-popd > /dev/null
+# -----------------------------------------------------------------------------
+# -- Main
+# -----------------------------------------------------------------------------
+main()
+{
+	if [ -z "$build_configs" ]; then
+		build_configs=(Debug Release)
+	fi
+	echo "Building ${build_configs[@]}..."
+	if [ $build_clean == 1 ]; then
+		echo "Cleaning previous build output..."
+		rm -r -f "${build_root}"
+	fi
+	mkdir -p "${build_root}"
+	native_build \
+		|| return $?
+	managed_build \
+		|| return $?
+}
 
-[ $? -eq 0 ] || exit $?
+process_args $*
+main
+echo "$?" 
+cd "$current_root" > /dev/null
+if [ $? -eq 0 ]; then
+	echo "... Success!" 
+else
+	exit $?
+fi
+
+
 
