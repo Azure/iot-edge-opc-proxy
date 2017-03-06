@@ -1,7 +1,6 @@
 
 #include "util_mem.h"
 #include "util_zlog.h"
-#include "util_string.h"
 #include "util_misc.h"
 #include <zlog.h>
 #include <category.h>
@@ -37,9 +36,8 @@ int32_t zlog_set_log_file(
 )
 {
     int32_t result;
-    STRING_HANDLE config;
-
-    config = STRING_construct(
+    char* config;
+    static const char* pre_config = 
         "[global]\n"
         "strict init = true\n"
         "buffer min = 1024\n"
@@ -49,20 +47,21 @@ int32_t zlog_set_log_file(
         "[rules]\n"
         "*.info >stdout\n"
         "*.error >stderr\n"
-        "*.* \""
-    );
+        "*.* \"";
+    static const char* post_config =
+        "\",1M*3 \n";
+
+    config = (char*)mem_alloc(
+        strlen(pre_config) + strlen(file_name) + strlen(post_config) + 1);
     if (!config)
         return er_out_of_memory;
     do
     {
-        if (0 != STRING_concat(config, file_name) ||
-            0 != STRING_concat(config, "\",1M*3 \n"))
-        {
-            result = er_out_of_memory;
-            break;
-        }
+        strcpy(config, pre_config);
+        strcat(config, file_name);
+        strcat(config, post_config);
 
-        if (0 != zlog_reload_from_string(STRING_c_str(config)))
+        if (0 != zlog_reload_from_string(config))
         {
             result = er_reading;
             break;
@@ -72,7 +71,7 @@ int32_t zlog_set_log_file(
         break;
     }
     while (0);
-    STRING_delete(config);
+    mem_free(config);
     return result;
 }
 

@@ -230,17 +230,17 @@ function(build_ut cur_test folder)
             else()
                 add_test(
                     NAME ${cur_test}_valgrind COMMAND valgrind                 
-                        --num-callers=100 --error-exitcode=1 
+                        --num-callers=50 --error-exitcode=1 
                         --trace-children=yes --leak-check=full --track-origins=yes 
                         ${VALGRIND_SUPPRESSIONS_FILE_EXTRA_PARAMETER} 
                         $<TARGET_FILE:${cur_test}_exe>)
                 add_test(
                     NAME ${cur_test}_helgrind COMMAND valgrind --tool=helgrind 
-                        --num-callers=100 --error-exitcode=1 
+                        --num-callers=50 --error-exitcode=1 
                         $<TARGET_FILE:${cur_test}_exe>)
                 add_test(
                     NAME ${cur_test}_drd COMMAND valgrind --tool=drd 
-                        --num-callers=100 --error-exitcode=1
+                        --num-callers=50 --error-exitcode=1
                         $<TARGET_FILE:${cur_test}_exe>)
             endif()
         endif()
