@@ -14,4 +14,4 @@ install:
   - sudo apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
   - sudo apt-get update
   - sudo apt-get install dotnet-dev-1.0.0-preview2-003121 -y
-script: "bash bld/build.sh -c $build_args"
+script: "bash bld/build.sh -c $build_args --skip-unittests"
