@@ -2,8 +2,6 @@
 # Copyright (c) Microsoft. All rights reserved.
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-set -e
-
 current_root=$(pwd)
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 
@@ -47,50 +45,66 @@ usage ()
 # -----------------------------------------------------------------------------
 process_args ()
 {
-    save_next_arg=0
-    for arg in $*; do
-		  if [ $save_next_arg == 1 ]; then
-			build_root="$arg"
-			save_next_arg=0
-		elif [ $save_next_arg == 2 ]; then
-			build_configs+=("$arg")
-			save_next_arg=0
-		elif [ $save_next_arg == 3 ]; then
-			build_nuget_output="$arg"
-			save_next_arg=0
-		elif [ $save_next_arg == 4 ]; then
-			build_os=="$arg"
-			save_next_arg=0
-		else
-			case "$arg" in
-				-x | --xtrace)
-					set -x;;
-				-o | --build-root)
-					save_next_arg=1;;
-				-C | --config)
-					save_next_arg=2;;
-				-c | --clean)
-					build_clean=1;;
-				--use-zlog)
-					use_zlog=ON;;
-				--use-openssl)
-					;;
-				--use-libwebsockets)
-					;;
-				--pack-only)
-					build_pack_only=1;;
-				--skip-unittests)
-					skip_unittests=ON;;
-				--skip-dotnet)
-					skip_dotnet=1;;
-				--os)
-					save_next_arg=4;;
-				-n | --nuget-folder)
-					save_next_arg=3;;
-				*)
-					usage;;
-			esac
-		fi
+    # Note that we use `"$@"' to let each command-line parameter expand to a
+    # separate word. The quotes around `$@' are essential!
+    # We need TEMP as the `eval set --' would nuke the return value of getopt.
+    TEMP=`getopt -o xo:C:cn: \
+          -l xtrace,build-root:,config:,clean,use-zlog,use-openssl,use-libwebsockets,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder: \
+         -- "$@"`
+
+    if [ $? != 0 ]
+    then
+        echo "Failed to parse options"
+        usage
+        exit 1
+    fi
+
+    # Note the quotes around `$TEMP': they are essential!
+    eval set -- "$TEMP"
+
+    while true
+    do
+	case "$1" in
+	    -x | --xtrace)
+		set -x
+                shift ;;
+	    -o | --build-root)
+		build_root="$2"
+                shift 2 ;;
+	    -C | --config)
+                build_configs+=("$2")
+                shift 2 ;;
+	    -c | --clean)
+		build_clean=1
+                shift ;;
+	    --use-zlog)
+		use_zlog=ON
+                shift ;;
+	    --use-openssl)
+                shift ;;
+	    --use-libwebsockets)
+                shift ;;
+	    --pack-only)
+		build_pack_only=1
+                shift ;;
+	    --skip-unittests)
+		skip_unittests=ON
+                shift ;;
+	    --skip-dotnet)
+		skip_dotnet=1
+                shift ;;
+	    --os)
+		build_os="$2"
+                shift 2 ;;
+	    -n | --nuget-folder)
+		build_nuget_output="$2"
+                shift 2 ;;
+	    --) shift
+                break ;; # Terminate the while loop at the last option
+	    *)
+		usage
+                shift ;
+	esac
     done
 }
 
@@ -208,6 +222,9 @@ main()
 }
 
 process_args $*
+
+set -e
+
 main
 echo "$?" 
 cd "$current_root" > /dev/null
