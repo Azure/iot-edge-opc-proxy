@@ -8,13 +8,7 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 skip_unittests=OFF
 skip_dotnet=0
 use_zlog=OFF
-if [ `nproc` -gt 1 ]
-then
-    # Use up to 2 parrallel jobs, if the machine has more than one core
-    MAKE_PARALLEL_JOBS=2
-else
-    MAKE_PARALLEL_JOBS=1
-fi
+MAKE_PARALLEL_JOBS=1
 
 build_root="${repo_root}"/build
 build_clean=0
@@ -27,16 +21,19 @@ usage ()
 {
     echo "build.sh [options]"
     echo "options"
-    echo "    --os <value>			   [] Os to build on (needs Docker installed)."
-    echo " -c --clean                  Build clean (Removes previous build output)"
-    echo " -C --config <value>         [Debug] Build configuration (e.g. Debug, Release)"
-    echo " -o --build-root <value>     [/build] Directory in which to place all files during build"
-    echo "    --use-zlog               Use zlog as logging framework instead of xlogging"
-    echo " 	  --skip-unittests         Skips building and executing unit tests"
-    echo "	  --skip-dotnet            Do not build dotnet core API and packages"
-    echo "    --pack-only              Only creates packages. (Cannot be combined with --clean)"
-    echo " -n --nuget-folder <value>   [/build] Folder to use when outputting nuget packages."
-    echo " -x --xtrace                 print a trace of each command"
+    echo "    --os <value>                [] Os to build on (needs Docker installed)."
+    echo " -c --clean                     Build clean (Removes previous build output)"
+    echo " -C --config <value>            [Debug] Build configuration (e.g. Debug, Release)"
+    echo " -o --build-root <value>        [/build] Directory in which to place all files during build"
+    echo "    --use-zlog                  Use zlog as logging framework instead of xlogging"
+    echo "    --skip-unittests            Skips building and executing unit tests"
+    echo "    --skip-dotnet               Do not build dotnet core API and packages"
+    echo "    --pack-only                 Only creates packages. (Cannot be combined with --clean)"
+    echo " -n --nuget-folder <value>      [/build] Folder to use when outputting nuget packages."
+    echo " -x --xtrace                    print a trace of each command"
+    echo " -j <value> | --jobs <value>    Number of parallel make jobs, see description of make -j"
+    echo "                                Unit test need a lot of memory. So --skip-unittests should be set,"
+    echo '                                if you want to use all cores with -j`nproc`'
     exit 1
 }
 
@@ -48,8 +45,8 @@ process_args ()
     # Note that we use `"$@"' to let each command-line parameter expand to a
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
-    TEMP=`getopt -o xo:C:cn: \
-          -l xtrace,build-root:,config:,clean,use-zlog,use-openssl,use-libwebsockets,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder: \
+    TEMP=`getopt -o xo:C:cn:j: \
+          -l xtrace,build-root:,config:,clean,use-zlog,use-openssl,use-libwebsockets,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
          -- "$@"`
 
     if [ $? != 0 ]
@@ -98,6 +95,9 @@ process_args ()
                 shift 2 ;;
 	    -n | --nuget-folder)
 		build_nuget_output="$2"
+                shift 2 ;;
+            -j | --jobs)
+                MAKE_PARALLEL_JOBS=$2
                 shift 2 ;;
 	    --) shift
                 break ;; # Terminate the while loop at the last option
