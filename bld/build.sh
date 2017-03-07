@@ -107,8 +107,9 @@ native_build()
 			cd "${build_root}/cmake/${c}" > /dev/null
 
 			cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
-					-Duse_zlog:BOOL=$use_zlog "$repo_root" || \
-				return 1 
+			      -Duse_zlog:BOOL=$use_zlog "$repo_root" \
+                              -DLWS_IPV6:BOOL=ON || \
+			    return 1
                         # Start as much parallel jobs as requested by the user.
                         # Until the load average equals the number of cores.
                         # Be verbose if something goes wrong
