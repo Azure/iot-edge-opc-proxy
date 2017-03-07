@@ -241,7 +241,7 @@ static int32_t prx_host_init_from_command_line(
         while (result == er_ok)
         {
             c = getopt_long(
-                argc, argv, "hiuc:t:n:L:l:C:d:", long_options, &option_index);
+                argc, argv, "hiuc:t:n:L:l:C:D:", long_options, &option_index);
             if (c == -1)
                 break;
 
