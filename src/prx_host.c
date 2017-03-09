@@ -231,6 +231,7 @@ static int32_t prx_host_init_from_command_line(
         { "connection-string-file",     required_argument,      NULL, 'C' },
         { "hub-config-file",            required_argument,      NULL, 'H' },
         { "ns-db-file",                 required_argument,      NULL, 'D' },
+        { "version",                    no_argument,            NULL, 'v' },
         { 0,                            0,                      NULL,  0  }
     };
 
@@ -257,6 +258,11 @@ static int32_t prx_host_init_from_command_line(
             case 'u':
                 should_exit = true;
                 is_uninstall = true;
+                break;
+            case 'v':
+#if defined(SCM_VERSION)
+                printf("Version: " SCM_VERSION "\n");
+#endif
                 break;
 #if defined(DEBUG)
             case 't':

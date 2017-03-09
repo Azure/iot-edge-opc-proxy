@@ -285,6 +285,18 @@ if(${use_openssl})
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
 
+# Try to define the verision from the closest parent git tag and the current Git hash.
+find_package(Git)
+if(GIT_EXECUTABLE)
+	execute_process(
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
+    OUTPUT_VARIABLE GIT_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+  target_compile_definitions(libproxy PRIVATE SCM_VERSION="${GIT_VERSION}")
+endif()
+
 if(WIN32)
   # Place here the install rule for win32
 elseif(LINUX)
