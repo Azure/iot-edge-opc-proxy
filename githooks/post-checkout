@@ -1,0 +1,12 @@
+#!/bin/sh
+# This hook is invoked when a git checkout is run after having updated the worktree.
+# This hook cannot affect the outcome of git checkout.
+# see: man 5 githooks
+# To enable this hook script copy it to $GIT_DIR/hooks/ and chmod +x $GIT_DIR/hooks/post-checkout
+
+# We need to update the time stamp of some files, so that cmake
+# knows to update what ever depends on these files
+
+UPDATE_FILES="$GIT_DIR/../inc/version.h"
+echo "Touching $UPDATE_FILES"
+touch $UPDATE_FILES
