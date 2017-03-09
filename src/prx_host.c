@@ -18,6 +18,7 @@
 
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/refcount.h"
+#include "version.h"
 
 #include <stdio.h>
 #include "getopt.h"
@@ -260,8 +261,8 @@ static int32_t prx_host_init_from_command_line(
                 is_uninstall = true;
                 break;
             case 'v':
-#if defined(SCM_VERSION)
-                printf("Version: " SCM_VERSION "\n");
+#if defined(MODULE_VERSION)
+                printf("Version: " MODULE_VERSION "\n");
 #endif
                 break;
 #if defined(DEBUG)
