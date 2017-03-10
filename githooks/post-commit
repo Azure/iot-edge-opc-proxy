@@ -1,0 +1,12 @@
+#!/bin/sh
+# This hook is invoked by git commit. It takes no parameter, and is invoked after a commit is made.
+# This hook is meant primarily for notification, and cannot affect the outcome of git commit.
+# see: man 5 githooks
+# To enable this hook script copy it to $GIT_DIR/hooks/ and chmod +x $GIT_DIR/hooks/post-commit
+
+# We need to update the time stamp of some files, so that cmake
+# knows to update what ever depends on these files
+
+UPDATE_FILES="$GIT_DIR/../bld/src/libproxy/CMakeLists.txt"
+echo "Touching $UPDATE_FILES"
+touch $UPDATE_FILES

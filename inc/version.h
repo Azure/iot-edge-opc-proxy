@@ -20,11 +20,18 @@
 #define _TOSTRING_(x) #x
 #define _TOSTRING(x) _TOSTRING_(x)
 
+#if defined(SCM_VERSION)
+#  define SCM_VERSION_APPEND " - " SCM_VERSION
+#else
+#  define SCM_VERSION_APPEND ""
+#endif
+
 // Stringified version
 #define MODULE_VERSION \
-     "" _TOSTRING_(MODULE_MAJ_VER) \
-    "." _TOSTRING_(MODULE_MIN_VER) \
-    "." _TOSTRING_(MODULE_REL_VER)
+     "" _TOSTRING(MODULE_MAJ_VER) \
+    "." _TOSTRING(MODULE_MIN_VER) \
+    "." _TOSTRING(MODULE_REL_VER) \
+     SCM_VERSION_APPEND
 
 #define MODULE_NAME "iot-gateway-proxy"
 

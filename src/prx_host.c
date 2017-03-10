@@ -18,6 +18,7 @@
 
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/refcount.h"
+#include "version.h"
 
 #include <stdio.h>
 #include "getopt.h"
@@ -231,6 +232,7 @@ static int32_t prx_host_init_from_command_line(
         { "connection-string-file",     required_argument,      NULL, 'C' },
         { "hub-config-file",            required_argument,      NULL, 'H' },
         { "ns-db-file",                 required_argument,      NULL, 'D' },
+        { "version",                    no_argument,            NULL, 'v' },
         { 0,                            0,                      NULL,  0  }
     };
 
@@ -241,7 +243,7 @@ static int32_t prx_host_init_from_command_line(
         while (result == er_ok)
         {
             c = getopt_long(
-                argc, argv, "hiuc:t:n:L:l:C:d:", long_options, &option_index);
+                argc, argv, "hiuc:t:n:L:l:C:D:", long_options, &option_index);
             if (c == -1)
                 break;
 
@@ -257,6 +259,11 @@ static int32_t prx_host_init_from_command_line(
             case 'u':
                 should_exit = true;
                 is_uninstall = true;
+                break;
+            case 'v':
+#if defined(MODULE_VERSION)
+                printf("Version: " MODULE_VERSION "\n");
+#endif
                 break;
 #if defined(DEBUG)
             case 't':
