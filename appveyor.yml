@@ -19,6 +19,7 @@ environment:
 image: Visual Studio 2015
 install:
   - git submodule update --init
+  - git -C deps/shared submodule update --init
   - appveyor DownloadFile https://libwebsockets.org:444/Win32OpenSSL-1_0_2h.exe
   - Win32OpenSSL-1_0_2h.exe /silent /verysilent /sp- /suppressmsgboxes
 build:
