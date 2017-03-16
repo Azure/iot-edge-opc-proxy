@@ -1,21 +1,17 @@
-# Simple TCP/IP Client Sample
+# Http Reverse Proxy Sample
 
-This C# sample is a Simple TCP/IP Services client that connects / sends / receives both synchronously and asynchronously through 
-the proxy. 
+This C# sample is a Simple Http Reverse Proxy that binds to localhost and allows a user to access web servers behind
+the firewall through the proxy.  
 
-## Prerequisites
+The Url through which you can reach the remote host has the form of 
 
-On Windows, the Simple TCP/IP services can be installed in:
 ```
-Programs and Features -> Turn Windows Features on or off -> [X] Simple TCPIP Services (i.e. echo, daytime, etc.)
-```
+http(s)://localhost:8080|8081/<target-url-withouth-scheme>
+``` 
 
-On Linux, the simple services must be enabled in inetd configuration.
-
-## Running the sample
-
-Once installed, start the ```proxyd``` host sample, then run the ```simple``` sample.  
-
-The sample accepts a host name, or defaults to the host name of the machine it is running on.  Though not recommended,
-if you run the proxyd sample on a different machine than the one you installed the services on, then a inbound firewall rule
-needs to be added for ports 7, 13, 17, and 19.  
+Example:
+``` 
+http://localhost:8080/www.microsoft.com
+``` 
+To run the sample, start the ```proxyd``` host sample, then run the ```webserver``` sample.  The proxy must of course
+be able to access the host name.
