@@ -8,14 +8,6 @@
 #include "io_codec.h"
 #include "io_token.h"
 
-typedef enum io_cs_type
-{
-    io_cs_type_unknown,
-    io_cs_type_iothub,
-    io_cs_type_servicebus
-}
-io_cs_type_t;
-
 //
 // connection connection string
 //

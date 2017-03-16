@@ -19,6 +19,7 @@ using Opc.Ua.Bindings;
 using Opc.Ua.Bindings.Proxy;
 
 using System.Security.Cryptography.X509Certificates;
+using System.Diagnostics;
 
 namespace NetCoreConsoleClient
 {
@@ -40,8 +41,8 @@ namespace NetCoreConsoleClient
             }
             try
             {
-                Console.WriteLine("Init Microsoft.Azure.Devices.Proxy");
-                Microsoft.Azure.Devices.Proxy.Provider.DefaultProvider.Instance.Init().Wait();
+                //  Microsoft.Azure.Devices.Proxy.Socket.Provider = 
+                //      Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
 
                 WcfChannelBase.g_CustomTransportChannel = new ProxyTransportChannelFactory();
 
@@ -128,6 +129,11 @@ namespace NetCoreConsoleClient
                 Console.WriteLine("    WARN: missing application certificate, using unsecure connection.");
             }
 
+#if PERF
+    while(true) {
+        try {
+            // Console.Clear();
+#endif
             Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
             Uri endpointURI = new Uri(endpointURL);
             var endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
@@ -147,12 +153,18 @@ namespace NetCoreConsoleClient
             var proxySocket = socket.ProxySocket;
             Console.WriteLine("    Connected through proxy {0}.", proxySocket.LocalEndPoint.ToString());
 
-            Console.WriteLine("4 - Browse the OPC UA server namespace.");
             ReferenceDescriptionCollection references;
             Byte[] continuationPoint;
 
             references = session.FetchReferences(ObjectIds.ObjectsFolder);
-
+#if PERF
+            Stopwatch w = Stopwatch.StartNew();
+            for (int i = 1; i <= 5; i++) {
+                // Console.Clear();
+                Console.WriteLine($"4 - Browse the OPC UA server namespace ({i}).");
+#else
+                Console.WriteLine($"4 - Browse the OPC UA server namespace.");
+#endif
             session.Browse(
                 null,
                 null,
@@ -188,6 +200,16 @@ namespace NetCoreConsoleClient
                     Console.WriteLine("   + {0}, {1}, {2}", nextRd.DisplayName, nextRd.BrowseName, nextRd.NodeClass);
                 }
             }
+#if PERF
+            }
+            Console.WriteLine($" ....        took {w.ElapsedMilliseconds} ms...");
+            session.Close();
+        }
+        catch (Exception e) {
+            Console.WriteLine(e.ToString());
+        }
+    }
+#else
 
             Console.WriteLine("5 - Create a subscription with publishing interval of 1 second.");
             var subscription = new Subscription(session.DefaultSubscription) { PublishingInterval = 1000 };
@@ -208,6 +230,7 @@ namespace NetCoreConsoleClient
 
             Console.WriteLine("8 - Running...Press any key to exit...");
             Console.ReadKey(true);
+#endif
         }
 
         private static void OnNotification(MonitoredItem item, MonitoredItemNotificationEventArgs e)

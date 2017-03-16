@@ -206,6 +206,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\version.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c">
@@ -308,6 +311,9 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

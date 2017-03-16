@@ -73,9 +73,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public async Task<OpenRequest> BeginOpenAsync(CancellationToken ct) {
             try {
                 _connection = await _socket.Provider.StreamService.CreateConnectionAsync(
-                    _streamId).ConfigureAwait(false);
+                    _streamId, RemoteId, Proxy).ConfigureAwait(false);
                 return new OpenRequest {
-                    ConnectionString = _connection.ConnectionString.ToString(),
+                    ConnectionString = _connection.ConnectionString != null ?
+                        _connection.ConnectionString.ToString() : "",
+                    IsPolled = _connection.IsPolled,
                     StreamId = _streamId
                 };
             }

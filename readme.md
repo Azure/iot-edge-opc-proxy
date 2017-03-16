@@ -22,22 +22,29 @@ Visit http://azure.com/iotdev to learn more about developing applications for Az
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-opc-ua-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-gateway-opc-ua-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-gateway-opc-ua-proxy)|
 
 The Azure IoT Field Gateway Proxy module depends on several components which are included as submodules. Hence, if you did
-not specify the ```--recursive``` option when using ```git clone``` to clone this repo, you need to first run ```git submodule update --init```
-in a console or terminal window before continuing...
+not specify the ```--recursive``` option when using ```git clone``` to clone this repo, you need to first run 
+```git submodule update --init``` in a console or terminal window before continuing...
 
 ## Linux
-- The Proxy module was tested on Ubuntu 16.04 and Alpine Linux 3.5, but can be built on a variety of Linux flavors. Check out the [Dockerfile folder](/bld/docker) to find examples 
-on how to set up your specific distribution.  If you do not find yours in the folder, consider contributing a Dockerfile target to this project.
-- To build the dotnet samples and API, follow the instructions [here](https://www.microsoft.com/net/core#linuxubuntu) to install .net Core on Linux.
-- Run ```bash <repo-root>/bld/build.sh```.  After a successful build, all proxy binaries can be found under the /build/cmake/bin folder.
-- (Optional) To install run the usual ```make install``` in directory build/cmake/Release or build/cmake/Debug. For a test install to /tmp/azure you could use for example the following: ```make -C <repo-root>/build/cmake/Debug  DESTDIR=/tmp/azure install```. Then run the proxy: ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/azure/usr/local/lib /tmp/azure/usr/local/bin/proxyd --help```
+- The Proxy module was tested on Ubuntu 16.04 and Alpine Linux 3.5, but can be built on a variety of Linux flavors. Check out 
+the [Dockerfile folder](/bld/docker) to find examples 
+on how to set up your specific distribution.  If you do not find yours in the folder, consider contributing a Dockerfile 
+target to this project.
+- To build the dotnet samples and API, follow the instructions [here](https://www.microsoft.com/net/core#linuxubuntu) to 
+install .net Core on Linux.
+- Run ```bash <repo-root>/bld/build.sh```.  After a successful build, all proxy binaries can be found under the 
+/build/cmake/bin folder.
+- (Optional) To install run the usual ```make install``` in directory build/cmake/Release or build/cmake/Debug. For a test 
+install to /tmp/azure you could use for example the following: ```make -C <repo-root>/build/cmake/Debug  DESTDIR=/tmp/azure 
+install```. Then run the proxy: ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/azure/usr/local/lib /tmp/azure/usr/local/bin/proxyd 
+--help```
 
 Run the build script with the ```--help``` option to see all configuration options available.
 
 ## Windows
-The Proxy module was successfully built and tested on Windows 10 with Visual Studio 2015.
-- Install [Visual Studio 2015](https://www.visualstudio.com/downloads/).
-- Install CMAKE from [here](https://cmake.org/).  
+The Proxy module was successfully built and tested on Windows 10 with Visual Studio 2017.
+- Install [Visual Studio 2017](https://www.visualstudio.com/downloads/).
+- Install CMAKE (3.7 or later) from [here](https://cmake.org/).  
 - Run ```<repo-root>\bld\build.cmd```.  After a successful build, all proxy binaries can be found under the 
 \build\cmake\<platform>\bin folder.
 
@@ -50,35 +57,49 @@ Use the following command line to clone the compatible version Azure IoT Gateway
 ```
 git clone -b "2016-12-16" --recursive https://github.com/Azure/azure-iot-gateway-sdk.git
 ```
-
 # Samples
+
+All samples require an Azure IoT Hub to be provisioned in your Azure Subscription and access to the ```iothubowner``` 
+policy connection string.
+
+For more information, see
+
+- [Set up IoT Hub](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md) describes how to 
+configure your Azure IoT Hub service.
+- [Manage IoT Hub](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/manage_iot_hub.md) describes how to 
+provision devices in your Azure IoT Hub service.
+
+For simplicity, the default Iot Hub provider used by most of the samples reads the connection string from the  ```_HUB_CS ``` environment variables when not provided programmatically.  
 
 ## Proxy Module Host Sample
 
-While the Proxy module can be hosted by the field gateway, for demonstration purposes the ```proxyd``` executable can also be used.  The sample requires an
-Azure IoT Hub to be provisioned in your Azure Subscription.  For more information, check out the following resources: 
+While the Proxy module can be hosted by the field gateway, for demonstration purposes the ```proxyd``` executable can also 
+be used.  
 
-- [Set up IoT Hub](https://github.com/Azure/azure-iot-sdks/blob/master/doc/setup_iothub.md) describes how to configure your Azure IoT Hub service.
-- [Manage IoT Hub](https://github.com/Azure/azure-iot-sdks/blob/master/doc/manage_iot_hub.md) describes how to provision devices in your Azure IoT Hub service.
+If you run the proxy host sample without a command line argument, the sample tries to read the ```iothubowner``` policy 
+connection strings from the  ```_HUB_CS ``` environment variable, and if successful, will automatically create a proxy entry 
+in your Iot Hub under the host name of the machine it is running on, and then wait and listen.  It will immediately exit if 
+the variable is not set, or the information is not provided otherwise.
 
-If you run the proxy host sample without a command line argument, the sample tries to read the ```iothubowner``` policy connection strings from the  ```_HUB_CS ```
-environment variable, and if successful, will automatically create a proxy entry in your Iot Hub under the host name of the machine it is
-running on, and then wait and listen.  It will immediately exit if the variable is not set, or the information is not provided otherwise.
-Alternatively, it can read the connection string from a file.  The file name then needs to be provided through the ```-C``` command line argument.  
-Using the ```-n``` option it is possible to provide a different proxy identity than the host name of the machine (e.g. to run multiple proxies simultaneously).  
+Alternatively, it can read the connection string from a file.  The file name then needs to be provided through the ```-C``` 
+command line argument.  
+
+Using the ```-n``` option it is possible to provide a different proxy identity than the host name of the machine (e.g. to 
+run multiple proxies simultaneously).  
+
 Run the ```proxyd``` executable with ```--help``` command line switch to see all available options. 
 
-A docker container that contains the proxy module host can be built and run directly from github.  If you have not done so already,
-install docker on your machine, then in a terminal or console window, run:
+A docker container that contains the proxy module host can be built and run directly from github.  If you have not done 
+so already, install docker on your machine, then in a terminal or console window, run:
 
 ```
 docker build -t <tag> https://github.com/Azure/iot-gateway-proxy
 docker run -e _HUB_CS=<iothubowner-connection-string> <tag>
 ```
 
-## API Samples
+## Other samples
 
-The following samples show how the Gateway module can be used:
+The following samples are included and demonstrate how to use the API:
 
 - An [OPC UA client](/api/csharp/samples/opc-ua/readme.md) that shows how the [OPC-Foundation reference stack](https://github.com/OPCFoundation/UA-.NETStandardLibrary) transport adapter can provide
 OPC-UA relay access to OPC UA servers in a Proxy network.  

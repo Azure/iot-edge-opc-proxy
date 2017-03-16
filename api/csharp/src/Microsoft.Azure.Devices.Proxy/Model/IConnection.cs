@@ -3,8 +3,6 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
-    using System;
-    using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -14,9 +12,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public interface IConnection {
 
         /// <summary>
-        /// Connection string for rendezvous point
+        /// Connection string 
         /// </summary>
         ConnectionString ConnectionString { get; }
+
+        /// <summary>
+        /// Whether this stream is polled.
+        /// </summary>
+        bool IsPolled { get; }
 
         /// <summary>
         /// Accept a message stream from remote side

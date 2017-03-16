@@ -28,13 +28,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 using System;
 using Microsoft.Azure.Devices.Proxy;
-using Microsoft.Azure.Devices.Proxy.Provider;
 using System.Windows.Forms;
 
 namespace RemoteViewing.Example {
     public partial class MainForm : Form {
         public MainForm() {
-            DefaultProvider.Instance.Init();
+#if !PERF
+            Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
+#endif
             InitializeComponent();
         }
 

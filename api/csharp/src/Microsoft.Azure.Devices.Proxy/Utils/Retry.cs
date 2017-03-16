@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 int delay = policy(k);
                 if (delay == 0)
                     continue;
-                await Task.Delay(delay).ConfigureAwait(false);
+                await Task.Delay(delay, ct).ConfigureAwait(false);
             }
             throw ProxyEventSource.Log.Timeout("Retry timeout exhausted.");
         }
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 int delay = policy(k);
                 if (delay == 0)
                     continue;
-                await Task.Delay(delay).ConfigureAwait(false);
+                await Task.Delay(delay, ct).ConfigureAwait(false);
             }
             throw ProxyEventSource.Log.Timeout("Retry timeout exhausted.");
         }

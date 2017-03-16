@@ -17,21 +17,21 @@ set(libpal_ut_include
 # Misc pal components to test
 #
 set(_MISC_PAL_UNITS_UNDER_TEST
-    new__pal_sk_posix
+    pal_sk_posix
     pal_err_posix
     pal_ev_kq
     pal_file_posix
     pal_mt_posix
     pal_net_posix
     pal_proc_posix
-    new__pal_ws_lws
+    pal_ws_lws
 )
 
 #
 # Win pal components to test
 #
 set(_WIN_PAL_UNITS_UNDER_TEST
-    new__pal_sk_win
+    pal_sk_win
     pal_err_win
     pal_ev_poll
     pal_file_win

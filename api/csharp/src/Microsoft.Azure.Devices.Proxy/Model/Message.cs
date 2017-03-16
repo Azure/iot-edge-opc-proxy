@@ -19,7 +19,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Version validation field
         /// </summary>
         [DataMember(Name = "version", Order = 1)]
-        public ushort Version { get; set; } = 0x5;
+        public ushort Version { get; set; } = (ushort)
+            ((VersionEx.Assembly.Major << 6) | (VersionEx.Assembly.Minor + 5));
 
         /// <summary>
         /// Source address

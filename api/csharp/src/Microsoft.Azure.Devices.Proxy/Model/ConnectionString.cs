@@ -11,7 +11,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
-    using Relay;
 
     /// <summary>
     /// Connection string
@@ -154,12 +153,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="endpoint"></param>
         /// <param name="keyName"></param>
         /// <param name="token"></param>
-        public ConnectionString(Uri endpoint, string keyName, SecurityToken token)
+        public ConnectionString(Uri endpoint, string keyName, string token)
             : this() {
             items[Id.HostName] = endpoint.DnsSafeHost;
             items[Id.EndpointName] = endpoint.AbsolutePath.TrimStart('/');
             items[Id.SharedAccessKeyName] = keyName;
-            items[Id.SharedAccessToken] = token.TokenString;
+            items[Id.SharedAccessToken] = token;
         }
 
         /// <summary>

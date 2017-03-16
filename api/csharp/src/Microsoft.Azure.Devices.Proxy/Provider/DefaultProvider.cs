@@ -4,73 +4,44 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Provider {
+    using Proxy;
     using Model;
     using System.Threading.Tasks;
     using System;
 
     /// <summary>
-    /// Default provider combines IoTHub name service with service bus stream service
+    /// Default service provider uses IoTHub service.
     /// </summary>
     public class DefaultProvider : IProvider {
 
-        public static readonly DefaultProvider Instance = new DefaultProvider();
-
-        private IoTHub _iothub;
-        private IStreamService _relay;
-
-        public IRemotingService ControlChannel {
+        public virtual IRemotingService ControlChannel {
             get {
                 return _iothub;
             }
         }
 
-        public INameService NameService {
+        public virtual INameService NameService {
             get {
                 return _iothub;
             }
         }
 
-        public IStreamService StreamService {
+        public virtual IStreamService StreamService {
             get {
-                return _relay;
+                return _iothub;
             }
         }
 
         /// <summary>
-        /// Initialize default provider
+        /// DefaultProvider constructor
         /// </summary>
         /// <param name="iothub"></param>
-        /// <param name="relay"></param>
         /// <returns></returns>
-        public async Task Init(ConnectionString iothub, ConnectionString relay) {
+        public DefaultProvider(ConnectionString iothub) {
             if (iothub == null)
                 throw new ArgumentException("Must provide iot hub connection string.");
-            if (relay == null)
-                throw new ArgumentException("Must provide relay connection string.");
-            _iothub = 
-                new IoTHub(iothub);
-            _relay = await ServiceBusRelay.CreateAsync(relay.Entity ?? 
-                "__Microsoft_Azure_Devices_Proxy_1__", relay).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Initialize default provider
-        /// </summary>
-        /// <param name="iothub"></param>
-        /// <param name="relay"></param>
-        /// <returns></returns>
-        public async Task Init(string iothub, string relay) {
-            if (iothub == null)
-                iothub = Environment.GetEnvironmentVariable("_HUB_CS");
-            if (relay == null)
-                relay = Environment.GetEnvironmentVariable("_SB_CS");
-            if (iothub == null)
-                throw ProxyEventSource.Log.ArgumentNull("iothub", this);
-            if (relay == null)
-                throw ProxyEventSource.Log.ArgumentNull("relay", this);
             try {
-                await Init(ConnectionString.Parse(iothub),
-                    ConnectionString.Parse(relay)).ConfigureAwait(false);
+                _iothub = new IoTHub(iothub);
             }
             catch(Exception e) {
                 throw ProxyEventSource.Log.Rethrow(e, this);
@@ -78,10 +49,44 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         /// <summary>
-        /// Init from environment
+        /// Initialize default provider
         /// </summary>
+        /// <param name="iothub"></param>
         /// <returns></returns>
-        public Task Init() =>
-            Init((string)null, (string)null);
+        public DefaultProvider(string iothub) {
+            var tcs = new TaskCompletionSource<bool>();
+            if (iothub == null)
+                iothub = Environment.GetEnvironmentVariable("_HUB_CS");
+            if (iothub == null) {
+                throw ProxyEventSource.Log.ArgumentNull("iothub", this);
+            }
+            try {
+                _iothub = new IoTHub(ConnectionString.Parse(iothub));
+            }
+            catch(Exception e) {
+                throw ProxyEventSource.Log.Rethrow(e, this);
+            }
+        }
+
+        /// <summary>
+        /// Default constructor, initializes from environment
+        /// </summary>
+        public DefaultProvider() : this((string)null) {}
+
+        /// <summary>
+        /// Same as constructor
+        /// </summary>
+        /// <param name="iothub"></param>
+        /// <returns></returns>
+        public static IProvider Create(string iothub) => new DefaultProvider(iothub);
+
+        /// <summary>
+        /// Same as constructor
+        /// </summary>
+        /// <param name="iothub"></param>
+        /// <returns></returns>
+        public static IProvider Create(ConnectionString iothub) => new DefaultProvider(iothub);
+
+        private IoTHub _iothub;
     }
 }

@@ -11,7 +11,7 @@
 #undef ENABLE_GLOBAL
 #include "io_types.h"
 
-#define VERSION MODULE_MAJ_VER + 5
+#define VERSION  ((MODULE_MAJ_VER << 6) | (MODULE_MIN_VER + 5))
 
 //
 // Protocol factory creates protocol messages from pool memory
@@ -499,12 +499,13 @@ static int32_t io_encode_open_request(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, request, 2);
+    __io_encode_type_begin(ctx, request, 3);
     __io_encode_object(ctx, ref, request, stream_id);
     result = io_encode_string(
         ctx, "connection-string", request->connection_string);
     if (result != er_ok)
         return result;
+    __io_encode_value(ctx, bool, request, polled);
     __io_encode_type_end(ctx);
     return result;
 }
@@ -518,12 +519,43 @@ static int32_t io_decode_open_request(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, request, 2);
+    __io_decode_type_begin(ctx, request, 3);
     __io_decode_object(ctx, ref, request, stream_id);
     result = io_decode_string_default(
         ctx, "connection-string", (char**)&request->connection_string);
     if (result != er_ok)
         return result;
+    __io_decode_value(ctx, bool, request, polled);
+    __io_decode_type_end(ctx);
+    return result;
+}
+
+//
+// Encode a poll request
+//
+static int32_t io_encode_poll_message(
+    io_codec_ctx_t* ctx,
+    io_poll_message_t* message
+)
+{
+    int32_t result;
+    __io_encode_type_begin(ctx, message, 1);
+    __io_encode_value(ctx, uint64, message, timeout);
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Decode a poll request
+//
+static int32_t io_decode_poll_message(
+    io_codec_ctx_t* ctx,
+    io_poll_message_t* message
+)
+{
+    int32_t result;
+    __io_decode_type_begin(ctx, message, 1);
+    __io_decode_value(ctx, uint64, message, timeout);
     __io_decode_type_end(ctx);
     return result;
 }
@@ -644,6 +676,8 @@ static int32_t io_encode_message_content(
             __io_encode_content(ctx, close_response, msg);
         else if (msg->type == io_message_type_ping)
             __io_encode_content(ctx, ping_response, msg);
+        else if (msg->type == io_message_type_poll)
+            __io_encode_null(ctx);
         else if (msg->type == io_message_type_link)
             __io_encode_content(ctx, link_response, msg);
         else if (msg->type == io_message_type_open)
@@ -665,6 +699,8 @@ static int32_t io_encode_message_content(
             __io_encode_null(ctx);
         else if (msg->type == io_message_type_ping)
             __io_encode_content(ctx, ping_request, msg);
+        else if (msg->type == io_message_type_poll)
+            __io_encode_content(ctx, poll_message, msg);
         else if (msg->type == io_message_type_link)
             __io_encode_content(ctx, link_request, msg);
         else if (msg->type == io_message_type_open)
@@ -727,6 +763,8 @@ static int32_t io_decode_message_content(
             __io_decode_content(ctx, close_response, msg);
         else if (msg->type == io_message_type_ping)
             __io_decode_content(ctx, ping_response, msg);
+        else if (msg->type == io_message_type_poll)
+            __io_decode_null(ctx);
         else if (msg->type == io_message_type_link)
             __io_decode_content(ctx, link_response, msg);
         else if (msg->type == io_message_type_open)
@@ -748,6 +786,8 @@ static int32_t io_decode_message_content(
             __io_decode_null(ctx);
         else if (msg->type == io_message_type_ping)
             __io_decode_content(ctx, ping_request, msg);
+        else if (msg->type == io_message_type_poll)
+            __io_decode_content(ctx, poll_message, msg);
         else if (msg->type == io_message_type_link)
             __io_decode_content(ctx, link_request, msg);
         else if (msg->type == io_message_type_open)
@@ -789,6 +829,8 @@ const char* io_message_type_as_string(
         return "DATA";
     else if (type == io_message_type_close)
         return "CLOSE";
+    else if (type == io_message_type_poll)
+        return "POLL";
 
     // ... more socket server messages
 

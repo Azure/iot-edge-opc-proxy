@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Azure.Devices.Proxy.Native", "Microsoft.Azure.Devices.Proxy.Native", "{F3B6C968-6933-4CCF-823E-A47F72C43C0B}"
 	ProjectSection(SolutionItems) = preProject
@@ -13,27 +13,29 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libiotsdk", "libiotsdk", "{
 		..\..\src\libiotsdk\CMakeLists.txt = ..\..\src\libiotsdk\CMakeLists.txt
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-shared", "..\..\src\libiotsdk\libiotsdk-shared.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-win32", "..\..\src\libiotsdk\libiotsdk-win32.vcxproj", "{6D8BE690-5BD5-4964-8C98-C18E6117877F}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libproxy", "libproxy", "{7AF09A3A-9349-4AAF-8F63-91168D99AFD3}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\src\libproxy\CMakeLists.txt = ..\..\src\libproxy\CMakeLists.txt
 	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproxy-shared", "..\..\src\libproxy\libproxy-shared.vcxitems", "{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libzlog", "libzlog", "{6CFB85CE-0674-4FAA-8E68-E53602AE53B2}"
 	ProjectSection(SolutionItems) = preProject
 		..\..\src\libzlog\CMakeLists.txt = ..\..\src\libzlog\CMakeLists.txt
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libproto", "libproto", "{B03F97EC-1946-40BE-9BE1-A58702900ABF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Azure.Devices.Proxy.Managed", "Microsoft.Azure.Devices.Proxy.Managed", "{5B34AE3B-5CD2-488E-A4A0-EFC9A06B9221}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-shared", "..\..\src\libiotsdk\libiotsdk-shared.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-win32", "..\..\src\libiotsdk\libiotsdk-win32.vcxproj", "{6D8BE690-5BD5-4964-8C98-C18E6117877F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproxy-shared", "..\..\src\libproxy\libproxy-shared.vcxitems", "{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzlog-shared", "..\..\src\libzlog\libzlog-shared.vcxitems", "{9DE32F51-262E-471C-B74B-8189FD1920F8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzlog-win32", "..\..\src\libzlog\libzlog-win32.vcxproj", "{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libproto", "libproto", "{B03F97EC-1946-40BE-9BE1-A58702900ABF}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproxy-win32-lib", "..\..\src\libproxy\libproxy-win32-static.vcxproj", "{697C4297-7BB2-4810-8947-BA87EE399EA5}"
 EndProject
@@ -43,16 +45,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto", "..\..\..\test\comp
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC} = {B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}
 		{6D8BE690-5BD5-4964-8C98-C18E6117877F} = {6D8BE690-5BD5-4964-8C98-C18E6117877F}
 		{697C4297-7BB2-4810-8947-BA87EE399EA5} = {697C4297-7BB2-4810-8947-BA87EE399EA5}
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B} = {43311AFB-D7C4-4E5A-B1DE-855407F90D1B}
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Azure.Devices.Proxy.Managed", "Microsoft.Azure.Devices.Proxy.Managed", "{5B34AE3B-5CD2-488E-A4A0-EFC9A06B9221}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-shared", "libproto\libproto-shared.vcxitems", "{782AEA3C-5234-4C34-B5C2-BE8F879A2C9F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-win32", "libproto\libproto-win32.vcxproj", "{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}"
 EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Microsoft.Azure.Devices.Proxy", "..\..\..\api\csharp\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.xproj", "{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Proxy", "..\..\..\api\csharp\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj", "{7C8855D4-723D-4431-80A6-7DFB7D57347D}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -159,41 +158,41 @@ Global
 		{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}.Signed|x64.Build.0 = Release|x64
 		{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}.Signed|x86.ActiveCfg = Release|Win32
 		{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}.Signed|x86.Build.0 = Release|Win32
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|x64.Build.0 = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Debug|x86.Build.0 = Debug|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|x64.ActiveCfg = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|x64.Build.0 = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|x86.ActiveCfg = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Release|x86.Build.0 = Release|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|Any CPU.ActiveCfg = Signed|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|Any CPU.Build.0 = Signed|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|x64.ActiveCfg = Signed|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|x64.Build.0 = Signed|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|x86.ActiveCfg = Signed|Any CPU
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B}.Signed|x86.Build.0 = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|x64.Build.0 = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Debug|x86.Build.0 = Debug|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|x64.ActiveCfg = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|x64.Build.0 = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|x86.ActiveCfg = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Release|x86.Build.0 = Release|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|Any CPU.ActiveCfg = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|Any CPU.Build.0 = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x64.ActiveCfg = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x64.Build.0 = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x86.ActiveCfg = Signed|Any CPU
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x86.Build.0 = Signed|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{BEBC5CE8-1655-4A51-9BF6-AB245F7BF69E} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
+		{7AF09A3A-9349-4AAF-8F63-91168D99AFD3} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
+		{6CFB85CE-0674-4FAA-8E68-E53602AE53B2} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
+		{B03F97EC-1946-40BE-9BE1-A58702900ABF} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7} = {BEBC5CE8-1655-4A51-9BF6-AB245F7BF69E}
 		{6D8BE690-5BD5-4964-8C98-C18E6117877F} = {BEBC5CE8-1655-4A51-9BF6-AB245F7BF69E}
-		{7AF09A3A-9349-4AAF-8F63-91168D99AFD3} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F} = {7AF09A3A-9349-4AAF-8F63-91168D99AFD3}
-		{6CFB85CE-0674-4FAA-8E68-E53602AE53B2} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{9DE32F51-262E-471C-B74B-8189FD1920F8} = {6CFB85CE-0674-4FAA-8E68-E53602AE53B2}
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC} = {6CFB85CE-0674-4FAA-8E68-E53602AE53B2}
-		{B03F97EC-1946-40BE-9BE1-A58702900ABF} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{697C4297-7BB2-4810-8947-BA87EE399EA5} = {7AF09A3A-9349-4AAF-8F63-91168D99AFD3}
 		{782AEA3C-5234-4C34-B5C2-BE8F879A2C9F} = {B03F97EC-1946-40BE-9BE1-A58702900ABF}
 		{23153B11-AF0A-4BBA-85E0-390D0B3BFC89} = {B03F97EC-1946-40BE-9BE1-A58702900ABF}
-		{43311AFB-D7C4-4E5A-B1DE-855407F90D1B} = {5B34AE3B-5CD2-488E-A4A0-EFC9A06B9221}
+		{7C8855D4-723D-4431-80A6-7DFB7D57347D} = {5B34AE3B-5CD2-488E-A4A0-EFC9A06B9221}
 	EndGlobalSection
 EndGlobal

@@ -21,6 +21,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\api.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_module.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_host.h" />
@@ -82,6 +83,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.c">
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_module.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_host.c" />

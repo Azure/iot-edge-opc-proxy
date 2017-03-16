@@ -77,9 +77,6 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Azure.Devices.Proxy">
-      <HintPath>..\..\api\csharp\src\Microsoft.Azure.Devices.Proxy\bin\Debug\net46\Microsoft.Azure.Devices.Proxy.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
   </ItemGroup>
   <Choose>
@@ -136,6 +133,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\api\csharp\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj">
+      <Project>{7c8855d4-723d-4431-80a6-7dfb7d57347d}</Project>
+      <Name>Microsoft.Azure.Devices.Proxy</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

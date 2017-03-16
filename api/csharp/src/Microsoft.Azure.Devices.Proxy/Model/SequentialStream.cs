@@ -14,11 +14,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// </summary>
     internal class SequentialStream : PacketStream {
 
-#if VERBOSE
-        private long _transferred;
-        private Stopwatch _watch = Stopwatch.StartNew();
-#endif
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -26,6 +21,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         internal SequentialStream(ProxySocket socket) : 
             base(socket) {
         }
+
+#if PERF
+        private long _transferred;
+        private Stopwatch _transferredw = Stopwatch.StartNew();
+#endif
 
         /// <summary>
         /// Buffered receive
@@ -71,10 +71,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 if (result.Count > 0)
                     break;
             }
-#if VERBOSE
+#if PERF
             _transferred += result.Count;
             Console.CursorLeft = 0; Console.CursorTop = 0;
-            Console.WriteLine($"{ _transferred / _watch.ElapsedMilliseconds * 1000} b/sec");
+            Console.WriteLine($"{ _transferred / _transferredw.ElapsedMilliseconds} kB/sec");
 #endif
             return result;
         }

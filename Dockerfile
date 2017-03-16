@@ -23,7 +23,7 @@ RUN \
     mv /proxy_build/build/cmake/Release/libwebsockets/lib/* /usr/lib \
         && \
     mv /proxy_build/build/cmake/Release/lib/* /usr/lib \
-            && \
+        && \
     rm -rf /proxy_build
    
 RUN apk del .build-deps \
@@ -32,5 +32,4 @@ RUN apk del .build-deps \
         bash \
         curl
 
-ENTRYPOINT \
-    proxyd
+ENTRYPOINT ["proxyd"]

@@ -6,14 +6,13 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Diagnostics;
     using System.Diagnostics.Tracing;
     using System.Globalization;
-    using Provider;
-    using Relay;
+    using Microsoft.Azure.Devices.Proxy.Provider;
 
     /// <summary>
     /// EventSource for the new Dynamic EventSource type of Microsoft-Azure-Devices-Proxy traces.
     /// </summary>
     [EventSource(Name = "Microsoft-Azure-Devices-Proxy")]
-    internal class ProxyEventSource : EventSource {
+    public class ProxyEventSource : EventSource {
         public static readonly ProxyEventSource Log = new ProxyEventSource();
 
         // Prevent additional instances other than ProxyEventSource.Log
@@ -99,12 +98,20 @@ namespace Microsoft.Azure.Devices.Proxy {
         [Event(40220, Level = EventLevel.Error, Message = "{0} No proxies installed on IoT Hub.")]
         public void NoProxyInstalled(object source) {
             if (this.IsEnabled()) {
-                this.WriteEvent(40210, CreateSourceString(source));
+                this.WriteEvent(40220, CreateSourceString(source));
             }
             Trace.TraceError($"No proxies installed - Add proxies to IoT Hub! ({source})");
         }
 
-        // 40221 - 40247 Available
+        [Event(40221, Level = EventLevel.Error, Message = "{0} Ping broadcast attempt {1} failed, remaining records {2}.")]
+        public void PingRetry(object source, int attempt, int remaining) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40221, CreateSourceString(source), attempt, remaining);
+            }
+            Trace.TraceWarning($"Ping broadcast attempt {attempt} failed - Remaining # of records to try: {remaining}...");
+        }
+
+        // 40222 - 40247 Available
 
 
         [Event(40248, Level = EventLevel.Warning, Message = "{0} Retry {1} after exception: {2}")]
@@ -119,7 +126,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         [NonEvent]
         public void HandledExceptionAsInformation(object source, Exception exception) {
             this.HandledExceptionAsInformation(CreateSourceString(source), ExceptionToString(exception));
-            Trace.TraceInformation($"IGNORING {exception.Message} ({source}).");
         }
 
         [Event(40249, Message = "{0} Handled Exception: {1}")]
@@ -127,6 +133,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (this.IsEnabled()) {
                 this.WriteEvent(40249, source, exception);
             }
+            Trace.TraceInformation($"INFO CONTINUE: {exception} ({source}).");
         }
 
         // Not the actual event definition since we're using object and Exception types
@@ -206,23 +213,27 @@ namespace Microsoft.Azure.Devices.Proxy {
         public TException Rethrow<TException>(TException exception, object source = null, EventLevel level = EventLevel.Error)
             where TException : Exception {
             // Avoid converting ToString, etc. if ETW tracing is not enabled.
-            switch (level) {
-                case EventLevel.Critical:
-                case EventLevel.LogAlways:
-                case EventLevel.Error:
-                    this.ThrowingExceptionError(CreateSourceString(source), ExceptionToString(exception));
-                    break;
-                case EventLevel.Warning:
-                    this.ThrowingExceptionWarning(CreateSourceString(source), ExceptionToString(exception));
-                    break;
-                case EventLevel.Informational:
-                case EventLevel.Verbose:
-                default:
-                    this.ThrowingExceptionInfo(CreateSourceString(source), ExceptionToString(exception));
-                    break;
+            if (this.IsEnabled()) {
+                if (exception is OperationCanceledException) {
+                    // Do not pollute log with cancellation exceptions
+                    level = EventLevel.Verbose;
+                }
+                switch (level) {
+                    case EventLevel.Critical:
+                    case EventLevel.LogAlways:
+                    case EventLevel.Error:
+                        this.ThrowingExceptionError(CreateSourceString(source), ExceptionToString(exception));
+                        break;
+                    case EventLevel.Warning:
+                        this.ThrowingExceptionWarning(CreateSourceString(source), ExceptionToString(exception));
+                        break;
+                    case EventLevel.Informational:
+                    case EventLevel.Verbose:
+                    default:
+                        this.ThrowingExceptionInfo(CreateSourceString(source), ExceptionToString(exception));
+                        break;
+                }
             }
-
-            // This allows "throw ServiceBusEventSource.Log.ThrowingException(..."
             return exception;
         }
 

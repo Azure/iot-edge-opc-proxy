@@ -17,11 +17,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Start opening a new stream.  Returns a connection string to be brokered to 
         /// remote side to open the remote end of the stream.  
         /// </summary>
-        /// <param name="streamId">Reference of the caller</param>
+        /// <param name="streamId">Local reference id of the stream</param>
+        /// <param name="remoteId">Remote reference of link</param>
+        /// <param name="proxy">The proxy server</param>
         /// <returns>
         /// A connection string to be brokered to remote side to open the remote end 
         /// of the stream.  
         /// </returns>
-        Task<IConnection> CreateConnectionAsync(Reference streamId);
+        Task<IConnection> CreateConnectionAsync(Reference streamId, 
+            Reference remoteId, INameRecord proxy);
     }
 }

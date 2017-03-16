@@ -14,8 +14,6 @@
 //
 // Client type and version
 //
-#define CLIENT_TYPE "iotproxy"
-#define CLIENT_VERSION "0.0.6"
 #define API_VERSION "2016-11-14"
 
 //

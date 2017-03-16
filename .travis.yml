@@ -5,13 +5,15 @@ services:
   - docker
 env:
   matrix:
-    - proxy=default build_args="--use-zlog"
-    - proxy=no_zlog build_args=""
+    - proxy=default_release build_args="-C Release --skip-unittests --use-zlog"
+    - proxy=no_zlog_release build_args="-C Release --skip-unittests"
+    - proxy=default_debug build_args="-C Debug --use-zlog"
+    - proxy=no_zlog_debug build_args="-C Debug"
 language: c
 compiler: gcc
 install:
-  - sudo sh -c 'echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/dotnet/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list' 
-  - sudo apt-key adv --keyserver apt-mo.trafficmanager.net --recv-keys 417A0893
+  - sudo sh -c 'echo "deb [arch=amd64] https://apt-mo.trafficmanager.net/repos/dotnet-release/ trusty main" > /etc/apt/sources.list.d/dotnetdev.list' 
+  - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893
   - sudo apt-get update
-  - sudo apt-get install dotnet-dev-1.0.0-preview2-003121 -y
-script: "bash bld/build.sh -c $build_args --skip-unittests"
+  - sudo apt-get install dotnet-dev-1.0.1 -y
+script: "bash bld/build.sh -c $build_args"

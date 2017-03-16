@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Implements a custom transport for the OPC Foundation reference stack using Microsoft Azure Device Proxy Service API.</Description>
+    <AssemblyTitle>Microsoft Azure Devices Opc-UA Reference Stack Proxy Transport</AssemblyTitle>
+    <VersionPrefix>0.2.2</VersionPrefix>
+    <Authors>microsoft</Authors>
+    <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
+    <NoWarn>$(NoWarn);1591;1734</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Microsoft.Azure.Devices.Opc.Ua.Proxy</AssemblyName>
+    <PackageId>Microsoft.Azure.Devices.Opc.Ua.Proxy</PackageId>
+    <PackageTags>Azure;IoT;.NET;Opc-UA;Proxy</PackageTags>
+    <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/Azure/azure-iot-proxy</RepositoryUrl>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>true</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Core" Version="0.2.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Signed' ">
+    <DefineConstants>$(DefineConstants);TODO___RELEASE_DELAY_SIGN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Perf|net46|AnyCPU'" />
+
+</Project>
