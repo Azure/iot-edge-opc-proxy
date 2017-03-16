@@ -333,7 +333,7 @@ static void prx_server_worker(
 {
     prx_server_socket_t* next;
     struct hashtable_itr* itr;
-    io_message_t* close;
+    io_message_t* closerequest;
     int result;
     bool sending, receiving, timedout;
     ticks_t now;
@@ -398,7 +398,7 @@ static void prx_server_worker(
                     // Add close message now, if we run out of memory, continue
                     result = io_message_create(next->message_pool,
                         io_message_type_close, &next->id, &next->stream_id,
-                        &close);
+                        &closerequest);
                     if (result != er_ok)
                     {
                         log_error(next->log, "Failed to create closerequest (%s)",
@@ -408,7 +408,7 @@ static void prx_server_worker(
                     {
                         // add close response to receive queue and deliver all
                         lock_enter(next->recv_lock);
-                        DList_InsertTailList(&next->recv_queue, &close->link);
+                        DList_InsertTailList(&next->recv_queue, &closerequest->link);
                         lock_exit(next->recv_lock);
                         prx_server_socket_deliver_results(next);
                     }
