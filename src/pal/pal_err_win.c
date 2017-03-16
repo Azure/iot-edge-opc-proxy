@@ -33,6 +33,7 @@ int32_t pal_os_to_prx_error(
     case STATUS_CONNECTION_ABORTED:    return er_aborted;
     case STATUS_REQUEST_ABORTED:       return er_aborted;
     case STATUS_CONNECTION_RESET:      return er_reset;
+    case STATUS_CONNECTION_REFUSED:    return er_refused;
     default:
         return pal_os_to_prx_net_error(error);
     }

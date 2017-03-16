@@ -6,6 +6,7 @@
 #include "pal_ws.h"
 #include "pal_mt.h"
 #include "util_string.h"
+#include "prx_config.h"
 
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/threadapi.h"
@@ -1022,6 +1023,61 @@ static int32_t pal_wsworker_thread(
 }
 
 //
+// Provide proxy information if configured
+//
+static int32_t pal_wsworker_get_proxy_info(
+    char** proxy_address,
+    unsigned int* port
+)
+{
+    size_t buf_len;
+    const char* proxy;
+    const char* user;
+    const char* pwd;
+
+    dbg_assert_ptr(proxy_address);
+    dbg_assert_ptr(port);
+
+    proxy = __prx_config_get(prx_config_key_proxy_host, NULL);
+    if (!proxy)
+    {
+        *proxy_address = NULL;
+        *port = 0;
+        return er_ok;  // No proxy configured, return success
+    }
+    user = __prx_config_get(prx_config_key_proxy_user, NULL);
+    pwd = __prx_config_get(prx_config_key_proxy_pwd, NULL);
+
+    buf_len = strlen(proxy) + user ? strlen(user) : 0 + pwd ? strlen(pwd) : 0
+        + 2 + 1;  // plus 2 for pwd/user sep and null terminator
+    
+    *proxy_address = (char*)crt_alloc(buf_len); // Use malloc for lws to free
+    if (!*proxy_address)
+        return er_out_of_memory;
+    // Concat proxy address string
+    if (user)
+    {
+        strcat(*proxy_address, user);
+        if (pwd)
+        {
+            strcat(*proxy_address, ":");
+            strcat(*proxy_address, pwd);
+        }
+        strcat(*proxy_address, "@");
+    }
+    strcpy(*proxy_address, proxy);
+
+    // Now parse port from host
+    while (*proxy && *proxy != ':') 
+        proxy++;
+    if (!*proxy)
+        *port = 0;
+    else
+        *port = atoi(proxy);
+    return er_ok;
+}
+
+//
 // Get a worker from the websocket client pool
 //
 static int32_t pal_wsworker_pool_attach(
@@ -1110,11 +1166,10 @@ static int32_t pal_wsworker_pool_attach(
 #endif
         info.user = worker;
 
-        // if (worker->proxy_address)
-        // {
-        //     info.http_proxy_address = worker->proxy_address;
-        //     info.http_proxy_port = worker->proxy_port;
-        // }
+        result = pal_wsworker_get_proxy_info(
+            (char**)&info.http_proxy_address, &info.http_proxy_port);
+        if (result != er_ok)
+            break;
 
         worker->context = lws_create_context(&info);
         if (!worker->context)

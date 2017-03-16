@@ -33,7 +33,35 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="buffer"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async override Task<ProxyAsyncResult> ReceiveAsync(
+        public override Task<ProxyAsyncResult> ReceiveAsync(
+            ArraySegment<byte> buffer, CancellationToken ct) {
+
+            if (buffer.Count == 0) {
+                return Task.FromResult(new ProxyAsyncResult());
+            }
+
+            if (_lastData != null) {
+                int copied = CopyBuffer(ref buffer);
+                if (copied > 0) {
+                    if (_lastRead == null || _lastRead.Result.Count != copied) {
+                        var result = new ProxyAsyncResult();
+                        result.Count = copied;
+                        _lastRead = Task.FromResult(result);
+                    }
+                    return _lastRead;
+                }
+            }
+            _lastRead = ReceiveInternalAsync(buffer, ct);
+            return _lastRead;
+        }
+
+        /// <summary>
+        /// Receive using async state machine
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<ProxyAsyncResult> ReceiveInternalAsync(
             ArraySegment<byte> buffer, CancellationToken ct) {
             var result = new ProxyAsyncResult();
             while (true) {
@@ -51,35 +79,46 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         _lastData = null;
                         break;
                     }
+#if PERF
+                    _transferred += _lastData.Payload.Length;
+                    Console.CursorLeft = 0; Console.CursorTop = 0;
+                    Console.WriteLine(
+                        $"{ _transferred / _transferredw.ElapsedMilliseconds} kB/sec");
+#endif
                 }
-
-                // How much to copy from the last data buffer.
-                int toCopy = Math.Min(buffer.Count - result.Count,
-                    _lastData.Payload.Length - _offset);
-
-                Buffer.BlockCopy(_lastData.Payload, _offset,
-                    buffer.Array, buffer.Offset + result.Count, toCopy);
-
-                result.Count += toCopy;
-                _offset += toCopy;
-
-                if (_offset >= _lastData.Payload.Length) {
-                    // Last data exhausted, release
-                    _lastData = null;
-                    _offset = 0;
-                }
+                result.Count = CopyBuffer(ref buffer);
                 if (result.Count > 0)
                     break;
             }
-#if PERF
-            _transferred += result.Count;
-            Console.CursorLeft = 0; Console.CursorTop = 0;
-            Console.WriteLine($"{ _transferred / _transferredw.ElapsedMilliseconds} kB/sec");
-#endif
             return result;
         }
 
+        /// <summary>
+        /// Copies from the last buffer
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        private int CopyBuffer(ref ArraySegment<Byte> buffer) {
+            // How much to copy from the last data buffer.
+            int toCopy = Math.Min(buffer.Count, _lastData.Payload.Length - _offset);
+            Buffer.BlockCopy(_lastData.Payload, _offset,
+                buffer.Array, buffer.Offset, toCopy);
+            _offset += toCopy;
+
+            if (_offset >= _lastData.Payload.Length) {
+                // Last data exhausted, release
+                _lastData = null;
+                _offset = 0;
+            }
+            return toCopy;
+        }
+
+        private Task<ProxyAsyncResult> _lastRead;
         private DataMessage _lastData;
         private int _offset;
+#if PERF
+        private long _transferred;
+        private Stopwatch _transferredw = Stopwatch.StartNew();
+#endif
     }
 }

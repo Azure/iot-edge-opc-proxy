@@ -18,7 +18,7 @@ RUN \
 			valgrind \
 			libglib2.0-dev \
 	&& \
-		curl -sSL -o dotnet.tar.gz https://go.microsoft.com/fwlink/?LinkID=835021  \
+		curl -sSL -o dotnet.tar.gz https://go.microsoft.com/fwlink/?LinkID=843453 \
 	&& \
 		mkdir -p /opt/dotnet && tar zxf dotnet.tar.gz -C /opt/dotnet \
 	&& \

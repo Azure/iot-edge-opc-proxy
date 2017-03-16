@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using Model;
 
     /// <summary>
-    /// Resolves names through registry manager and provides remoting
+    /// Resolves names through registry manager and provides remoting and streaming
     /// through devices methods.
     /// </summary>
     public class IoTHub : ResultCache, IRemotingService, INameService, IStreamService {
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
 
         /// <summary>
-        /// Specialized implementation of relay based message stream
+        /// IoT Hub device method based message stream
         /// </summary>
         class IoTHubStream : IConnection, IMessageStream {
 
@@ -165,8 +165,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             /// <returns></returns>
             public async Task ReceiveAsync(CancellationToken ct) {
                 Message response = await _iotHub.TryInvokeDeviceMethodAsync(_link, 
-                    new Message(_streamId, _remoteId, new PollRequest(
-                        2 * 60000)), TimeSpan.FromMinutes(3), _open.Token).ConfigureAwait(false);
+                    new Message(_streamId, _remoteId, new PollRequest(120000)), 
+                        TimeSpan.FromMinutes(3), _open.Token).ConfigureAwait(false);
                 if (response != null) {
                     ReceiveQueue.Enqueue(response);
                 }
@@ -212,7 +212,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             Reference remoteId, INameRecord proxy) {
 
             IConnection conn = new IoTHubStream(this, streamId, remoteId, proxy, 
-                null);  // TODO : Create a dedicated stream with connection string
+                null);
+
+            // TODO: Revisit:  At this point we could either a) look up a host from the registry
+            // then use it to create a dedicated stream with connection string or b) create an 
+            // adhoc dr stream entry in the registry.  However, due to overall IoTHub performance  
+            // characteristic there is at this point no performance benefit from doing so.
 
             return Task.FromResult(conn);
         }

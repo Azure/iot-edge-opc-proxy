@@ -100,13 +100,13 @@
 #endif // !_CRTDBG_MAP_ALLOC 
 
 #include <crtdbg.h>
-#define _CRTDBG_FLAGS \
-  /* _CRTDBG_ALLOC_MEM_DF | */     \
-  /* _CRTDBG_CHECK_CRT_DF | */     \
-    _CRTDBG_LEAK_CHECK_DF |        \
-    _CRTDBG_DELAY_FREE_MEM_DF |    \
-  /* _CRTDBG_CHECK_EVERY_1024_DF | */ \
-    _CRTDBG_CHECK_ALWAYS_DF |      \
+#define _CRTDBG_FLAGS               \
+    _CRTDBG_ALLOC_MEM_DF |          \
+    _CRTDBG_CHECK_CRT_DF |          \
+    _CRTDBG_LEAK_CHECK_DF |         \
+ /* _CRTDBG_DELAY_FREE_MEM_DF | */  \
+    _CRTDBG_CHECK_EVERY_1024_DF |   \
+ /* _CRTDBG_CHECK_ALWAYS_DF |   */  \
     0
 #define mem_init()              _CrtSetDbgFlag(_CRTDBG_FLAGS)
 #define mem_alloc               malloc

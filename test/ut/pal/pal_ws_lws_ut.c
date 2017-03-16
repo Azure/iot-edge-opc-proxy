@@ -79,6 +79,7 @@ MOCKABLE_FUNCTION(, const char*, trusted_certs);
 //
 BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
+REGISTER_UMOCK_ALIAS_TYPE(prx_config_key_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(enum lws_write_protocol, int);
 REGISTER_UMOCK_ALIAS_TYPE(enum lws_close_status, int);
 REGISTER_UMOCK_ALIAS_TYPE(log_emit_function, void*);

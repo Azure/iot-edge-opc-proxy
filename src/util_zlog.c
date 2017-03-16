@@ -7,6 +7,17 @@
 
 static int32_t init_called = 0;
 
+#define ZLOG_DEFAULT_CONFIG \
+    "[global]\n" \
+	"strict init = true\n" \
+	"buffer min = 1024\n" \
+	"buffer max = 0\n" \
+	"rotate lock file = zlog.lock\n" \
+	"default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
+	"[rules]\n" \
+	"*.info >stdout\n" \
+	"*.error >stderr\n"
+
 //
 // Initialize zlog library
 //
@@ -24,7 +35,9 @@ int32_t zlog_initialize(
         return er_ok;
     if (0 != dzlog_init(NULL, "root"))
         return er_fatal;
-
+#if !defined(DEBUG)
+	zlog_reload_from_string(ZLOG_DEFAULT_CONFIG);
+#endif
     return er_ok;
 }
 
@@ -37,19 +50,8 @@ int32_t zlog_set_log_file(
 {
     int32_t result;
     char* config;
-    static const char* pre_config = 
-        "[global]\n"
-        "strict init = true\n"
-        "buffer min = 1024\n"
-        "buffer max = 0\n"
-        "rotate lock file = zlog.lock\n"
-        "default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n"
-        "[rules]\n"
-        "*.info >stdout\n"
-        "*.error >stderr\n"
-        "*.* \"";
-    static const char* post_config =
-        "\",1M*3 \n";
+    static const char* pre_config = ZLOG_DEFAULT_CONFIG "*.* \"";
+    static const char* post_config = "\",1M*3 \n";
 
     config = (char*)malloc(
         strlen(pre_config) + strlen(file_name) + strlen(post_config) + 1);

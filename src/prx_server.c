@@ -1210,7 +1210,6 @@ static int32_t prx_server_socket_handle_pollrequest(
         return er_ok;
     }
 
-    // Now hang on to this message, once a 
     result = io_message_clone(message, &message);
     if (result == er_ok)
     {

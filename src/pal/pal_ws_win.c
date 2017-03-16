@@ -8,6 +8,7 @@
 #include "pal_err.h"
 #include "util_string.h"
 #include "prx_sched.h"
+#include "prx_config.h"
 
 #include "wchar.h"
 #if !defined(UNIT_TEST)
@@ -830,6 +831,9 @@ int32_t pal_wsclient_create(
 {
     int32_t result;
     DWORD max_conns;
+    BOOL non_blocking;
+    const char* value;
+    wchar_t* w_value = NULL;
     pal_wsclient_t* wsclient;
 
     if (!host || !path || !created || !callback)
@@ -862,18 +866,71 @@ int32_t pal_wsclient_create(
         if (result != er_ok)
             break;
 
-        wsclient->h_session = WinHttpOpen(NULL,
-            WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, WINHTTP_FLAG_ASYNC);
-        if (!wsclient->h_session)
+        value = __prx_config_get(prx_config_key_proxy_host, NULL);
+        if (!value)
         {
-            result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
-            log_error(wsclient->log, "Error WinHttpOpen %s.", prx_err_string(result));
-            break;
+            // No proxy configuration - use automatic proxy
+            wsclient->h_session = WinHttpOpen(NULL,
+                WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, WINHTTP_FLAG_ASYNC);
+            if (!wsclient->h_session)
+            {
+                result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
+                log_error(wsclient->log, "Error WinHttpOpen (automatic proxy) %s.", 
+                    prx_err_string(result));
+                break;
+            }
         }
-
+        else
+        {
+            // Proxy configuration passed from command line or configuration
+            result = pal_string_clone_as_wide_string(value, &w_value);
+            if (result != er_ok)
+                break;
+            wsclient->h_session = WinHttpOpen(NULL,
+                WINHTTP_ACCESS_TYPE_NAMED_PROXY, w_value, L"<local>", WINHTTP_FLAG_ASYNC);
+            if (!wsclient->h_session)
+            {
+                result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
+                log_error(wsclient->log, "Error WinHttpOpen with proxy %s.", 
+                    prx_err_string(result));
+                break;
+            }
+            value = __prx_config_get(prx_config_key_proxy_user, NULL);
+            if (value)
+            {
+                mem_free(w_value);
+                w_value = NULL;
+                result = pal_string_clone_as_wide_string(value, &w_value);
+                if (result != er_ok)
+                    break;
+                if (!WinHttpSetOption(wsclient->h_session,
+                    WINHTTP_OPTION_PROXY_USERNAME, w_value, sizeof(w_value)))
+                {
+                    result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
+                    break;
+                }
+            }
+            value = __prx_config_get(prx_config_key_proxy_pwd, NULL);
+            if (value)
+            {
+                mem_free(w_value);
+                w_value = NULL;
+                result = pal_string_clone_as_wide_string(value, &w_value);
+                if (result != er_ok)
+                    break;
+                if (!WinHttpSetOption(wsclient->h_session,
+                    WINHTTP_OPTION_PROXY_PASSWORD, w_value, sizeof(w_value)))
+                {
+                    result = pal_wsclient_from_winhttp_error(wsclient, GetLastError());
+                    break;
+                }
+            }
+        }
         max_conns = 1;
-
-        if (!WinHttpSetOption(wsclient->h_session, 
+        non_blocking = TRUE;
+        if (!WinHttpSetOption(wsclient->h_session,
+                WINHTTP_OPTION_ASSURED_NON_BLOCKING_CALLBACKS, &non_blocking, sizeof(BOOL)) ||
+            !WinHttpSetOption(wsclient->h_session, 
                 WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)) ||
             !WinHttpSetOption(wsclient->h_session,
                 WINHTTP_OPTION_MAX_CONNS_PER_SERVER, &max_conns, sizeof(DWORD)) ||
@@ -900,10 +957,15 @@ int32_t pal_wsclient_create(
         log_debug(wsclient->log, "Websocket client created (%p [%p]).",
             wsclient, wsclient->context);
 
+        if (w_value)
+            mem_free(w_value);
         *created = wsclient;
         return er_ok;
     } 
     while (0);
+
+    if (w_value)
+        mem_free(w_value);
 
     if (wsclient->h_session)
     {
@@ -1133,10 +1195,13 @@ void pal_wsclient_deinit(
 )
 {
     if (_scheduler)
+    {
         prx_scheduler_release(_scheduler, NULL);
+        prx_scheduler_at_exit(_scheduler);
+        _scheduler = NULL;
+    }
+
     if (_winhttp)
         (void)FreeLibrary(_winhttp);
-
     _winhttp = NULL;
-    _scheduler = NULL;
 }

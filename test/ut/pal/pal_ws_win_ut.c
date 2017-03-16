@@ -75,6 +75,7 @@ MOCKABLE_FUNCTION(, void, pal_wsclient_event_handler_mock,
 // 3. Setup test suite
 //
 BEGIN_DECLARE_TEST_SUITE()
+REGISTER_UMOCK_ALIAS_TYPE(prx_config_key_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(pal_wsclient_event_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(WINHTTP_WEB_SOCKET_BUFFER_TYPE, int);
 REGISTER_UMOCK_ALIAS_TYPE(HINTERNET, void*);
@@ -106,7 +107,7 @@ DECLARE_TEST_SETUP()
 // 
 // Test pal_wsclient_create happy path 
 // 
-TEST_FUNCTION(pal_win_wsclient_create__success)
+TEST_FUNCTION(pal_win_wsclient_create__success_1)
 {
     static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
     static prx_scheduler_t* k_scheduler_child_valid = (prx_scheduler_t*)0x2323423;
@@ -159,8 +160,16 @@ TEST_FUNCTION(pal_win_wsclient_create__success)
     STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_path_valid, -1, k_wide_char_valid, 10))
         .SetReturn(10);
 
+    STRICT_EXPECTED_CALL(_prx_config())
+        .SetReturn((prx_config_t*)0x1);
+    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_host, NULL))
+        .SetReturn(NULL);
+
     STRICT_EXPECTED_CALL(WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, WINHTTP_FLAG_ASYNC))
         .SetReturn(k_session_handle_valid);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_ASSURED_NON_BLOCKING_CALLBACKS, IGNORED_PTR_ARG, sizeof(BOOL)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
         .IgnoreArgument(3)
         .SetReturn(TRUE);
@@ -174,6 +183,142 @@ TEST_FUNCTION(pal_win_wsclient_create__success)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid, 
+        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+
+    // assert
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test pal_wsclient_create happy path 
+// 
+TEST_FUNCTION(pal_win_wsclient_create__success_2)
+{
+    static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
+    static prx_scheduler_t* k_scheduler_child_valid = (prx_scheduler_t*)0x2323423;
+    static const char* k_protocol_name_valid = "rpotadf";
+    static const char* k_host_valid = "lkjafsd";
+    static const uint16_t k_port_valid = 10;
+    static const char* k_path_valid = "/9845/sadkf";
+    static const char* k_proxy_host = "test:1234";
+    static const char* k_proxy_user = "test";
+    static const char* k_proxy_password = "1234";
+    static void* k_callback_context_valid = (void*)0x2354;
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x234;
+    static HINTERNET k_session_handle_valid = (HINTERNET)0x234;
+    pal_wsclient_t* wsclient_valid;
+    int32_t result;
+
+    memset(UT_MEM, 0, sizeof(UT_MEM));
+    _scheduler = (prx_scheduler_t*)0x2343;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(pal_wsclient_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    STRICT_EXPECTED_CALL(prx_scheduler_create(_scheduler, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer_scheduler(&k_scheduler_child_valid, sizeof(k_scheduler_child_valid))
+        .SetReturn(er_ok);
+
+    STRICT_EXPECTED_CALL(STRING_new())
+        .SetReturn(k_string_valid);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "Sec-WebSocket-Protocol"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ": "))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, k_protocol_name_valid))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "\r\n"))
+        .SetReturn(0);
+
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_host_valid, -1, NULL, 0))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_wide_char_valid);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_host_valid, -1, k_wide_char_valid, 10))
+        .SetReturn(10);
+
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_path_valid, -1, NULL, 0))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_wide_char_valid);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_path_valid, -1, k_wide_char_valid, 10))
+        .SetReturn(10);
+
+    STRICT_EXPECTED_CALL(_prx_config())
+        .SetReturn((prx_config_t*)0x1);
+    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_host, NULL))
+        .SetReturn(k_proxy_host);
+
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_host, -1, NULL, 0))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_wide_char_valid);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_host, -1, k_wide_char_valid, 10))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_NAMED_PROXY, k_wide_char_valid, IGNORED_PTR_ARG, WINHTTP_FLAG_ASYNC))
+        .ValidateArgumentBuffer(4, L"<local>", 16)
+        .SetReturn(k_session_handle_valid);
+
+    STRICT_EXPECTED_CALL(_prx_config())
+        .SetReturn((prx_config_t*)0x1);
+    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_user, NULL))
+        .SetReturn(k_proxy_user);
+
+    STRICT_EXPECTED_CALL(h_free((void*)k_wide_char_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_user, -1, NULL, 0))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_wide_char_valid);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_user, -1, k_wide_char_valid, 10))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_PROXY_USERNAME, IGNORED_PTR_ARG, sizeof(k_wide_char_valid)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
+
+    STRICT_EXPECTED_CALL(_prx_config())
+        .SetReturn((prx_config_t*)0x1);
+    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_pwd, NULL))
+        .SetReturn(k_proxy_password);
+
+    STRICT_EXPECTED_CALL(h_free((void*)k_wide_char_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_password, -1, NULL, 0))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_wide_char_valid);
+    STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_password, -1, k_wide_char_valid, 10))
+        .SetReturn(10);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_PROXY_PASSWORD, k_wide_char_valid, sizeof(k_wide_char_valid)))
+        .SetReturn(TRUE);
+
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_ASSURED_NON_BLOCKING_CALLBACKS, IGNORED_PTR_ARG, sizeof(BOOL)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_MAX_CONNS_PER_SERVER, IGNORED_PTR_ARG, sizeof(DWORD)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetTimeouts(k_session_handle_valid, 0, 0, 0, 0))
+        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(WinHttpSetStatusCallback(k_session_handle_valid, pal_wsclient_winhttp_cb, (DWORD)-1, 0))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(h_free((void*)k_wide_char_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+
+
+    // act 
+    result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
         k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert
@@ -402,9 +547,20 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
         .SetReturn(10)
         .SetFailReturn(-1);
 
+    STRICT_EXPECTED_CALL(_prx_config())
+        .SetReturn((prx_config_t*)0x1)
+        .SetFailReturn((prx_config_t*)0x1);
+    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_host, NULL))
+        .SetReturn(NULL)
+        .SetFailReturn(NULL);
+
     STRICT_EXPECTED_CALL(WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, NULL, NULL, WINHTTP_FLAG_ASYNC))
         .SetReturn(k_session_handle_valid)
         .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_ASSURED_NON_BLOCKING_CALLBACKS, IGNORED_PTR_ARG, sizeof(BOOL)))
+        .IgnoreArgument(3)
+        .SetReturn(TRUE)
+        .SetFailReturn(FALSE);
     STRICT_EXPECTED_CALL(WinHttpSetOption(k_session_handle_valid, WINHTTP_OPTION_CONTEXT_VALUE, IGNORED_PTR_ARG, sizeof(pal_wsclient_t*)))
         .IgnoreArgument(3)
         .SetReturn(TRUE)
@@ -430,7 +586,8 @@ TEST_FUNCTION(pal_win_wsclient_create__neg_2)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_fatal,         er_out_of_memory, er_fatal,
-        er_fatal,         er_out_of_memory, er_fatal,         er_ok);
+        er_fatal,         er_out_of_memory, er_fatal,         er_ok,            er_ok,
+        er_ok); // TODO: need exploratory umock
 }
 
 // 
@@ -1364,6 +1521,7 @@ TEST_FUNCTION(pal_win_wsclient_deinit__success_1)
 
     // arrange 
     STRICT_EXPECTED_CALL(prx_scheduler_release(k_valid_scheduler, NULL));
+    STRICT_EXPECTED_CALL(prx_scheduler_at_exit(k_valid_scheduler));
     STRICT_EXPECTED_CALL(FreeLibrary(k_valid_dll))
         .SetReturn(TRUE);
 

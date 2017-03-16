@@ -6,6 +6,7 @@
 #include "io_mqtt.h"
 #include "io_ws.h"
 #include "prx_buffer.h"
+#include "prx_config.h"
 #include "prx_ns.h"
 #include "util_misc.h"
 #include "util_stream.h"
@@ -227,7 +228,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
             break;
         }
 
-        result = io_message_clone(message, &message); // We will always a get a callback
+        result = io_message_clone(message, &message); // We will always get a callback
         if (result != er_ok)
             break;
 
@@ -420,8 +421,10 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         }
 
         // NULL scheme ensures best scheme is chosen
-        result = io_url_create(NULL, io_cs_get_host_name(cs), 0, "/$iothub/websocket", 
-            STRING_c_str(path), NULL, &url);
+        result = io_url_create(
+            1 == __prx_config_get_int(prx_config_key_connect_flag, 0) ? "wss" : NULL,
+            io_cs_get_host_name(cs), 0, "/$iothub/websocket", STRING_c_str(path), NULL, 
+            &url);
         if (result != er_ok)
             break;
         // Add token provider to address 

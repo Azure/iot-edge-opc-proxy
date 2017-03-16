@@ -22,7 +22,7 @@ RUN \
 		apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 417A0893 \
 	&& \
 		apt-get update && apt-get install -y \
-			dotnet-dev-1.0.0-preview2.1-003177
+			dotnet-dev-1.0.1
 
 COPY docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
