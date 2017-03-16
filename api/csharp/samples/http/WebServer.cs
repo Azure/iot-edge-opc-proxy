@@ -65,27 +65,32 @@ namespace WebServerSample {
                             // Read from stream the response back.
 
                             await stream.ReadAsync(context.Response, val => {
-                                var mappedUri = new UriBuilder(val);
+                                try {
+                                    var mappedUri = new UriBuilder(val);
 
-                                // Handle relative paths...
-                                if (string.IsNullOrEmpty(mappedUri.Host)) {
-                                    mappedUri.Host = realUri.Host;
+                                    // Handle relative paths...
+                                    if (string.IsNullOrEmpty(mappedUri.Host)) {
+                                        mappedUri.Host = realUri.Host;
+                                    }
+                                    if (string.IsNullOrEmpty(mappedUri.Scheme) ||
+                                        realUri.Scheme.Equals("https")) { // Do not allow downgrade
+                                        mappedUri.Scheme = realUri.Scheme;
+                                    }
+
+                                    // Format of rewrite is http(s)://host:port/realHost/realPath
+                                    mappedUri.Path = $"{mappedUri.Host}/{mappedUri.Path.Trim('/')}";
+                                    mappedUri.Host = context.Request.Host.Host;
+                                    mappedUri.Port = app.GetPort(mappedUri.Scheme);
+
+                                    // Everything else stays as is...
+                                    var newUri = mappedUri.ToString();
+                                    Console.WriteLine($"... rewritten {val} => {newUri}");
+                                    return newUri;
                                 }
-                                if (string.IsNullOrEmpty(mappedUri.Scheme) ||
-                                    realUri.Scheme.Equals("https")) { // Do not allow downgrade
-                                    mappedUri.Scheme = realUri.Scheme;
+                                catch {
+                                    Console.WriteLine($"  FAILED to rewrite {val}!");
+                                    return val;
                                 }
-
-                                // Format of rewrite is http(s)://host:port/realHost/realPath
-                                mappedUri.Path = $"{mappedUri.Host}/{mappedUri.Path.Trim('/')}";
-                                mappedUri.Host = context.Request.Host.Host;
-                                mappedUri.Port = app.GetPort(mappedUri.Scheme);
-
-                                // Everything else stays as is...
-                                var newUri = mappedUri.ToString();
-                                Console.WriteLine($"=>   {val}: {newUri}");
-                                return newUri;
-
                             }).ConfigureAwait(false);
                         }
                         catch(Exception ex) {
@@ -217,10 +222,9 @@ namespace WebServerSample {
         /// <returns></returns>
         public static async Task WriteAsync(this Stream stream, HttpRequest request, Uri uri) {
             Console.WriteLine("\nWriting request:");
-            var header = $"{request.Method} {uri.Scheme}://{uri.Host}{uri.PathAndQuery} {request.Protocol}\r\n";
-            Console.Write(header);
-
             using (var bufferStream = new MemoryStream()) {
+                var header = $"{request.Method} {uri.Scheme}://{uri.Host}{uri.PathAndQuery} {request.Protocol}\r\n";
+                Console.Write(header);
                 var buf = Encoding.ASCII.GetBytes(header);
                 bufferStream.Write(buf, 0, buf.Length);
                 foreach (var kv in request.Headers) {
@@ -234,8 +238,8 @@ namespace WebServerSample {
                                 filtered += $" {val},";
                             }
                         }
-                        filtered = filtered.Trim(',');
-                        if (string.IsNullOrWhiteSpace(header)) {
+                        filtered = filtered.Trim(',').Trim();
+                        if (string.IsNullOrWhiteSpace(filtered)) {
                             continue; // none remaining, do not send...
                         }
                         header = $"{kv.Key}: {filtered}\r\n";
@@ -314,61 +318,63 @@ namespace WebServerSample {
 
             Encoding encoder;
             if (IsTextContent(response.ContentType, out encoder)) {
-                await reader.ReadBodyAsync(response, isChunked,
-                    (body, len) => {
-
-                        if (!string.IsNullOrWhiteSpace(contentEncoding)) {
-                            using (var mem = new MemoryStream(body, 0, len)) {
-                                /**/ if (contentEncoding.Equals("gzip")) {
-                                    var gzip = new GZipStream(new MemoryStream(body, 0, len),
-                                        CompressionMode.Decompress);
-                                    s = gzip.ToString(encoder);
-                                }
-                                else if (contentEncoding.Equals("deflate")) {
-                                    var deflate = new DeflateStream(new MemoryStream(body, 0, len),
-                                        CompressionMode.Decompress);
-                                    s = deflate.ToString(encoder);
-                                }
-                                else {
-                                    throw new Exception("Unexpected content encoding");
-                                }
+                await reader.ReadBodyAsync(response, isChunked, (body, len) => {
+                    if (!string.IsNullOrWhiteSpace(contentEncoding)) {
+                        var mem = new MemoryStream(body, 0, len);
+                        /**/ if (contentEncoding.Equals("gzip")) {
+                            using (var gzip = new GZipStream(mem,
+                                CompressionMode.Decompress, false)) {
+                                s = gzip.ToString(encoder);
+                            }
+                        }
+                        else if (contentEncoding.Equals("deflate")) {
+                            using (var deflate = new DeflateStream(mem,
+                                CompressionMode.Decompress, false)) {
+                                s = deflate.ToString(encoder);
                             }
                         }
                         else {
-                            s = encoder.GetString(body, 0, len);
+                            throw new Exception("Unexpected content encoding");
                         }
-
-                        // We use a very stupid algorithm here, one could make 
-                        // this a lot better
-
-                        // 1. find any fully qualified urls
-                        s = _urls.Replace(s, (f) => {
-                            return rewrite(f.Value);
-                        });
-                        // 2. find any href="/ and src="/ and rewrite content.
-
-                        body = encoder.GetBytes(s);
-                        if (!string.IsNullOrWhiteSpace(contentEncoding)) {
-
-                            var mem = new MemoryStream();
-                            /**/ if (contentEncoding.Equals("gzip")) {
-                                using (var gzip = new GZipStream(mem,
-                                    CompressionMode.Compress, true)) {
-                                    gzip.Write(body, 0, body.Length);
-                                }
-                            }
-                            else if (contentEncoding.Equals("deflate")) {
-                                using (var deflate = new DeflateStream(mem,
-                                    CompressionMode.Compress, true)) {
-                                    deflate.Write(body, 0, body.Length);
-                                }
-                            }
-                            body = mem.ToArray();
-                        }
-                        return body;
+                    }
+                    else {
+                        s = encoder.GetString(body, 0, len);
                     }
 
-                ).ConfigureAwait(false);
+                    // We use a very stupid algorithm here, one could make 
+                    // this a lot better...
+
+                    Console.WriteLine(s);
+
+                    // 1. find any fully qualified urls
+                    s = _urls.Replace(s, (f) => rewrite(f.Value));
+
+                    // 2. find any href="/ and src="/ and rewrite content.
+                    s = _links.Replace(s, (f) => {
+                        var val = f.Groups["url"].Value;
+                        return val.StartsWith("/") && !val.StartsWith("//") ? rewrite(val) : val;
+                    });
+
+                    body = encoder.GetBytes(s);
+                    if (!string.IsNullOrWhiteSpace(contentEncoding)) {
+
+                        var mem = new MemoryStream();
+                        /**/ if (contentEncoding.Equals("gzip")) {
+                            using (var gzip = new GZipStream(mem,
+                                CompressionMode.Compress, true)) {
+                                gzip.Write(body, 0, body.Length);
+                            }
+                        }
+                        else if (contentEncoding.Equals("deflate")) {
+                            using (var deflate = new DeflateStream(mem,
+                                CompressionMode.Compress, true)) {
+                                deflate.Write(body, 0, body.Length);
+                            }
+                        }
+                        body = mem.ToArray();
+                    }
+                    return body;
+                }).ConfigureAwait(false);
                 return;
             }
             else {
@@ -614,8 +620,13 @@ namespace WebServerSample {
         }
 
         private static readonly byte[] _crlf = new byte[] { (byte)'\r', (byte)'\n' };
-        private static Regex _urls = new Regex(@"
-((www\.|(http|https)+\:\/\/)[&#95;.a-z0-9-]
-+\.[a-z0-9\/&#95;:@=.+?,##%&~-]*[^.|\'|\# |!|\(|?|,| |>|<|;|\)])", RegexOptions.IgnoreCase);
+        private static Regex _links = new Regex(
+            @"<(?<n>(a|script)|img)\b[^>]*?\b(?<t>(?(1)href|src))\s*=\s*" +
+            @"(?:""(?<url>(?:\\""|[^""])*)""|'(?<url>(?:\\'|[^'])*)')",
+            RegexOptions.IgnoreCase);
+        private static Regex _urls = new Regex(
+            @"http(s)?://([\w+?\.\w+])+([a-zA-Z0-9\~\!\@\#\$\%\^\&amp;" +
+            @"\*\(\)_\-\=\+\\\/\?\.\:\;\'\,]*([a-zA-Z0-9\?\#\=\/]){1})?", 
+            RegexOptions.IgnoreCase);
     }
 }
