@@ -44,6 +44,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public static readonly uint Open            = 20;
         public static readonly uint Close           = 21;
         public static readonly uint Data            = 30;
+        public static readonly uint Poll            = 31;
         public static readonly uint Custom          =  0;
 
         /// <summary>
@@ -56,6 +57,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return Data;
             else if (content is PingRequest)
                 return Ping;
+            else if (content is PollRequest)
+                return Poll;
             else if (content is PingResponse)
                 return Ping;
             else if (content is ResolveRequest)
@@ -115,6 +118,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 return isResponse ? typeof(OpenResponse) : typeof(OpenRequest);
             if (type == Close)
                 return isResponse ? typeof(CloseResponse) : typeof(CloseRequest);
+            if (type == Poll)
+                return typeof(PollRequest);
             if (type == Data)
                 return typeof(DataMessage);
             else
@@ -704,6 +709,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public string ConnectionString { get; set; }
 
         /// <summary>
+        /// Whether the stream is going to be polled
+        /// </summary>
+        [DataMember(Name = "polled", Order = 3)]
+        public bool IsPolled { get; set; }
+
+        /// <summary>
         /// Comparison
         /// </summary>
         /// <param name="that"></param>
@@ -714,6 +725,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             }
             return
                 this.StreamId.Equals(that.StreamId) &&
+                this.IsPolled == that.IsPolled &&
                 this.ConnectionString.Equals(that.ConnectionString);
         }
 
@@ -740,6 +752,72 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// </summary>
     [DataContract]
     public class OpenResponse : VoidMessage, IResponse {
+    }
+
+    /// <summary>
+    /// Request to poll data
+    /// </summary>
+    [DataContract]
+    public class PollRequest : IMessageContent, IRequest, IEquatable<PollRequest> {
+
+        /// <summary>
+        /// How long to wait in milliseconds
+        /// </summary>
+        [DataMember(Name = "timeout", Order = 1)]
+        public ulong Timeout { get; set; }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        /// <param name="timeout"></param>
+        public PollRequest() {
+            Timeout = 60000;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="timeout"></param>
+        public PollRequest(ulong timeout) {
+            Timeout = timeout;
+        }
+
+        /// <summary>
+        /// Returns whether 2 request are equal.
+        /// </summary>
+        /// <param name="other"></param>
+        /// <returns></returns>
+        public bool Equals(PollRequest that) {
+            if (that == null) {
+                return false;
+            }
+            return
+                this.Timeout.Equals(that.Timeout);
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public override bool Equals(Object that) {
+            return Equals(that as PollRequest);
+        }
+
+        /// <summary>
+        /// Returns hash for efficient lookup in list
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() {
+            return base.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// Void response for poll requests
+    /// </summary>
+    [DataContract]
+    public class PollResponse : VoidMessage, IResponse {
     }
 
     /// <summary>

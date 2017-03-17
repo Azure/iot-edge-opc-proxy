@@ -344,5 +344,4 @@ typedef struct prx_socket_properties
 }
 prx_socket_properties_t;
 
-
 #endif // _aprx_types_h_

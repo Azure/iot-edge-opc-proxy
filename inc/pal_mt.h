@@ -12,9 +12,10 @@
 // os_xxx.h so that they can be used in unit tests, since they are
 // effectively compiler emitted, not operating system dependent.
 //
-#if defined _WIN32
+#if defined(_WIN32) 
 typedef volatile long atomic_t;
 
+#include <intrin.h>
 #define set_atomic(var, val) \
     _InterlockedExchange((atomic_t*)&(var), (atomic_t)(val))
 #define set_atomic_ptr(ptr, val) \

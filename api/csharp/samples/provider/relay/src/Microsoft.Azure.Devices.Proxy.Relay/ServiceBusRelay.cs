@@ -4,7 +4,6 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Provider {
-
     using System;
     using System.IO;
     using System.Threading;
@@ -12,7 +11,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System.Collections.Concurrent;
     using Relay;
     using Model;
-    using System.Collections.Generic;
     using System.Linq;
 
     /// <summary>
@@ -23,11 +21,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     /// up a stateful rendezvous point or scaled out websocket services.
     /// </summary>
     public class ServiceBusRelay : IStreamService, IDisposable {
-        private TokenProvider _tokenProvider;
-        private Uri _uri;
-        private HybridConnectionListener _listener;
-        private Task _listenerTask;
-        private CancellationTokenSource _cts = new CancellationTokenSource();
+
+        ConcurrentDictionary<Reference, RelayStream> _streamMap =
+            new ConcurrentDictionary<Reference, RelayStream>();
 
         /// <summary>
         /// Specialized implementation of relay based message stream
@@ -48,9 +44,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 new TaskCompletionSource<IMessageStream>();
 
             /// <summary>
-            /// Link reference
+            /// Stream reference
             /// </summary>
-            internal Reference LinkId { get; private set; }
+            internal Reference StreamId { get; private set; }
 
             /// <summary>
             /// Whether we were closed
@@ -63,15 +59,20 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             public ConnectionString ConnectionString { get; private set; }
 
             /// <summary>
+            /// Never polled
+            /// </summary>
+            public bool IsPolled { get; } = false;
+
+            /// <summary>
             /// Constructor
             /// </summary>
             /// <param name="relay"></param>
-            /// <param name="linkId"></param>
+            /// <param name="streamId"></param>
             /// <param name="connectionString"></param>
-            public RelayStream(ServiceBusRelay relay, Reference linkId,
+            public RelayStream(ServiceBusRelay relay, Reference streamId,
                 ConnectionString connectionString) {
                 _relay = relay;
-                LinkId = linkId;
+                StreamId = streamId;
                 ConnectionString = connectionString;
             }
 
@@ -94,7 +95,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             public async Task CloseAsync() {
                 // Remove ourselves from the listener...
                 RelayStream stream;
-                _relay._streamMap.TryRemove(LinkId, out stream);
+                _relay._streamMap.TryRemove(StreamId, out stream);
 
                 // If not remotely closed, close streaming now
                 if (!_open.IsCancellationRequested) {
@@ -310,9 +311,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 new BlockingCollection<TaskCompletionSource<bool>>();
         }
 
-        ConcurrentDictionary<Reference, RelayStream> _streamMap =
-            new ConcurrentDictionary<Reference, RelayStream>();
-
         /// <summary>
         /// Constructor to create service bus relay
         /// </summary>
@@ -346,16 +344,19 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Creates connection
         /// </summary>
-        /// <param name="linkId"></param>
+        /// <param name="streamId">Local reference id of the stream</param>
+        /// <param name="remoteId">Remote reference of link</param>
+        /// <param name="proxy">The proxy server</param>
         /// <returns></returns>
-        public async Task<IConnection> CreateConnectionAsync(Reference linkId) {
+        public async Task<IConnection> CreateConnectionAsync(Reference streamId,
+            Reference remoteId, INameRecord proxy) {
             var uri = new UriBuilder(_uri);
             uri.Scheme = "http";
             var token = await _tokenProvider.GetTokenAsync(uri.ToString(), 
-                TimeSpan.FromHours(1)).ConfigureAwait(false);
+                TimeSpan.FromHours(24)).ConfigureAwait(false);
             var connection = new RelayStream(
-                this, linkId, new ConnectionString(_uri, "proxy", token));
-            _streamMap.AddOrUpdate(linkId, connection, (r, s) => connection);
+                this, streamId, new ConnectionString(_uri, "proxy", token.TokenString));
+            _streamMap.AddOrUpdate(streamId, connection, (r, s) => connection);
             return connection;
         }
 
@@ -495,6 +496,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             catch (Exception) {
             }
         }
+
+        private TokenProvider _tokenProvider;
+        private Uri _uri;
+        private HybridConnectionListener _listener;
+        private Task _listenerTask;
+        private CancellationTokenSource _cts = new CancellationTokenSource();
 
         static readonly TimeSpan _closeTimeout = TimeSpan.FromSeconds(3);
     }

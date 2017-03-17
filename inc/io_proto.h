@@ -124,6 +124,7 @@ decl_g(const uint32_t, io_message_type_getopt,                  14);
 decl_g(const uint32_t, io_message_type_open,                    20);
 decl_g(const uint32_t, io_message_type_close,                   21);
 decl_g(const uint32_t, io_message_type_data,                    30);
+decl_g(const uint32_t, io_message_type_poll,                    31);
 
 // ... more socket server messages
 
@@ -267,8 +268,8 @@ io_getopt_response_t;
 //
 // Open requests open a channel for asynchronous messages on the 
 // link, which mainly include data messages.  For this the open
-// request carries a connection string that points to a web socket
-// url. Responses are exception responses only (i.e. error_code
+// request carries a connection string that points to an endpoint.
+// Responses are exception responses only (i.e. error_code
 // are set to something other than er_ok, e.g. in the case the
 // connection could not be established to the web socket endpoint.
 //
@@ -280,12 +281,26 @@ typedef struct io_open_request
 {
     io_ref_t stream_id;
     const char* connection_string;
+    bool polled;
 }
 io_open_request_t;
 
 //
-// Stream data messages are sent on asynchronous channel for all
-// datagrams or stream reads on the underlying proxied socket.
+// Poll messages allow streaming in polled mode (see open). A poll
+// request specifies how long to wait for data to arrive. A response 
+// does not contain a timeout.
+//
+typedef struct io_poll_message
+{
+    uint64_t timeout;
+}
+io_poll_message_t;
+
+//
+// Stream data messages are sent either as a request to write, a
+// response to a poll request, or unsolicited on an asynchronous 
+// stream. They contain the last successful read of the underlying 
+// proxied socket.
 //
 
 //
@@ -343,8 +358,9 @@ struct io_message
     io_getopt_request_t getopt_request;
     io_getopt_response_t getopt_response;
     io_open_request_t open_request;
-    io_close_response_t close_response;
+    io_poll_message_t poll_message;
     io_data_message_t data_message;
+    io_close_response_t close_response;
     } content;                                 // Internal: ...
     io_message_factory_t* owner;              // Owning factory
     void* buffer;       // Memory for dynamic allocated content

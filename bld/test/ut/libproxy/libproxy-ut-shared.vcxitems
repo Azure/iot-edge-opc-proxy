@@ -15,34 +15,35 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_config_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_err_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_host_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_client_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_host_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_client_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_ref_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_buffer_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_codec_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_buffer_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_codec_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_cs_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_mqtt_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_ns_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_mqtt_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_ns_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_proto_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_queue_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_server_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__prx_sched_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_token_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_transport_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_queue_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_server_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_sched_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_token_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_transport_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_types_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_url_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__io_ws_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_ws_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__util_stream_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_stream_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_handle_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__util_log_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__util_mem_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_log_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_mem_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_misc_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_signal_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_string_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__xio_sk_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\new__xio_ws_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\xio_sk_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\xio_ws_ut.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\..\inc\os_mock.h" />

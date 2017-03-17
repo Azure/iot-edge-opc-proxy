@@ -1,0 +1,47 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The Asp.NET Core websocket stream provider is an alternative stream channel provider for Azure IoT Gateway proxy.</Description>
+    <AssemblyTitle>Asp.NET Core websocket stream provider implementation for Azure IoT proxy</AssemblyTitle>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <Version>1.0.1-preview</Version>
+    <Authors>microsoft</Authors>
+    <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
+    <NoWarn>$(NoWarn);1591;1734</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Microsoft.Azure.Devices.Proxy.Owin</AssemblyName>
+    <PackageId>Microsoft.Azure.Devices.Proxy.Owin</PackageId>
+    <PackageTags>Azure;IoT;.NET;websocket;Proxy</PackageTags>
+    <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/Azure/azure-iot-proxy</RepositoryUrl>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>true</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.WebSockets" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Signed' ">
+    <DefineConstants>$(DefineConstants);RELEASE_DELAY_SIGN</DefineConstants>
+  </PropertyGroup>
+
+</Project>

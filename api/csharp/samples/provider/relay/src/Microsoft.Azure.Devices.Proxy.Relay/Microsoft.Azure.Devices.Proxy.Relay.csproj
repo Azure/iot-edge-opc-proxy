@@ -1,0 +1,62 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>The Hy-Co stream provider is an alternative stream channel provider for Azure IoT Gateway proxy.</Description>
+    <AssemblyTitle>Service Bus Hy-Co stream provider implementation for Azure IoT proxy</AssemblyTitle>
+    <VersionPrefix>0.1.4</VersionPrefix>
+    <Version>0.1.4-preview</Version>
+    <Authors>microsoft</Authors>
+    <TargetFrameworks>net46;net45;netstandard1.3</TargetFrameworks>
+    <NoWarn>$(NoWarn);1591;1734</NoWarn>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>Microsoft.Azure.Devices.Proxy.Relay</AssemblyName>
+    <PackageId>Microsoft.Azure.Devices.Proxy.Relay</PackageId>
+    <PackageTags>Azure;IoT;.NET;Relay;Proxy</PackageTags>
+    <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE</PackageLicenseUrl>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <RepositoryUrl>https://github.com/Azure/azure-iot-proxy</RepositoryUrl>
+    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
+    <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
+    <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
+    <GenerateAssemblyConfigurationAttribute>true</GenerateAssemblyConfigurationAttribute>
+    <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Azure.Relay" Version="0.1.4-preview" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="3.4.5" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="3.4.5" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Signed' ">
+    <DefineConstants>$(DefineConstants);RELEASE_DELAY_SIGN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Perf|net46|AnyCPU'" />
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
+    <PackageReference Include="system.xml.xpath.xmldocument" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+  </ItemGroup>
+
+</Project>

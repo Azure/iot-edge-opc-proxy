@@ -19,11 +19,13 @@ environment:
 image: Visual Studio 2015
 install:
   - git submodule update --init
-  - appveyor DownloadFile https://libwebsockets.org:444/Win32OpenSSL-1_0_2h.exe
-  - Win32OpenSSL-1_0_2h.exe /silent /verysilent /sp- /suppressmsgboxes
+  - ps: Start-FileDownload 'https://libwebsockets.org:444/Win32OpenSSL-1_0_2h.exe'
+  - cmd /c Win32OpenSSL-1_0_2h.exe /silent /verysilent /sp- /suppressmsgboxes
+  - ps: Start-FileDownload 'https://go.microsoft.com/fwlink/?linkid=843448' -FileName dotnet_1_1_1_install.exe
+  - cmd /c dotnet_1_1_1_install.exe /install /quiet /norestart
 build:
 build_script:
-  - call bld\build.cmd -c %build_args%
+  - bld\build.cmd --vs 14 -c %build_args%
 cache:
   - C:\OpenSSL-Win32
 matrix:

@@ -124,9 +124,9 @@ native_build()
 			      -Duse_zlog:BOOL=$use_zlog "$repo_root" \
                               -DLWS_IPV6:BOOL=ON || \
 			    return 1
-                        # Start as much parallel jobs as requested by the user.
-                        # Until the load average equals the number of cores.
-                        # Be verbose if something goes wrong
+			# Start as much parallel jobs as requested by the user.
+			# Until the load average equals the number of cores.
+			# Be verbose if something goes wrong
 			make -j$MAKE_PARALLEL_JOBS --load-average=`nproc` || make VERBOSE=1 || \
 				return 1
 			if [ $skip_unittests == ON ]; then
@@ -163,19 +163,14 @@ managed_build()
 				mkdir -p "${build_nuget_output}/${c}"
 				mkdir -p "${build_root}/${c}"
 
-				for f in $(find . -type f -name "project.json"); do
+				for f in $(find . -type f -name "*.csproj"); do
 					grep -q netstandard1.3 $f
 					if [ $? -eq 0 ]; then
-						if [ $build_pack_only == 0 ]; then
-							echo -e "\033[1mBuilding ${f} as netstandard1.3\033[0m"
-							dotnet build -c $c -o "${build_root}/${c}" \
-								--framework netstandard1.3 $f \
-								|| return $?
-						fi
-						dotnet pack --no-build -c $c $f \
-							-o "${build_nuget_output}/${c}" \
+						echo -e "\033[1mBuilding ${f} as netstandard1.3\033[0m"
+						dotnet build -c $c -o "${build_root}/${c}" \
+							--framework netstandard1.3 $f \
 							|| return $?
-					elif [ $build_pack_only == 0 ]; then
+					else
 						grep -q netcoreapp1.1 $f
 						if [ $? -eq 0 ]; then
 							echo -e "\033[1mBuilding ${f} as netcoreapp1.1\033[0m"

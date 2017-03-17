@@ -4,6 +4,7 @@
 #include "util_mem.h"
 #include "io_token.h"
 #include "util_string.h"
+#include "prx_config.h"
 #include "pal_time.h"
 
 #include "azure_c_shared_utility/refcount.h"
@@ -338,8 +339,9 @@ int32_t io_iothub_token_provider_create(
     io_token_provider_t** provider
 )
 {
-    return io_sas_token_provider_create(
-        shared_access_key, scope, policy, DEFAULT_RENEWAL_TIMEOUT_SEC,
+    int32_t timeout = __prx_config_get_int(prx_config_key_token_ttl, 
+        DEFAULT_RENEWAL_TIMEOUT_SEC);
+    return io_sas_token_provider_create(shared_access_key, scope, policy, timeout,
         io_token_provider_on_new_iothub_token, provider);
 }
 

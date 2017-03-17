@@ -31,32 +31,33 @@ endif()
 #
 set(_PROXY_UNITS_UNDER_TEST
     prx_err
-    new__prx_host
-    new__prx_client
-    new__prx_server
-    new__prx_buffer
-    new__prx_ns
-    new__prx_sched
-    new__io_codec
-    new__io_mqtt
+    prx_config
+    prx_host
+    prx_client
+    prx_server
+    prx_buffer
+    prx_ns
+    prx_sched
+    io_codec
+    io_mqtt
     io_ref
     io_proto
     io_types
     io_url
-    new__io_queue
-    new__io_token
-    new__io_transport
-    new__io_ws
+    io_queue
+    io_token
+    io_transport
+    io_ws
     pal
     util_handle
     util_misc
     util_signal
     util_string
-    new__util_stream
-    new__util_log
-    new__util_mem
-    new__xio_sk
-    new__xio_ws
+    util_stream
+    util_log
+    util_mem
+    xio_sk
+    xio_ws
 )
 
 compileAsC99()

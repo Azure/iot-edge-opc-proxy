@@ -60,11 +60,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         reader, context, ct).ConfigureAwait(false);
                 else
                     await reader.ReadAsync(ct).ConfigureAwait(false);
-
             }
             else {
                 /**/ if (message.TypeId == MessageContent.Data)
                     message.Content = await context.Get<DataMessage>().ReadAsync(
+                        reader, context, ct).ConfigureAwait(false);
+                else if (message.TypeId == MessageContent.Poll)
+                    message.Content = await context.Get<PollRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
                 else if (message.TypeId == MessageContent.Ping)
                     message.Content = await context.Get<PingRequest>().ReadAsync(
@@ -117,7 +119,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             /**/ if (message.Content is DataMessage)                                   
                 await context.Get<DataMessage>().WriteAsync(writer, 
-                    (DataMessage)message.Content, context, ct).ConfigureAwait(false);                          
+                    (DataMessage)message.Content, context, ct).ConfigureAwait(false);
+            else if (message.Content is PollRequest)
+                await context.Get<PollRequest>().WriteAsync(writer,
+                    (PollRequest)message.Content, context, ct).ConfigureAwait(false);
             else if (message.Content is PingRequest)
                 await context.Get<PingRequest>().WriteAsync(writer,
                     (PingRequest)message.Content, context, ct).ConfigureAwait(false);

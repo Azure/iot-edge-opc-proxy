@@ -1747,9 +1747,12 @@ void pal_socket_deinit(
     tlsio_openssl_deinit();
 #endif
     if (_scheduler)
+    {
         prx_scheduler_release(_scheduler, NULL);
+        prx_scheduler_at_exit(_scheduler);
+        _scheduler = NULL;
+    }
     if (_ntdll)
         (void)FreeLibrary(_ntdll);
     _ntdll = NULL;
-    _scheduler = NULL;
 }

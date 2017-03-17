@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     if (connected) {
                         return Disposition.Done;
                     }
-                    if (response != null && response.Error == (int)SocketError.Success) {
+                    if (response.Error == (int)SocketError.Success) {
                         try {
                             // Foreach returned item, try to link now
                             connected = await LinkAsync(proxy, address, ct2).ConfigureAwait(false);

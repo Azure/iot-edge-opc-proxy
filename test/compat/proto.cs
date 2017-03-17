@@ -291,6 +291,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             OpenRequest args = new OpenRequest();
             args.StreamId = new Reference();
             args.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
+            args.IsPolled = true;
 
             Message request = new Message(null, null, null, args);
             MemoryStream stream = new MemoryStream();
@@ -318,6 +319,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
+        }
+
+        [TestMethod]
+        public void TestMpackPollRequestWriteRead() {
+            // Arrange
+            Message request = new Message(null, null, null, new PollRequest(100000));
+            MemoryStream stream = new MemoryStream();
+
+            // Act
+            request.Encode(stream, CodecId.Mpack);
+            byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
+            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+
+            // Assert
+            Assert.IsTrue(request.Equals(returned));
         }
 
         [TestMethod]
@@ -370,6 +386,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             OpenRequest args1 = new OpenRequest();
             args1.StreamId = new Reference();
             args1.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
+            args1.IsPolled = false;
             DataMessage args2 = new DataMessage();
             args2.Source = new NullSocketAddress();
             args2.Payload = new byte[600];
@@ -724,6 +741,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             OpenRequest args = new OpenRequest();
             args.StreamId = new Reference();
             args.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
+            args.IsPolled = true;
 
             Message request = new Message(null, null, null, args);
             MemoryStream stream = new MemoryStream();
@@ -751,6 +769,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
+        }
+
+        [TestMethod]
+        public void TestJsonPollRequestWriteRead() {
+            // Arrange
+            Message request = new Message(null, null, null, new PollRequest(100000));
+            MemoryStream stream = new MemoryStream();
+
+            // Act
+            request.Encode(stream, CodecId.Json);
+            byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
+            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+
+            // Assert
+            Assert.IsTrue(request.Equals(returned));
         }
 
         [TestMethod]
@@ -831,6 +864,5 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             // Assert
             Assert.IsTrue(response.Equals(returned));
         }
-
     } // class
 }

@@ -13,7 +13,39 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading;
     using System.Threading.Tasks;
 
-    internal class Http {
+    /// <summary>
+    /// Http class exceptions for status != 200
+    /// </summary>
+    public class HttpResponseException : Exception {
+
+        /// <summary>
+        /// Failed status
+        /// </summary>
+        public HttpStatusCode StatusCode { get; private set; }
+
+        /// <summary>
+        /// Response content
+        /// </summary>
+        public string Response { get; private set; }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="status"></param>
+        /// <param name="response"></param>
+        internal HttpResponseException(HttpStatusCode status, string response) {
+            StatusCode = status;
+            Response = response;
+        }
+
+        /// <summary>
+        /// Stringify exception
+        /// </summary>
+        /// <returns></returns>
+        public override String ToString() => $"{StatusCode}: {Response}";
+    }
+
+    public class Http {
         private HttpClient _client;
 
         /// <summary>
@@ -22,6 +54,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public Http() {
             _client = new HttpClient();
         }
+
 
         /// <summary>
         /// Helper to do rest call
@@ -51,7 +84,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                     }
                 }
                 try { 
-                    var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false); 
+                    var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
+                    if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
+                        throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
+                    }
                     queryHeaders(resp.Headers);
                     return await resp.Content.ReadAsStringAsync().ConfigureAwait(false); 
                 }
@@ -110,8 +146,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
                 try {
                     var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
-                    queryHeaders(resp.Headers);
-                    return await resp.Content.ReadAsStreamAsync().ConfigureAwait(false); 
+                    if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
+                        throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
+                    }
+                    else {
+                        queryHeaders(resp.Headers);
+                        return await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    }
                 }
                 catch (TaskCanceledException ex) {
                     if (!ct.IsCancellationRequested) {

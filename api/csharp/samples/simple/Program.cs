@@ -1,4 +1,8 @@
-﻿
+﻿// ------------------------------------------------------------
+//  Copyright (c) Microsoft Corporation.  All rights reserved.
+//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+// ------------------------------------------------------------
+
 namespace simple_client {
     using System;
     using System.Collections.Generic;
@@ -13,7 +17,7 @@ namespace simple_client {
 
         static void Main(string[] args) {
 
-            Microsoft.Azure.Devices.Proxy.Provider.DefaultProvider.Instance.Init().Wait();
+            // Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
 
             if (args.Length > 0)
                 host_name = args[0];
@@ -31,6 +35,7 @@ namespace simple_client {
             for (int j = 1; ; j++) {
                 Console.Clear();
                 Console.Out.WriteLine($"#{j} Sync tests...");
+#if !PERF
                 for (int i = 0; i < j + 1; i++) {
                     try {
                         SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
@@ -44,7 +49,7 @@ namespace simple_client {
                         Console.Out.WriteLine(e.ToString());
                     }
                 }
-
+#endif
                 Console.Clear();
                 Console.Out.WriteLine($"#{j} Async tests...");
                 try {

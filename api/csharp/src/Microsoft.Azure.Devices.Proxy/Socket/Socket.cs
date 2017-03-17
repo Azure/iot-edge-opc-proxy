@@ -84,6 +84,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
+        // The service provider to use
+        //
+        public static IProvider Provider {
+            get; set;
+        } = NullProvider.Create();
+
+        //
         // Create a socket
         //
         public Socket(SocketType socketType, ProtocolType protocolType)
@@ -100,7 +107,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Protocol = protocolType,
                 Type = socketType,
                 Timeout = keepAlive
-            }, DefaultProvider.Instance);
+            }, Provider);
         }
 
         //
@@ -454,7 +461,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Set/get the send timeout
         //
-        public int SendTimeout { get; set; } = 10 * 1000;
+        public int SendTimeout { get; set; } = 30 * 1000;
 
         //
         // Send array segment 
@@ -851,6 +858,8 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         #endregion
 
+        #region Receive
+
         //
         // Gets the amount of data that can be read from input
         //
@@ -863,9 +872,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         //  Set/get the timeout for receive calls
         //
-        public int ReceiveTimeout { get; set; } = 10 * 1000;
-
-        #region Receive
+        public int ReceiveTimeout { get; set; } = 30 * 1000;
 
         //
         // Receives data from a connected socket 
@@ -1171,7 +1178,8 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         #endregion
 
-        #region options
+        #region Options
+
         //
         // Enable broadcast moode
         //

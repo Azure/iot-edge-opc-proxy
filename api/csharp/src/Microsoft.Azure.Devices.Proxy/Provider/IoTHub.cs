@@ -4,8 +4,11 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Provider {
+    using System;
     using System.Threading.Tasks;
     using System.Collections.Generic;
+    using System.Collections.Concurrent;
+    using System.Diagnostics;
     using System.Text;
     using System.Threading;
     using System.IO;
@@ -16,17 +19,16 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System.Security.Cryptography;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    using System;
     using Model;
 
     /// <summary>
-    /// Resolves names through registry manager and provides remoting
+    /// Resolves names through registry manager and provides remoting and streaming
     /// through devices methods.
     /// </summary>
-    public class IoTHub : ResultCache, IRemotingService, INameService {
+    public class IoTHub : ResultCache, IRemotingService, INameService, IStreamService {
 
         private static readonly string _apiVersion = "2016-11-14";
-        private static readonly string _clientId = "Microsoft.Azure.Devices/1.1.4";
+        private static readonly string _clientId = $"Microsoft.Azure.Devices.Proxy/{VersionEx.Assembly}";
 
         /// <summary>
         /// Wrapper around device twin result
@@ -98,16 +100,126 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             private JObject _tags;
         }
 
-        private ConnectionString _hubConnectionString;
-        private Http _http = new Http();
 
         /// <summary>
-        /// Constructor
+        /// IoT Hub device method based message stream
         /// </summary>
-        /// <param name="elem"></param>
+        class IoTHubStream : IConnection, IMessageStream {
+
+            /// <summary>
+            /// Connection string for connection
+            /// </summary>
+            public ConnectionString ConnectionString { get; private set; }
+
+            /// <summary>
+            /// Always polled
+            /// </summary>
+            public bool IsPolled { get; } = true;
+
+            /// <summary>
+            /// Queue to read from 
+            /// </summary>
+            public ConcurrentQueue<Message> ReceiveQueue { get; } =
+                new ConcurrentQueue<Message>();
+
+            /// <summary>
+            /// Constructor creating a method based polled stream.
+            /// </summary>
+            /// <param name="iothub"></param>
+            /// <param name="streamId"></param>
+            /// <param name="remoteId"></param>
+            /// <param name="link"></param>
+            /// <param name="connectionString"></param>
+            public IoTHubStream(IoTHub iothub, Reference streamId,
+                Reference remoteId, INameRecord link, ConnectionString connectionString) {
+                _iotHub = iothub;
+                _streamId = streamId;
+                _remoteId = remoteId;
+                _link = link;
+                ConnectionString = connectionString;
+            }
+
+            /// <summary>
+            /// Open stream
+            /// </summary>
+            /// <param name="ct"></param>
+            /// <returns></returns>
+            public Task<IMessageStream> OpenAsync(CancellationToken ct) {
+                _open = new CancellationTokenSource();
+                return Task.FromResult((IMessageStream)this);
+            }
+
+            /// <summary>
+            /// Close stream
+            /// </summary>
+            /// <returns></returns>
+            public Task CloseAsync() {
+                _open.Cancel();
+                return Task.FromResult(true);
+            }
+
+            /// <summary>
+            /// Sends a poll request and enqueues result to receive queue.
+            /// </summary>
+            /// <param name="ct"></param>
+            /// <returns></returns>
+            public async Task ReceiveAsync(CancellationToken ct) {
+                Message response = await _iotHub.TryInvokeDeviceMethodAsync(_link, 
+                    new Message(_streamId, _remoteId, new PollRequest(120000)), 
+                        TimeSpan.FromMinutes(3), _open.Token).ConfigureAwait(false);
+                if (response != null) {
+                    ReceiveQueue.Enqueue(response);
+                }
+            }
+
+            /// <summary>
+            /// Send data message
+            /// </summary>
+            /// <param name="message"></param>
+            /// <param name="ct"></param>
+            /// <returns></returns>
+            public async Task SendAsync(Message message, CancellationToken ct) {
+                message.Source = _streamId;
+                message.Target = _remoteId;
+                Message response = await _iotHub.CallAsync(_link, message, ct).ConfigureAwait(false);
+            }
+
+            private IoTHub _iotHub;
+            private Reference _streamId;
+            private Reference _remoteId;
+            private INameRecord _link;
+            private CancellationTokenSource _open;
+        }
+
+
+        /// <summary>
+        /// Constructor for IotHub service implementation
+        /// </summary>
+        /// <param name="hubConnectionString"></param>
         public IoTHub(ConnectionString hubConnectionString) {
             _hubConnectionString = hubConnectionString;
             StartTimer(TimeSpan.FromMinutes(5));
+        }
+
+        /// <summary>
+        /// Create stream connection through iot hub methods.
+        /// </summary>
+        /// <param name="streamId">Local reference id of the stream</param>
+        /// <param name="remoteId">Remote reference of link</param>
+        /// <param name="proxy">The proxy server</param>
+        /// <returns></returns>
+        public Task<IConnection> CreateConnectionAsync(Reference streamId,
+            Reference remoteId, INameRecord proxy) {
+
+            IConnection conn = new IoTHubStream(this, streamId, remoteId, proxy, 
+                null);
+
+            // TODO: Revisit:  At this point we could either a) look up a host from the registry
+            // then use it to create a dedicated stream with connection string or b) create an 
+            // adhoc dr stream entry in the registry.  However, due to overall IoTHub performance  
+            // characteristic there is at this point no performance benefit from doing so.
+
+            return Task.FromResult(conn);
         }
 
         /// <summary>
@@ -121,12 +233,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             try {
                 return await Retry.Do(ct,
                     () => InvokeDeviceMethodAsync(proxy, request, TimeSpan.FromMinutes(3), ct),
-                    (e) => true, Retry.NoBackoff, int.MaxValue).ConfigureAwait(false);
+                    (e) => !ct.IsCancellationRequested, Retry.NoBackoff, int.MaxValue).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
             }
             catch (Exception e) {
                 ProxyEventSource.Log.HandledExceptionAsError(this, e);
-                return null;
             }
+            return null;
         }
 
         /// <summary>
@@ -143,7 +257,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
             var cts = new CancellationTokenSource();
             ct.Register(() => {
-                cts?.Cancel();
+                cts.Cancel();
             });
 
             try {
@@ -151,11 +265,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 var results = await LookupAsync(sql, ct).ConfigureAwait(false);
                 if (!results.Any()) {
                     ProxyEventSource.Log.NoProxyInstalled(this);
-                    return;
                 }
 
                 var proxyList = new List<INameRecord>(results);
-                for (int attempts = 0; !ct.IsCancellationRequested; attempts++) {
+                for (int attempts = 0; !ct.IsCancellationRequested && proxyList.Any(); attempts++) {
                     var tasks = new Dictionary<Task<Message>, INameRecord>();
                     foreach (var proxy in proxyList) {
                         tasks.Add(TryInvokeDeviceMethodAsync(proxy, message, 
@@ -172,8 +285,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             proxyList.Add(record);
                             continue;
                         }
-                        var disp = await handler(
-                            method.Result, record, cts.Token).ConfigureAwait(false);
+                        var response = await method;
+                        if (response == null) {
+                            proxyList.Add(record);
+                            continue;
+                        }
+                        var disp = await handler(response, record, ct).ConfigureAwait(false);
                         /**/ if (disp == Disposition.Done) {
                             return;
                         }
@@ -181,7 +298,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             proxyList.Add(record);
                         }
                     }
-                    await Task.Delay(3 * attempts, cts.Token).ConfigureAwait(false);
+
+                    ProxyEventSource.Log.PingRetry(this, attempts + 1, proxyList.Count);
+                    if (!proxyList.Any()) {
+                        break;
+                    }
+                    await Task.Delay(3 * attempts, ct).ConfigureAwait(false);
                 }
                 if (!ct.IsCancellationRequested) {
                     last(null);
@@ -274,12 +396,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             try {
                 return await Retry.WithLinearBackoff(ct,
                     () => PagedLookupAsync(sql, continuation, ct),
-                    (e) => true).ConfigureAwait(false);
+                    (e) => !ct.IsCancellationRequested).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
             }
             catch (Exception e) {
                 ProxyEventSource.Log.HandledExceptionAsError(this, e);
-                return null;
             }
+            return null;
         }
 
         /// <summary>
@@ -417,6 +541,47 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             public Message Payload { get; set; }
         }
 
+#if PERF
+        private long _calls;
+        private long _failed;
+        private Stopwatch _callsw = Stopwatch.StartNew();
+
+        private async Task<Message> InvokeDeviceMethodAsync(Message message, 
+            TimeSpan timeout, CancellationToken ct) {
+            bool log = true;
+            try {
+                message = await InvokeDeviceMethodInternalAsync(message, timeout, ct);
+                _calls++;
+                return message;
+            }
+            catch (OperationCanceledException) {
+                log = false; throw;
+            }
+            catch (ProxyNotFoundException) {
+                log = false; throw;
+            }
+            catch (Exception) {
+                _failed++; throw;
+            }
+            finally {
+                if (log) {
+                    var persec = _calls / _callsw.Elapsed.TotalSeconds;
+                    Console.CursorLeft = 0; Console.CursorTop = 1;
+                    Console.WriteLine(
+                        $"{_calls} calls [{_failed} failed] ({persec} calls/sec)");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Makes a method request from a message
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="timeout"></param>
+        /// <returns></returns>
+        private async Task<Message> InvokeDeviceMethodInternalAsync(Message message, 
+            TimeSpan timeout, CancellationToken ct) {
+#else
         /// <summary>
         /// Makes a method request from a message
         /// </summary>
@@ -425,6 +590,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         private async Task<Message> InvokeDeviceMethodAsync(Message message, 
             TimeSpan timeout, CancellationToken ct) {
+#endif
             if (string.IsNullOrEmpty(message.DeviceId)) {
                 throw ProxyEventSource.Log.ArgumentNull("deviceId");
             }
@@ -443,20 +609,31 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     h.Add(HttpRequestHeader.UserAgent.ToString(), _clientId);
                 }, _ => { }, ct, Encoding.UTF8.GetString(buffer.ToArray()),
                     "application/json").ConfigureAwait(false);
-
                 using (stream) {
                     response = MethodCallResponse.Decode(stream, CodecId.Json);
                 }
             }
+            catch (HttpResponseException hex) {
+                if (hex.StatusCode != HttpStatusCode.NotFound) {
+                    ProxyEventSource.Log.HandledExceptionAsError(this, hex);
+                    throw new ProxyException(
+                        $"Remote proxy device method communication failure: {hex.StatusCode}.", hex);
+                }
+                else {
+                    ProxyEventSource.Log.HandledExceptionAsInformation(this, hex);
+                    throw new ProxyNotFoundException(hex);
+                }
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
             catch (Exception ex) {
-                throw ProxyEventSource.Log.Rethrow(ex);
+                ProxyEventSource.Log.HandledExceptionAsError(this, ex);
+                throw new ProxyException($"Unknown proxy failure.", ex);
             }
             if (response.Status != 200) {
-                if (response.Status == 0) {
-                    throw new ProxyException($"Remote proxy not connected!");
-                }
                 throw ProxyEventSource.Log.Rethrow(
-                    new ProxyException($"Unexpected status {response.Status}"));
+                    new ProxyException($"Unexpected status {response.Status} returned by proxy."));
             }
             return response.Payload;
         }
@@ -490,11 +667,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 return await InvokeDeviceMethodAsync(
                     record, request, timeout, ct).ConfigureAwait(false);
             }
-            catch (ProxyException) {
-                return null;
-            }
-            catch (Exception e) {
-                ProxyEventSource.Log.HandledExceptionAsWarning(this, e);
+            catch {
                 return null;
             }
         }
@@ -522,5 +695,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 encodedScope, Uri.EscapeDataString(sig), Uri.EscapeDataString(expiry),
                 Uri.EscapeDataString(_hubConnectionString.SharedAccessKeyName)));
         }
+
+
+        private ConnectionString _hubConnectionString;
+        private Http _http = new Http();
     }
 }
