@@ -21,7 +21,6 @@
         ${_SHARED_ROOT}/src/gballoc.c
         ${_SHARED_ROOT}/src/hmac.c
         ${_SHARED_ROOT}/src/hmacsha256.c
-        ${_SHARED_ROOT}/src/xio.c
         ${_SHARED_ROOT}/src/singlylinkedlist.c
         ${_SHARED_ROOT}/src/map.c
         ${_SHARED_ROOT}/src/optionhandler.c
@@ -33,10 +32,15 @@
         ${_SHARED_ROOT}/src/string_tokenizer.c
         ${_SHARED_ROOT}/src/urlencode.c
         ${_SHARED_ROOT}/src/usha.c
-        ${_SHARED_ROOT}/src/vector.c
+        ${_SHARED_ROOT}/src/http_proxy_io.c
         ${_SHARED_ROOT}/src/httpapiex.c
         ${_SHARED_ROOT}/src/httpapiexsas.c
         ${_SHARED_ROOT}/src/httpheaders.c
+        ${_SHARED_ROOT}/src/utf8_checker.c
+        ${_SHARED_ROOT}/src/uws_client.c
+        ${_SHARED_ROOT}/src/uws_frame_encoder.c
+        ${_SHARED_ROOT}/src/vector.c
+        ${_SHARED_ROOT}/src/xio.c
         ${_SHARED_ROOT}/src/xlogging.c
     )
 if(WIN32)

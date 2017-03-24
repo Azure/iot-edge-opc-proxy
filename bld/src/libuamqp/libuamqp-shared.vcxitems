@@ -14,7 +14,6 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpalloc.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpvalue.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqpvalue_to_string.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\amqp_definitions.c" />
@@ -38,7 +37,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\src\session.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpalloc.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpvalue.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqpvalue_to_string.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\uamqp\inc\azure_uamqp_c\amqp_definitions.h" />

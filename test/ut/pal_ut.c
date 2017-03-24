@@ -48,6 +48,8 @@ TEST_FUNCTION(pal_init__success_1)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_rand_init())
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init())
@@ -101,6 +103,43 @@ TEST_FUNCTION(pal_init__success_3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_rand_init())
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_file_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_socket_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_wsclient_init())
+        .SetReturn(er_not_supported);
+
+    // act 
+    result = pal_init();
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_TRUE(capabilities == (pal_cap_sockets | pal_cap_cred | pal_cap_ev | pal_cap_file));
+}
+
+// 
+// Test pal_init happy path 
+// 
+TEST_FUNCTION(pal_init__success_4)
+{
+    int32_t result;
+
+    capabilities = pal_not_init;
+    diag_callback = NULL;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_err_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_time_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_rand_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_not_supported);
     STRICT_EXPECTED_CALL(pal_file_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init())
@@ -133,8 +172,11 @@ TEST_FUNCTION(pal_init__neg_1)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_rand_init())
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_init())
         .SetReturn(er_fatal);
+    STRICT_EXPECTED_CALL(pal_cred_deinit());
     STRICT_EXPECTED_CALL(pal_rand_deinit());
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
@@ -164,11 +206,14 @@ TEST_FUNCTION(pal_init__neg_2)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_rand_init())
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init())
         .SetReturn(er_not_supported);
     STRICT_EXPECTED_CALL(pal_file_deinit());
+    STRICT_EXPECTED_CALL(pal_cred_deinit());
     STRICT_EXPECTED_CALL(pal_rand_deinit());
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
@@ -198,6 +243,8 @@ TEST_FUNCTION(pal_init__neg_3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_rand_init())
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init())
@@ -206,6 +253,38 @@ TEST_FUNCTION(pal_init__neg_3)
         .SetReturn(er_fatal);
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_file_deinit());
+    STRICT_EXPECTED_CALL(pal_cred_deinit());
+    STRICT_EXPECTED_CALL(pal_rand_deinit());
+    STRICT_EXPECTED_CALL(pal_time_deinit());
+    STRICT_EXPECTED_CALL(pal_err_deinit());
+
+    // act 
+    result = pal_init();
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
+    ASSERT_IS_TRUE(capabilities == pal_not_init);
+}
+
+// 
+// Test pal_init unhappy path 
+// 
+TEST_FUNCTION(pal_init__neg_4)
+{
+    int32_t result;
+
+    capabilities = pal_not_init;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_err_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_time_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_rand_init())
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_cred_init())
+        .SetReturn(er_fatal);
     STRICT_EXPECTED_CALL(pal_rand_deinit());
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
@@ -260,6 +339,7 @@ TEST_FUNCTION(pal_deinit__success_1)
     STRICT_EXPECTED_CALL(pal_wsclient_deinit());
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_file_deinit());
+    STRICT_EXPECTED_CALL(pal_cred_deinit());
     STRICT_EXPECTED_CALL(pal_rand_deinit());
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());

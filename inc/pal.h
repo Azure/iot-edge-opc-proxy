@@ -18,8 +18,9 @@ typedef enum pal_capabilities
     pal_cap_sockets = 0x2,
     pal_cap_ev = 0x4,
     pal_cap_wsclient = 0x8,
+    pal_cap_cred = 0x10,
 
-    pal_cap_all = 0xf
+    pal_cap_all = 0x1f
 }
 pal_capabilities_t;
 

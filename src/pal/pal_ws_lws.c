@@ -1073,7 +1073,7 @@ static int32_t pal_wsworker_get_proxy_info(
     if (!*proxy)
         *port = 0;
     else
-        *port = atoi(proxy);
+        *port = atoi(++proxy);
     return er_ok;
 }
 

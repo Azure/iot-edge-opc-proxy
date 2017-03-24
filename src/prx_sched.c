@@ -229,8 +229,8 @@ static int32_t prx_scheduler_work(
             next->task(next->context);
             log_debug(scheduler->log, "Task %s took %u ms",
                 next->name, (uint32_t)(ticks_get() - now));
-
             prx_buffer_release(scheduler->task_pool, next);
+            mem_check();
         }
         else if (!scheduler->should_run && idle_timeout == -1)
         {
@@ -246,6 +246,7 @@ static int32_t prx_scheduler_work(
                 (uint32_t)(ticks_get() - now));
         }
     }
+    mem_check();
     return 0;
 }
 

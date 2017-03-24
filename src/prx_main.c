@@ -252,6 +252,7 @@ int32_t main(
     char *argv[]
 )
 {
+    int32_t result;
 #if _WIN32
     // If called by SCM, then register entry point and start dispatcher
     SERVICE_TABLE_ENTRYA service_table[2] = { { "proxyd", ServiceMain }, 0 };
@@ -267,5 +268,7 @@ int32_t main(
 #else
     signal(SIGINT, signal_handler);
 #endif
-    return service_main(argc, argv, NULL);
+    result = service_main(argc, argv, NULL);
+    mem_deinit();
+    return result;
 }

@@ -8,7 +8,6 @@ set(source_c_files
     ${_UAMQP_ROOT}/src/amqp_definitions.c
     ${_UAMQP_ROOT}/src/amqp_frame_codec.c
     ${_UAMQP_ROOT}/src/amqp_management.c
-    ${_UAMQP_ROOT}/src/amqpalloc.c
     ${_UAMQP_ROOT}/src/amqpvalue.c
     ${_UAMQP_ROOT}/src/amqpvalue_to_string.c
     ${_UAMQP_ROOT}/src/cbs.c

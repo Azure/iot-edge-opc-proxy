@@ -358,22 +358,6 @@ typedef int32_t(*prx_ns_entry_get_cs_t)(
     );
 
 //
-// Provider to lookup all routing entries for an entry
-//
-typedef int32_t (*prx_ns_entry_get_routes_t)(
-    void* context,
-    prx_ns_result_t** results
-    );
-
-//
-// Provider to add a routing entry to database
-//
-typedef int32_t(*prx_ns_entry_add_route_t)(
-    void* context,
-    prx_ns_entry_t* proxy
-    );
-
-//
 // Provider to return links for this entry
 //
 typedef int32_t (*prx_ns_entry_get_links_t)(
@@ -401,8 +385,6 @@ struct prx_ns_entry
     prx_ns_entry_get_name_t get_name;
     prx_ns_entry_get_index_t get_index;
     prx_ns_entry_get_addr_t get_addr;
-    prx_ns_entry_get_routes_t get_routes;
-    prx_ns_entry_add_route_t add_route;
     prx_ns_entry_get_links_t get_links;
     prx_ns_entry_release_t release;
 };
@@ -499,34 +481,6 @@ decl_inline_2(int32_t, prx_ns_entry_get_addr,
         return er_fault;
     dbg_assert_ptr(entry->get_addr);
     return entry->get_addr(entry->context, address);
-}
-
-//
-// Returns routing entries for entry
-//
-decl_inline_2(int32_t, prx_ns_entry_get_routes,
-    prx_ns_entry_t*, entry,
-    prx_ns_result_t**, results
-)
-{
-    if (!entry || !results)
-        return er_fault;
-    dbg_assert_ptr(entry->get_routes);
-    return entry->get_routes(entry->context, results);
-}
-
-//
-// Returns routing entries for entry
-//
-decl_inline_2(int32_t, prx_ns_entry_add_route,
-    prx_ns_entry_t*, entry,
-    prx_ns_entry_t*, proxy
-)
-{
-    if (!entry || !proxy)
-        return er_fault;
-    dbg_assert_ptr(entry->add_route);
-    return entry->add_route(entry->context, proxy);
 }
 
 //

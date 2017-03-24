@@ -168,13 +168,6 @@ decl_internal_1(const char*, io_cs_get_shared_access_key_name,
 );
 
 //
-// Returns the key from the connection string
-//
-decl_internal_1(const char*, io_cs_get_shared_access_key,
-    io_cs_t*, connection_string
-);
-
-//
 // Returns the token from the connection string
 //
 decl_internal_1(const char*, io_cs_get_shared_access_token,
@@ -205,7 +198,14 @@ decl_internal_2(int32_t, io_cs_create_token_provider,
 );
 
 //
-// Free connection connection string
+// Releases any persistently stored key handle
+//
+decl_internal_1(void, io_cs_remove_keys,
+    io_cs_t*, connection_string
+);
+
+//
+// Free connection string
 //
 decl_internal_1(void, io_cs_free,
     io_cs_t*, connection_string

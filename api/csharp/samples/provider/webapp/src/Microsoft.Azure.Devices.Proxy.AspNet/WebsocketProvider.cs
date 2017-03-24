@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System.Threading;
 
     /// <summary>
-    /// Provider that uses asp.net core websockets as stream service
+    /// asp.net core middleware that provides streamprovider that uses websockets as stream service
     /// implementation.
     /// </summary>
     public partial class WebsocketProvider : DefaultProvider, IStreamService {
@@ -303,27 +303,22 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="app"></param>
+        /// <param name="next"></param>
+        /// <param name="uri"></param>
         /// <param name="iothub"></param>
-        public WebsocketProvider(IApplicationBuilder app, Uri uri, string iothub) :
+        public WebsocketProvider(RequestDelegate next, Uri uri, string iothub) :
             base(iothub) {
             _uri = uri;
-            _app = app;
-            _app.UseWebSockets(new WebSocketOptions() {
-                ReceiveBufferSize = WebSocketStream.DefaultBufferSize
-            });
-            _app.Use(async (context, next) => {
-                await OnWebSocketRequest(context, next);
-            });
+            _next = next;
+            Socket.Provider = this;
         }
 
         /// <summary>
         /// Handle all websocket requests
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="next"></param>
         /// <returns></returns>
-        private async Task OnWebSocketRequest(HttpContext context, Func<Task> next) {
+        public async Task Invoke(HttpContext context) {
             try {
                 if (context.WebSockets.IsWebSocketRequest && context.Request.IsHttps) {
                     // Correlate the accepted socket to an open stream in our map
@@ -347,7 +342,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 // Some error occurred
                 ProxyEventSource.Log.ConnectionRejected(context, e);
             }
-            await next();
+            await _next(context);
         }
 
         /// <summary>
@@ -369,7 +364,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         private Uri _uri;
-        private IApplicationBuilder _app;
+        private RequestDelegate _next;
     }
 
 
@@ -383,7 +378,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="app"></param>
         /// <returns></returns>
         public static void ConfigureProxy(this IApplicationBuilder app, Uri endpoint) {
-            Socket.Provider = new WebsocketProvider(app, endpoint, null);
+            app.UseWebSockets();
+            app.UseMiddleware<WebsocketProvider>(endpoint, null);
         }
 
         /// <summary>
@@ -394,7 +390,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public static void ConfigureProxy(this IApplicationBuilder app, Uri endpoint,
             string iotHub) {
-            Socket.Provider = new WebsocketProvider(app, endpoint, iotHub);
+            app.UseWebSockets();
+            app.UseMiddleware<WebsocketProvider>(endpoint, iotHub);
         }
     }
 }

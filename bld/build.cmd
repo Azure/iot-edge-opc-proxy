@@ -30,7 +30,7 @@ set build-docker-args=
 set build-vs-ver=15
 
 set CMAKE_toolset=
-set CMAKE_skip_unittests=OFF
+set CMAKE_run_unittests=ON
 set CMAKE_use_openssl=OFF
 set CMAKE_use_zlog=OFF
 set CMAKE_use_lws=OFF
@@ -105,7 +105,7 @@ if %build-platform% == x64 (
 )
 goto :args-continue
 :arg-skip-unittests 
-set CMAKE_skip_unittests=ON
+set CMAKE_run_unittests=OFF
 goto :args-continue
 :arg-skip-dotnet 
 set build-skip-dotnet=1
@@ -158,15 +158,15 @@ if "%CMAKE-version%" == "" exit /b 1
 pushd %build-root%\cmake\%build-platform%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
-    call cmake %CMAKE_toolset% -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == arm (
     echo ***Running CMAKE for ARM***
-    call cmake %CMAKE_toolset% -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else (
     echo ***Running CMAKE for Win32***
-    call cmake %CMAKE_toolset% -Dskip_unittests:BOOL=%CMAKE_skip_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver%"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver%"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
@@ -185,7 +185,7 @@ if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "MinSize
 call cmake --build . --config %1
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 if %build-platform% equ arm goto :eof
-if "%CMAKE_skip_unittests%" equ "ON" goto :eof
+if "%CMAKE_run_unittests%" equ "OFF" goto :eof
 call ctest -C "%1" -V
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof

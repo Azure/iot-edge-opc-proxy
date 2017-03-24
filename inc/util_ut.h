@@ -76,7 +76,8 @@ static void on_umock_c_error(
     case UMOCK_C_NULL_ARGUMENT:               ASSERT_FAIL("NULL_ARGUMENT");
     case UMOCK_C_INVALID_PAIRED_CALLS:        ASSERT_FAIL("INVALID_PAIRED_CALLS");
     case UMOCK_C_REGISTER_TYPE_FAILED:        ASSERT_FAIL("UMOCK_C_REGISTER_TYPE_FAILED");
-    case UMOCK_C_ERROR:                       break; // ASSERT_FAIL("ERROR"); 
+    case UMOCK_C_ERROR:                       
+        break; // ASSERT_FAIL("ERROR"); 
     }
 }
 

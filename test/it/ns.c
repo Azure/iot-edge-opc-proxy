@@ -249,5 +249,6 @@ int main(int argc, char *argv[])
 
     log_deinit();
 
+    mem_deinit();
     return result;
 }

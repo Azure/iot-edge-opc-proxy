@@ -13,6 +13,7 @@
 #include "pal_sk.h"
 #include "pal_time.h"
 #include "pal_rand.h"
+#include "pal_cred.h"
 
 static pal_diag_callback_t diag_callback = NULL;
 static uint32_t capabilities = pal_not_init;
@@ -88,16 +89,23 @@ int32_t pal_init(
                 break;
         }
 
+        // Initialize secret store 
+        result = pal_cred_init();
+        if (result == er_ok)
+            capabilities |= pal_cap_cred;
+        else if (result != er_not_supported)
+        {
+            log_error(NULL, "Failed to init cred pal (%s).",
+                prx_err_string(result));
+            break;
+        }
+
         // Initialize file 
         result = pal_file_init();
         if (result == er_ok)
             capabilities |= pal_cap_file;
         else if (result != er_not_supported)
         {
-            pal_rand_deinit();
-            pal_time_deinit();
-            pal_err_deinit();
-
             log_error(NULL, "Failed to init file pal (%s).", 
                 prx_err_string(result));
             break;
@@ -120,16 +128,38 @@ int32_t pal_init(
             capabilities |= pal_cap_wsclient;
         else if (result != er_not_supported)
         {
-            log_error(NULL, "Failed to init websocket pal (%s).",
+            log_error(NULL, "Failed to init wsclient pal (%s).",
                 prx_err_string(result));
             break;
         }
+
+        // Success...
         return er_ok;
     } 
     while (0);
 
-    pal_deinit();
+    if (capabilities == pal_not_init)
+    {
+        pal_rand_deinit();
+        pal_time_deinit();
+        pal_err_deinit();
+    }
+    else
+    {
+        pal_deinit();
+    }
+    diag_callback = NULL;
     return result;
+}
+
+//
+// Post init, returns the capabilties of the pal.
+//
+uint32_t pal_caps(
+    void
+)
+{
+    return capabilities;
 }
 
 //
@@ -151,10 +181,11 @@ int32_t pal_deinit(
     if (capabilities & pal_cap_file)
         pal_file_deinit();
 
+    if (capabilities & pal_cap_cred)
+        pal_cred_deinit();
+
     pal_rand_deinit();
-
     pal_time_deinit();
-
     pal_err_deinit();
 
     capabilities = pal_not_init;

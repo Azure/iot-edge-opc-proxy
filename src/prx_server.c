@@ -1060,12 +1060,16 @@ static int32_t prx_server_socket_handle_openrequest(
                 entry, prx_server_socket_control_handler, server_sock,
                 server_sock->server->scheduler, &server_sock->stream);
         }
-        else
+        else if (pal_caps() & pal_cap_wsclient)
         {
             // ... otherwise transport is websocket based, and stream handler.
             result = io_transport_create(io_iot_hub_ws_server_transport(),
                 entry, prx_server_socket_stream_handler, server_sock,
                 server_sock->server->scheduler, &server_sock->stream);
+        }
+        else
+        {
+            result = er_not_supported;
         }
         if (result != er_ok)
             break;

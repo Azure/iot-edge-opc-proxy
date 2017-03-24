@@ -3,7 +3,7 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace simple_client {
+namespace Microsoft.Azure.Devices.Proxy.Samples {
     using System;
     using System.Collections.Generic;
     using System.Text;

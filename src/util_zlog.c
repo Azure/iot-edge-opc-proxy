@@ -441,6 +441,7 @@ BOOL __stdcall DllMain(
         _set_invalid_parameter_handler(invalid_parameter);
         break;
     case DLL_PROCESS_DETACH:
+        mem_deinit();
         break;
     case DLL_THREAD_ATTACH:
         break;

@@ -15,6 +15,7 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_cred_stub_ut.c.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_sk_posix_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_ws_lws_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_err_posix_ut.c" />

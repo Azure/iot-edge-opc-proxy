@@ -5,11 +5,13 @@
 #include "util_string.h"
 #include "util_stream.h"
 #include "prx_ns.h"
+#include "prx_config.h"
 
 #include "pal_file.h"
 #include "pal_mt.h"
 #include "azure_c_shared_utility/strings.h"
 #include "azure_c_shared_utility/httpapiexsas.h"
+#include "azure_c_shared_utility/shared_util_options.h"
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "parson.h"
 
@@ -275,32 +277,6 @@ static int32_t prx_ns_generic_entry_get_addr(
 }
 
 //
-// No op for generic entries
-//
-static int32_t prx_ns_generic_entry_get_routes(
-    void* context,
-    prx_ns_result_t** routes
-)
-{
-    (void)context;
-    (void)routes;
-    return er_not_found;
-}
-
-//
-// No op for generic entries
-//
-static int32_t prx_ns_generic_entry_add_route(
-    void* context,
-    prx_ns_entry_t* route
-)
-{
-    (void)context;
-    (void)route;
-    return er_not_supported;
-}
-
-//
 // Create generic entry from connection string
 //
 static int32_t prx_ns_generic_entry_create(
@@ -448,10 +424,6 @@ static int32_t prx_ns_generic_entry_create(
             prx_ns_generic_entry_get_index;
         entry->itf.get_name =
             prx_ns_generic_entry_get_name;
-        entry->itf.get_routes =
-            prx_ns_generic_entry_get_routes;
-        entry->itf.add_route =
-            prx_ns_generic_entry_add_route;
         entry->itf.get_links =
             prx_ns_generic_entry_get_links;
         entry->itf.get_type =
@@ -740,6 +712,8 @@ static int32_t prx_ns_generic_registry_entry_delete(
         registry->num_entries--;
         (void)prx_ns_generic_registry_save(registry);
         rw_lock_exit_w(registry->entries_lock);
+
+        io_cs_remove_keys(next->cs);
         prx_ns_generic_entry_free(next);
         return er_ok;
     }
@@ -1054,6 +1028,46 @@ static int32_t prx_ns_iot_hub_rest_status_code_to_prx_error(
 }
 
 //
+// Set proxy information on handle if configured
+//
+static void prx_ns_iot_hub_rest_call_configure_proxy(
+    HTTPAPIEX_HANDLE http_handle
+)
+{
+    int32_t result;
+    HTTP_PROXY_OPTIONS proxy_options;
+    const char* ptr;
+    char* buffer;
+
+    dbg_assert_ptr(http_handle);
+
+    ptr = __prx_config_get(prx_config_key_proxy_host, NULL);
+    if (!ptr)
+        return;
+    proxy_options.username = __prx_config_get(prx_config_key_proxy_user, NULL);
+    proxy_options.password = __prx_config_get(prx_config_key_proxy_pwd, NULL);
+    // Create a copy so we can parse the port number
+    result = string_clone(ptr, &buffer);
+    if (result != er_ok)
+        return;
+    proxy_options.host_address = ptr = buffer;
+    proxy_options.port = 0;
+    while (*ptr && *ptr != ':')
+        ptr++;
+    if (*ptr)
+    {
+        *(char*)ptr = 0;
+        proxy_options.port = atoi(++ptr);
+    }
+    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
+        &proxy_options))
+    {
+        log_debug(NULL, "Failed to configure proxy settings with httpapi");
+    }
+    mem_free(buffer);
+}
+
+//
 // Make REST call
 //
 static int32_t prx_ns_iot_hub_rest_call(
@@ -1072,8 +1086,9 @@ static int32_t prx_ns_iot_hub_rest_call(
     HTTPAPIEX_RESULT http_result;
     HTTPAPIEX_HANDLE http_handle = NULL;
     HTTP_HEADERS_HANDLE request_headers = NULL, response_headers = NULL;
-    HTTPAPIEX_SAS_HANDLE sas_handle = NULL;
-    STRING_HANDLE path = NULL, key = NULL, key_name = NULL, request_id = NULL;
+    STRING_HANDLE token = NULL, path = NULL, request_id = NULL;
+    io_token_provider_t* provider = NULL;
+    int64_t ttl;
 
     dbg_assert_ptr(spec);
     dbg_assert_ptr(uri);
@@ -1081,15 +1096,17 @@ static int32_t prx_ns_iot_hub_rest_call(
 
     do
     {
+        result = io_cs_create_token_provider(spec, &provider);
+        if (result != er_ok)
+            break;
+
+        result = io_token_provider_new_token(provider, &token, &ttl);
+        if (result != er_ok)
+            break;
+
         result = er_out_of_memory;
         path = STRING_construct(io_cs_get_host_name(spec));
         if (!path || 0 != STRING_concat(path, uri))
-            break;
-
-        key_name = STRING_construct(io_cs_get_shared_access_key_name(spec));
-        key = STRING_construct(io_cs_get_shared_access_key(spec));
-        sas_handle = HTTPAPIEX_SAS_Create(key, path, key_name);
-        if (!sas_handle)
             break;
 
         if (!req_headers)
@@ -1101,7 +1118,7 @@ static int32_t prx_ns_iot_hub_rest_call(
 
         if (!resp_headers)
         {
-            response_headers = resp_headers= HTTPHeaders_Alloc();
+            response_headers = resp_headers = HTTPHeaders_Alloc();
             if (!response_headers)
                 break;
         }
@@ -1111,7 +1128,7 @@ static int32_t prx_ns_iot_hub_rest_call(
             break;
 
         if (0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "Authorization", " ") ||
+                req_headers, "Authorization", STRING_c_str(token)) ||
             0 != HTTPHeaders_AddHeaderNameValuePair(
                 req_headers, "Request-Id", STRING_c_str(request_id)) ||
             0 != HTTPHeaders_AddHeaderNameValuePair(
@@ -1142,8 +1159,9 @@ static int32_t prx_ns_iot_hub_rest_call(
         http_handle = HTTPAPIEX_Create(io_cs_get_host_name(spec));
         if (!http_handle)
             break;
+        prx_ns_iot_hub_rest_call_configure_proxy(http_handle);
 
-        http_result = HTTPAPIEX_SAS_ExecuteRequest(sas_handle, http_handle, type,
+        http_result = HTTPAPIEX_ExecuteRequest(http_handle, type,
             STRING_c_str(path), req_headers,
             request, (unsigned int*)status_code, resp_headers, response);
         if (http_result != HTTPAPIEX_OK)
@@ -1159,10 +1177,8 @@ static int32_t prx_ns_iot_hub_rest_call(
 
     } while (result == er_retry);
 
-    if (key)
-        STRING_delete(key);
-    if (key_name)
-        STRING_delete(key_name);
+    if (token)
+        STRING_delete(token);
     if (path)
         STRING_delete(path);
     if (request_id)
@@ -1171,8 +1187,8 @@ static int32_t prx_ns_iot_hub_rest_call(
         HTTPHeaders_Free(request_headers);
     if (response_headers)
         HTTPHeaders_Free(response_headers);
-    if (sas_handle)
-        HTTPAPIEX_SAS_Destroy(sas_handle);
+    if (provider)
+        io_token_provider_release(provider);
     if (http_handle)
         HTTPAPIEX_Destroy(http_handle);
 
@@ -1374,32 +1390,6 @@ static int32_t prx_ns_iot_hub_twin_entry_get_links(
 }
 
 //
-// Add route entry to this entry
-//
-static int32_t prx_ns_iot_hub_twin_entry_add_route(
-    void* context,
-    prx_ns_entry_t* route
-)
-{
-    (void)context;
-    (void)route;
-    return er_not_impl;
-}
-
-//
-// Returns routing proxys for host, start to iterate
-//
-static int32_t prx_ns_iot_hub_twin_entry_get_routes(
-    void* context,
-    prx_ns_result_t** routes
-)
-{
-    (void)context;
-    (void)routes;
-    return er_not_found;
-}
-
-//
 // Free entry
 //
 static void prx_ns_iot_hub_twin_entry_free(
@@ -1492,10 +1482,6 @@ static int32_t prx_ns_iot_hub_twin_entry_create(
             prx_ns_iot_hub_twin_entry_get_index;
         entry->itf.get_name =
             prx_ns_iot_hub_twin_entry_get_name;
-        entry->itf.get_routes =
-            prx_ns_iot_hub_twin_entry_get_routes;
-        entry->itf.add_route =
-            prx_ns_iot_hub_twin_entry_add_route;
         entry->itf.get_links =
             prx_ns_iot_hub_twin_entry_get_links;
         entry->itf.get_type =

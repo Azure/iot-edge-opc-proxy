@@ -5,7 +5,6 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
-    using System.Linq;
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
@@ -182,15 +181,24 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsBound = true;
             }
             catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during Connect", e, e.GetSocketError());
+                throw new SocketException($"Exception connecting to {endpoint.ToString()}", 
+                    e, e.GetSocketError());
             }
         }
 
         //
         // Without cancellation token
         //
-        public Task ConnectAsync(SocketAddress endpoint) =>
-            ConnectAsync(endpoint, CancellationToken.None);
+        public async Task ConnectAsync(SocketAddress endpoint) {
+            var cts = new CancellationTokenSource(ConnectTimeout);
+            try {
+                await ConnectAsync(endpoint, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout after {ConnectTimeout.ToString()} connecting to {endpoint.ToString()}.");
+            }
+        }
 
         //
         // Sync connect
@@ -262,15 +270,24 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsBound = true;
             }
             catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during Bind", e, e.GetSocketError());
+                throw new SocketException($"Exception binding to {endpoint.ToString()}", 
+                    e, e.GetSocketError());
             }
         }
 
         //
         // Without cancellation token
         //
-        public Task BindAsync(SocketAddress endpoint) =>
-            BindAsync(endpoint, CancellationToken.None);
+        public async Task BindAsync(SocketAddress endpoint) {
+            var cts = new CancellationTokenSource(ConnectTimeout);
+            try {
+                await BindAsync(endpoint, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout after {ConnectTimeout.ToString()} binding to {endpoint.ToString()}.");
+            }
+        }
 
         //
         // Bind, sync
@@ -342,8 +359,16 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Without cancellation token
         //
-        public Task ListenAsync(int backlog = int.MaxValue) =>
-            ListenAsync(backlog, CancellationToken.None);
+        public async Task ListenAsync(int backlog = int.MaxValue) {
+            var cts = new CancellationTokenSource(ConnectTimeout);
+            try {
+                await ListenAsync(backlog, cts.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cts.IsCancellationRequested) {
+                throw new TimeoutException(
+                    $"Timeout on listen after {ConnectTimeout.ToString()}.");
+            }
+        }
 
         //
         // Same, but sync

@@ -37,7 +37,7 @@ typedef struct io_iot_hub_umqtt_connection
     io_iot_hub_connection_t base;           // Common connection members
     io_mqtt_connection_t* mqtt_connection; // Underlying mqtt connection
     io_mqtt_subscription_t* subscription;   // Receiver subscription ...
-    prx_buffer_factory_t* buffer_pool;        // plus dynamic buffer pool
+    prx_buffer_factory_t* buffer_pool;       // plus dynamic buffer pool
     log_t log;
 }
 io_iot_hub_umqtt_connection_t;

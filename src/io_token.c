@@ -6,9 +6,11 @@
 #include "util_string.h"
 #include "prx_config.h"
 #include "pal_time.h"
+#include "pal_cred.h"
 
 #include "azure_c_shared_utility/refcount.h"
-#include "azure_c_shared_utility/sastoken.h"
+#include "azure_c_shared_utility/urlencode.h"
+#include "azure_c_shared_utility/buffer_.h"
 
 #define DEFAULT_RENEWAL_TIMEOUT_SEC 10 * 60
 
@@ -39,6 +41,85 @@ typedef struct io_passthru_token_provider
 io_passthru_token_provider_t;
 
 DEFINE_REFCOUNT_TYPE(io_passthru_token_provider_t);
+
+//
+// Build sas token
+//
+static int32_t io_sas_token_create(
+    STRING_HANDLE key_or_handle,
+    const char* scope,
+    const char* keyname,
+    size_t expiry,
+    STRING_HANDLE* created
+)
+{
+    int32_t result;
+    uint8_t hmac[32];
+
+    STRING_HANDLE hash_string;
+    STRING_HANDLE token = NULL;
+    BUFFER_HANDLE hash = NULL;
+    STRING_HANDLE signature = NULL;
+    STRING_HANDLE url_encode = NULL;
+
+    hash_string = STRING_new();
+    if (!hash_string)
+        return er_out_of_memory;
+    do
+    {
+        // Create signature
+        result = er_out_of_memory;
+        hash_string = STRING_new();
+        if (!hash_string)
+            break;
+        if (0 != STRING_concat(hash_string, scope) ||
+            0 != STRING_concat(hash_string, "\n") ||
+            0 != STRING_concat_int(hash_string, (int)expiry, 10))
+            break;
+
+        result = pal_cred_hmac_sha256(key_or_handle, 
+            STRING_c_str(hash_string), STRING_length(hash_string), 
+            hmac, sizeof(hmac));
+        if (result != er_ok)
+            break;
+
+        // url encode base64 hmac
+        result = er_out_of_memory;
+        signature = STRING_construct_base64(hmac, sizeof(hmac));
+        if (!signature)
+            break;
+        url_encode = URL_Encode(signature);
+        if (!url_encode)
+            break;
+        token = STRING_construct("SharedAccessSignature sr=");
+        if (!token)
+            break;
+        if (0 != STRING_concat(token, scope) ||
+            0 != STRING_concat(token, "&sig=") ||
+            0 != STRING_concat_with_STRING(token, url_encode) ||
+            0 != STRING_concat(token, "&se=") ||
+            0 != STRING_concat_int(token, (int)expiry, 10) ||
+            0 != STRING_concat(token, "&skn=") ||
+            0 != STRING_concat(token, keyname))
+            break;
+
+        *created = token;
+        token = NULL;
+        result = er_ok;
+        break;
+    } while (0);
+    STRING_delete(hash_string);
+
+    if (token)
+        STRING_delete(token);
+    if (signature)
+        STRING_delete(signature);
+    if (url_encode)
+        STRING_delete(url_encode);
+    if (hash)
+        BUFFER_delete(hash);
+    return result;
+}
 
 //
 // Destroy the iothub provider context, i.e. the shared access key
@@ -110,25 +191,27 @@ static int32_t io_token_provider_on_new_iothub_token(
     int64_t* ttl
 )
 {
+    int32_t result;
     io_sas_token_provider_t* provider = (io_sas_token_provider_t*)context;
-    dbg_assert_ptr(provider);
-    dbg_assert_ptr(token);
-    dbg_assert_ptr(ttl);
-
-    *token = SASToken_Create(provider->shared_access_key, provider->scope, 
-        provider->policy, (int32_t)get_time(NULL) + provider->ttl_in_seconds);
-    if (!*token)
-        return er_out_of_memory;
-    // Leave 20 % to renew
-    *ttl = (provider->ttl_in_seconds * 800);
-    return er_ok;
+    if (!provider || !token || !ttl)
+        return er_fault;
+    // Create token
+    result = io_sas_token_create(provider->shared_access_key, 
+        STRING_c_str(provider->scope), STRING_c_str(provider->policy), 
+        (int32_t)get_time(NULL) + provider->ttl_in_seconds, token);
+    if (result == er_ok)
+    {
+        // Leave 20 % to renew
+        *ttl = (provider->ttl_in_seconds * 800);
+    }
+    return result;
 }
 
 //
 // Helper to create token provider object
 //
 static int32_t io_sas_token_provider_create(
-    const char* shared_access_key,
+    STRING_HANDLE key_or_handle,
     const char* scope,
     const char* policy,
     int32_t ttl_in_seconds,
@@ -161,7 +244,7 @@ static int32_t io_sas_token_provider_create(
         provider->policy = 
             STRING_construct(policy ? policy : "");
         provider->shared_access_key = 
-            STRING_construct(shared_access_key);
+            STRING_clone(key_or_handle);
 
         if (!provider->scope || 
             !provider->policy || 
@@ -334,14 +417,14 @@ bool io_token_provider_is_equivalent(
 //
 int32_t io_iothub_token_provider_create(
     const char* policy,
-    const char* shared_access_key,
+    STRING_HANDLE key_or_handle,
     const char* scope,
     io_token_provider_t** provider
 )
 {
     int32_t timeout = __prx_config_get_int(prx_config_key_token_ttl, 
         DEFAULT_RENEWAL_TIMEOUT_SEC);
-    return io_sas_token_provider_create(shared_access_key, scope, policy, timeout,
-        io_token_provider_on_new_iothub_token, provider);
+    return io_sas_token_provider_create(key_or_handle, scope,
+        policy, timeout, io_token_provider_on_new_iothub_token, provider);
 }
 

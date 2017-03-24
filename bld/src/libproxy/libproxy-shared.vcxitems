@@ -21,6 +21,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\api.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_module.h" />

@@ -209,6 +209,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c">

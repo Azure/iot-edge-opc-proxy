@@ -5,7 +5,7 @@
 current_root=$(pwd)
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 
-skip_unittests=OFF
+run_unittests=ON
 skip_dotnet=0
 use_zlog=OFF
 MAKE_PARALLEL_JOBS=1
@@ -85,7 +85,7 @@ process_args ()
 		build_pack_only=1
                 shift ;;
 	    --skip-unittests)
-		skip_unittests=ON
+		run_unittests=OFF
                 shift ;;
 	    --skip-dotnet)
 		skip_dotnet=1
@@ -120,7 +120,7 @@ native_build()
 			mkdir -p "${build_root}/cmake/${c}"
 			cd "${build_root}/cmake/${c}" > /dev/null
 
-			cmake -DCMAKE_BUILD_TYPE=$c -Dskip_unittests:BOOL=$skip_unittests \
+			cmake -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
 			      -Duse_zlog:BOOL=$use_zlog "$repo_root" \
                               -DLWS_IPV6:BOOL=ON || \
 			    return 1
@@ -129,7 +129,7 @@ native_build()
 			# Be verbose if something goes wrong
 			make -j$MAKE_PARALLEL_JOBS --load-average=`nproc` || make VERBOSE=1 || \
 				return 1
-			if [ $skip_unittests == ON ]; then
+			if [ $run_unittests == OFF ]; then
 				echo "Skipping unittests..."
 			else
 				#use doctored (-DPURIFY no-asm) openssl

@@ -44,6 +44,7 @@ set(_PROXY_COMPONENTS
 if(WIN32)
     set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
         pal_err_win
+        pal_cred_win
         pal_file_win
         pal_main_win
         pal_mt_win
@@ -77,6 +78,23 @@ else()
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_openssl)
     endif()
 
+    include(FindPkgConfig)
+    pkg_check_modules(LIBSECRET libsecret-1)
+    if(LIBSECRET_FOUND)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_gnome)
+        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBSECRET_LIBRARIES})
+        set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBSECRET_INCLUDE_DIRS})
+        set(_PAL_DEP_DEFS ${_PAL_DEP_DEFS} __HAVE_LIBSECRET=1)
+    else()
+    pkg_check_modules(LIBGNOMEKEYRING gnome-keyring-1)
+    if(LIBGNOMEKEYRING_FOUND)
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_gnome)
+        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBGNOMEKEYRING_LIBRARIES})
+        set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBGNOMEKEYRING_INCLUDE_DIRS})
+    else()
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_stub)
+    endif()
+    endif()
     if(LINUX)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
             pal_ev_epoll
@@ -192,6 +210,7 @@ endif()
 if(${use_openssl})
     target_include_directories(libproxy PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
+    target_include_directories(libproxy PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy
 		PRIVATE _POSIX_C_SOURCE=200112L
@@ -216,6 +235,7 @@ else()
         PRIVATE ${CURL_LIBRARIES}
         PRIVATE pthread m
     )
+    target_link_libraries(libproxy PRIVATE ${_PAL_DEP_LIBS})
 endif()
 if(${use_lws})
     target_link_libraries(libproxy PRIVATE websockets_shared)
@@ -224,6 +244,7 @@ if(${use_openssl})
 	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy PRIVATE ${OPENSSL_LIBRARIES})
 endif()
+    target_compile_definitions(libproxy PRIVATE ${_PAL_DEP_DEFS})
 
 #
 # proxy static library target
@@ -253,12 +274,14 @@ endif()
 if(${use_openssl})
     target_include_directories(libproxy-static PRIVATE ${OPENSSL_INCLUDE_DIR})
 endif()
+    target_include_directories(libproxy-static PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy-static
 		PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
+    target_compile_definitions(libproxy-static PRIVATE ${_PAL_DEP_DEFS})
 
 if(WIN32)
     target_link_libraries(libproxy-static
@@ -282,11 +305,13 @@ if (${use_lws})
     target_link_libraries(libproxy-static PUBLIC websockets_shared)
 endif()
 if(${use_openssl})
-	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
+	target_compile_definitions(libproxy-static PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
+    target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
 
-# Try to define the verision from the closest parent git tag and the current Git hash.
+# Try to define the version from the closest parent git tag and 
+# the current Git hash.
 find_package(Git)
 if(GIT_EXECUTABLE)
 	execute_process(

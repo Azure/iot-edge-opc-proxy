@@ -5,6 +5,7 @@
 #include "io_mqtt.h"
 #include "io_queue.h"
 #include "xio_sk.h"
+#include "pal.h"
 #include "pal_time.h"
 #include "util_string.h"
 
@@ -964,18 +965,17 @@ static void io_mqtt_connection_reconnect(
             if (!connection->address->scheme)
                 connection->is_websocket = !connection->is_websocket;
 
-            if (connection->is_websocket)
+            if (connection->is_websocket && (pal_caps() & pal_cap_wsclient))
             {
                 memset(&ws_io_config, 0, sizeof(WSIO_CONFIG));
-                ws_io_config.host = 
+                ws_io_config.hostname = 
                     STRING_c_str(connection->address->host_name);
                 ws_io_config.port =
                     connection->address->port ? connection->address->port : 443;
-                ws_io_config.protocol_name =
+                ws_io_config.protocol =
                     "MQTT";
-                ws_io_config.relative_path = 
+                ws_io_config.resource_name = 
                     STRING_c_str(connection->address->path);
-                ws_io_config.use_ssl = true;
 
                 connection->socket_io = xio_create(
                     wsio_get_interface_description(), &ws_io_config);
@@ -984,6 +984,7 @@ static void io_mqtt_connection_reconnect(
             }
             else
             {
+                memset(&tls_io_config, 0, sizeof(tls_io_config));
                 tls_io_config.port = 
                     connection->address->port ? connection->address->port : 8883;
                 tls_io_config.hostname = STRING_c_str(connection->address->host_name);

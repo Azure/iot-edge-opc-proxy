@@ -353,7 +353,7 @@ TEST_FUNCTION(STRING_construct_random__neg)
 // 
 TEST_FUNCTION(STRING_construct_utf8__success)
 {
-    static const unsigned char k_buf_valid[] = { 'a', 127, 'b', 128, 'c', 129, 'd', 180, 'e', 255 };
+    static const uint8_t k_buf_valid[] = { 'a', 127, 'b', 128, 'c', 129, 'd', 180, 'e', 255 };
     static const size_t k_buf_len_valid = sizeof(k_buf_valid);
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0xabcde0;
     STRING_HANDLE result;
@@ -375,7 +375,7 @@ TEST_FUNCTION(STRING_construct_utf8__success)
 }
 
 // 
-// Test STRING_construct_utf8 passing as buf argument an invalid const unsigned char* value 
+// Test STRING_construct_utf8 passing as buf argument an invalid const uint8_t* value 
 // 
 TEST_FUNCTION(STRING_construct_utf8__arg_buf_invalid)
 {
@@ -396,7 +396,7 @@ TEST_FUNCTION(STRING_construct_utf8__arg_buf_invalid)
 // 
 TEST_FUNCTION(STRING_construct_utf8__arg_buf_len_invalid)
 {
-    static const unsigned char k_buf_valid[] = { 'a', 199, 'b', 127, 'c', 99, 'd', 0 };
+    static const uint8_t k_buf_valid[] = { 'a', 199, 'b', 127, 'c', 99, 'd', 0 };
     STRING_HANDLE result;
 
     // arrange 
@@ -414,7 +414,7 @@ TEST_FUNCTION(STRING_construct_utf8__arg_buf_len_invalid)
 // 
 TEST_FUNCTION(STRING_construct_utf8__neg)
 {
-    static const unsigned char k_buf_valid[] = { 1, 127, 2, 128, 3, 129, 4, 180, 0, 255 };
+    static const uint8_t k_buf_valid[] = { 1, 127, 2, 128, 3, 129, 4, 180, 0, 255 };
     static const size_t k_buf_len_valid = sizeof(k_buf_valid);
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0xabcd0;
     STRING_HANDLE result;
@@ -435,6 +435,98 @@ TEST_FUNCTION(STRING_construct_utf8__neg)
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = STRING_construct_utf8(k_buf_valid, k_buf_len_valid);
+
+    // assert 
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL, NULL, k_string_handle_valid);
+}
+
+// 
+// Test STRING_construct_base16 happy path 
+// 
+TEST_FUNCTION(STRING_construct_base16__success)
+{
+    static const uint8_t k_buf_valid[] = { 1, 127, 2, 128, 3, 129, 4, 180, 0, 255 };
+    static const size_t k_buf_len_valid = sizeof(k_buf_valid);
+    static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0xabcde0;
+    STRING_HANDLE result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(c_realloc(21, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_new_with_memory(IGNORED_PTR_ARG))
+        .IgnoreArgument(1)
+        .SetReturn(k_string_handle_valid);
+
+    // act 
+    result = STRING_construct_base16(k_buf_valid, k_buf_len_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
+}
+
+// 
+// Test STRING_construct_base16 passing as buf argument an invalid const uint8_t* value 
+// 
+TEST_FUNCTION(STRING_construct_base16__arg_buf_invalid)
+{
+    STRING_HANDLE result;
+
+    // arrange 
+
+    // act 
+    result = STRING_construct_base16(NULL, 14);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
+}
+
+// 
+// Test STRING_construct_base16 passing as buf_len argument an invalid size_t value 
+// 
+TEST_FUNCTION(STRING_construct_base16__arg_buf_len_invalid)
+{
+    static const uint8_t k_buf_valid[] = { 1, 127, 2, 128, 3, 129, 4, 180, 0, 255 };
+    STRING_HANDLE result;
+
+    // arrange 
+
+    // act 
+    result = STRING_construct_base16(k_buf_valid, 0);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
+}
+
+// 
+// Test STRING_construct_base16 unhappy path 
+// 
+TEST_FUNCTION(STRING_construct_base16__neg)
+{
+    static const uint8_t k_buf_valid[] = { 1, 127, 2, 128, 3, 129, 4, 180, 0, 255 };
+    static const size_t k_buf_len_valid = sizeof(k_buf_valid);
+    static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0xabcd0;
+    STRING_HANDLE result;
+
+    // arrange 
+    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
+    STRICT_EXPECTED_CALL(c_realloc(21, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_new_with_memory(IGNORED_PTR_ARG))
+        .IgnoreArgument(1)
+        .SetReturn(k_string_handle_valid)
+        .SetFailReturn((STRING_HANDLE)NULL);
+    STRICT_EXPECTED_CALL(c_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+
+    // act 
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = STRING_construct_base16(k_buf_valid, k_buf_len_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL, NULL, k_string_handle_valid);
@@ -2997,70 +3089,46 @@ TEST_FUNCTION(string_key_value_parser__arg_visitor_invalid)
 }
 
 // 
-// Test string_to_byte_array happy path 
+// Test string_base16_to_byte_array happy path 
 // 
-TEST_FUNCTION(string_to_byte_array__success_1)
+TEST_FUNCTION(string_base16_to_byte_array__success)
 {
-    static const char* k_val_valid = "abcdefghijklmnop!\"$%/&()=#";
-    unsigned char* buffer_valid;
-    size_t len_valid;
+    static const char* k_val_valid = "7d45f092";
+    static const uint8_t k_buffer_valid[] = { 0x7d, 0x45, 0xf0, 0x92 };
+    uint8_t* buffer_valid = NULL;
+    size_t len_valid = 0;
     int32_t result;
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
     // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(26, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(h_realloc(4, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
 
     // act 
-    result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
+    result = string_base16_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_ARE_EQUAL(void_ptr, (void*)UT_MEM, (void*)buffer_valid);
+    ASSERT_ARE_EQUAL(int32_t, (int32_t)len_valid, 4);
+    ASSERT_IS_TRUE(0 == memcmp(buffer_valid, k_buffer_valid, sizeof(k_buffer_valid)));
 }
 
 // 
-// Test string_to_byte_array happy path 
+// Test string_base16_to_byte_array passing as val argument an invalid const char* value 
 // 
-TEST_FUNCTION(string_to_byte_array__success_2)
+TEST_FUNCTION(string_base16_to_byte_array__arg_val_null)
 {
-    static const char* k_val_valid = "ABC";
-    unsigned char* buffer_valid;
-    size_t len_valid;
-    int32_t result;
-
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-
-    // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(3, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-
-    // act 
-    result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_ARE_EQUAL(char_ptr, k_val_valid, (const char*)buffer_valid);
-}
-
-// 
-// Test string_to_byte_array passing as val argument an invalid const char* value 
-// 
-TEST_FUNCTION(string_to_byte_array__arg_val_invalid)
-{
-    unsigned char* buffer_valid;
-    size_t len_valid;
+    uint8_t* buffer_valid = NULL;
+    size_t len_valid = 0;
     int32_t result;
 
     // arrange 
 
     // act 
-    result = string_to_byte_array(NULL, &buffer_valid, &len_valid);
+    result = string_base16_to_byte_array(NULL, &buffer_valid, &len_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3068,19 +3136,44 @@ TEST_FUNCTION(string_to_byte_array__arg_val_invalid)
 }
 
 // 
-// Test string_to_byte_array passing as val argument an invalid const char* value 
+// Test string_base16_to_byte_array passing as val argument an invalid const char* value 
 // 
-TEST_FUNCTION(string_to_byte_array__arg_val_empty)
+TEST_FUNCTION(string_base16_to_byte_array__arg_val_invalid)
+{
+    static const char* k_val_invalid = "XYZB";
+    uint8_t* buffer_valid = NULL;
+    size_t len_valid = 0;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(2, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+
+    // act 
+    result = string_base16_to_byte_array(k_val_invalid, &buffer_valid, &len_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_base16_to_byte_array passing as val argument an invalid const char* value 
+// 
+TEST_FUNCTION(string_base16_to_byte_array__arg_val_empty)
 {
     static const char* k_val_invalid = "";
-    unsigned char* buffer_valid;
-    size_t len_valid;
+    uint8_t* buffer_valid = NULL;
+    size_t len_valid = 0;
     int32_t result;
 
     // arrange 
 
     // act 
-    result = string_to_byte_array(k_val_invalid, &buffer_valid, &len_valid);
+    result = string_base16_to_byte_array(k_val_invalid, &buffer_valid, &len_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3088,18 +3181,18 @@ TEST_FUNCTION(string_to_byte_array__arg_val_empty)
 }
 
 // 
-// Test string_to_byte_array passing as buffer argument an invalid unsigned char** value 
+// Test string_base16_to_byte_array passing as buffer argument an invalid uint8_t** value 
 // 
-TEST_FUNCTION(string_to_byte_array__arg_buffer_invalid)
+TEST_FUNCTION(string_base16_to_byte_array__arg_buffer_invalid)
 {
-    static const char* k_val_valid = "0123456789!\"$%/&()=+-";
-    size_t len_valid;
+    static const char* k_val_valid = "7d45f092";
+    size_t len_valid = 0;
     int32_t result;
 
     // arrange 
 
     // act 
-    result = string_to_byte_array(k_val_valid, NULL, &len_valid);
+    result = string_base16_to_byte_array(k_val_valid, NULL, &len_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3107,18 +3200,18 @@ TEST_FUNCTION(string_to_byte_array__arg_buffer_invalid)
 }
 
 // 
-// Test string_to_byte_array passing as len argument an invalid size_t* value 
+// Test string_base16_to_byte_array passing as len argument an invalid size_t* value 
 // 
-TEST_FUNCTION(string_to_byte_array__arg_len_invalid)
+TEST_FUNCTION(string_base16_to_byte_array__arg_len_invalid)
 {
-    static const char* k_val_valid = "0123456789!\"$%/&()=#";
-    unsigned char* buffer_valid;
+    static const char* k_val_valid = "7d45f092";
+    uint8_t* buffer_valid = NULL;
     int32_t result;
 
     // arrange 
 
     // act 
-    result = string_to_byte_array(k_val_valid, &buffer_valid, NULL);
+    result = string_base16_to_byte_array(k_val_valid, &buffer_valid, NULL);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3126,22 +3219,22 @@ TEST_FUNCTION(string_to_byte_array__arg_len_invalid)
 }
 
 // 
-// Test string_to_byte_array unhappy path 
+// Test string_base16_to_byte_array unhappy path 
 // 
-TEST_FUNCTION(string_to_byte_array__neg)
+TEST_FUNCTION(string_base16_to_byte_array__neg)
 {
-    static const char* k_val_valid = "k_val_valid";
-    unsigned char* buffer_valid;
-    size_t len_valid;
+    static const char* k_val_valid = "7d45f092";
+    uint8_t* buffer_valid = NULL;
+    size_t len_valid = 0;
     int32_t result;
 
     // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(11, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(h_realloc(4, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn(NULL);
 
     // act 
-    result = string_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
+    result = string_base16_to_byte_array(k_val_valid, &buffer_valid, &len_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
