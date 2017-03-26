@@ -25,21 +25,6 @@ typedef enum pal_capabilities
 pal_capabilities_t;
 
 //
-// Called when a new logger entry for $diag was pushed
-//
-typedef void(*pal_diag_callback_t)(
-    const char* target,
-    const char* msg
-    );
-
-//
-// Hook for diagnostic callbacks
-//
-decl_public_1(int32_t, pal_set_diag_callback,
-    pal_diag_callback_t, cb
-);
-
-//
 // Initialize pal
 //
 decl_public_0(int32_t, pal_init,

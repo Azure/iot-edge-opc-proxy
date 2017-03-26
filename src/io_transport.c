@@ -54,6 +54,34 @@ typedef struct io_iot_hub_ws_connection
 }
 io_iot_hub_ws_connection_t;
 
+
+//
+// Start to receive log messages
+//
+static void io_iot_hub_connection_log_telemetry_callback(
+    log_entry_t* msg
+)
+{
+#if defined(NO_ZLOG)
+    (void)msg;
+#else
+    dbg_assert_ptr(msg);
+    // _cb(msg->target, msg->msg);
+#endif
+}
+
+//
+// Hook to receive diagnostic messages
+//
+int32_t io_iot_hub_connection_log_telemetry_subscribe(
+    void
+)
+{
+    return log_register("pal",
+        io_iot_hub_connection_log_telemetry_callback);
+}
+
+
 //
 // Deinit connection base
 //

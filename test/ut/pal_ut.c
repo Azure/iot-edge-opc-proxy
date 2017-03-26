@@ -39,7 +39,6 @@ TEST_FUNCTION(pal_init__success_1)
     int32_t result;
 
     capabilities = pal_not_init;
-    diag_callback = NULL;
 
     // arrange 
     STRICT_EXPECTED_CALL(pal_err_init())
@@ -94,7 +93,6 @@ TEST_FUNCTION(pal_init__success_3)
     int32_t result;
 
     capabilities = pal_not_init;
-    diag_callback = NULL;
 
     // arrange 
     STRICT_EXPECTED_CALL(pal_err_init())
@@ -129,7 +127,6 @@ TEST_FUNCTION(pal_init__success_4)
     int32_t result;
 
     capabilities = pal_not_init;
-    diag_callback = NULL;
 
     // arrange 
     STRICT_EXPECTED_CALL(pal_err_init())
@@ -394,48 +391,6 @@ TEST_FUNCTION(pal_deinit__neg)
     // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_bad_state, result);
-}
-
-// 
-// Test pal_set_diag_callback happy path 
-// 
-TEST_FUNCTION(pal_set_diag_callback__success_1)
-{
-    static const pal_diag_callback_t k_cb_valid = (pal_diag_callback_t)0x234;
-    int32_t result;
-
-    capabilities = pal_not_init;
-
-    // arrange 
-
-    // act 
-    result = pal_set_diag_callback(k_cb_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(diag_callback == k_cb_valid);
-}
-
-// 
-// Test pal_set_diag_callback happy path 
-// 
-TEST_FUNCTION(pal_set_diag_callback__success_2)
-{
-    static const pal_diag_callback_t k_cb_valid = (pal_diag_callback_t)0x234;
-    int32_t result;
-
-    capabilities = pal_cap_all;
-
-    // arrange 
-
-    // act 
-    result = pal_set_diag_callback(k_cb_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(diag_callback == k_cb_valid);
 }
 
 //
