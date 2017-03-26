@@ -148,7 +148,7 @@ static void prx_server_socket_free(
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
-    log_info(server_sock->log, "Server socket %p freed!", server_sock);
+    log_trace(server_sock->log, "Server socket %p freed!", server_sock);
     mem_free_type(prx_server_socket_t, server_sock);
 }
 
@@ -175,7 +175,7 @@ static void prx_server_free(
     if (server->sockets_lock)
         lock_free(server->sockets_lock);
 
-    log_info(server->log, "Freeing server.");
+    log_trace(server->log, "Freeing server.");
     mem_free_type(prx_server_t, server);
 }
 
@@ -373,7 +373,7 @@ static void prx_server_worker(
                 case prx_server_socket_closed:
                     if (next->stream && !next->server_stream)
                     {
-                        log_info(next->log, "Socket %p closed, clean up stream", 
+                        log_trace(next->log, "Socket %p closed, clean up stream",
                             next);
                         io_connection_close(next->stream);
                     }

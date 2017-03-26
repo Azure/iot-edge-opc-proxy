@@ -173,7 +173,7 @@ int main(int argc, char *argv[])
         ns_clean(ns);
 
 #define NUM_PROXYS 34
-        log_info(log, "Creating %d proxy entries", NUM_PROXYS);
+        log_trace(log, "Creating %d proxy entries", NUM_PROXYS);
         for (int i = 0; i < NUM_PROXYS; i++)
         {
             strcpy(buffer, "proxy_");
@@ -188,7 +188,7 @@ int main(int argc, char *argv[])
             }
         }
 #define NUM_HOSTS 46
-        log_info(log, "Creating %d host entries", NUM_HOSTS);
+        log_trace(log, "Creating %d host entries", NUM_HOSTS);
         for (int i = 0; i < NUM_HOSTS; i++)
         {
             strcpy(buffer, "host_");
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
             }
         }
 #define NUM_LINKS 65
-        log_info(log, "Creating %d link entries", NUM_LINKS);
+        log_trace(log, "Creating %d link entries", NUM_LINKS);
         for (int i = 0; i < NUM_LINKS; i++)
         {
             strcpy(buffer, "link_");

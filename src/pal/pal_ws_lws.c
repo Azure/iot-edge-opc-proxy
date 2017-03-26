@@ -120,11 +120,11 @@ static void pal_wsclient_lws_log(
     }
     else if (level & LLL_INFO)
     {
-        log_debug(global_wsworker_pool->log, "%s", msg);
+        log_trace(global_wsworker_pool->log, "%s", msg);
     }
     else if (level & LLL_NOTICE)
     {
-        log_debug(global_wsworker_pool->log, "NOTICE: %s", msg);
+        log_trace(global_wsworker_pool->log, "NOTICE: %s", msg);
     }
 #ifdef LOG_VERBOSE
     else if (level & LLL_DEBUG)
@@ -701,7 +701,7 @@ static int pal_wsworker_lws_on_disconnect(
     dbg_assert_ptr(wsclient);
     dbg_assert(wsclient->wsi == wsi, "Unexpected");
 
-    log_info(wsclient->log, "lws reported remote side closed");
+    log_trace(wsclient->log, "lws reported remote side closed");
 
     wsclient->last_error = er_closed;
     wsclient->wsi = NULL;

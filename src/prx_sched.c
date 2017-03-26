@@ -117,7 +117,7 @@ static void prx_scheduler_log_queue(
 #if defined(UNIT_TEST)
         (void)log;
 #elif defined(DEBUG)
-        log_info(log, "%d [%s(%p)] (%s:%d) due:%u added:%u",
+        log_debug(log, "%d [%s(%p)] (%s:%d) due:%u added:%u",
             index, next->name, next->context, next->func, next->line, 
             next->deadline, next->queued);
 #else

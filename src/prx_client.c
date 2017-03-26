@@ -70,8 +70,8 @@ global_state = { 0 };
 #define prx_client_socket_log_error(s, FMT, ...) \
     log_error(s->log, "V-Socket " IO_REF_FMT " (c: %p, if: " IO_REF_FMT ") " FMT, \
         IO_REF_PRINT(&s->r_addr), NULL/*s->stream*/, IO_REF_PRINT(&s->c_addr), __VA_ARGS__ );
-#define prx_client_socket_log_info(s, FMT, ...) \
-    log_info(s->log, "V-Socket " IO_REF_FMT " (c: %p, if: " IO_REF_FMT ") " FMT, \
+#define prx_client_socket_log_trace(s, FMT, ...) \
+    log_trace(s->log, "V-Socket " IO_REF_FMT " (c: %p, if: " IO_REF_FMT ") " FMT, \
         IO_REF_PRINT(&s->r_addr), NULL/*s->stream*/, IO_REF_PRINT(&s->c_addr), __VA_ARGS__ );
 
 //

@@ -232,7 +232,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
         if (result != er_ok)
             break;
 
-        log_info(connection->log, "OUT: [%s]", io_message_type_as_string(message->type));
+        log_trace(connection->log, "OUT: [%s]", io_message_type_as_string(message->type));
 
         // Buffer now contains json encoded response, send through transport
         result = io_mqtt_connection_publish(connection->mqtt_connection,
@@ -339,7 +339,7 @@ static void io_iot_hub_umqtt_connection_on_receive(
             break;
         }
 
-        log_info(connection->log, "IN: [%s]", io_message_type_as_string(message->type));
+        log_trace(connection->log, "IN: [%s]", io_message_type_as_string(message->type));
 
         result = connection->base.handler_cb(
             connection->base.handler_cb_ctx, io_connection_received, message);
@@ -500,7 +500,7 @@ static void io_iot_hub_ws_connection_on_free(
     dbg_assert_ptr(connection);
 
     io_iot_hub_connection_base_deinit(&connection->base);
-    log_info(connection->log, "Websocket transport connection freed.");
+    log_trace(connection->log, "Websocket transport connection freed.");
     mem_free_type(io_iot_hub_ws_connection_t, connection);
 }
 

@@ -393,19 +393,29 @@ static int32_t prx_host_init_from_command_line(
 
         if (log_config && log_file)
             printf("WARNING: --log-file overrides --log-config-file option...");
-
         if (log_config)
         {
             // Configure logging
             result = pal_get_real_path(log_config ? log_config : "log.config", &log_config);
             if (result != er_ok)
                 break;
+        }
+        else if (!log_file)
+        {
+            // try loading default log configuration file
+            result = pal_get_real_path("log.config", &log_config);
+            if (result == er_ok && !pal_file_exists(log_config))
+            {
+                pal_free_path(log_config);
+                log_config = NULL;
+            }
+        }
 
+        if (log_config)
+        {
             result = log_read_config(log_config);
             if (result != er_ok)
-            {
-                printf("WARNING: Logging config file %s was not found. \n\n", log_config);
-            }
+                printf("WARNING: Logging config file %s was not used. \n\n", log_config);
             pal_free_path(log_config);
             log_config = NULL;
         }
@@ -567,7 +577,8 @@ static int32_t prx_host_init_from_command_line(
     }
     if (result != er_arg)
     {
-        printf("Operation failed.\n");
+        if (result != er_ok)
+            printf("Operation failed.\n");
         return result;
     }
 
@@ -962,7 +973,7 @@ int32_t prx_host_init(
             break;
 
         // Host created
-        log_info(process_host->log, "Proxy host created!");
+        log_trace(process_host->log, "Proxy host created!");
         DEC_REF(prx_host_t, process_host); // weak reference
         return er_ok;
             

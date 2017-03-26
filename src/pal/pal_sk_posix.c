@@ -68,7 +68,7 @@ void pal_socket_clear(
 {
     if (sock->event_handle != 0)
     {
-        log_info(sock->log, "Clearing socket (fd:%d)", sock->sock_fd);
+        log_trace(sock->log, "Clearing socket (fd:%d)", sock->sock_fd);
         // Event handle closes file descripter
         pal_event_close(sock->event_handle);
         sock->event_handle = 0;
@@ -270,7 +270,7 @@ static int32_t pal_socket_on_connected(
     {
         pal_socket_open_complete(sock, result);
         // Success!
-        log_info(sock->log, "Socket connected asynchronously!");
+        log_trace(sock->log, "Socket connected asynchronously!");
     }
     else
     {
@@ -698,7 +698,7 @@ static int32_t pal_socket_connect(
             break;
         }
 
-        log_info(sock->log, "Socket connecting ... (fd:%d)", sock->sock_fd);
+        log_trace(sock->log, "Socket connecting ... (fd:%d)", sock->sock_fd);
 #if defined(TCP_USER_TIMEOUT)
         (void)setsockopt (sock->sock_fd, SOL_TCP, TCP_USER_TIMEOUT,
             (char*)&timeout, sizeof(timeout));
@@ -731,7 +731,7 @@ static int32_t pal_socket_connect(
         }
         else
         {
-            log_info(sock->log, "Socket connected synchronously!");
+            log_trace(sock->log, "Socket connected synchronously!");
             result = er_ok;
         }
     } 
@@ -783,7 +783,7 @@ static int32_t pal_socket_bind(
         }
         else
         {
-            log_info(sock->log, "Socket bound synchronously!");
+            log_trace(sock->log, "Socket bound synchronously!");
             result = er_ok;
         }
 
@@ -804,7 +804,7 @@ static int32_t pal_socket_bind(
             break;
         }
 
-        log_info(sock->log, "Socket listening...");
+        log_trace(sock->log, "Socket listening...");
         result = er_ok;
     } while (0);
     return result;
@@ -842,7 +842,7 @@ static int32_t pal_socket_try_open(
             result = pal_os_last_net_error_as_prx_error();
             break;
         }
-        log_info(sock->log, "Socket created ... (fd:%d)", sock->sock_fd);
+        log_trace(sock->log, "Socket created ... (fd:%d)", sock->sock_fd);
 
 #if defined(ASYNC_CONNECT)
         // This will make socket nonblocking
@@ -915,7 +915,7 @@ static void pal_socket_try_next(
             continue;  // Try next
         }
         // Success!
-        log_info(sock->log, "Socket %d opened synchronously!", sock->sock_fd);
+        log_trace(sock->log, "Socket %d opened synchronously!", sock->sock_fd);
         
 #if !defined(ASYNC_CONNECT)
         // Make sure any event is not completing open

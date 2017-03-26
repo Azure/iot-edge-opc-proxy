@@ -157,7 +157,7 @@ void pal_cred_remove(
     
     if (!CredDeleteA(target, CRED_TYPE_GENERIC, 0))
     {
-        log_info(NULL, "Failed deleting credential (%d)",
+        log_error(NULL, "Failed deleting credential (%d)",
             pal_os_last_error_as_prx_error());
     }
 }

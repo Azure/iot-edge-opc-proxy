@@ -93,12 +93,16 @@
 #if defined(_MSC_VER)
 #define __log_debug(log, file, a1, func, a2, line, fmt, ...) \
       __log(log, AZ_LOG_TRACE, file, func, line, fmt, __VA_ARGS__)
+#define __log_trace(log, file, a1, func, a2, line, fmt, ...) \
+      __log(log, AZ_LOG_TRACE, file, func, line, fmt, __VA_ARGS__)
 #define __log_info(log, file, a1, func, a2, line, fmt, ...) \
       __log(log, AZ_LOG_INFO, file, func, line, fmt, __VA_ARGS__)
 #define __log_error(log, file, a1, func, a2, line, fmt, ...) \
       __log(log, AZ_LOG_ERROR, file, func, line, fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define __log_debug(log, file, a1, func, a2, line, fmt, ...) \
+      __log(log, AZ_LOG_TRACE, file, func, line, fmt, ##__VA_ARGS__)
+#define __log_trace(log, file, a1, func, a2, line, fmt, ...) \
       __log(log, AZ_LOG_TRACE, file, func, line, fmt, ##__VA_ARGS__)
 #define __log_info(log, file, a1, func, a2, line, fmt, ...) \
       __log(log, AZ_LOG_INFO, file, func, line, fmt, ##__VA_ARGS__)
@@ -107,6 +111,8 @@
 #else
 #define __log_debug(log, file, a1, func, a2, line, args...) \
       __log(log, AZ_LOG_TRACE, file, func, line, ## args)
+#define __log_trace(log, file, a1, func, a2, line, args...) \
+      __log(log, AZ_LOG_TRACE, file, func, line, ## args)
 #define __log_info(log, file, a1, func, a2, line, args...) \
       __log(log, AZ_LOG_INFO, file, func, line, ## args)
 #define __log_error(log, file, a1, func, a2, line, args...) \
@@ -114,6 +120,8 @@
 #endif
 
 #define __log_debug_b(log, file, a1, func, a2, line, fmt, b, len) \
+      __log_b(log, AZ_LOG_TRACE, file, func, line, fmt, b, len)
+#define __log_trace_b(log, file, a1, func, a2, line, fmt, b, len) \
       __log_b(log, AZ_LOG_TRACE, file, func, line, fmt, b, len)
 #define __log_info_b(log, file, a1, func, a2, line, fmt, b, len) \
       __log_b(log, AZ_LOG_INFO, file, func, line, fmt, b, len)
@@ -176,6 +184,26 @@ _inl__ void __log_debug(
 //
 // Log trace message implementation
 //
+_inl__ void __log_trace(
+    log_t log,
+    const char *file,
+    size_t filelen,
+    const char *func,
+    size_t funclen,
+    long line,
+    const char* format,
+    ...
+)
+{
+    va_list va;
+    va_start(va, format);
+    __zlog_trace_v(log, file, filelen, func, funclen, line, format, va);
+    va_end(va);
+}
+
+//
+// Log event message implementation
+//
 _inl__ void __log_info(
     log_t log,
     const char *file,
@@ -215,26 +243,10 @@ _inl__ void  __log_error(
 
 #define __log_debug_b       __zlog_debug_b
 #define __log_info_b        __zlog_info_b
+#define __log_trace_b       __zlog_trace_b
 #define __log_error_b       __zlog_error_b
 
 #endif // !NO_ZLOG 
-
-//
-// Log a info message for a category
-//
-#if defined(_MSC_VER) 
-#define log_info(log, fmt, ...) \
-      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, __VA_ARGS__) 
-#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
-#define log_info(log, fmt, ...) \
-      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ##__VA_ARGS__) 
-#else
-#define log_info(log, fmt, args...) \
-      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ## args )
-#endif
 
 //
 // Log an error message for a category
@@ -258,6 +270,40 @@ _inl__ void  __log_error(
 #endif
 
 //
+// Log an event message for a category
+//
+#if defined(_MSC_VER) 
+#define log_info(log, fmt, ...) \
+      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, __VA_ARGS__) 
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#define log_info(log, fmt, ...) \
+      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, ##__VA_ARGS__) 
+#else
+#define log_info(log, fmt, args...) \
+      __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, ## args )
+#endif
+
+//
+// Log a trace message for a category
+//
+#if defined(_MSC_VER) 
+#define log_trace(log, fmt, ...) \
+      __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, __VA_ARGS__) 
+#elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#define log_trace(log, fmt, ...) \
+      __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, ##__VA_ARGS__) 
+#else
+#define log_trace(log, fmt, args...) \
+      __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        fmt, ## args )
+#endif
+
+//
 // Log a debug message for a category
 //
 #if defined(_MSC_VER) 
@@ -277,11 +323,14 @@ _inl__ void  __log_error(
 //
 // Log buffers
 //
-#define log_info_b(log, b, len) \
-      __log_info_b(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        b, (size_t)len)
 #define log_error_b(log, b, len) \
       __log_error_b(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        b, (size_t)len)
+#define  log_info_b(log, b, len) \
+       __log_info_b(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
+        b, (size_t)len)
+#define log_trace_b(log, b, len) \
+      __log_trace_b(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
         b, (size_t)len)
 #define log_debug_b(log, b, len) \
       __log_debug_b(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \

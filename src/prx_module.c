@@ -114,7 +114,7 @@ static prx_module_t* prx_module_create(
             break;
         }
         // Success
-        log_info(NULL, "Proxy module created in GW Host!");
+        log_trace(NULL, "Proxy module created in GW Host!");
         return module;
     }
     while (0);
