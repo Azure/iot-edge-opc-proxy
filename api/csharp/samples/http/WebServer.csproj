@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>0.1.0</VersionPrefix>
-    <Description>Simple Web forwarder sample application</Description>
-    <AssemblyTitle>Simple Web forwarder sample</AssemblyTitle>
+    <VersionPrefix>0.1.1</VersionPrefix>
+    <Description>Simple Reverse Webproxy sample application</Description>
+    <AssemblyTitle>Simple Reverse Webproxy sample</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
     <AssemblyName>WebServer</AssemblyName>
     <OutputType>Exe</OutputType>
