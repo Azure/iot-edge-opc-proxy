@@ -783,7 +783,7 @@ static void io_mqtt_connection_operation_callback(
         break;
 
     case MQTT_CLIENT_ON_PING_RESPONSE:
-        log_trace(connection->log, "Connection alive...");
+        log_info(connection->log, "Connection alive...");
         result = er_ok;
         break;
     default:

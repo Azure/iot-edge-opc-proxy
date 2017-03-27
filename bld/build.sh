@@ -8,6 +8,8 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 run_unittests=ON
 skip_dotnet=0
 use_zlog=OFF
+with_memcheck=OFF
+toolset=
 MAKE_PARALLEL_JOBS=1
 
 build_root="${repo_root}"/build
@@ -22,16 +24,18 @@ usage ()
     echo "build.sh [options]"
     echo "options"
     echo "    --os <value>                [] Os to build on (needs Docker installed)."
-    echo " -c --clean                     Build clean (Removes previous build output)"
-    echo " -C --config <value>            [Debug] Build configuration (e.g. Debug, Release)"
-    echo " -o --build-root <value>        [/build] Directory in which to place all files during build"
-    echo "    --use-zlog                  Use zlog as logging framework instead of xlogging"
-    echo "    --skip-unittests            Skips building and executing unit tests"
-    echo "    --skip-dotnet               Do not build dotnet core API and packages"
+    echo " -c --clean                     Build clean (Removes previous build output)."
+    echo " -C --config <value>            [Debug] Build configuration (e.g. Debug, Release)."
+	echo " -T --toolset <value>           An optional toolset to use."
+    echo " -o --build-root <value>        [/build] Directory in which to place all files during build."
+    echo "    --use-zlog                  Use zlog as logging framework instead of xlogging."
+	echo "    --with-memcheck             Compile in memory checks."
+    echo "    --skip-unittests            Skips building and executing unit tests."
+    echo "    --skip-dotnet               Do not build dotnet core API and packages."
     echo "    --pack-only                 Only creates packages. (Cannot be combined with --clean)"
     echo " -n --nuget-folder <value>      [/build] Folder to use when outputting nuget packages."
-    echo " -x --xtrace                    print a trace of each command"
-    echo " -j <value> | --jobs <value>    Number of parallel make jobs, see description of make -j"
+    echo " -x --xtrace                    print a trace of each command."
+    echo " -j <value> | --jobs <value>    Number of parallel make jobs, see description of make -j."
     echo "                                Unit test need a lot of memory. So --skip-unittests should be set,"
     echo '                                if you want to use all cores with -j`nproc`'
     exit 1
@@ -45,8 +49,9 @@ process_args ()
     # Note that we use `"$@"' to let each command-line parameter expand to a
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
-    TEMP=`getopt -o xo:C:cn:j: \
-          -l xtrace,build-root:,config:,clean,use-zlog,use-openssl,use-libwebsockets,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
+    TEMP=`getopt -o xo:C:T:cn:j: \
+          -l xtrace,build-root:,config:,clean,toolset:,use-zlog,use-openssl,use-libwebsockets,\
+		  with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
          -- "$@"`
 
     if [ $? != 0 ]
@@ -71,8 +76,14 @@ process_args ()
 	    -C | --config)
                 build_configs+=("$2")
                 shift 2 ;;
+	    -T | --toolset)
+		toolset="-T $2"
+                shift 2 ;;
 	    -c | --clean)
 		build_clean=1
+                shift ;;
+	    --with-memcheck)
+		with_memcheck=ON
                 shift ;;
 	    --use-zlog)
 		use_zlog=ON
@@ -120,8 +131,8 @@ native_build()
 			mkdir -p "${build_root}/cmake/${c}"
 			cd "${build_root}/cmake/${c}" > /dev/null
 
-			cmake -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
-			      -Duse_zlog:BOOL=$use_zlog "$repo_root" \
+			cmake $toolset -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
+			      -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog "$repo_root" \
                               -DLWS_IPV6:BOOL=ON || \
 			    return 1
 			# Start as much parallel jobs as requested by the user.

@@ -39,8 +39,10 @@ int32_t pal_get_real_path(
     const char** path
 )
 {
+    int32_t result;
     const char* real;
-    long path_max;
+    size_t path_max;
+    int err;
     char *buf = NULL;
     if (!file_name || !path)
         return er_fault;
@@ -49,20 +51,78 @@ int32_t pal_get_real_path(
     // Get max path, if this fails, then it is 
     // assumed that realpath will malloc
     //
-    path_max = pathconf(".", _PC_PATH_MAX);
-    if (path_max > 0)
-        buf = (char*)crt_alloc(path_max + 1);
+    path_max = (size_t)pathconf(".", _PC_PATH_MAX);
+    if ((long)path_max <= 0)
+        path_max = 4096;
 
-    // Get real path
-    real = realpath(file_name, buf);
-    if (!real)
+    buf = (char*)crt_alloc(path_max + 1);
+    do 
     {
-        if (buf)
-            crt_free(buf);
-        return pal_os_last_error_as_prx_error();
+        // First get real path
+        real = realpath(file_name, buf);
+        if (real)
+        {
+            *path = real;
+            buf = NULL;
+            result = er_ok;
+            break;
+        }
+
+        err = errno;
+        result = pal_os_to_prx_error(err);
+        if (!buf)
+            break;
+
+        *path = buf;
+#if defined(GNU_SOURCE)
+        if (err == ENOENT || err == EACCES)
+        {
+            buf = NULL;
+            result = er_ok;
+            break;
+        }
+#endif
+        if (*file_name == '/')
+        {
+            strcpy(buf, file_name);
+            buf = NULL;
+            result = er_ok;
+            break;
+        }
+        
+        // Relative path to absolute
+        if (*file_name == '.')
+        {
+            file_name++;
+            while (*file_name == '/')
+                file_name++;
+        }
+
+        real = getcwd(buf, path_max);
+        if (!real)
+        {
+            result = pal_os_last_error_as_prx_error();
+            break;
+        }
+
+        path_max -= strlen(buf);
+        if (path_max < strlen(file_name) + 1)
+        {
+            result = er_fault;
+            break;
+        }
+        strcat(buf, "/");
+        strcat(buf, file_name);
+
+        buf = NULL;
+        result = er_ok;
+        break;
     }
-    *path = real;
-    return er_ok;
+    while(0);
+
+    if (buf)
+        crt_free(buf);
+    return result;
 }
 
 //
