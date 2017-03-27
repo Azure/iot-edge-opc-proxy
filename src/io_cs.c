@@ -285,8 +285,7 @@ static int32_t io_cs_import_key(
             STRING_delete(key_handle);
 
         // Clear key value. 
-        // TODO: Need secure storage
-        memset((void*)STRING_c_str(key_val), 0, STRING_length(key_val));
+        // memset((void*)STRING_c_str(key_val), 0, STRING_length(key_val));
         cs->entries[io_cs_entry_shared_access_key] = NULL;
         STRING_delete(key_val);
     } 
