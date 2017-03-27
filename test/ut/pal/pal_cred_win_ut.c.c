@@ -607,56 +607,25 @@ TEST_FUNCTION(pal_win_cred_hmac_sha256__arg_sig_len_invalid)
 // 
 // Test pal_cred_hmac_sha256 unhappy path 
 // 
-TEST_FUNCTION(pal_win_cred_hmac_sha256__neg_0)
+TEST_FUNCTION(pal_win_cred_hmac_sha256__neg_1)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "b64:a1s343534580a8324=";
-    static unsigned char* k_protected_key = (unsigned char*)UT_MEM;
-    static const size_t k_protected_key_len = 48;
-    static const size_t k_valid_key_len = 32;
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
     static const size_t k_valid_buf_len = 123;
     static void* k_valid_sig = UT_MEM + 128;
     static const size_t k_valid_sig_len = 32;
-    static void* k_valid_hash = "12345678901234567890123456789012";
-    static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
-
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-    *(size_t*)UT_MEM = k_valid_key_len;
 
     // arrange 
     STRICT_EXPECTED_CALL(BUFFER_new())
-        .SetReturn(k_valid_buffer_handle);
-    STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
-        .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(true);
-
-    STRICT_EXPECTED_CALL(string_base64_to_byte_array(k_valid_target + 4, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_buffer(&k_protected_key, sizeof(k_protected_key))
-        .CopyOutArgumentBuffer_len(&k_protected_key_len, sizeof(k_protected_key_len))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(CryptUnprotectMemory(k_protected_key, (DWORD)k_protected_key_len, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-
-    STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_protected_key + sizeof(size_t), k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
-        .SetReturn(HMACSHA256_OK);
-    STRICT_EXPECTED_CALL(BUFFER_length(k_valid_buffer_handle))
-        .SetReturn(32);
-    STRICT_EXPECTED_CALL(BUFFER_u_char(k_valid_buffer_handle))
-        .SetReturn((unsigned char*)k_valid_hash);
-    STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)(k_protected_key + sizeof(size_t)), k_valid_key_len));
-    STRICT_EXPECTED_CALL(h_free((void*)k_protected_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+        .SetReturn(NULL);
 
     // act 
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
 // 

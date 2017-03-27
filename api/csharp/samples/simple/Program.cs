@@ -17,8 +17,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
 
         static void Main(string[] args) {
 
-            // Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
-
             if (args.Length > 0)
                 host_name = args[0];
             else

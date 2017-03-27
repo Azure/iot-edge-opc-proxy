@@ -325,6 +325,30 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_2)
 }
 
 // 
+// Test pal_cred_hmac_sha256 unhappy path 
+// 
+TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_3)
+{
+    static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
+    static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
+    static const size_t k_valid_buf_len = 123;
+    static void* k_valid_sig = UT_MEM + 128;
+    static const size_t k_valid_sig_len = 32;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(BUFFER_new())
+        .SetReturn(NULL);
+
+    // act 
+    result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+}
+
+// 
 // Test pal_cred_deinit happy path
 // 
 TEST_FUNCTION(pal_stub_cred_deinit__success)

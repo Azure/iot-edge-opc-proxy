@@ -173,7 +173,8 @@ int32_t pal_cred_import(
     if (key)
     {
         key_val = (void*)STRING_c_str(key);
-        memset(key_val, 0, STRING_length(key));
+        key_len = STRING_length(key);
+         memset(key_val, 0, key_len);
         STRING_delete(key);
     }
     return result;

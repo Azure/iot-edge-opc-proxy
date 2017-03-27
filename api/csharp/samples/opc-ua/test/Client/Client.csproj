@@ -20,7 +20,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Perf|net46|AnyCPU'" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\provider\relay\src\Microsoft.Azure.Devices.Proxy.Relay\Microsoft.Azure.Devices.Proxy.Relay.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Azure.Devices.Opc.Ua.Proxy\Microsoft.Azure.Devices.Opc.Ua.Proxy.csproj" />
   </ItemGroup>
 

@@ -54,8 +54,6 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-#if 0
-
 // 
 // Test pal_cred_import happy path 
 // 
@@ -81,12 +79,12 @@ TEST_FUNCTION(pal_gnome_cred_import__success_0)
     STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
         .SetReturn(UT_MEM);
     STRICT_EXPECTED_CALL(secret_password_store_sync(IGNORED_PTR_ARG, SECRET_COLLECTION_DEFAULT, k_key_name_valid, k_key_encoded_valid, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_key_name_valid, NULL))
-        .IgnoreArgument(1).IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6).IgnoreArgument(7)
+        .IgnoreAllArguments()
         .SetReturn(true);
     STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
         .SetReturn(UT_MEM);
     STRICT_EXPECTED_CALL(STRING_length(k_encoded_string))
-        .SetReturn(64);
+        .SetReturn(strlen(k_key_encoded_valid));
     STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
     // act 
@@ -94,9 +92,7 @@ TEST_FUNCTION(pal_gnome_cred_import__success_0)
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_ARE_EQUAL(char_ptr, "", UT_MEM);
 }
-
 
 // 
 // Test pal_cred_import happy path 
@@ -104,127 +100,39 @@ TEST_FUNCTION(pal_gnome_cred_import__success_0)
 TEST_FUNCTION(pal_gnome_cred_import__success_1)
 {
     static const char* k_key_name_valid = "testkeyname";
-    static void* k_key_val_valid = (void*)(UT_MEM + 128);
     static const size_t k_key_len_valid = 32;
-    static STRING_HANDLE k_handle_valid1 = (STRING_HANDLE)0x234243;
-    static STRING_HANDLE k_handle_valid2 = (STRING_HANDLE)0x65343;
-    static const bool k_persist_valid = true;
+    static STRING_HANDLE k_encoded_string = (STRING_HANDLE)0x8982;
+    static const char* k_key_encoded_valid = "3452345234578";
+    static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x234243;
+    static const bool k_persist_valid = false;
+    void* k_key_val_valid = (UT_MEM + 128);
     STRING_HANDLE handle_valid;
     int32_t result;
+
+    memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
 
     // arrange 
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(CredWriteA(IGNORED_PTR_ARG, 0))
-        .IgnoreArgument(1)
-        .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid1));
-
-    STRICT_EXPECTED_CALL(h_realloc(48, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(CryptProtectMemory((void*)UT_MEM, 48, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-    STRICT_EXPECTED_CALL(STRING_construct_base64((unsigned char*)UT_MEM, 48))
-        .SetReturn(k_handle_valid2);
-    STRICT_EXPECTED_CALL(STRING_construct(HANDLE_PREFIX))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_handle_valid1, k_handle_valid2))
-        .SetReturn(0);
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)UT_MEM, 48));
-    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid2));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory(k_key_val_valid, k_key_len_valid));
+        .SetReturn(k_handle_valid);
+    STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
+        .SetReturn(k_encoded_string);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
+        .SetReturn(UT_MEM);
+    STRICT_EXPECTED_CALL(secret_password_store_sync(IGNORED_PTR_ARG, SECRET_COLLECTION_SESSION, k_key_name_valid, k_key_encoded_valid, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_key_name_valid, NULL))
+        .IgnoreAllArguments()
+        .SetReturn(true);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
+        .SetReturn(UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_length(k_encoded_string))
+        .SetReturn(strlen(k_key_encoded_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
     // act 
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
-    // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
-
-// 
-// Test pal_cred_import happy path 
-// 
-TEST_FUNCTION(pal_gnome_cred_import__success_2)
-{
-    static void* k_key_val_valid = (void*)(UT_MEM + 128);
-    static const size_t k_key_len_valid = 32;
-    static STRING_HANDLE k_handle_valid1 = (STRING_HANDLE)0x234243;
-    static STRING_HANDLE k_handle_valid2 = (STRING_HANDLE)0x65343;
-    static const bool k_persist_valid = true;
-    STRING_HANDLE handle_valid;
-    int32_t result;
-
-    // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(48, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(CryptProtectMemory((void*)UT_MEM, 48, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-    STRICT_EXPECTED_CALL(STRING_construct_base64((unsigned char*)UT_MEM, 48))
-        .SetReturn(k_handle_valid2);
-    STRICT_EXPECTED_CALL(STRING_construct(HANDLE_PREFIX))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_handle_valid1, k_handle_valid2))
-        .SetReturn(0);
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)UT_MEM, 48));
-    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid2));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory(k_key_val_valid, k_key_len_valid));
-
-    // act 
-    result = pal_cred_import(NULL, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-// 
-// Test pal_cred_import happy path 
-// 
-TEST_FUNCTION(pal_gnome_cred_import__success_3)
-{
-    static const char* k_key_name_valid = "testkeyname";
-    static void* k_key_val_valid = (void*)(UT_MEM + 128);
-    static const size_t k_key_len_valid = 32;
-    static STRING_HANDLE k_handle_valid1 = (STRING_HANDLE)0x234243;
-    static STRING_HANDLE k_handle_valid2 = (STRING_HANDLE)0x65343;
-    static const bool k_persist_valid = false;
-    STRING_HANDLE handle_valid;
-    int32_t result;
-
-    // arrange 
-    STRICT_EXPECTED_CALL(h_realloc(48, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(CryptProtectMemory((void*)UT_MEM, 48, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-    STRICT_EXPECTED_CALL(STRING_construct_base64((unsigned char*)UT_MEM, 48))
-        .SetReturn(k_handle_valid2);
-    STRICT_EXPECTED_CALL(STRING_construct(HANDLE_PREFIX))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_handle_valid1, k_handle_valid2))
-        .SetReturn(0);
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)UT_MEM, 48));
-    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid2));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory(k_key_val_valid, k_key_len_valid));
-
-    // act 
-    result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-#endif
 
 // 
 // Test pal_cred_import passing as key_val argument an invalid void* value 
@@ -313,47 +221,35 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_0)
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-#if 0
-
 // 
 // Test pal_cred_import unhappy path 
 // 
 TEST_FUNCTION(pal_gnome_cred_import__neg_1)
 {
     static const char* k_key_name_valid = "testkeyname";
-    static void* k_key_val_valid = (void*)(UT_MEM + 128);
     static const size_t k_key_len_valid = 32;
-    static STRING_HANDLE k_handle_valid1 = (STRING_HANDLE)0x234243;
+    static STRING_HANDLE k_encoded_string = (STRING_HANDLE)0x8982;
+    static const char* k_key_encoded_valid = "3452345234578";
+    static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x234243;
     static const bool k_persist_valid = true;
+    void* k_key_val_valid = (UT_MEM + 128);
     STRING_HANDLE handle_valid;
     int32_t result;
 
+    memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
+
     // arrange 
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(CredWriteA(IGNORED_PTR_ARG, 0))
-        .IgnoreArgument(1)
-        .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid1));
-
-    STRICT_EXPECTED_CALL(h_realloc(48, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(CryptProtectMemory((void*)UT_MEM, 48, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
-        .SetReturn(er_fatal);
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)UT_MEM, 48));
-    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory(k_key_val_valid, k_key_len_valid));
+        .SetReturn(k_handle_valid);
+    STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid));
 
     // act 
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
-    // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
 // 
@@ -362,57 +258,54 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_1)
 TEST_FUNCTION(pal_gnome_cred_import__neg_2)
 {
     static const char* k_key_name_valid = "testkeyname";
-    static void* k_key_val_valid = (void*)(UT_MEM + 128);
     static const size_t k_key_len_valid = 32;
-    static STRING_HANDLE k_handle_valid1 = (STRING_HANDLE)0x234243;
-    static STRING_HANDLE k_handle_valid2 = (STRING_HANDLE)0x65343;
+    static STRING_HANDLE k_encoded_string = (STRING_HANDLE)0x8982;
+    static const char* k_key_encoded_valid = "3452345234578";
+    static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x234243;
     static const bool k_persist_valid = true;
+    void* k_key_val_valid = (UT_MEM + 128);
     STRING_HANDLE handle_valid;
     int32_t result;
+    GError error_valid, *k_error_valid_ptr = &error_valid;
+
+    memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
+    error_valid.message = "Error";
 
     // arrange 
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(CredWriteA(IGNORED_PTR_ARG, 0))
-        .IgnoreArgument(1)
-        .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid1));
-
-    STRICT_EXPECTED_CALL(h_realloc(48, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)UT_MEM);
-    STRICT_EXPECTED_CALL(CryptProtectMemory((void*)UT_MEM, 48, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-    STRICT_EXPECTED_CALL(STRING_construct_base64((unsigned char*)UT_MEM, 48))
-        .SetReturn(k_handle_valid2);
-    STRICT_EXPECTED_CALL(STRING_construct(HANDLE_PREFIX))
-        .SetReturn(k_handle_valid1);
-    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_handle_valid1, k_handle_valid2))
-        .SetReturn(-1);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid1));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)UT_MEM, 48));
-    STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid2));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory(k_key_val_valid, k_key_len_valid));
+        .SetReturn(k_handle_valid);
+    STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
+        .SetReturn(k_encoded_string);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
+        .SetReturn(UT_MEM);
+    STRICT_EXPECTED_CALL(secret_password_store_sync(IGNORED_PTR_ARG, SECRET_COLLECTION_DEFAULT, k_key_name_valid, k_key_encoded_valid, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_key_name_valid, NULL))
+        .IgnoreAllArguments()
+        .CopyOutArgumentBuffer_error(&k_error_valid_ptr, sizeof(k_error_valid_ptr))
+        .SetReturn(false);
+    STRICT_EXPECTED_CALL(g_error_free(k_error_valid_ptr));
+    STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid));
+    STRICT_EXPECTED_CALL(STRING_c_str(k_encoded_string))
+        .SetReturn(UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_length(k_encoded_string))
+        .SetReturn(strlen(k_key_encoded_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
     // act 
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
-    // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+    ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
 }
 
 // 
 // Test pal_cred_hmac_sha256 happy path 
 // 
-TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success_0)
+TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "b64:a1s343534580a8324=";
-    static unsigned char* k_protected_key = (unsigned char*)UT_MEM;
-    static const size_t k_protected_key_len = 48;
+    static char* k_valid_target = "device:x@y.com";
+    static const char* k_protected_key = "10323423942334";
+    static unsigned char* k_valid_key = (unsigned char*)"2382734928332423";
     static const size_t k_valid_key_len = 32;
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
     static const size_t k_valid_buf_len = 123;
@@ -422,33 +315,30 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success_0)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-    *(size_t*)UT_MEM = k_valid_key_len;
-
     // arrange 
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(true);
-
-    STRICT_EXPECTED_CALL(string_base64_to_byte_array(k_valid_target + 4, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_buffer(&k_protected_key, sizeof(k_protected_key))
-        .CopyOutArgumentBuffer_len(&k_protected_key_len, sizeof(k_protected_key_len))
+    STRICT_EXPECTED_CALL(secret_password_lookup_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .SetReturn((gchar*)k_protected_key);
+    STRICT_EXPECTED_CALL(h_realloc(7, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_valid_key);
+    STRICT_EXPECTED_CALL(string_base16_to_byte_array(k_protected_key, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+        .IgnoreArgument(2)
+        .CopyOutArgumentBuffer_len(&k_valid_key_len, sizeof(k_valid_key_len))
         .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(CryptUnprotectMemory(k_protected_key, (DWORD)k_protected_key_len, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-
-    STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_protected_key + sizeof(size_t), k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
+    STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_valid_key, k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
         .SetReturn(HMACSHA256_OK);
     STRICT_EXPECTED_CALL(BUFFER_length(k_valid_buffer_handle))
         .SetReturn(32);
     STRICT_EXPECTED_CALL(BUFFER_u_char(k_valid_buffer_handle))
         .SetReturn((unsigned char*)k_valid_hash);
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)(k_protected_key + sizeof(size_t)), k_valid_key_len));
-    STRICT_EXPECTED_CALL(h_free((void*)k_protected_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(secret_password_free((gchar*)k_protected_key));
+    STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
@@ -459,63 +349,6 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success_0)
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(!memcmp(k_valid_sig, k_valid_hash, k_valid_sig_len));
 }
-
-// 
-// Test pal_cred_hmac_sha256 happy path 
-// 
-TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success_1)
-{
-    static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "devíce:a1s34@something.com";
-
-    static unsigned char* k_protected_key = (unsigned char*)UT_MEM;
-    static const size_t k_valid_key_len = 32;
-    static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
-    static const size_t k_valid_buf_len = 123;
-    static void* k_valid_sig = UT_MEM + 128;
-    static const size_t k_valid_sig_len = 32;
-    static void* k_valid_hash = "12345678901234567890123456789012";
-    static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
-    CREDENTIALA valid_cred, *k_valid_cred_ptr = &valid_cred;
-    int32_t result;
-
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-    *(size_t*)UT_MEM = k_valid_key_len;
-    valid_cred.CredentialBlob = (LPBYTE)k_protected_key;
-    valid_cred.CredentialBlobSize = (DWORD)k_valid_key_len;
-
-    // arrange 
-    STRICT_EXPECTED_CALL(BUFFER_new())
-        .SetReturn(k_valid_buffer_handle);
-    STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
-        .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(false);
-
-    STRICT_EXPECTED_CALL(CredReadA(k_valid_target, CRED_TYPE_GENERIC, 0, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_Credential(&k_valid_cred_ptr, sizeof(k_valid_cred_ptr))
-        .SetReturn(TRUE);
-
-    STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_protected_key, k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
-        .SetReturn(HMACSHA256_OK);
-    STRICT_EXPECTED_CALL(BUFFER_length(k_valid_buffer_handle))
-        .SetReturn(32);
-    STRICT_EXPECTED_CALL(BUFFER_u_char(k_valid_buffer_handle))
-        .SetReturn((unsigned char*)k_valid_hash);
-    STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)k_protected_key, k_valid_key_len));
-    STRICT_EXPECTED_CALL(CredFree((void*)k_valid_cred_ptr));
-
-    // act 
-    result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(!memcmp(k_valid_sig, k_valid_hash, k_valid_sig_len));
-}
-
-#endif
 
 // 
 // Test pal_cred_hmac_sha256 passing as buf argument an invalid handle
@@ -622,94 +455,65 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_sig_len_invalid)
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-#if 0
-
 // 
 // Test pal_cred_hmac_sha256 unhappy path 
 // 
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_0)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "b64:a1s343534580a8324=";
-    static unsigned char* k_protected_key = (unsigned char*)UT_MEM;
-    static const size_t k_protected_key_len = 48;
-    static const size_t k_valid_key_len = 32;
+    static char* k_valid_target = "device:x@y.com";
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
     static const size_t k_valid_buf_len = 123;
     static void* k_valid_sig = UT_MEM + 128;
     static const size_t k_valid_sig_len = 32;
-    static void* k_valid_hash = "12345678901234567890123456789012";
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
-
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-    *(size_t*)UT_MEM = k_valid_key_len;
 
     // arrange 
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(true);
-
-    STRICT_EXPECTED_CALL(string_base64_to_byte_array(k_valid_target + 4, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_buffer(&k_protected_key, sizeof(k_protected_key))
-        .CopyOutArgumentBuffer_len(&k_protected_key_len, sizeof(k_protected_key_len))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(CryptUnprotectMemory(k_protected_key, (DWORD)k_protected_key_len, CRYPTPROTECTMEMORY_SAME_LOGON))
-        .SetReturn(TRUE);
-
-    STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_protected_key + sizeof(size_t), k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
-        .SetReturn(HMACSHA256_OK);
-    STRICT_EXPECTED_CALL(BUFFER_length(k_valid_buffer_handle))
-        .SetReturn(32);
-    STRICT_EXPECTED_CALL(BUFFER_u_char(k_valid_buffer_handle))
-        .SetReturn((unsigned char*)k_valid_hash);
+    STRICT_EXPECTED_CALL(secret_password_lookup_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .SetReturn(NULL);
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)(k_protected_key + sizeof(size_t)), k_valid_key_len));
-    STRICT_EXPECTED_CALL(h_free((void*)k_protected_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
 }
 
 // 
 // Test pal_cred_hmac_sha256 unhappy path 
 // 
-TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
+TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_1)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "a1s34";
+    static char* k_valid_target = "device:x@y.com";
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
     static const size_t k_valid_buf_len = 123;
-
-    static void* k_valid_sig = UT_MEM;
+    static void* k_valid_sig = UT_MEM + 128;
     static const size_t k_valid_sig_len = 32;
-
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
+    GError error_valid, *k_error_valid_ptr = &error_valid;
     int32_t result;
 
-    memset(UT_MEM, 0, sizeof(UT_MEM));
+    error_valid.message = "Error";
 
     // arrange 
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(false);
-
-    STRICT_EXPECTED_CALL(CredReadA(k_valid_target, CRED_TYPE_GENERIC, 0, IGNORED_PTR_ARG))
-        .IgnoreArgument(4)
-        .SetReturn(FALSE);
-    STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
-        .SetReturn(er_fatal);
+    STRICT_EXPECTED_CALL(secret_password_lookup_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .CopyOutArgumentBuffer_error(&k_error_valid_ptr, sizeof(k_error_valid_ptr))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(g_error_free(k_error_valid_ptr));
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
 
     // act 
@@ -723,41 +527,78 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
 // 
 // Test pal_cred_hmac_sha256 unhappy path 
 // 
-TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
+TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
-    static char* k_valid_target = "a1s34";
-    static unsigned char* k_valid_key = (unsigned char*)"0x2d5";
-    static const size_t k_valid_key_len = 32;
+    static char* k_valid_target = "device:x@y.com";
+    static const char* k_protected_key = "10323423942334";
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
     static const size_t k_valid_buf_len = 123;
-    static void* k_valid_sig = UT_MEM;
+    static void* k_valid_sig = UT_MEM + 128;
     static const size_t k_valid_sig_len = 32;
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
-    CREDENTIALA valid_cred, *k_valid_cred_ptr = &valid_cred;
     int32_t result;
-
-    memset(UT_MEM, 0, sizeof(UT_MEM));
-    *(size_t*)UT_MEM = k_valid_key_len;
-    valid_cred.CredentialBlob = (LPBYTE)k_valid_key;
-    valid_cred.CredentialBlobSize = (DWORD)k_valid_key_len;
 
     // arrange 
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(false);
+    STRICT_EXPECTED_CALL(secret_password_lookup_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .SetReturn((gchar*)k_protected_key);
+    STRICT_EXPECTED_CALL(h_realloc(7, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
+    STRICT_EXPECTED_CALL(secret_password_free((gchar*)k_protected_key));
 
-    STRICT_EXPECTED_CALL(CredReadA(k_valid_target, CRED_TYPE_GENERIC, 0, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_Credential(&k_valid_cred_ptr, sizeof(k_valid_cred_ptr))
-        .SetReturn(TRUE);
+    // act 
+    result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+}
+
+// 
+// Test pal_cred_hmac_sha256 unhappy path 
+// 
+TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
+{
+    static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
+    static char* k_valid_target = "device:x@y.com";
+    static const char* k_protected_key = "10323423942334";
+    static unsigned char* k_valid_key = (unsigned char*)"2382734928332423";
+    static const size_t k_valid_key_len = 32;
+    static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
+    static const size_t k_valid_buf_len = 123;
+    static void* k_valid_sig = UT_MEM + 128;
+    static const size_t k_valid_sig_len = 32;
+    static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(BUFFER_new())
+        .SetReturn(k_valid_buffer_handle);
+    STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
+        .SetReturn(k_valid_target);
+    STRICT_EXPECTED_CALL(secret_password_lookup_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .SetReturn((gchar*)k_protected_key);
+    STRICT_EXPECTED_CALL(h_realloc(7, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)k_valid_key);
+    STRICT_EXPECTED_CALL(string_base16_to_byte_array(k_protected_key, IGNORED_PTR_ARG, IGNORED_PTR_ARG))
+        .IgnoreArgument(2)
+        .CopyOutArgumentBuffer_len(&k_valid_key_len, sizeof(k_valid_key_len))
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(HMACSHA256_ComputeHash(k_valid_key, k_valid_key_len, k_valid_buf, k_valid_buf_len, k_valid_buffer_handle))
         .SetReturn(HMACSHA256_ERROR);
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
-    STRICT_EXPECTED_CALL(RtlSecureZeroMemory((void*)k_valid_key, k_valid_key_len));
-    STRICT_EXPECTED_CALL(CredFree((void*)k_valid_cred_ptr));
+    STRICT_EXPECTED_CALL(secret_password_free((gchar*)k_protected_key));
+    STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
@@ -768,32 +609,33 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
 }
 
 // 
-// Test pal_cred_remove happy path 
+// Test pal_cred_hmac_sha256 unhappy path 
 // 
-TEST_FUNCTION(pal_gnome_cred_remove__success_0)
+TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_4)
 {
-    static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x23423;
-    static const char* k_valid_target = "abcdefg";
+    static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
+    static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
+    static const size_t k_valid_buf_len = 123;
+    static void* k_valid_sig = UT_MEM + 128;
+    static const size_t k_valid_sig_len = 32;
+    int32_t result;
 
     // arrange 
-    STRICT_EXPECTED_CALL(STRING_c_str(k_handle_valid))
-        .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
-        .SetReturn(false);
-    STRICT_EXPECTED_CALL(CredDeleteA(k_valid_target, CRED_TYPE_GENERIC, 0))
-        .SetReturn(TRUE);
+    STRICT_EXPECTED_CALL(BUFFER_new())
+        .SetReturn(NULL);
 
     // act 
-    pal_cred_remove(k_handle_valid);
+    result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert
+    // assert 
     ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
 // 
 // Test pal_cred_remove happy path 
 // 
-TEST_FUNCTION(pal_gnome_cred_remove__success_1)
+TEST_FUNCTION(pal_gnome_cred_remove__success)
 {
     static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x23423;
     static const char* k_valid_target = "abcdefg";
@@ -801,7 +643,8 @@ TEST_FUNCTION(pal_gnome_cred_remove__success_1)
     // arrange 
     STRICT_EXPECTED_CALL(STRING_c_str(k_handle_valid))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
+    STRICT_EXPECTED_CALL(secret_password_clear_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
         .SetReturn(true);
 
     // act 
@@ -810,8 +653,6 @@ TEST_FUNCTION(pal_gnome_cred_remove__success_1)
     // assert
     ASSERT_EXPECTED_CALLS();
 }
-
-#endif
 
 // 
 // Test pal_cred_remove passing as handle argument an invalid STRING_HANDLE value 
@@ -827,7 +668,6 @@ TEST_FUNCTION(pal_gnome_cred_remove__arg_handle_invalid)
     ASSERT_EXPECTED_CALLS();
 }
 
-#if 0
 // 
 // Test pal_cred_remove unhappy path 
 // 
@@ -835,22 +675,25 @@ TEST_FUNCTION(pal_gnome_cred_remove__neg)
 {
     static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x23423;
     static const char* k_valid_target = "abcdefg";
+    GError error_valid, *k_error_valid_ptr = &error_valid;
+
+    error_valid.message = "Error";
 
     // arrange 
     STRICT_EXPECTED_CALL(STRING_c_str(k_handle_valid))
         .SetReturn(k_valid_target);
-    STRICT_EXPECTED_CALL(string_starts_with_nocase(k_valid_target, HANDLE_PREFIX))
+    STRICT_EXPECTED_CALL(secret_password_clear_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
+        .IgnoreAllArguments()
+        .CopyOutArgumentBuffer_error(&k_error_valid_ptr, sizeof(k_error_valid_ptr))
         .SetReturn(false);
-    STRICT_EXPECTED_CALL(CredDeleteA(k_valid_target, CRED_TYPE_GENERIC, 0))
-        .SetReturn(FALSE);
+    STRICT_EXPECTED_CALL(g_error_free(k_error_valid_ptr));
 
     // act 
     pal_cred_remove(k_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
-#endif
 
 // 
 // Test pal_cred_deinit happy path
