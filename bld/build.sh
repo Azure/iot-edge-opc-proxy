@@ -143,10 +143,8 @@ native_build()
                 echo "Skipping unittests..."
             else
                 #use doctored (-DPURIFY no-asm) openssl
-                export LD_LIBRARY_PATH=/usr/local/ssl/lib
-                ctest -C "$c" --output-on-failure || \
+                LD_LIBRARY_PATH=/usr/local/ssl/lib ctest -C "$c" --output-on-failure || \
                     return 1
-                export LD_LIBRARY_PATH=
             fi
         done
     fi
