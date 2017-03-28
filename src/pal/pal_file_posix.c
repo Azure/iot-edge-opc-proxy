@@ -43,20 +43,21 @@ int32_t pal_get_real_path(
     const char* real;
     size_t path_max;
     int err;
-    char *buf = NULL;
+    char *buf, *ptr;
     if (!file_name || !path)
         return er_fault;
 
-    //
-    // Get max path, if this fails, then it is 
-    // assumed that realpath will malloc
-    //
+    // Get max path, if this fails, then we see if realpath will malloc
     path_max = (size_t)pathconf(".", _PC_PATH_MAX);
-    if ((long)path_max <= 0)
-        path_max = 4096;
+    if ((long)path_max > 0)
+        buf = (char*)crt_alloc(path_max + 1);
+    else
+    {
+        path_max = 1024;
+        buf = NULL;
+    }
 
-    buf = (char*)crt_alloc(path_max + 1);
-    do 
+    do
     {
         // First get real path
         real = realpath(file_name, buf);
@@ -68,29 +69,37 @@ int32_t pal_get_real_path(
             break;
         }
 
-        err = errno;
-        result = pal_os_to_prx_error(err);
-        if (!buf)
-            break;
-
-        *path = buf;
 #if defined(GNU_SOURCE)
-        if (err == ENOENT || err == EACCES)
+        err = errno;
+        if (buf && (err == ENOENT || err == EACCES))
         {
+            *path = buf;
             buf = NULL;
             result = er_ok;
             break;
         }
 #endif
+        // If absolute path, return as is
         if (*file_name == '/')
         {
+            if (!buf || strlen(file_name) > path_max)
+            {
+                ptr = (char*)crt_realloc(buf, strlen(file_name) + 1);
+                if (!ptr)
+                {
+                    result = er_out_of_memory;
+                    break;
+                }
+                buf = ptr;
+            }
             strcpy(buf, file_name);
+            *path = buf;
             buf = NULL;
             result = er_ok;
             break;
         }
         
-        // Relative path to absolute
+        // Convert relative path to absolute using current working dir
         if (*file_name == '.')
         {
             file_name++;
@@ -98,25 +107,50 @@ int32_t pal_get_real_path(
                 file_name++;
         }
 
-        real = getcwd(buf, path_max);
-        if (!real)
+        ptr = buf;
+        while(true)
         {
-            result = pal_os_last_error_as_prx_error();
-            break;
+            if (!ptr)
+            {
+                ptr = (char*)crt_realloc(buf, path_max + 1);
+                if (!ptr)
+                {
+                    result = er_out_of_memory;
+                    break;
+                }
+                buf = ptr;
+            }
+            ptr = NULL;
+            real = getcwd(buf, path_max);
+            if (!real)
+            {
+                err = errno;
+                if (err != ERANGE)
+                {
+                    result = pal_os_to_prx_error(err);
+                    break;
+                }
+                // Increase size of path up to 16 k
+                path_max *= 2;
+                if (path_max >= 0x4000)
+                {
+                    result = er_invalid_format;
+                    break;
+                }
+            }
+            // See if relative portion fits into the remainder of buffer
+            else if (path_max < strlen(buf) + strlen(file_name) + 1)
+                     path_max = strlen(buf) + strlen(file_name) + 1;
+            else
+            {
+                strcat(buf, "/");
+                strcat(buf, file_name);
+                *path = buf; 
+                buf = NULL;
+                result = er_ok;
+                break;
+            }
         }
-
-        path_max -= strlen(buf);
-        if (path_max < strlen(file_name) + 1)
-        {
-            result = er_fault;
-            break;
-        }
-        strcat(buf, "/");
-        strcat(buf, file_name);
-
-        buf = NULL;
-        result = er_ok;
-        break;
     }
     while(0);
 
