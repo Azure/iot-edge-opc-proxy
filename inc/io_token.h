@@ -152,7 +152,7 @@ decl_internal_2(int32_t, io_passthru_token_provider_create,
 //
 decl_internal_4(int32_t, io_iothub_token_provider_create,
     const char*, policy,
-    const char*, shared_access_key,
+    STRING_HANDLE, key_or_handle,
     const char*, scope,
     io_token_provider_t**, provider
 );

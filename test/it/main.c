@@ -21,6 +21,7 @@ BOOL __stdcall DllMain(
         mem_init();
         break;
     case DLL_PROCESS_DETACH:
+        mem_deinit();
         break;
     case DLL_THREAD_ATTACH:
         break;

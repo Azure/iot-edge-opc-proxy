@@ -114,7 +114,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LEAK_DETECT;_CRTDBG_MAP_ALLOC;_CRT_SECURE_NO_WARNINGS;API_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LEAK_DETECT;MEM_CHECK;_CRTDBG_MAP_ALLOC;_CRT_SECURE_NO_WARNINGS;API_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\zlog\src\;..\..\..\deps\shared\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -131,7 +131,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>LEAK_DETECT;_CRTDBG_MAP_ALLOC;_CRT_SECURE_NO_WARNINGS;API_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>LEAK_DETECT;MEM_CHECK;_CRTDBG_MAP_ALLOC;_CRT_SECURE_NO_WARNINGS;API_EXPORT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\zlog\src\;..\..\..\deps\shared\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

@@ -3,7 +3,7 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-namespace simple_client {
+namespace Microsoft.Azure.Devices.Proxy.Samples {
     using System;
     using System.Collections.Generic;
     using System.Text;
@@ -16,8 +16,6 @@ namespace simple_client {
         static string host_name;
 
         static void Main(string[] args) {
-
-            // Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
 
             if (args.Length > 0)
                 host_name = args[0];

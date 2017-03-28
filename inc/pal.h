@@ -18,25 +18,11 @@ typedef enum pal_capabilities
     pal_cap_sockets = 0x2,
     pal_cap_ev = 0x4,
     pal_cap_wsclient = 0x8,
+    pal_cap_cred = 0x10,
 
-    pal_cap_all = 0xf
+    pal_cap_all = 0x1f
 }
 pal_capabilities_t;
-
-//
-// Called when a new logger entry for $diag was pushed
-//
-typedef void(*pal_diag_callback_t)(
-    const char* target,
-    const char* msg
-    );
-
-//
-// Hook for diagnostic callbacks
-//
-decl_public_1(int32_t, pal_set_diag_callback,
-    pal_diag_callback_t, cb
-);
 
 //
 // Initialize pal

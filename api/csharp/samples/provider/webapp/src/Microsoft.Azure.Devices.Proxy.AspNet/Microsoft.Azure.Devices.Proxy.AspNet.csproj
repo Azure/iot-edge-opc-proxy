@@ -10,8 +10,8 @@
     <NoWarn>$(NoWarn);1591;1734</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Microsoft.Azure.Devices.Proxy.Owin</AssemblyName>
-    <PackageId>Microsoft.Azure.Devices.Proxy.Owin</PackageId>
+    <AssemblyName>Microsoft.Azure.Devices.Proxy.AspNet</AssemblyName>
+    <PackageId>Microsoft.Azure.Devices.Proxy.AspNet</PackageId>
     <PackageTags>Azure;IoT;.NET;websocket;Proxy</PackageTags>
     <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>

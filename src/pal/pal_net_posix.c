@@ -1006,8 +1006,8 @@ int32_t pal_getaddrinfo(
             }
             else
             {
-                log_info(NULL, "Warning: Failed to convert 1 addrinfo to prx_addrinfo_t (%s)",
-                    prx_err_string(result));
+                log_info(NULL, "Warning: Failed to convert 1 addrinfo "
+                    "to prx_addrinfo_t (%s)", prx_err_string(result));
             }
         }
 

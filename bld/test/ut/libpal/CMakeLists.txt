@@ -17,6 +17,7 @@ set(libpal_ut_include
 # Misc pal components to test
 #
 set(_MISC_PAL_UNITS_UNDER_TEST
+    pal_cred_stub
     pal_sk_posix
     pal_err_posix
     pal_ev_kq
@@ -31,6 +32,7 @@ set(_MISC_PAL_UNITS_UNDER_TEST
 # Win pal components to test
 #
 set(_WIN_PAL_UNITS_UNDER_TEST
+    pal_cred_win
     pal_sk_win
     pal_err_win
     pal_ev_poll

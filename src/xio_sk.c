@@ -101,7 +101,7 @@ static void xio_socket_deliver_inbound_results(
 {
     io_queue_buffer_t* buffer;
     size_t size;
-    const unsigned char* buf;
+    const uint8_t* buf;
 
     dbg_assert_ptr(sk);
     if (sk->closed)
@@ -114,7 +114,7 @@ static void xio_socket_deliver_inbound_results(
             break;
 
         size = buffer->length;
-        buf = (const unsigned char*)io_queue_buffer_to_ptr(buffer);
+        buf = (const uint8_t*)io_queue_buffer_to_ptr(buffer);
 
         // Deliver read buffer
         /**/ if (buffer->code != er_ok && sk->on_io_error)

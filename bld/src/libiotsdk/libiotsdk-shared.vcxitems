@@ -28,6 +28,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\httpapiex.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\httpapiexsas.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\httpheaders.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\http_proxy_io.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\singlylinkedlist.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\map.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\optionhandler.c" />
@@ -39,6 +40,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\string_tokenizer.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\urlencode.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\usha.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\utf8_checker.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_client.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_frame_encoder.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\vector.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\xio.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\xlogging.c" />
@@ -48,12 +52,14 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\base64.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\buffer_.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\condition.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\connection_string_parser.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\consolelogger.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\constbuffer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\constmap.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\crt_abstractions.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\doublylinkedlist.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gballoc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_rand.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_stdio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_time.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\hmac.h" />
@@ -62,6 +68,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\httpapiex.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\httpapiexsas.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\httpheaders.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\http_proxy_io.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\singlylinkedlist.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\lock.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\macro_utils.h" />
@@ -76,6 +83,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\socketio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\stdint_ce6.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\strings.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\strings_types.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\string_tokenizer.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\threadapi.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tickcounter.h" />
@@ -83,10 +91,15 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tlsio_openssl.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tlsio_schannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tlsio_wolfssl.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tls_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\umock_c_prod.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uniqueid.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\urlencode.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\utf8_checker.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_client.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_frame_encoder.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector_types_internal.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\wsio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\x509_openssl.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\x509_schannel.h" />

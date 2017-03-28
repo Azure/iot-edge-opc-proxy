@@ -1,4 +1,5 @@
-﻿/**/*.user
+﻿/**/*.i
+/**/*.user
 /**/obj/**
 /**/.vs
 /**/bin/**
@@ -11,6 +12,7 @@
 /**/*.opensdf
 /**/*.vc.db
 /**/zlog.lock
+/**/TestResults/**
 /.vscode/**
 /build/**
 *.user

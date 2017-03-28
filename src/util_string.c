@@ -656,37 +656,10 @@ int32_t STRING_update(
 }
 
 //
-// Convert string to byte buffer
-//
-int32_t string_to_byte_array(
-    const char* val,
-    unsigned char** buffer,
-    size_t* len
-)
-{
-    unsigned char* result;
-    if (!buffer || !len || !val)
-        return er_fault;
-
-    *len = strlen(val);
-    if (!*len)
-        return er_arg;
-    result = (unsigned char*)mem_alloc(*len);
-    if (!result)
-        return er_out_of_memory;
-
-    for (size_t i = 0; i < *len; i++)
-        result[i] = (unsigned char)toupper(val[i]);
-    
-    *buffer = result;
-    return er_ok;
-}
-
-//
 // Construct a utf8 conforming string from a raw char* buffer
 //
 STRING_HANDLE STRING_construct_utf8(
-    const unsigned char* buf,
+    const uint8_t* buf,
     size_t buf_len
 )
 {
@@ -723,36 +696,16 @@ STRING_HANDLE STRING_construct_utf8(
 }
 
 //
-// Construct a base64 conforming string from a raw char* buffer
-//
-STRING_HANDLE STRING_construct_base64(
-    const unsigned char* buf,
-    size_t buf_len
-)
-{
-    BUFFER_HANDLE buffer;
-    STRING_HANDLE result = NULL;
-
-    buffer = BUFFER_new();
-    if (!buffer)
-        return NULL;
-    if (0 == BUFFER_build(buffer, buf, buf_len))
-        result = Base64_Encode(buffer);
-    BUFFER_delete(buffer);
-    return result;
-}
-
-//
 // Helper to encode a buffer as base16
 //
 void string_from_buf(
-    const unsigned char* buf, // must be at least half the size of len
+    const uint8_t* buf, // must be at least half the size of len
     char* string,
     size_t len,
     bool swap
 )
 {
-    unsigned char c;
+    uint8_t c;
 
 #define _byte_to_string(i) \
         c = (buf[(i)] & 0xf0) >> 4; \
@@ -778,7 +731,7 @@ void string_from_buf(
 //
 int32_t string_to_buf(
     const char* string,
-    unsigned char* buf,  
+    uint8_t* buf,  
     size_t len,        // must be at least half the size of string len
     bool swap
 )
@@ -816,6 +769,71 @@ int32_t string_to_buf(
             _string_to_byte(i);
         }
     return er_ok;
+}
+
+//
+// Convert base16 string to byte buffer
+//
+int32_t string_base16_to_byte_array(
+    const char* val,
+    uint8_t** buffer,
+    size_t* len
+)
+{
+    int32_t result;
+    size_t min_len;
+    if (!buffer || !len || !val)
+        return er_fault;
+    min_len = (strlen(val) / 2);
+    if (!min_len)
+        return er_arg;
+    if (*len && *len < min_len)
+        return er_fault;
+    if (!*buffer || !*len)
+        *buffer = (uint8_t*)mem_alloc(min_len);
+    *len = min_len;
+    if (!*buffer)
+        return er_out_of_memory;
+    result = string_to_buf(val, *buffer, *len, false);
+    if (result == er_ok)
+        return er_ok;
+    mem_free(*buffer);
+    return result;
+}
+
+//
+// Convert base64 string to byte buffer
+//
+int32_t string_base64_to_byte_array(
+    const char* val,
+    uint8_t** buffer,
+    size_t* len
+)
+{
+    int32_t result;
+    BUFFER_HANDLE handle;
+    if (!buffer || !len || !val)
+        return er_fault;
+
+    handle = Base64_Decoder(val);
+    if (!handle)
+        return er_out_of_memory;
+    do
+    {
+        *len = BUFFER_length(handle);
+        *buffer = (uint8_t*)mem_alloc(*len);
+        if (!*buffer)
+        {
+            result = er_out_of_memory;
+            break;
+        }
+        memcpy(*buffer, BUFFER_u_char(handle), *len);
+        result = er_ok;
+        break;
+    } 
+    while (0);
+    BUFFER_delete(handle);
+    return result;
 }
 
 //
@@ -886,37 +904,6 @@ int32_t string_from_uuid(
 }
 
 //
-// Construct a random ascii string
-//
-STRING_HANDLE STRING_construct_random(
-    size_t len
-)
-{
-    int32_t result;
-    char* buffer;
-    size_t buf_len; 
-    
-    if (len < 1)
-        return NULL;
-
-    buf_len = (len + 1) / 2;
-    buffer = (char*)crt_alloc(len + 2 + buf_len);
-    if (buffer)
-    {
-        result = pal_rand_fill((unsigned char*)&buffer[len + 2], buf_len);
-        if (result == er_ok)
-        {
-            // Format the buffer as base16 and terminate
-            string_from_buf((unsigned char*)&buffer[len + 2], buffer, (len + 1), false);
-            buffer[len] = 0;
-            return STRING_new_with_memory(buffer);
-        }
-        crt_free(buffer);
-    }
-    return NULL;
-}
-
-//
 // Construct a random uuid string
 //
 STRING_HANDLE STRING_construct_uuid(
@@ -949,3 +936,78 @@ STRING_HANDLE STRING_construct_uuid(
     crt_free(buffer);
     return NULL;
 }
+
+//
+// Construct a base64 conforming string from a raw char* buffer
+//
+STRING_HANDLE STRING_construct_base64(
+    const uint8_t* buf,
+    size_t buf_len
+)
+{
+    BUFFER_HANDLE buffer;
+    STRING_HANDLE result = NULL;
+    buffer = BUFFER_new();
+    if (!buffer)
+        return NULL;
+    if (0 == BUFFER_build(buffer, buf, buf_len))
+        result = Base64_Encode(buffer);
+    BUFFER_delete(buffer);
+    return result;
+}
+
+//
+// Construct a base16 conforming string from a raw char* buffer
+//
+STRING_HANDLE STRING_construct_base16(
+    const uint8_t* buf,
+    size_t len
+)
+{
+    char* buffer;
+    if (!len || !buf)
+        return NULL;
+    len *= 2;
+    buffer = (char*)crt_alloc(len + 1);
+    if (!buffer)
+        return NULL;
+    string_from_buf(buf, buffer, len, false);
+    buffer[len] = 0;
+    return STRING_new_with_memory(buffer);
+}
+
+// 
+// Construct a random ascii string 
+// 
+STRING_HANDLE STRING_construct_random(
+    size_t len
+)
+{
+    int32_t result;
+    char* buffer;
+    size_t buf_len;
+
+    if (!len)
+        return NULL;
+
+    buf_len = (len + 1) / 2;
+    buffer = (char*)crt_alloc(len + 2 + buf_len);
+    if (buffer)
+    {
+        result = pal_rand_fill(
+            (unsigned char*)&buffer[len + 2], buf_len);
+        if (result == er_ok)
+        {
+            // Format the buffer as base16 and terminate 
+            string_from_buf((unsigned char*)&buffer[len + 2],
+                buffer, (len + 1), false);
+            buffer[len] = 0;
+            return STRING_new_with_memory(buffer);
+        }
+        crt_free(buffer);
+    }
+    return NULL;
+}
+
+
+

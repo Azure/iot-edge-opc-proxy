@@ -461,7 +461,7 @@ enum __H_ERRNO
 // Windows
 typedef wchar_t WCHAR, *LPWSTR;
 typedef char *LPSTR;
-typedef unsigned char BYTE;
+typedef unsigned char BYTE, *LPBYTE;
 typedef const wchar_t *LPCWSTR;
 typedef const char *LPCSTR, *PCSTR;
 typedef unsigned int UINT, DWORD, *LPDWORD;
@@ -474,6 +474,7 @@ typedef const void* LPCVOID;
 typedef HANDLE *PHANDLE;
 typedef unsigned short WORD, USHORT, INTERNET_PORT;
 typedef void* DWORD_PTR, *HLOCAL;
+typedef size_t SIZE_T;
 #define INVALID_HANDLE_VALUE (HANDLE)-1
 #define TRUE true
 #define FALSE false
@@ -589,6 +590,23 @@ typedef void* HCRYPTPROV;
 #define PROV_RSA_FULL 1
 #define CRYPT_VERIFYCONTEXT     0x10
 #define CRYPT_SILENT            0x40
+
+#define CRYPTPROTECTMEMORY_BLOCK_SIZE 16
+#define CRYPTPROTECTMEMORY_SAME_LOGON 0x2
+
+// Wincred.h
+
+typedef struct _CREDENTIALA {
+    DWORD Type;
+    LPSTR TargetName;
+    DWORD CredentialBlobSize;
+    LPBYTE CredentialBlob;
+    DWORD Persist;
+    LPSTR UserName;
+} CREDENTIALA;
+
+#define CRED_TYPE_GENERIC 4
+#define CRED_PERSIST_LOCAL_MACHINE 3
 
 // Winsock
 typedef intptr_t SOCKET;
@@ -1089,7 +1107,8 @@ struct lws_client_connect_info
     struct lws **pwsi;
 };
 
-enum lws_write_protocol {
+enum lws_write_protocol
+{
     LWS_WRITE_CONTINUATION = 0x1,
     LWS_WRITE_BINARY = 0x2,
     LWS_WRITE_TEXT = 0x4,
@@ -1108,6 +1127,33 @@ typedef void BIO_METHOD;
 typedef void X509;
 typedef void SSL_CTX;
 typedef void pem_password_cb;
+
+// secret service
+typedef bool gboolean;
+typedef char gchar;
+typedef struct __SecretSchemaAttribute 
+{
+    const gchar* name;
+    int type;
+} 
+SecretSchemaAttribute;
+typedef struct __SecretSchema  
+{
+    const gchar *name;
+    int flags;
+    SecretSchemaAttribute attributes[32];
+} 
+SecretSchema; 
+typedef struct __GError
+{
+    const char* message;
+}
+GError;
+typedef void GCancellable;
+#define SECRET_COLLECTION_DEFAULT "foo"
+#define SECRET_COLLECTION_SESSION "bar"
+#define SECRET_SCHEMA_NONE 1
+#define SECRET_SCHEMA_ATTRIBUTE_STRING 3
 
 //
 // Adapter types

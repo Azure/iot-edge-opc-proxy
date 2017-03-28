@@ -5,6 +5,7 @@
 #include "io_mqtt.h"
 #include "io_queue.h"
 #include "xio_sk.h"
+#include "pal.h"
 #include "pal_time.h"
 #include "util_string.h"
 
@@ -237,7 +238,7 @@ void io_mqtt_connection_free(
     //           &connection->subscriptions), io_mqtt_subscription_t, link));
     //   }
 
-    log_info(connection->log, "Connection freed.");
+    log_trace(connection->log, "Connection freed.");
     mem_free_type(io_mqtt_connection_t, connection);
 }
 
@@ -433,7 +434,7 @@ static void io_mqtt_connection_monitor(
     // If connection has expired, reset connection
     if (connection->expiry && connection->expiry < now)
     {
-        log_info(connection->log, "Need to refresh token, soft reset...");
+        log_trace(connection->log, "Need to refresh token, soft reset...");
         io_mqtt_connection_clear_failures(connection);
         __do_next(connection, io_mqtt_connection_soft_reset);
         return;
@@ -554,7 +555,7 @@ static void io_mqtt_connection_receive_message(
     properties = STRING_construct(props);
     payload = mqttmessage_getApplicationMsg(msg_handle);
     
-    log_info(subscription->log, "RECV [size: %08d]", payload->length);
+    log_trace(subscription->log, "RECV [size: %08d]", payload->length);
     // Do callback
     subscription->receiver_cb(subscription->receiver_ctx,
         (io_mqtt_properties_t*)properties, payload->message, payload->length);
@@ -595,7 +596,7 @@ static int32_t io_mqtt_connection_handle_PUBLISH_ACK(
         return er_not_found; 
     }
 
-    log_info(connection->log, "SENT [size: %08d, took %d]", 
+    log_trace(connection->log, "SENT [size: %08d, took %d]",
         message->buf_len, ticks_get() - message->attempted);
     io_mqtt_connection_clear_failures(connection);
     
@@ -777,7 +778,7 @@ static void io_mqtt_connection_operation_callback(
         if (connection->status == io_mqtt_status_connecting ||
             connection->status == io_mqtt_status_connected)
         {
-            log_info(connection->log, "Remote side disconnected.");
+            log_trace(connection->log, "Remote side disconnected.");
         }
         break;
 
@@ -884,7 +885,7 @@ static void io_mqtt_connection_complete_disconnect(
         xio_destroy(connection->socket_io);
         connection->socket_io = NULL;
 
-        log_info(connection->log, "Socket disconnected.");
+        log_trace(connection->log, "Socket disconnected.");
     }
 
     if (connection->client)
@@ -892,7 +893,7 @@ static void io_mqtt_connection_complete_disconnect(
         mqtt_client_deinit(connection->client);
         connection->client = NULL;
 
-        log_info(connection->log, "Client disconnected.");
+        log_trace(connection->log, "Client disconnected.");
     }
 
     // Reset send queue
@@ -964,18 +965,17 @@ static void io_mqtt_connection_reconnect(
             if (!connection->address->scheme)
                 connection->is_websocket = !connection->is_websocket;
 
-            if (connection->is_websocket)
+            if (connection->is_websocket && (pal_caps() & pal_cap_wsclient))
             {
                 memset(&ws_io_config, 0, sizeof(WSIO_CONFIG));
-                ws_io_config.host = 
+                ws_io_config.hostname = 
                     STRING_c_str(connection->address->host_name);
                 ws_io_config.port =
                     connection->address->port ? connection->address->port : 443;
-                ws_io_config.protocol_name =
+                ws_io_config.protocol =
                     "MQTT";
-                ws_io_config.relative_path = 
+                ws_io_config.resource_name = 
                     STRING_c_str(connection->address->path);
-                ws_io_config.use_ssl = true;
 
                 connection->socket_io = xio_create(
                     wsio_get_interface_description(), &ws_io_config);
@@ -984,6 +984,7 @@ static void io_mqtt_connection_reconnect(
             }
             else
             {
+                memset(&tls_io_config, 0, sizeof(tls_io_config));
                 tls_io_config.port = 
                     connection->address->port ? connection->address->port : 8883;
                 tls_io_config.hostname = STRING_c_str(connection->address->host_name);
@@ -1111,7 +1112,7 @@ void io_mqtt_subscription_release(
     if (!subscription)
         return;
 
-    log_info(subscription->log, "Free subscription for topic %s...", 
+    log_trace(subscription->log, "Free subscription for topic %s...",
         STRING_c_str(subscription->uri));
 
     if (__subscription_subscribed(subscription))
@@ -1427,7 +1428,7 @@ void io_mqtt_connection_close(
 
     status = connection->status;
 
-    log_info(connection->log, "Closing connection ...");
+    log_trace(connection->log, "Closing connection ...");
     connection->status = io_mqtt_status_closing;
     connection->reconnect_cb = NULL;
 

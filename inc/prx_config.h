@@ -22,6 +22,7 @@ typedef enum prx_config_key
     prx_config_key_proxy_pwd,       // ... password to use to connect
     prx_config_key_connect_flag,      // Controls connection behavior
     prx_config_key_token_ttl,       // Default ttl for created tokens
+    prx_config_key_policy_import,   // Whether to allow policy import
     prx_config_key_max
 }
 prx_config_key_t;

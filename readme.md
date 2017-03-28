@@ -71,21 +71,20 @@ provision devices in your Azure IoT Hub service.
 
 For simplicity, the default Iot Hub provider used by most of the samples reads the connection string from the  ```_HUB_CS ``` environment variables when not provided programmatically.  
 
-## Proxy Module Host Sample
+## Proxy Host 
 
-While the Proxy module can be hosted by the field gateway, for demonstration purposes the ```proxyd``` executable can also 
-be used.  
+While the Proxy module can be hosted by a Gateway built using the Field gateway SDK, the ```proxyd``` executable is an 
+alternative host which can be configured from the command line.  An IoT Hub connection string can be provided via the 
+```-c```, ```-C``` or ```-s``` command line arguments or through the ```_HUB_CS ``` environment variable (which allows you 
+to run the host without any command line arguments).   
 
-If you run the proxy host sample without a command line argument, the sample tries to read the ```iothubowner``` policy 
-connection strings from the  ```_HUB_CS ``` environment variable, and if successful, will automatically create a proxy entry 
-in your Iot Hub under the host name of the machine it is running on, and then wait and listen.  It will immediately exit if 
-the variable is not set, or the information is not provided otherwise.
+If the ```iothubowner``` policy connection string is provided, it will automatically create a proxy entry in your Iot Hub using 
+the host name of the machine it is running on, and then wait and listen for requests.  Use the ```-D``` option to persist the
+registration information locally.  
 
-Alternatively, it can read the connection string from a file.  The file name then needs to be provided through the ```-C``` 
-command line argument.  
-
-Using the ```-n``` option it is possible to provide a different proxy identity than the host name of the machine (e.g. to 
-run multiple proxies simultaneously).  
+For example, to install a proxy, you can run ```proxy -i -C iothubowner.txt -D config.db``` which will add the device to the 
+config.db file, and optionally safe the key in a platform specific secure location.  You can then run ```proxy -D config.db``` 
+to start the proxy.  The proxy will read the connection string from config.db, connect to Azure, and wait for requests.
 
 Run the ```proxyd``` executable with ```--help``` command line switch to see all available options. 
 
@@ -94,7 +93,7 @@ so already, install docker on your machine, then in a terminal or console window
 
 ```
 docker build -t <tag> https://github.com/Azure/iot-gateway-proxy
-docker run -e _HUB_CS=<iothubowner-connection-string> <tag>
+docker run <tag> <commandlineargs>
 ```
 
 ## Other samples

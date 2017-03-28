@@ -48,6 +48,9 @@
     <ClCompile Include="..\..\..\deps\getopt\src\getopt.c">
       <Filter>src\getopt</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_cred_win.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\os_win.h">
@@ -88,6 +91,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\deps\getopt\src\getopt.h">
       <Filter>inc\getopt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_cred.h">
+      <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

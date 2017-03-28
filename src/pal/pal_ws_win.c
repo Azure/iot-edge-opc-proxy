@@ -229,13 +229,13 @@ static void pal_wsclient_log_winhttp_callback_status(
     (void)status;
 #if defined(_MSC_VER)
 #define __case(v, fmt, ...) \
-    case v: log_info(wsclient->log, #v fmt, __VA_ARGS__); break;
+    case v: log_trace(wsclient->log, #v fmt, __VA_ARGS__); break;
 #elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
 #define __case(v, fmt, ...) \
-    case v: log_info(wsclient->log, #v fmt, ##__VA_ARGS__); break;
+    case v: log_trace(wsclient->log, #v fmt, ##__VA_ARGS__); break;
 #else
 #define __case(v, fmt, args...) \
-    case v: log_info(wsclient->log, #v fmt, ## args); break;
+    case v: log_trace(wsclient->log, #v fmt, ## args); break;
 #endif
     switch (status)
     {
@@ -579,7 +579,7 @@ static void pal_wsclient_close_handle(
         
         if (atomic_bit_clear(wsclient->state, pal_wsclient_disconnected_bit))
         {
-            log_info(wsclient->log, "Websocket successfully disconnected! (%p [%p])",
+            log_trace(wsclient->log, "Websocket successfully disconnected! (%p [%p])",
                 wsclient, wsclient->context);
             //
             // If connection, socket, and request are closed, return any in 
@@ -682,7 +682,7 @@ static void CALLBACK pal_wsclient_winhttp_cb(
             break;
         }
 
-        log_info(wsclient->log, "Connection upgraded to websocket (%p)!", wsclient);
+        log_trace(wsclient->log, "Connection upgraded to websocket (%p)!", wsclient);
 
         if (!WinHttpSetOption(
             wsclient->h_websocket, WINHTTP_OPTION_CONTEXT_VALUE, &wsclient, sizeof(wsclient)))

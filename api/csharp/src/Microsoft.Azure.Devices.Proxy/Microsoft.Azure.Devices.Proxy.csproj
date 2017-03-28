@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>Managed Service API for the Field Gateway Proxy Module</Description>
+    <Description>Managed Service API for IoT Device Proxy</Description>
     <AssemblyTitle>Microsoft Azure Devices Proxy API</AssemblyTitle>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.1.1</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;net45;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>

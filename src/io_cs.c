@@ -4,9 +4,14 @@
 #include "util_mem.h"
 #include "util_string.h"
 #include "util_stream.h"
+#include "prx_config.h"
 #include "io_cs.h"
+
+#include "pal.h"
 #include "pal_file.h"
-#include "azure_c_shared_utility/sastoken.h"
+#include "pal_cred.h"
+
+#include "azure_c_shared_utility/sastoken.h" // for SASToken_Validate
 
 //
 // Items in spec
@@ -24,6 +29,7 @@ typedef enum io_cs_entry
     io_cs_entry_entity,
     io_cs_entry_endpoint_name,
     io_cs_entry_shared_access_token,
+    io_cs_entry_shared_access_key_handle,
     io_cs_entry_max
 }
 io_cs_entry_t;
@@ -31,11 +37,10 @@ io_cs_entry_t;
 //
 // connection string
 //
-typedef struct io_cs
+struct io_cs
 {
     STRING_HANDLE entries[io_cs_entry_max];
-}
-io_cs_struct_t;
+};
 
 //
 // Validate host name
@@ -132,7 +137,7 @@ static int32_t io_cs_validate_device_id(
 // Validate fqn
 //
 static int32_t io_cs_validate(
-    io_cs_struct_t* cs
+    io_cs_t* cs
 )
 {
     int32_t result;
@@ -178,6 +183,138 @@ static int32_t io_cs_validate(
 }
 
 //
+// Build a unique key name from this connection string.
+//
+static int32_t io_cs_get_unique_key_name(
+    io_cs_t* cs,
+    STRING_HANDLE* created
+)
+{   
+    // The format is <policy>|device:<device>@<hostname>
+    int32_t result;
+    const char* id;
+    STRING_HANDLE key_name;
+
+    dbg_assert_ptr(cs);
+    dbg_assert_ptr(created);
+
+    // Get a unique key name as name/id @ hostname
+    id = io_cs_get_shared_access_key_name(cs);
+    key_name = STRING_construct(id ? id : "");
+    if (!key_name)
+        return er_out_of_memory;
+    do
+    {
+        result = er_out_of_memory;
+        if (!id)
+        {
+            id = io_cs_get_device_id(cs);
+            if (!id)
+            {
+                log_error(NULL, "No device nor key name to make "
+                    "unique key name for connection string!");
+                result = er_not_found;
+                break;
+            }
+
+            if (0 != STRING_concat(key_name, "device:") ||
+                0 != STRING_concat(key_name, id))
+                break;
+        }
+
+        id = io_cs_get_host_name(cs);
+        if (id &&
+            (0 != STRING_concat(key_name, "@") ||
+                0 != STRING_concat(key_name, id)))
+            break;
+        
+        *created = key_name;
+        return er_ok;
+    } 
+    while (0);
+    
+    STRING_delete(key_name);
+    return result;
+}
+
+//
+// If connection string contains key, protect it
+//
+static int32_t io_cs_import_key(
+    io_cs_t* cs
+)
+{
+    int32_t result;
+    size_t key_len;
+    STRING_HANDLE key_val;
+    STRING_HANDLE key_name = NULL;
+    STRING_HANDLE key_handle;
+    uint8_t* key = NULL;
+    bool persist;
+
+    // Key present?  And import supported?
+    key_val = cs->entries[io_cs_entry_shared_access_key];
+    if (!key_val || 0 == (pal_caps() & pal_cap_cred))
+        return er_ok;
+
+    result = io_cs_get_unique_key_name(cs, &key_name);
+    if (result != er_ok)
+        return result;
+
+    // base 64 decode the key then import into credential store  
+    // TODO: see if we need utf8!
+    do
+    {
+        result = string_base64_to_byte_array(STRING_c_str(key_val),
+            &key, &key_len);
+        if (result != er_ok)
+            break;
+
+        // Do not persist policy keys
+        persist = !io_cs_get_shared_access_key_name(cs) ||
+            __prx_config_get_int(prx_config_key_policy_import, 0);
+        result = pal_cred_import(STRING_c_str(key_name), key, key_len,
+            persist, &key_handle);
+        if (result != er_ok)
+            break;
+
+        // Success, delete original key
+        if (0 != STRING_compare(key_name, key_handle))
+            cs->entries[io_cs_entry_shared_access_key_handle] = key_handle;
+        else // No need to keep it - it is a unique well known key-name
+            STRING_delete(key_handle);
+
+        // Clear key value. 
+        // memset((void*)STRING_c_str(key_val), 0, STRING_length(key_val));
+        cs->entries[io_cs_entry_shared_access_key] = NULL;
+        STRING_delete(key_val);
+    } 
+    while (0);
+    if (key)
+        mem_free(key);
+    if (key_name)
+        STRING_delete(key_name);
+    return result;
+}
+
+//
+// Returns a key handle for this connection string
+//
+static STRING_HANDLE io_cs_get_key_handle(
+    io_cs_t* cs
+)
+{
+    STRING_HANDLE key_handle;
+    key_handle = cs->entries[io_cs_entry_shared_access_key_handle];
+    if (!key_handle)
+    {
+        if (er_ok == io_cs_get_unique_key_name(cs, &key_handle))
+            cs->entries[io_cs_entry_shared_access_key_handle] = key_handle;
+    }
+    return key_handle;
+}
+
+//
 // Callback for connections string parser
 //
 static int32_t io_cs_parser_callback(
@@ -188,7 +325,7 @@ static int32_t io_cs_parser_callback(
     size_t val_len
 )
 {
-    io_cs_struct_t* cs = (io_cs_struct_t*)ctx;
+    io_cs_t* cs = (io_cs_t*)ctx;
 #define __io_cs_add_entry(t) { \
         if (cs->entries[t]) return er_invalid_format; \
         cs->entries[t] = STRING_safe_construct_n(val, val_len); \
@@ -215,6 +352,8 @@ static int32_t io_cs_parser_callback(
         __io_cs_add_entry(io_cs_entry_endpoint_name)
     else if (string_is_equal_nocase(key, key_len, "SharedAccessToken"))
         __io_cs_add_entry(io_cs_entry_shared_access_token)
+    else if (string_is_equal_nocase(key, key_len, "SharedAccessKeyHandle"))
+        __io_cs_add_entry(io_cs_entry_shared_access_key_handle)
     else if (string_is_equal_nocase(key, key_len, "GatewayHostName"))
         return er_ok; // Not used
     else
@@ -319,6 +458,10 @@ int32_t io_cs_append_to_STRING(
         cs, io_cs_entry_shared_access_token, "SharedAccessToken=", c_string);
     if (result != er_ok)
         return result;
+    result = io_cs_append_entry_to_STRING(
+        cs, io_cs_entry_shared_access_key_handle, "SharedAccessKeyHandle=", c_string);
+    if (result != er_ok)
+        return result;
 
     return result;
 }
@@ -337,7 +480,7 @@ void io_cs_free(
         if (cs->entries[i])
             STRING_delete(cs->entries[i]);
     }
-    mem_free_type(io_cs_struct_t, cs);
+    mem_free_type(io_cs_t, cs);
 }
 
 //
@@ -349,17 +492,21 @@ int32_t io_cs_create_from_string(
 )
 {
     int32_t result;
-    io_cs_struct_t* cs;
+    io_cs_t* cs;
     if (!c_string || !created)
         return er_fault;
 
-    cs = mem_zalloc_type(io_cs_struct_t);
+    cs = mem_zalloc_type(io_cs_t);
     if (!cs)
         return er_out_of_memory;
     do
     {
         result = string_key_value_parser(
             c_string, io_cs_parser_callback, ';', cs);
+        if (result != er_ok)
+            break;
+
+        result = io_cs_import_key(cs);
         if (result != er_ok)
             break;
 
@@ -449,16 +596,17 @@ int32_t io_cs_create(
     io_cs_t** created
 )
 {
-    int32_t result = er_out_of_memory;
-    io_cs_struct_t* cs;
+    int32_t result;
+    io_cs_t* cs;
     if (!host_name || !created)
         return er_fault;
 
-    cs = mem_zalloc_type(io_cs_struct_t);
+    cs = mem_zalloc_type(io_cs_t);
     if (!cs)
         return er_out_of_memory;
     do
     {
+        result = er_out_of_memory;
         cs->entries[io_cs_entry_host_name] = 
             STRING_construct(host_name);
         if (!cs->entries[io_cs_entry_host_name])
@@ -482,11 +630,15 @@ int32_t io_cs_create(
 
         if (shared_access_key)
         {
-            cs->entries[io_cs_entry_shared_access_key] = 
+            cs->entries[io_cs_entry_shared_access_key] =
                 STRING_construct(shared_access_key);
             if (!cs->entries[io_cs_entry_shared_access_key])
                 break;
         }
+
+        result = io_cs_import_key(cs);
+        if (result != er_ok)
+            break;
 
         result = io_cs_validate(cs);
         if (result != er_ok)
@@ -510,11 +662,11 @@ int32_t io_cs_clone(
 )
 {
     int32_t result = er_ok;
-    io_cs_struct_t* cs;
+    io_cs_t* cs;
     if (!orig || !cloned)
         return er_fault;
 
-    cs = mem_zalloc_type(io_cs_struct_t);
+    cs = mem_zalloc_type(io_cs_t);
     if (!cs)
         return er_out_of_memory;
     for (int32_t i = 0; i < io_cs_entry_max; i++)
@@ -534,6 +686,28 @@ int32_t io_cs_clone(
     else
         *cloned = cs;
     return result;
+}
+
+//
+// Releases any persistently stored key handle
+//
+void io_cs_remove_keys(
+    io_cs_t* cs
+)
+{
+    STRING_HANDLE handle;
+    if (!cs)
+        return;
+
+    handle = cs->entries[io_cs_entry_shared_access_key_handle];
+    if (!handle)
+        return;
+
+    // Notify key storage to remove the specified key handle
+    pal_cred_remove(handle);
+
+    STRING_delete(handle);
+    cs->entries[io_cs_entry_shared_access_key_handle] = NULL;
 }
 
 //
@@ -672,16 +846,6 @@ const char* io_cs_get_shared_access_key_name(
 }
 
 //
-// Returns the key from the cs
-//
-const char* io_cs_get_shared_access_key(
-    io_cs_t* cs
-)
-{
-    return io_cs_get_entry(cs, io_cs_entry_shared_access_key);
-}
-
-//
 // Returns the name of the hub
 //
 const char* io_cs_get_hub_name(
@@ -771,7 +935,7 @@ int32_t io_cs_set_device_id(
 {
     int32_t result;
     if (!cs)
-        return er_fault;
+    return er_fault;
 
     if (device_id)
     {
@@ -869,19 +1033,18 @@ int32_t io_cs_create_token_provider(
 )
 {
     int32_t result;
-    const char *key, *val, *delim = "/";
-    STRING_HANDLE scope = NULL, b64_key = NULL;
-
-    key = io_cs_get_shared_access_token(cs);
+    const char *val, *delim = "/";
+    STRING_HANDLE scope = NULL;
+    STRING_HANDLE key;
+  
+    if (!cs)
+        return er_fault;
+    key = cs->entries[io_cs_entry_shared_access_token];
     if (key)
-        return io_passthru_token_provider_create(key, provider);
+        return io_passthru_token_provider_create(STRING_c_str(key), provider);
     do
     {
         result = er_invalid_format;
-        key = io_cs_get_shared_access_key(cs);
-        if (!key)
-            break;
-
         val = io_cs_get_endpoint(cs);
         if (!val)
         {
@@ -896,40 +1059,44 @@ int32_t io_cs_create_token_provider(
             break;
 
         val = io_cs_get_device_id(cs);
-        if (val)
-        {
-            // scope is {HostName}/devices/{DeviceId}
+        if (val) // scope is {HostName}/devices/{DeviceId}
             delim = "/devices/";
-            // Iot hub connection string is alread base 64
-            b64_key = STRING_construct(key);
-        }
         else
         {
             val = io_cs_get_entity(cs);
             if (!val)
                 val = io_cs_get_endpoint_name(cs);
-            // Convert utf-8 key to base 64
-            b64_key = STRING_construct_base64((const unsigned char*)key, strlen(key));
         }
 
-        if (!b64_key)
-            break;
         if (val)
         {
             if (0 != STRING_concat(scope, delim) ||
                 0 != STRING_concat(scope, val))
                 break;
         }
-        result = io_iothub_token_provider_create(io_cs_get_shared_access_key_name(cs), 
-            STRING_c_str(b64_key), STRING_c_str(scope), provider);
+
+        if (pal_caps() & pal_cap_cred)
+            key = io_cs_get_key_handle(cs);
+        else
+            key = cs->entries[io_cs_entry_shared_access_key];
+        if (!key)
+        {
+            result = er_invalid_format;
+            break;
+        }
+
+        val = io_cs_get_shared_access_key_name(cs);
+
+        // Create provider
+        result = io_iothub_token_provider_create(val, key,
+            STRING_c_str(scope), provider);
         if (result != er_ok)
             break;
-    } while (0);
+    } 
+    while (0);
 
     if (scope)
         STRING_delete(scope);
-    if (b64_key)
-        STRING_delete(b64_key);
     return result;
 }
 

@@ -8,6 +8,7 @@
 // 1. Required mocks
 //
 #include "io_codec.h"
+#include "io_token.h"
 
 //
 // 2. Include unit under test
@@ -94,6 +95,7 @@ TEST_FUNCTION(io_cs_create_from_string__success_1)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+    
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
         .SetReturn(k_hostname_string_valid);
@@ -112,6 +114,7 @@ TEST_FUNCTION(io_cs_create_from_string__success_1)
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("SharedAccessKey", 15))
         .SetReturn((STRING_HANDLE)4);
+    STRICT_EXPECTED_CALL(pal_caps()).SetReturn((uint32_t)~pal_cap_cred);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
         .SetReturn("Hub.Suffix");
     STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
@@ -191,6 +194,7 @@ TEST_FUNCTION(io_cs_create_from_string__success_2)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 14))
@@ -253,6 +257,7 @@ TEST_FUNCTION(io_cs_create_from_string__success_2)
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("32", 2))
         .SetReturn((STRING_HANDLE)5);
 
+    STRICT_EXPECTED_CALL(pal_caps()).SetReturn((uint32_t)~pal_cap_cred);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
         .SetReturn("Hub.Suffix");
     STRICT_EXPECTED_CALL(STRING_c_str(k_device_id_string_valid))
@@ -328,6 +333,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_with_2_components_
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
@@ -371,6 +377,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_with_2_components_
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
@@ -437,6 +444,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_no_hostname)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
@@ -477,6 +485,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_1)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
@@ -519,6 +528,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_2)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
@@ -560,7 +570,9 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_3)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
-    EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
+    
+
+        EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
         .SetReturn(k_hostname_string_valid);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
@@ -598,6 +610,8 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_hostname_4)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+    
+
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n(k_component, 8))
         .SetReturn(k_hostname_string_valid);
@@ -659,6 +673,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_1)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
@@ -709,6 +724,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_2)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
@@ -759,6 +775,7 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_bad_device_id_3)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_connection_string_valid, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
@@ -1200,6 +1217,7 @@ TEST_FUNCTION(io_cs_create__success)
         .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
     STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
         .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(pal_caps()).SetReturn((uint32_t)~pal_cap_cred);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
         .SetReturn(k_host_name_valid);
     STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
@@ -1260,6 +1278,7 @@ TEST_FUNCTION(io_cs_create__arg_device_id_null)
         .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key_name);
     STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
         .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(pal_caps()).SetReturn((uint32_t)~pal_cap_cred);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
         .SetReturn(k_host_name_valid);
 
@@ -1296,6 +1315,7 @@ TEST_FUNCTION(io_cs_create__arg_shared_access_key_name_null)
         .SetReturn((STRING_HANDLE)io_cs_entry_device_id);
     STRICT_EXPECTED_CALL(STRING_construct(k_shared_access_key_valid))
         .SetReturn((STRING_HANDLE)io_cs_entry_shared_access_key);
+    STRICT_EXPECTED_CALL(pal_caps()).SetReturn((uint32_t)~pal_cap_cred);
     STRICT_EXPECTED_CALL(STRING_c_str(k_hostname_string_valid))
         .SetReturn(k_host_name_valid);
     STRICT_EXPECTED_CALL(STRING_c_str((STRING_HANDLE)io_cs_entry_device_id))
@@ -1401,8 +1421,8 @@ TEST_FUNCTION(io_cs_create__neg)
         .SetFailReturn(NULL);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        memset(UT_MEM, 0, sizeof(UT_MEM));
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    memset(UT_MEM, 0, sizeof(UT_MEM));
     result = io_cs_create(k_host_name_valid, k_device_id_valid,
         k_shared_access_key_name_valid, k_shared_access_key_valid, &cs_valid);
 
@@ -1543,7 +1563,7 @@ TEST_FUNCTION(io_cs_clone__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_out_of_memory, er_ok);
+        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok);
 }
 
 // 
@@ -1646,6 +1666,15 @@ TEST_FUNCTION(io_cs_append_to_STRING__success)
         .SetReturn(0);
     STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid,
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_token)))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyHandle="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid,
+        (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key_handle)))
         .SetReturn(0);
 
     // act 
@@ -1833,6 +1862,19 @@ TEST_FUNCTION(io_cs_append_to_STRING__neg)
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_token)))
         .SetReturn(0)
         .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1)
+        .SetFailReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "SharedAccessKeyHandle="))
+        .SetReturn(0)
+        .SetFailReturn(-1);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid,
+        (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key_handle)))
+        .SetReturn(0)
+        .SetFailReturn(-1);
 
     // act 
         UMOCK_C_NEGATIVE_TESTS_ACT();
@@ -1847,7 +1889,7 @@ TEST_FUNCTION(io_cs_append_to_STRING__neg)
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok,            er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_ok,            er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_ok,            er_out_of_memory);
+        er_ok, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok, er_out_of_memory);
 }
 
 // 
@@ -3170,9 +3212,9 @@ TEST_FUNCTION(io_cs_get_shared_access_key_name__arg_connection_string_null)
 }
 
 // 
-// Test io_cs_get_shared_access_key happy path 
+// Test io_cs_get_shared_access_token happy path 
 // 
-TEST_FUNCTION(io_cs_get_shared_access_key__success)
+TEST_FUNCTION(io_cs_get_shared_access_token__success)
 {
     static const char* k_string_c_valid = "1861054187029348710239847019238471203";
     const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x4643455;
@@ -3180,14 +3222,14 @@ TEST_FUNCTION(io_cs_get_shared_access_key__success)
     const char* result;
 
     memset(&connection_string_valid, 0, sizeof(connection_string_valid));
-    connection_string_valid.entries[io_cs_entry_shared_access_key] = k_string_valid;
+    connection_string_valid.entries[io_cs_entry_shared_access_token] = k_string_valid;
 
     // arrange 
     STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
         .SetReturn(k_string_c_valid);
 
     // act 
-    result = io_cs_get_shared_access_key(&connection_string_valid);
+    result = io_cs_get_shared_access_token(&connection_string_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3195,9 +3237,9 @@ TEST_FUNCTION(io_cs_get_shared_access_key__success)
 }
 
 // 
-// Test io_cs_get_shared_access_key passing as connection_string argument an invalid io_cs_t* value 
+// Test io_cs_get_shared_access_token passing as connection_string argument an invalid io_cs_t* value 
 // 
-TEST_FUNCTION(io_cs_get_shared_access_key__arg_connection_string_invalid)
+TEST_FUNCTION(io_cs_get_shared_access_tokeny__arg_connection_string_invalid)
 {
     io_cs_t connection_string_valid;
     const char* result;
@@ -3207,7 +3249,7 @@ TEST_FUNCTION(io_cs_get_shared_access_key__arg_connection_string_invalid)
     // arrange 
 
     // act 
-    result = io_cs_get_shared_access_key(&connection_string_valid);
+    result = io_cs_get_shared_access_token(&connection_string_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3215,16 +3257,16 @@ TEST_FUNCTION(io_cs_get_shared_access_key__arg_connection_string_invalid)
 }
 
 // 
-// Test io_cs_get_shared_access_key passing as connection_string argument an invalid io_cs_t* value 
+// Test io_cs_get_shared_access_token passing as connection_string argument an invalid io_cs_t* value 
 // 
-TEST_FUNCTION(io_cs_get_shared_access_key__arg_connection_string_null)
+TEST_FUNCTION(io_cs_get_shared_access_token__arg_connection_string_null)
 {
     const char* result;
 
     // arrange 
 
     // act 
-    result = io_cs_get_shared_access_key(NULL);
+    result = io_cs_get_shared_access_token(NULL);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -3546,6 +3588,7 @@ TEST_FUNCTION(io_decode_cs__success)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2);
+
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
         .SetReturn(k_hostname_string_valid);
@@ -3606,6 +3649,7 @@ TEST_FUNCTION(io_decode_cs__neg)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
+
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     STRICT_EXPECTED_CALL(STRING_safe_construct_n("Hub.Suffix", 2))
         .SetReturn(k_hostname_string_valid)
@@ -3634,6 +3678,204 @@ TEST_FUNCTION(io_decode_cs__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
         er_invalid_format, er_invalid_format, er_ok, er_out_of_memory, er_invalid_format);
 }
+
+// 
+// Test io_cs_remove_keys happy path 
+// 
+TEST_FUNCTION(io_cs_remove_keys__success_0)
+{
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x2342;
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+    connection_string_valid.entries[io_cs_entry_shared_access_key_handle] = k_string_valid;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pal_cred_remove(k_string_valid));
+    STRICT_EXPECTED_CALL(STRING_delete(k_string_valid));
+
+    // act 
+    io_cs_remove_keys(connection_string_ptr_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_IS_NULL(connection_string_valid.entries[io_cs_entry_shared_access_key_handle]);
+}
+
+// 
+// Test io_cs_remove_keys happy path 
+// 
+TEST_FUNCTION(io_cs_remove_keys__success_1)
+{
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+
+    // arrange 
+
+    // act 
+    io_cs_remove_keys(connection_string_ptr_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+}
+
+// 
+// Test io_cs_remove_keys passing as connection_string argument an invalid io_cs_t* value 
+// 
+TEST_FUNCTION(io_cs_remove_keys__arg_connection_string_invalid)
+{
+    // arrange 
+
+    // act 
+    io_cs_remove_keys(NULL);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+}
+
+// 
+// Test io_cs_create_token_provider happy path 
+// 
+TEST_FUNCTION(io_cs_create_token_provider__success_0)
+{
+    static const io_cs_t* k_cs_valid;
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x2342;
+    static const io_token_provider_t* k_provider_valid = (io_token_provider_t*)0x3243;
+    static const char* k_string_value_valid = "test";
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+    io_token_provider_t* provider_valid;
+    int32_t result;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+    connection_string_valid.entries[io_cs_entry_shared_access_token] = k_string_valid;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn(k_string_value_valid);
+    STRICT_EXPECTED_CALL(io_passthru_token_provider_create(k_string_value_valid, &provider_valid))
+        .CopyOutArgumentBuffer_provider(&k_provider_valid, sizeof(k_provider_valid))
+        .SetReturn(er_ok);
+
+    // act 
+    result = io_cs_create_token_provider(connection_string_ptr_valid, &provider_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test io_cs_create_token_provider happy path 
+// 
+TEST_FUNCTION(io_cs_create_token_provider__success_1)
+{
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x2342;
+    static const io_token_provider_t* k_provider_valid = (io_token_provider_t*)0x3243;
+    static const char* k_string_value_valid = "test";
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+    io_token_provider_t* provider_valid;
+    int32_t result;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+    connection_string_valid.entries[io_cs_entry_shared_access_token] = k_string_valid;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn(k_string_value_valid);
+    STRICT_EXPECTED_CALL(io_passthru_token_provider_create(k_string_value_valid, &provider_valid))
+        .CopyOutArgumentBuffer_provider(&k_provider_valid, sizeof(k_provider_valid))
+        .SetReturn(er_ok);
+
+    // act 
+    result = io_cs_create_token_provider(connection_string_ptr_valid, &provider_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test io_cs_create_token_provider passing as cs argument an invalid io_cs_t* value 
+// 
+TEST_FUNCTION(io_cs_create_token_provider__arg_cs_invalid)
+{
+    io_token_provider_t* provider_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = io_cs_create_token_provider(NULL, &provider_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test io_cs_create_token_provider passing as provider argument an invalid io_token_provider_t** value 
+// 
+TEST_FUNCTION(io_cs_create_token_provider__arg_provider_invalid)
+{
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x2342;
+    static const char* k_string_value_valid = "test";
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+    io_token_provider_t* provider_valid;
+    int32_t result;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+    connection_string_valid.entries[io_cs_entry_shared_access_token] = k_string_valid;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn(k_string_value_valid);
+    STRICT_EXPECTED_CALL(io_passthru_token_provider_create(k_string_value_valid, &provider_valid))
+        .SetReturn(er_fault);
+
+    // act 
+    result = io_cs_create_token_provider(connection_string_ptr_valid, &provider_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test io_cs_create_token_provider unhappy path 
+// 
+TEST_FUNCTION(io_cs_create_token_provider__neg_0)
+{
+    static STRING_HANDLE k_string_valid = (STRING_HANDLE)0x2342;
+    static const io_token_provider_t* k_provider_valid = (io_token_provider_t*)0x3243;
+    static const char* k_string_value_valid = "test";
+    io_cs_t connection_string_valid;
+    io_cs_t* connection_string_ptr_valid = &connection_string_valid;
+    io_token_provider_t* provider_valid;
+    int32_t result;
+
+    memset(&connection_string_valid, 0, sizeof(connection_string_valid));
+    connection_string_valid.entries[io_cs_entry_shared_access_token] = k_string_valid;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
+        .SetReturn(k_string_value_valid);
+    STRICT_EXPECTED_CALL(io_passthru_token_provider_create(k_string_value_valid, &provider_valid))
+        .SetReturn(er_out_of_memory);
+
+    // act 
+    result = io_cs_create_token_provider(connection_string_ptr_valid, &provider_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+}
+
 
 //
 // 5. Teardown tests and test suite

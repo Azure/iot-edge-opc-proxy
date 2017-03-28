@@ -104,7 +104,7 @@ static void xio_wsclient_deliver_inbound_results(
 {
     io_queue_buffer_t* buffer;
     size_t size;
-    unsigned char* buf;
+    uint8_t* buf;
 
     dbg_assert_ptr(ws);
 
@@ -115,7 +115,7 @@ static void xio_wsclient_deliver_inbound_results(
             break;
 
         size = buffer->length;
-        buf = (unsigned char*)io_queue_buffer_to_ptr(buffer);
+        buf = (uint8_t*)io_queue_buffer_to_ptr(buffer);
 
         /**/ if (ws->on_io_error && buffer->code != er_ok)
         {
@@ -534,8 +534,8 @@ static CONCRETE_IO_HANDLE xio_wsclient_create(
     WSIO_CONFIG* ws_io_config = (WSIO_CONFIG*)io_create_parameters;
     xio_wsclient_t* ws;
 
-    if (!ws_io_config || !ws_io_config->host ||
-        !ws_io_config->protocol_name || !ws_io_config->relative_path)
+    if (!ws_io_config || !ws_io_config->hostname ||
+        !ws_io_config->protocol || !ws_io_config->resource_name)
         return NULL;
 
     ws = mem_zalloc_type(xio_wsclient_t);
@@ -553,8 +553,8 @@ static CONCRETE_IO_HANDLE xio_wsclient_create(
             break;
 
         result = pal_wsclient_create(
-            ws_io_config->protocol_name, ws_io_config->host,
-            (uint16_t)ws_io_config->port, ws_io_config->relative_path, 
+            ws_io_config->protocol, ws_io_config->hostname,
+            (uint16_t)ws_io_config->port, ws_io_config->resource_name,
             xio_wsclient_event_handler, ws, &ws->websocket);
         if (result != er_ok)
             break;

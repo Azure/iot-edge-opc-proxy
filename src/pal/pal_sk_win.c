@@ -378,7 +378,7 @@ static void pal_socket_async_connect_complete(
         pal_socket_open_complete(async_op->sock, er_ok);
 
         // Success!
-        log_info(async_op->sock->log, "Socket connected asynchronously!");
+        log_trace(async_op->sock->log, "Socket connected asynchronously!");
     } 
     else
     {
@@ -1000,7 +1000,7 @@ static int32_t pal_socket_async_connect_begin(
         }
         else
         {
-          //  log_info(async_op->sock->log, "Socket connected synchronously!");
+          //  log_trace(async_op->sock->log, "Socket connected synchronously!");
           //  result = er_ok;
             return er_waiting;
         }
@@ -1041,7 +1041,7 @@ static int32_t pal_socket_bind(
         }
         else
         {
-            log_info(sock->log, "Socket bound synchronously!");
+            log_trace(sock->log, "Socket bound synchronously!");
             result = er_ok;
         }
 
@@ -1062,7 +1062,7 @@ static int32_t pal_socket_bind(
             break;
         }
  
-        log_info(sock->log, "Socket listening...");
+        log_trace(sock->log, "Socket listening...");
         result = er_ok;
     }
     while(0);

@@ -41,9 +41,6 @@ namespace NetCoreConsoleClient
             }
             try
             {
-                //  Microsoft.Azure.Devices.Proxy.Socket.Provider = 
-                //      Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
-
                 WcfChannelBase.g_CustomTransportChannel = new ProxyTransportChannelFactory();
 
                 ConsoleSampleClient(endpointURL).Wait();

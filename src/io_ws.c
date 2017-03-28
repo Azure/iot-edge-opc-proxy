@@ -329,7 +329,7 @@ static void io_ws_connection_clear_failures(
 {
     if (connection->back_off_in_seconds)
     {
-        log_info(connection->log, "Clearing failures on connection %p...", 
+        log_trace(connection->log, "Clearing failures on connection %p...",
             connection);
     }
     connection->last_success = connection->last_activity = ticks_get();
@@ -360,7 +360,7 @@ static void io_ws_connection_reset(
         !connection->reconnect_cb(connection->reconnect_ctx))
         return;
 
-    log_info(connection->log, "Reconnecting in %d seconds...",
+    log_trace(connection->log, "Reconnecting in %d seconds...",
         connection->back_off_in_seconds);
 
     __do_later(connection, io_ws_connection_reconnect,
@@ -691,7 +691,7 @@ static void io_ws_connection_event_handler(
         // Fall through
     case pal_wsclient_event_disconnected:
         dbg_assert(!buffer && !size && !type, "no buffer expected.");
-        log_info(connection->log, "... disconnected. (%s) (ws-conn:%p)",
+        log_trace(connection->log, "... disconnected. (%s) (ws-conn:%p)",
             prx_err_string(error), connection);
         __do_next(connection, io_ws_connection_on_disconnected);
         break;
@@ -700,7 +700,7 @@ static void io_ws_connection_event_handler(
         dbg_assert(!buffer && !size && !type, "no buffer expected.");
         dbg_assert_ptr(connection->wsclient);
         connection->wsclient = NULL;
-        log_info(connection->log, "... destroyed. (ws-conn:%p)",
+        log_trace(connection->log, "... destroyed. (ws-conn:%p)",
             connection);
         __do_next(connection, io_ws_connection_free);
         break;
@@ -740,7 +740,7 @@ static void io_ws_connection_monitor(
     // If connection has expired, reset connection
     if (connection->expiry && connection->expiry < now)
     {
-        log_info(connection->log, "Need to refresh credentials, disconnect...");
+        log_trace(connection->log, "Need to refresh credentials, disconnect...");
         __do_next(connection, io_ws_connection_disconnect);
         return;
     }

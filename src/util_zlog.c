@@ -16,7 +16,7 @@ static int32_t init_called = 0;
 	"default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
 	"[rules]\n" \
 	"*.info >stdout\n" \
-	"*.error >stderr\n"
+    "*.error >stderr\n"
 
 //
 // Initialize zlog library
@@ -148,11 +148,10 @@ void __zlog_debug_v(
             func, funclen, line, ZLOG_LEVEL_DEBUG, format, args);
 }
 
-
 //
 // Log trace message implementation
 //
-void __zlog_info_v(
+void __zlog_trace_v(
     log_t log,
     const char *file,
     size_t filelen,
@@ -171,6 +170,27 @@ void __zlog_info_v(
             func, funclen, line, ZLOG_LEVEL_INFO, format, args);
 }
 
+//
+// Log event message implementation
+//
+void __zlog_info_v(
+    log_t log,
+    const char *file,
+    size_t filelen,
+    const char *func,
+    size_t funclen,
+    long line,
+    const char* format,
+    va_list args
+)
+{
+    if (!log)
+        vdzlog(file, filelen,
+            func, funclen, line, ZLOG_LEVEL_NOTICE, format, args);
+    else
+        vzlog((zlog_category_t*)log, file, filelen,
+            func, funclen, line, ZLOG_LEVEL_NOTICE, format, args);
+}
 
 //
 // Log error message implementation
@@ -219,7 +239,7 @@ void __zlog_debug_b(
 //
 // Log trace message implementation
 //
-void __zlog_info_b(
+void __zlog_trace_b(
     log_t log,
     const char *file,
     size_t filelen,
@@ -236,6 +256,28 @@ void __zlog_info_b(
     else
         hzlog((zlog_category_t*)log, file, filelen,
             func, funclen, line, ZLOG_LEVEL_INFO, buf, buflen);
+}
+
+//
+// Log trace message implementation
+//
+void __zlog_info_b(
+    log_t log,
+    const char *file,
+    size_t filelen,
+    const char *func,
+    size_t funclen,
+    long line,
+    const char* buf,
+    size_t buflen
+)
+{
+    if (!log)
+        hdzlog(file, filelen,
+            func, funclen, line, ZLOG_LEVEL_NOTICE, buf, buflen);
+    else
+        hzlog((zlog_category_t*)log, file, filelen,
+            func, funclen, line, ZLOG_LEVEL_NOTICE, buf, buflen);
 }
 
 //
@@ -441,6 +483,7 @@ BOOL __stdcall DllMain(
         _set_invalid_parameter_handler(invalid_parameter);
         break;
     case DLL_PROCESS_DETACH:
+        mem_deinit();
         break;
     case DLL_THREAD_ATTACH:
         break;

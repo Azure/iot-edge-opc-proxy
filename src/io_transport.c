@@ -37,7 +37,7 @@ typedef struct io_iot_hub_umqtt_connection
     io_iot_hub_connection_t base;           // Common connection members
     io_mqtt_connection_t* mqtt_connection; // Underlying mqtt connection
     io_mqtt_subscription_t* subscription;   // Receiver subscription ...
-    prx_buffer_factory_t* buffer_pool;        // plus dynamic buffer pool
+    prx_buffer_factory_t* buffer_pool;       // plus dynamic buffer pool
     log_t log;
 }
 io_iot_hub_umqtt_connection_t;
@@ -53,6 +53,34 @@ typedef struct io_iot_hub_ws_connection
     log_t log;
 }
 io_iot_hub_ws_connection_t;
+
+
+//
+// Start to receive log messages
+//
+static void io_iot_hub_connection_log_telemetry_callback(
+    log_entry_t* msg
+)
+{
+#if defined(NO_ZLOG)
+    (void)msg;
+#else
+    dbg_assert_ptr(msg);
+    // _cb(msg->target, msg->msg);
+#endif
+}
+
+//
+// Hook to receive diagnostic messages
+//
+int32_t io_iot_hub_connection_log_telemetry_subscribe(
+    void
+)
+{
+    return log_register("pal",
+        io_iot_hub_connection_log_telemetry_callback);
+}
+
 
 //
 // Deinit connection base
@@ -74,7 +102,9 @@ static bool io_iot_hub_connection_base_reconnect_handler(
 )
 {
     int32_t result;
-    io_iot_hub_connection_t* connection = (io_iot_hub_connection_t*)context;
+    io_iot_hub_connection_t* connection;
+
+    connection = (io_iot_hub_connection_t*)context;
     if (!connection->handler_cb)
         return false;
     result = connection->handler_cb(
@@ -104,10 +134,9 @@ static int32_t io_iot_hub_connection_base_init(
 // Called when the connection interface is freed
 //
 static void io_iot_hub_umqtt_connection_on_free(
-    void* context
+    io_iot_hub_umqtt_connection_t* connection
 )
 {
-    io_iot_hub_umqtt_connection_t* connection = (io_iot_hub_umqtt_connection_t*)context;
     dbg_assert_ptr(connection);
     dbg_assert(!connection->mqtt_connection && !connection->subscription, 
         "Should be closed");
@@ -124,10 +153,9 @@ static void io_iot_hub_umqtt_connection_on_free(
 // Called when the connection interface closes the connection
 //
 static void io_iot_hub_umqtt_connection_on_close(
-    void* context
+    io_iot_hub_umqtt_connection_t* connection
 )
 {
-    io_iot_hub_umqtt_connection_t* connection = (io_iot_hub_umqtt_connection_t*)context;
     dbg_assert_ptr(connection);
 
     if (connection->subscription)
@@ -162,13 +190,11 @@ static void io_iot_hub_umqtt_connection_on_send_complete(
 // Send message - converts protocol message to transport message
 //
 static int32_t io_iot_hub_umqtt_connection_on_send(
-    void* context,
+    io_iot_hub_umqtt_connection_t* connection,
     io_message_t* message
 )
 {
     int32_t result;
-    io_iot_hub_umqtt_connection_t* connection = 
-        (io_iot_hub_umqtt_connection_t*)context;
     io_codec_ctx_t ctx, obj;
     io_dynamic_buffer_stream_t stream;
     io_stream_t* codec_stream;
@@ -232,7 +258,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
         if (result != er_ok)
             break;
 
-        log_info(connection->log, "OUT: [%s]", io_message_type_as_string(message->type));
+        log_trace(connection->log, "OUT: [%s]", io_message_type_as_string(message->type));
 
         // Buffer now contains json encoded response, send through transport
         result = io_mqtt_connection_publish(connection->mqtt_connection,
@@ -272,15 +298,15 @@ static void io_iot_hub_umqtt_connection_on_receive(
 )
 {
     int32_t result;
-    io_iot_hub_umqtt_connection_t* connection = 
-        (io_iot_hub_umqtt_connection_t*)context;
     io_message_t* message = NULL;
+    io_iot_hub_umqtt_connection_t* connection;
     io_codec_ctx_t ctx, obj;
     char request_id[UUID_PRINTABLE_STRING_LENGTH];
     io_fixed_buffer_stream_t stream;
     io_stream_t* codec_stream;
     bool is_null;
 
+    connection = (io_iot_hub_umqtt_connection_t*)context;
     dbg_assert_ptr(connection);
 
     codec_stream = io_fixed_buffer_stream_init(&stream, body, body_len, NULL, 0);
@@ -339,7 +365,7 @@ static void io_iot_hub_umqtt_connection_on_receive(
             break;
         }
 
-        log_info(connection->log, "IN: [%s]", io_message_type_as_string(message->type));
+        log_trace(connection->log, "IN: [%s]", io_message_type_as_string(message->type));
 
         result = connection->base.handler_cb(
             connection->base.handler_cb_ctx, io_connection_received, message);
@@ -458,11 +484,11 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         
         connection->base.funcs.context =
             connection;
-        connection->base.funcs.on_send =
+        connection->base.funcs.on_send = (io_connection_send_t)
             io_iot_hub_umqtt_connection_on_send;
-        connection->base.funcs.on_close =
+        connection->base.funcs.on_close = (io_connection_close_t)
             io_iot_hub_umqtt_connection_on_close;
-        connection->base.funcs.on_free =
+        connection->base.funcs.on_free = (io_connection_free_t)
             io_iot_hub_umqtt_connection_on_free;
 
         io_cs_free(cs);
@@ -493,14 +519,13 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
 // Called when the connection is freed
 //
 static void io_iot_hub_ws_connection_on_free(
-    void* context
+    io_iot_hub_ws_connection_t* connection
 )
 {
-    io_iot_hub_ws_connection_t* connection = (io_iot_hub_ws_connection_t*)context;
     dbg_assert_ptr(connection);
 
     io_iot_hub_connection_base_deinit(&connection->base);
-    log_info(connection->log, "Websocket transport connection freed.");
+    log_trace(connection->log, "Websocket transport connection freed.");
     mem_free_type(io_iot_hub_ws_connection_t, connection);
 }
 
@@ -508,10 +533,9 @@ static void io_iot_hub_ws_connection_on_free(
 // Called when the connection interface closes the connection
 //
 static void io_iot_hub_ws_connection_on_close(
-    void* context
+    io_iot_hub_ws_connection_t* connection
 )
 {
-    io_iot_hub_ws_connection_t* connection = (io_iot_hub_ws_connection_t*)context;
     dbg_assert_ptr(connection);
 
     if (connection->ws_connection)
@@ -535,9 +559,10 @@ static int32_t io_iot_hub_ws_connection_send_handler(
 )
 {
     int32_t result;
-    io_iot_hub_ws_connection_t* connection = (io_iot_hub_ws_connection_t*)context;
     io_codec_ctx_t ctx, obj;
+    io_iot_hub_ws_connection_t* connection;
 
+    connection = (io_iot_hub_ws_connection_t*)context;
     dbg_assert_ptr(connection);
     dbg_assert_ptr(connection->message);
     dbg_assert_ptr(stream);
@@ -600,12 +625,11 @@ static void io_iot_hub_ws_connection_on_send_complete(
 // Send message - converts protocol message to transport message
 //
 static int32_t io_iot_hub_ws_connection_on_send(
-    void* context,
+    io_iot_hub_ws_connection_t* connection,
     io_message_t* message
 )
 {
     int32_t result;
-    io_iot_hub_ws_connection_t* connection = (io_iot_hub_ws_connection_t*)context;
 
     result = io_message_clone(message, &connection->message);
     if (result != er_ok)
@@ -633,11 +657,12 @@ static int32_t io_iot_hub_ws_connection_receive_handler(
 )
 {
     int32_t result;
-    io_iot_hub_ws_connection_t* connection = (io_iot_hub_ws_connection_t*)context;
     io_message_t* message = NULL;
     io_codec_ctx_t ctx, obj;
+    io_iot_hub_ws_connection_t* connection;
     bool is_null;
 
+    connection = (io_iot_hub_ws_connection_t*)context;
     dbg_assert_ptr(connection);
     dbg_assert_ptr(stream);
 
@@ -784,11 +809,11 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
 
         connection->base.funcs.context =
             connection;
-        connection->base.funcs.on_send =
+        connection->base.funcs.on_send = (io_connection_send_t)
             io_iot_hub_ws_connection_on_send;
-        connection->base.funcs.on_close =
+        connection->base.funcs.on_close = (io_connection_close_t)
             io_iot_hub_ws_connection_on_close;
-        connection->base.funcs.on_free =
+        connection->base.funcs.on_free = (io_connection_free_t)
             io_iot_hub_ws_connection_on_free;
 
         STRING_delete(client_id);
@@ -817,6 +842,17 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
 }
 
 //
+// Dummy release
+//
+static void io_iot_hub_umqtt_server_transport_release(
+    void* context
+)
+{
+    (void)context;
+    // no op
+}
+
+//
 // mqtt server transport (methods)
 //
 io_transport_t* io_iot_hub_mqtt_server_transport(
@@ -825,9 +861,21 @@ io_transport_t* io_iot_hub_mqtt_server_transport(
 {
     static io_transport_t transport = {
         io_iot_hub_umqtt_server_transport_create_connection,
+        io_iot_hub_umqtt_server_transport_release,
         &transport
     };
     return &transport;
+}
+
+//
+// Dummy release
+//
+static void io_iot_hub_ws_server_transport_release(
+    void* context
+)
+{
+    (void)context;
+    // no op
 }
 
 //
@@ -839,6 +887,7 @@ io_transport_t* io_iot_hub_ws_server_transport(
 {
     static io_transport_t transport = {
         io_iot_hub_ws_server_transport_create_connection,
+        io_iot_hub_ws_server_transport_release,
         &transport
     };
     return &transport;

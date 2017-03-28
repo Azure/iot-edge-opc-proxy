@@ -13,40 +13,9 @@
 #include "pal_sk.h"
 #include "pal_time.h"
 #include "pal_rand.h"
+#include "pal_cred.h"
 
-static pal_diag_callback_t diag_callback = NULL;
 static uint32_t capabilities = pal_not_init;
-
-//
-// Internal registered callback
-//
-static void pal_diag_callback(
-    log_entry_t* msg
-)
-{
-#if defined(NO_ZLOG)
-    (void)msg;
-#else
-    pal_diag_callback_t _cb = diag_callback;
-    if (!_cb || !msg)
-        return;
-    _cb(msg->target, msg->msg);
-#endif
-}
-
-//
-// Hook for diagnostic callbacks
-//
-int32_t pal_set_diag_callback(
-    pal_diag_callback_t callback
-)
-{
-    diag_callback = callback;
-    if (capabilities == pal_not_init)
-        return er_ok;
-
-    return log_register("pal", pal_diag_callback);
-}
 
 //
 // Initialize the pal layer
@@ -80,12 +49,15 @@ int32_t pal_init(
     }
     do
     {
-        // Register diagnostic callback
-        if (diag_callback)
+        // Initialize secret store 
+        result = pal_cred_init();
+        if (result == er_ok)
+            capabilities |= pal_cap_cred;
+        else if (result != er_not_supported)
         {
-            result = log_register("pal", pal_diag_callback);
-            if (result != er_ok)
-                break;
+            log_error(NULL, "Failed to init cred pal (%s).",
+                prx_err_string(result));
+            break;
         }
 
         // Initialize file 
@@ -94,10 +66,6 @@ int32_t pal_init(
             capabilities |= pal_cap_file;
         else if (result != er_not_supported)
         {
-            pal_rand_deinit();
-            pal_time_deinit();
-            pal_err_deinit();
-
             log_error(NULL, "Failed to init file pal (%s).", 
                 prx_err_string(result));
             break;
@@ -120,16 +88,37 @@ int32_t pal_init(
             capabilities |= pal_cap_wsclient;
         else if (result != er_not_supported)
         {
-            log_error(NULL, "Failed to init websocket pal (%s).",
+            log_error(NULL, "Failed to init wsclient pal (%s).",
                 prx_err_string(result));
             break;
         }
+
+        // Success...
         return er_ok;
     } 
     while (0);
 
-    pal_deinit();
+    if (capabilities == pal_not_init)
+    {
+        pal_rand_deinit();
+        pal_time_deinit();
+        pal_err_deinit();
+    }
+    else
+    {
+        pal_deinit();
+    }
     return result;
+}
+
+//
+// Post init, returns the capabilties of the pal.
+//
+uint32_t pal_caps(
+    void
+)
+{
+    return capabilities;
 }
 
 //
@@ -151,14 +140,14 @@ int32_t pal_deinit(
     if (capabilities & pal_cap_file)
         pal_file_deinit();
 
+    if (capabilities & pal_cap_cred)
+        pal_cred_deinit();
+
     pal_rand_deinit();
-
     pal_time_deinit();
-
     pal_err_deinit();
 
     capabilities = pal_not_init;
-    diag_callback = NULL;
 
     return er_ok;
 }

@@ -129,6 +129,10 @@ endif()
         add_definitions(-DNO_ZLOG)
     endif()
 
+    option(mem_check "set mem_check to ON (default is OFF)" OFF)
+    if(${mem_check})
+        add_definitions(-DMEM_CHECK)
+    endif()
     option(leak_detection "set leak_detection to ON (default is OFF)" OFF)
     if(${leak_detection})
         add_definitions(-DLEAK_DETECT)
@@ -136,7 +140,7 @@ endif()
 if(WIN32)
     if(MSVC)
         add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-        if(${leak_detection})
+        if(${leak_detection} OR ${mem_check})
             add_definitions(-D_CRTDBG_MAP_ALLOC)
         endif()
     endif()
@@ -175,15 +179,13 @@ endfunction()
 add_subdirectory(src)
 add_subdirectory(api)
 
-option(skip_unittests "set skip_unittests to ON to skip unittests (default is OFF)" OFF)
+option(run_unittests "set run_unittests to ON to run unittests (default is OFF)" OFF)
 
 #
 # Build a test
 #
 function(build_ut cur_test folder)
-    if (${skip_unittests} OR CMAKE_CROSSCOMPILING)
-        # Skipping tests
-    else()
+    if (${run_unittests} AND NOT CMAKE_CROSSCOMPILING)
         add_executable(${cur_test}_exe ${${cur_test}_test_files} 
             ${${cur_test}_c_files} ${_IOTSDK_SRC}/xlogging.c ${_IOTSDK_SRC}/consolelogger.c
         )

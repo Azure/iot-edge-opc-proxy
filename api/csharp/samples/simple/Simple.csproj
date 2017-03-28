@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>0.1.0</VersionPrefix>
+    <VersionPrefix>0.1.1</VersionPrefix>
     <Description>Simple TCP/IP client sample application</Description>
     <AssemblyTitle>Simple TCP/IP client sample</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.0;netcoreapp1.1;net46</TargetFrameworks>
@@ -19,7 +19,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\provider\relay\src\Microsoft.Azure.Devices.Proxy.Relay\Microsoft.Azure.Devices.Proxy.Relay.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
   </ItemGroup>
 

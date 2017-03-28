@@ -30,7 +30,7 @@ typedef struct prx_buffer_pool
 {
     const char* name;
     lock_t lock;
-    DLIST_ENTRY free_list;                        // buffers that are free
+    DLIST_ENTRY free_list;                      // buffers that are free
     size_t free_count;             // Number of free buffers in the pool
     DLIST_ENTRY checked_out;             // buffers that are checked out
     size_t item_size;                             // default buffer size
@@ -248,10 +248,9 @@ static void prx_buffer_pool_free_buffer(
 // Returns how many buffers can be created
 //
 static size_t prx_dynamic_pool_available(
-    void* context
+    prx_dynamic_pool_t* pool
 )
 {
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     return pool->pool.free_count;
 }
 
@@ -259,10 +258,9 @@ static size_t prx_dynamic_pool_available(
 // Release dynamic pool
 //
 static void prx_dynamic_pool_free(
-    void* context
+    prx_dynamic_pool_t* pool
 )
 {
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     prx_buffer_t* next;
     dbg_assert_ptr(pool);
 
@@ -302,13 +300,12 @@ static void prx_dynamic_pool_free(
 // Grow pool to specified size of dynamic buffers
 //
 static int32_t prx_dynamic_pool_grow_no_lock(
-    void* context
+    prx_dynamic_pool_t* pool
 )
 {
     int32_t result;
     prx_buffer_t* buf;
     size_t items;
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
 
     items = pool->pool.config.initial_count;
     if (pool->pool.config.max_count)
@@ -344,24 +341,22 @@ static int32_t prx_dynamic_pool_grow_no_lock(
 // Create dynamic buffer using dynamic allocator
 //
 static void* prx_dynamic_buffer_alloc(
-    void* context,
+    prx_dynamic_pool_t* pool,
     void* original
 )
 {
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
-    return prx_buffer_pool_alloc_buffer(
-        &pool->pool, original, prx_dynamic_pool_grow_no_lock, pool);
+    return prx_buffer_pool_alloc_buffer(&pool->pool, original, 
+        (prx_buffer_pool_grow_t)prx_dynamic_pool_grow_no_lock, pool);
 }
 
 //
 // Return buffer to pool
 //
 static void prx_dynamic_buffer_release(
-    void* context,
+    prx_dynamic_pool_t* pool,
     void* buffer
 )
 {
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     prx_buffer_pool_free_buffer(&pool->pool, buffer);
 }
 
@@ -369,13 +364,12 @@ static void prx_dynamic_buffer_release(
 // Resize dynamic buffer to length
 //
 static int32_t prx_dynamic_buffer_set_size(
-    void* context,
+    prx_dynamic_pool_t* pool,
     void** buffer,
     size_t size
 )
 {
     int32_t result;
-    prx_dynamic_pool_t* pool = (prx_dynamic_pool_t*)context;
     prx_buffer_t* buf, *orig;
     if (!buffer || !*buffer)
         return er_fault;
@@ -413,11 +407,11 @@ static int32_t prx_dynamic_buffer_set_size(
 // Returns current size of dynamic buffer
 //
 static size_t prx_dynamic_buffer_get_size(
-    void* context,
+    prx_dynamic_pool_t* pool,
     void* buffer
 )
 {
-    (void)context;
+    (void)pool;
     prx_buffer_t* pool_buf = __prx_buffer(buffer);
     dbg_assert_buf(pool_buf);
     return pool_buf->length;
@@ -427,10 +421,9 @@ static size_t prx_dynamic_buffer_get_size(
 // Returns how many buffers can be created
 //
 static size_t prx_fixed_pool_available(
-    void* context
+    prx_fixed_pool_t* pool
 )
 {
-    prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
     return pool->pool.free_count; // TODO
 }
 
@@ -438,10 +431,9 @@ static size_t prx_fixed_pool_available(
 // Release fixed pool and free all block allocations
 //
 static void prx_fixed_pool_free(
-    void* context
+    prx_fixed_pool_t* pool
 )
 {
-    prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
     prx_buffer_t* next;
     dbg_assert_ptr(pool);
 
@@ -473,12 +465,11 @@ static void prx_fixed_pool_free(
 // Grow fixed pool by adding another block
 //
 static int32_t prx_fixed_pool_grow_no_lock(
-    void* context
+    prx_fixed_pool_t* pool
 )
 {
     prx_buffer_t* buf;
     size_t items, size;
-    prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
 
     items = pool->pool.config.initial_count;
     if (pool->pool.config.max_count)
@@ -529,24 +520,22 @@ static int32_t prx_fixed_pool_grow_no_lock(
 // Create fixed buffer using block allocator
 //
 static void* prx_fixed_buffer_alloc(
-    void* context,
+    prx_fixed_pool_t* pool,
     void* original
 )
 {
-    prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
-    return prx_buffer_pool_alloc_buffer(
-        &pool->pool, original, prx_fixed_pool_grow_no_lock, pool);
+    return prx_buffer_pool_alloc_buffer(&pool->pool, original, 
+        (prx_buffer_pool_grow_t)prx_fixed_pool_grow_no_lock, pool);
 }
 
 //
 // Return buffer to pool
 //
 static void prx_fixed_buffer_release(
-    void* context,
+    prx_fixed_pool_t* pool,
     void* buffer
 )
 {
-    prx_fixed_pool_t* pool = (prx_fixed_pool_t*)context;
     prx_buffer_pool_free_buffer(&pool->pool, buffer);
 
     // TODO: Check to see if we can compact by removing blocks
@@ -556,12 +545,12 @@ static void prx_fixed_buffer_release(
 // Fixed buffers cannot be resized
 //
 static int32_t prx_fixed_buffer_set_size(
-    void* context,
+    prx_fixed_pool_t* pool,
     void** buffer,
     size_t size
 )
 {
-    (void)context;
+    (void)pool;
     (void)buffer;
     (void)size;
 
@@ -573,12 +562,12 @@ static int32_t prx_fixed_buffer_set_size(
 // Returns raw memory pointer 
 //
 static size_t prx_fixed_buffer_get_size(
-    void* context,
+    prx_fixed_pool_t* pool,
     void* buffer
 )
 {
     (void)buffer;
-    return ((prx_fixed_pool_t*)context)->pool.item_size;
+    return pool->pool.item_size;
 }
 
 //
@@ -612,17 +601,17 @@ int32_t prx_dynamic_pool_create(
 
         pool->funcs.context = 
             pool;
-        pool->funcs.on_available = 
+        pool->funcs.on_available = (prx_buffer_factory_available_t)
             prx_dynamic_pool_available;
-        pool->funcs.on_free =
+        pool->funcs.on_free = (prx_buffer_factory_free_t)
             prx_dynamic_pool_free;
-        pool->funcs.on_alloc =
+        pool->funcs.on_alloc = (prx_buffer_alloc_t)
             prx_dynamic_buffer_alloc;
-        pool->funcs.on_set_size =
+        pool->funcs.on_set_size = (prx_buffer_set_size_t)
             prx_dynamic_buffer_set_size;
-        pool->funcs.on_get_size =
+        pool->funcs.on_get_size = (prx_buffer_get_size_t)
             prx_dynamic_buffer_get_size;
-        pool->funcs.on_release =
+        pool->funcs.on_release = (prx_buffer_free_t)
             prx_dynamic_buffer_release;
 
         *buffer_factory = &pool->funcs;
@@ -665,17 +654,17 @@ int32_t prx_fixed_pool_create(
 
         pool->funcs.context =
             pool;
-        pool->funcs.on_available =
+        pool->funcs.on_available = (prx_buffer_factory_available_t)
             prx_fixed_pool_available;
-        pool->funcs.on_free =
+        pool->funcs.on_free = (prx_buffer_factory_free_t)
             prx_fixed_pool_free;
-        pool->funcs.on_alloc =
+        pool->funcs.on_alloc = (prx_buffer_alloc_t)
             prx_fixed_buffer_alloc;
-        pool->funcs.on_set_size =
+        pool->funcs.on_set_size = (prx_buffer_set_size_t)
             prx_fixed_buffer_set_size;
-        pool->funcs.on_get_size =
+        pool->funcs.on_get_size = (prx_buffer_get_size_t)
             prx_fixed_buffer_get_size;
-        pool->funcs.on_release =
+        pool->funcs.on_release = (prx_buffer_free_t)
             prx_fixed_buffer_release;
 
         *buffer_factory = &pool->funcs;

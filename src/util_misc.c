@@ -4,6 +4,20 @@
 #include "util_mem.h"
 #include "util_misc.h"
 
+#include "pal_rand.h"
+
+//
+// pal to gb rand adapter
+//
+int gb_rand(
+    void
+)
+{
+    int result;
+    (void)pal_rand_fill(&result, sizeof(result));
+    return result;
+}
+
 //
 // Count leading ones
 //

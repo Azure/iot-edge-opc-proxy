@@ -148,7 +148,7 @@ static void prx_server_socket_free(
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
-    log_info(server_sock->log, "Server socket %p freed!", server_sock);
+    log_trace(server_sock->log, "Server socket %p freed!", server_sock);
     mem_free_type(prx_server_socket_t, server_sock);
 }
 
@@ -175,7 +175,7 @@ static void prx_server_free(
     if (server->sockets_lock)
         lock_free(server->sockets_lock);
 
-    log_info(server->log, "Freeing server.");
+    log_trace(server->log, "Freeing server.");
     mem_free_type(prx_server_t, server);
 }
 
@@ -373,7 +373,7 @@ static void prx_server_worker(
                 case prx_server_socket_closed:
                     if (next->stream && !next->server_stream)
                     {
-                        log_info(next->log, "Socket %p closed, clean up stream", 
+                        log_trace(next->log, "Socket %p closed, clean up stream",
                             next);
                         io_connection_close(next->stream);
                     }
@@ -1060,12 +1060,16 @@ static int32_t prx_server_socket_handle_openrequest(
                 entry, prx_server_socket_control_handler, server_sock,
                 server_sock->server->scheduler, &server_sock->stream);
         }
-        else
+        else if (pal_caps() & pal_cap_wsclient)
         {
             // ... otherwise transport is websocket based, and stream handler.
             result = io_transport_create(io_iot_hub_ws_server_transport(),
                 entry, prx_server_socket_stream_handler, server_sock,
                 server_sock->server->scheduler, &server_sock->stream);
+        }
+        else
+        {
+            result = er_not_supported;
         }
         if (result != er_ok)
             break;

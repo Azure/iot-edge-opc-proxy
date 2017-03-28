@@ -385,26 +385,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             return results;
         }
 
-
         /// <summary>
         /// Returns the query results async, but retries with exponential backoff when failure.
         /// </summary>
         /// <param name="message"></param>
         /// <returns></returns>
         private async Task<Tuple<string, IEnumerable<INameRecord>>> PagedLookupWithRetryAsync(
-            string sql, string continuation, CancellationToken ct) {
-            try {
-                return await Retry.WithLinearBackoff(ct,
-                    () => PagedLookupAsync(sql, continuation, ct),
+            string sql, string continuation, CancellationToken ct) =>
+            await Retry.WithLinearBackoff(ct, () => PagedLookupAsync(sql, continuation, ct),
                     (e) => !ct.IsCancellationRequested).ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) {
-            }
-            catch (Exception e) {
-                ProxyEventSource.Log.HandledExceptionAsError(this, e);
-            }
-            return null;
-        }
 
         /// <summary>
         /// Returns the query results async

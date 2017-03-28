@@ -14,6 +14,10 @@ MOCKABLE_FUNCTION(, char*, getcwd, char*, buf, size_t, size);
 MOCKABLE_FUNCTION(, long, pathconf, const char*, path, int, name);
 MOCKABLE_FUNCTION(, char*, realpath, const char*, path, char*, resolved_path);
 MOCKABLE_FUNCTION(, int, access, const char*, pathname, int, mode);
+// errno
+#undef errno
+MOCKABLE_FUNCTION(, int*, errno_mock);
+#define errno (*errno_mock())
 
 //
 // 2. Include unit under test
@@ -167,6 +171,145 @@ TEST_FUNCTION(pal_posix_get_real_path__success_2)
 }
 
 // 
+// Test pal_get_real_path happy path 
+// 
+TEST_FUNCTION(pal_posix_get_real_path__success_3)
+{
+    static const char* k_file_name_valid = "foo.txt";
+    static const char* k_cwd_path_valid = "/working/dir";
+    static const char* k_full_path_valid = "/working/dir/foo.txt";
+    char* full_path_buffer = UT_MEM;
+    const char* full_path;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
+        .SetReturn(MAX_PATH);
+    STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, full_path_buffer))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(getcwd(full_path_buffer, MAX_PATH))
+        .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid) + 1)
+        .SetReturn(full_path_buffer);
+
+    // act 
+    result = pal_get_real_path(k_file_name_valid, &full_path);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
+}
+
+// 
+// Test pal_get_real_path happy path 
+// 
+TEST_FUNCTION(pal_posix_get_real_path__success_4)
+{
+    static const char* k_file_name_valid = "./foo.txt";
+    static const char* k_cwd_path_valid = "/working/dir";
+    static const char* k_full_path_valid = "/working/dir/foo.txt";
+    char* full_path_buffer = UT_MEM;
+    const char* full_path;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
+        .SetReturn(MAX_PATH);
+    STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, full_path_buffer))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(getcwd(full_path_buffer, MAX_PATH))
+        .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid)+1)
+        .SetReturn(full_path_buffer);
+
+    // act 
+    result = pal_get_real_path(k_file_name_valid, &full_path);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
+}
+
+// 
+// Test pal_get_real_path happy path 
+// 
+TEST_FUNCTION(pal_posix_get_real_path__success_5)
+{
+    static const char* k_file_name_valid = "/working/dir/foo.txt";
+    char* full_path_buffer = UT_MEM;
+    const char* full_path;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(c_realloc(20 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+
+    // act 
+    result = pal_get_real_path(k_file_name_valid, &full_path);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, k_file_name_valid, full_path);
+}
+
+// 
+// Test pal_get_real_path happy path 
+// 
+TEST_FUNCTION(pal_posix_get_real_path__success_6)
+{
+    static const char* k_file_name_valid = "./working/dir/foo.txt";
+    static const char* k_cwd_path_valid = "/working/dir";
+    static const char* k_full_path_valid = "/working/dir/working/dir/foo.txt";
+    char* full_path_buffer = UT_MEM;
+    const char* full_path;
+    int errno_valid = ERANGE;
+    int32_t result;
+
+    memset(UT_MEM, 0, sizeof(UT_MEM));
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
+        .SetReturn(16);
+    STRICT_EXPECTED_CALL(c_realloc(16 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, full_path_buffer))
+        .SetReturn(NULL);
+
+    STRICT_EXPECTED_CALL(getcwd(full_path_buffer, 16))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(errno_mock())
+        .SetReturn(&errno_valid);
+    STRICT_EXPECTED_CALL(c_realloc(32 + 1, full_path_buffer, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+
+    STRICT_EXPECTED_CALL(getcwd(full_path_buffer, 32))
+        .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid) + 1)
+        .SetReturn(full_path_buffer);
+
+    // act 
+    result = pal_get_real_path(k_file_name_valid, &full_path);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
+}
+
+// 
 // Test pal_get_real_path passing as file_name argument an invalid const char* value 
 // 
 TEST_FUNCTION(pal_posix_get_real_path__arg_file_name_invalid)
@@ -219,8 +362,9 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_1)
         .SetReturn(NULL);
     STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
         .SetReturn(NULL);
-    STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
-        .SetReturn(er_out_of_memory);
+    STRICT_EXPECTED_CALL(c_realloc(16 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn(NULL);
 
     // act 
     result = pal_get_real_path(k_file_name_valid, &full_path);
@@ -235,30 +379,68 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_1)
 // 
 TEST_FUNCTION(pal_posix_get_real_path__neg_2)
 {
-    static const char* k_file_name_valid = "/home/../foo.txt";
-    char* full_path_buffer = UT_MEM;
+    static const char* k_file_name_valid = "./foo.txt";
+    static const char* k_cwd_path_valid = "/working/dir";
     const char* full_path;
     int32_t result;
 
     // arrange 
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
-        .SetReturn(MAX_PATH);
-    STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
-        .SetReturn((void*)full_path_buffer);
-    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, full_path_buffer))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
         .SetReturn(NULL);
-    STRICT_EXPECTED_CALL(c_free((void*)full_path_buffer, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
-        .SetReturn(er_fatal);
+    STRICT_EXPECTED_CALL(c_realloc(1024 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn(NULL);
 
     // act 
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
+}
+
+// 
+// Test pal_get_real_path happy path 
+// 
+TEST_FUNCTION(pal_posix_get_real_path__neg_3)
+{
+    static const char* k_file_name_valid = "./working/dir/foo.txt";
+    static const char* k_cwd_path_valid = "/working/dir";
+    char* full_path_buffer = UT_MEM;
+    const char* full_path;
+    int errno_valid = ERANGE;
+    int32_t result;
+
+    memset(UT_MEM, 0, sizeof(UT_MEM));
+
+    // arrange 
+    STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
+        .SetReturn(16);
+    STRICT_EXPECTED_CALL(c_realloc(16 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)full_path_buffer);
+    STRICT_EXPECTED_CALL(realpath(k_file_name_valid, full_path_buffer))
+        .SetReturn(NULL);
+
+    STRICT_EXPECTED_CALL(getcwd(full_path_buffer, 16))
+        .SetReturn(NULL);
+    STRICT_EXPECTED_CALL(errno_mock())
+        .SetReturn(&errno_valid);
+    STRICT_EXPECTED_CALL(c_realloc(32 + 1, full_path_buffer, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn(NULL);
+
+    STRICT_EXPECTED_CALL(c_free(full_path_buffer, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+
+    // act 
+    result = pal_get_real_path(k_file_name_valid, &full_path);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
 // 
