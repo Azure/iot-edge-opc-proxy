@@ -1038,7 +1038,7 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
     result = string_clone(ptr, &buffer);
     if (result != er_ok)
         return;
-    proxy_options.host_address = ptr = buffer;
+    proxy_options.host_address = ptr = buffer; ///< @bug issue #14: Now proxy_options.host_address points to the memory allocated for buffer
     proxy_options.port = 0;
     while (*ptr && *ptr != ':')
         ptr++;
@@ -1047,7 +1047,7 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
         *(char*)ptr = 0;
         proxy_options.port = atoi(++ptr);
     }
-    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
+    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, ///< @bug issue #14: This copies the _pointers_ in proxy_options to the http_handle. And this means, that the memory allocated to proxy_options.host_address ( = buffer) must not be freed in this function!
         &proxy_options))
     {
         log_debug(NULL, "Failed to configure proxy settings with httpapi");
