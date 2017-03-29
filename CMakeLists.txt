@@ -23,6 +23,15 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# Add rule to generate TAGS for emacs and vi
+if(MSVC)
+else()
+  add_custom_target(TAGS
+    COMMAND etags ${CMAKE_SOURCE_DIR}/*/*.[hc] )
+  add_custom_target(tags
+    COMMAND ctags ${CMAKE_SOURCE_DIR}/*/*.[hc] )
+endif()
+
 #
 # Sub-projects
 #
