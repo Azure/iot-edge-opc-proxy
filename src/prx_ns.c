@@ -1052,7 +1052,6 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
     {
         log_debug(NULL, "Failed to configure proxy settings with httpapi");
     }
-    mem_free(buffer);
 }
 
 //
