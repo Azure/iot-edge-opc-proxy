@@ -1048,12 +1048,13 @@ static int32_t pal_wsworker_get_proxy_info(
     user = __prx_config_get(prx_config_key_proxy_user, NULL);
     pwd = __prx_config_get(prx_config_key_proxy_pwd, NULL);
 
-    buf_len = strlen(proxy) + user ? strlen(user) : 0 + pwd ? strlen(pwd) : 0
+    buf_len = strlen(proxy) + (user ? strlen(user) : 0 ) + (pwd ? strlen(pwd) : 0)
         + 2 + 1;  // plus 2 for pwd/user sep and null terminator
     
     *proxy_address = (char*)crt_alloc(buf_len); // Use malloc for lws to free
     if (!*proxy_address)
         return er_out_of_memory;
+    memset(*proxy_address, 0, buf_len); // Avoid use of uninitialized memory, issue #27
     // Concat proxy address string
     if (user)
     {
