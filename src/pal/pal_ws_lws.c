@@ -1054,6 +1054,7 @@ static int32_t pal_wsworker_get_proxy_info(
     *proxy_address = (char*)crt_alloc(buf_len); // Use malloc for lws to free
     if (!*proxy_address)
         return er_out_of_memory;
+    memset(*proxy_address, 0, buf_len); // Avoid use of uninitialized memory, issue #27
     // Concat proxy address string
     if (user)
     {
