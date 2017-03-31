@@ -929,6 +929,7 @@ int32_t pal_getaddrinfo(
 {
     struct addrinfo hint, *info, *ai = NULL;
     int32_t result;
+    int attempt = 0;
     prx_size_t alloc_count = 0;
 
     chk_arg_fault_return(prx_ai_count);
@@ -949,17 +950,23 @@ int32_t pal_getaddrinfo(
         return result;
 
     hint.ai_flags |= AI_CANONNAME;
-
-    result = getaddrinfo(address, service, &hint, &info);
-    if (result != 0)
+    while (true)
     {
-#ifndef _WIN32
-        log_error(NULL, "getaddrinfo returned error '%s' (%d)", 
-            gai_strerror(result), result);
-#endif
-        return pal_os_to_prx_gai_error(result);
-    }
+        result = getaddrinfo(address, service, &hint, &info);
+        if (result == 0)
+            break;
 
+        // Intermittent dns outages can result in E_AGAIN, try 3 times
+#define GAI_MAX_ATTEMPTS 3
+        if (result != EAI_AGAIN || attempt++ >= GAI_MAX_ATTEMPTS)
+        {
+            log_error(NULL, "getaddrinfo returned error '%s' (%d)",
+                gai_strerror(result), result);
+            return pal_os_to_prx_gai_error(result);
+        }
+        log_info(NULL, "getaddrinfo returned error '%s' (%d) - try again...",
+            gai_strerror(result), result);
+    }
     do
     {
         for (ai = info; ai != NULL; ai = ai->ai_next)

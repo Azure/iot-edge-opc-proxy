@@ -1787,8 +1787,6 @@ static void prx_server_handle_pingrequest(
     prx_addrinfo_t* prx_ai = NULL;
     prx_size_t prx_ai_count = 0;
 
-    // Note: In case of error, we just do not respond...
-
     dbg_assert_ptr(message);
     dbg_assert_ptr(server);
     dbg_assert_is_task(server->scheduler);
@@ -1796,48 +1794,60 @@ static void prx_server_handle_pingrequest(
     // Todo: ntop and then resolve.
     // Todo: pal_ping, with SendArp or alike...
 
-    if (message->content.ping_request.address.un.family != prx_address_family_inet6 &&
-        message->content.ping_request.address.un.family != prx_address_family_inet &&
-        message->content.ping_request.address.un.family != prx_address_family_proxy)
+    do
     {
-        log_error(server->log, "Ping request for address with invalid address family %d",
-            message->content.ping_request.address.un.family);
-        return;
-    }
-
-    result = string_from_int(
-        message->content.ping_request.address.un.ip.port, 10, port, sizeof(port));
-    if (result != er_ok)
-        return;
-
-    if (message->content.ping_request.address.un.family == prx_address_family_proxy)
-    {
-        if (strlen(message->content.ping_request.address.un.proxy.host) == 0)
-            return;
-
-        result = pal_getaddrinfo(message->content.ping_request.address.un.proxy.host, port,
-            prx_address_family_unspec, 0, &prx_ai, &prx_ai_count);
-        if (result != er_ok)
+        if (message->content.ping_request.address.un.family != prx_address_family_inet6 &&
+            message->content.ping_request.address.un.family != prx_address_family_inet &&
+            message->content.ping_request.address.un.family != prx_address_family_proxy)
         {
-            log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
-                message->content.ping_request.address.un.proxy.host, port,
-                prx_err_string(result));
+            log_error(server->log, "Ping request for address with invalid address family %d",
+                message->content.ping_request.address.un.family);
+            result = er_invalid_format;
+            break;
         }
-    }
-    else 
-    {
-        result = pal_ntop(&message->content.ping_request.address, host_ip, sizeof(host_ip));
-        if (result != er_ok)
-            return;
 
-        result = pal_getaddrinfo(host_ip, port,
-            message->content.ping_request.address.un.family, 0, &prx_ai, &prx_ai_count);
+        result = string_from_int(
+            message->content.ping_request.address.un.ip.port, 10, port, sizeof(port));
         if (result != er_ok)
+            break;
+
+        if (message->content.ping_request.address.un.family == prx_address_family_proxy)
         {
-            log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
-                host_ip, port, prx_err_string(result));
+            if (strlen(message->content.ping_request.address.un.proxy.host) == 0)
+            {
+                result = er_invalid_format;
+                break;
+            }
+
+            result = pal_getaddrinfo(message->content.ping_request.address.un.proxy.host,
+                port, prx_address_family_unspec, 0, &prx_ai, &prx_ai_count);
+            if (result != er_ok)
+            {
+                log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
+                    message->content.ping_request.address.un.proxy.host, port,
+                    prx_err_string(result));
+                break;
+            }
         }
-    }
+        else
+        {
+            result = pal_ntop(&message->content.ping_request.address, host_ip,
+                sizeof(host_ip));
+            if (result != er_ok)
+                break;
+
+            result = pal_getaddrinfo(host_ip, port,
+                message->content.ping_request.address.un.family, 0, &prx_ai, &prx_ai_count);
+            if (result != er_ok)
+            {
+                log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
+                    host_ip, port, prx_err_string(result));
+                break;
+            }
+        }
+        result = er_ok;
+    } 
+    while (0);
 
     io_message_as_response(message);
     message->error_code = result;

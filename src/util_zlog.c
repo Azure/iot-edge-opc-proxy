@@ -50,7 +50,7 @@ int32_t zlog_set_log_file(
 {
     int32_t result;
     char* config;
-    static const char* pre_config = ZLOG_DEFAULT_CONFIG "*.* \"";
+    static const char* pre_config = ZLOG_DEFAULT_CONFIG "*.debug \"";
     static const char* post_config = "\",1M*3 \n";
 
     config = (char*)malloc(
