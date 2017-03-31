@@ -94,10 +94,10 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\xio_ws_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Data\git\azure\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\util_ringbuf_ut.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_ringbuf_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="C:\Data\git\azure\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\prx_log_ut.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_log_ut.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
