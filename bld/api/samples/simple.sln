@@ -13,12 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libzlog", "libzlog", "{E997
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libproxy", "libproxy", "{379DF021-4BC4-43DE-B05D-0CBED384920C}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libuamqp", "libuamqp", "{D9573550-D2C6-4ECA-8ED2-3A7ADDA5871B}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuamqp-shared", "..\src\libuamqp\libuamqp-shared.vcxitems", "{E113EC9B-1D47-437E-87B9-2044F68F086C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuamqp-win32", "..\src\libuamqp\libuamqp-win32.vcxproj", "{225A3E54-A551-4100-AE8B-42D5EE7C7261}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproxy-shared", "..\src\libproxy\libproxy-shared.vcxitems", "{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-shared", "..\src\libiotsdk\libiotsdk-shared.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
@@ -47,7 +41,6 @@ Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\src\libmocket\libmocket-shared.vcxitems*{05f5a67a-643b-4e70-b797-37620458a8cf}*SharedItemsImports = 9
 		..\src\libproxy\libproxy-shared.vcxitems*{0f7e0590-fcef-4fd9-ac3d-8a202dfc20c3}*SharedItemsImports = 4
-		..\src\libuamqp\libuamqp-shared.vcxitems*{225a3e54-a551-4100-ae8b-42d5ee7c7261}*SharedItemsImports = 4
 		..\src\libumqtt\libumqtt-shared.vcxitems*{225a3e54-b551-4100-ae8b-42d5ee7c7261}*SharedItemsImports = 4
 		..\src\libiotsdk\libiotsdk-shared.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 		..\src\libumqtt\libumqtt-shared.vcxitems*{46a5ff79-0746-4d81-990d-684ae2229753}*SharedItemsImports = 9
@@ -56,7 +49,6 @@ Global
 		..\src\libzlog\libzlog-shared.vcxitems*{9de32f51-262e-471c-b74b-8189fd1920f8}*SharedItemsImports = 9
 		..\src\libzlog\libzlog-shared.vcxitems*{b1f92e2e-23c2-48e8-94ba-2d73dce95ebc}*SharedItemsImports = 4
 		..\src\libmocket\libmocket-shared.vcxitems*{e0a8f758-73d5-491f-81f6-0ef99ad35f77}*SharedItemsImports = 4
-		..\src\libuamqp\libuamqp-shared.vcxitems*{e113ec9b-1d47-437e-87b9-2044f68f086c}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64

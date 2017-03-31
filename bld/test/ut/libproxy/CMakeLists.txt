@@ -7,7 +7,6 @@
 set(libproxy_ut_include
     ${_PROJECT_INC} 
     ${_PROJECT_SRC} 
-    ${_UAMQP_INC} 
     ${_UMQTT_INC} 
     ${_IOTSDK_INC} 
     ${_HASHTABLE_ROOT} 
@@ -36,6 +35,7 @@ set(_PROXY_UNITS_UNDER_TEST
     prx_client
     prx_server
     prx_buffer
+    prx_log
     prx_ns
     prx_sched
     io_codec
@@ -54,7 +54,7 @@ set(_PROXY_UNITS_UNDER_TEST
     util_signal
     util_string
     util_stream
-    util_log
+    util_ringbuf
     util_mem
     xio_sk
     xio_ws

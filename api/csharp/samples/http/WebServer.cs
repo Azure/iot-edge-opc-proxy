@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         public void Configure(IApplicationBuilder app, ILoggerFactory loggerFactory) {
             loggerFactory.AddConsole();
             Socket.RemoteTimeout = 120 * 1000;
-            app.UseMiddleware<ReverseProxy>(app);
+            app.UseMiddleware<ReverseProxy>(app, "proxy");
         }
 
         /// <summary>

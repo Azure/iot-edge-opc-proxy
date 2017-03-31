@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-#ifndef _util_codec_h_
-#define _util_codec_h_
+#ifndef _util_stream_h_
+#define _util_stream_h_
 
 #include "common.h"
 #include "io_stream.h"
@@ -73,4 +73,4 @@ decl_internal_3(io_stream_t*, io_file_stream_init,
     const char*, mode
 );
 
-#endif // _util_codec_h_
+#endif // _util_stream_h_

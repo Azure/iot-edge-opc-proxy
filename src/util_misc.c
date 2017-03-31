@@ -5,6 +5,44 @@
 #include "util_misc.h"
 
 #include "pal_rand.h"
+#include "pal_time.h"
+
+#if !defined(UNIT_TEST)
+#include "azure_c_shared_utility/tickcounter.h"
+#endif
+
+//
+// pal to tick counter adapter
+//
+TICK_COUNTER_HANDLE tickcounter_create(
+    void
+)
+{
+    return (TICK_COUNTER_HANDLE)0x1;
+}
+
+//
+// pal to tick counter adapter
+//
+void tickcounter_destroy(
+    TICK_COUNTER_HANDLE tick_counter
+)
+{
+    (void)tick_counter;
+}
+
+//
+// pal to tick counter adapter
+//
+int tickcounter_get_current_ms(
+    TICK_COUNTER_HANDLE tick_counter,
+    tickcounter_ms_t* current_ms
+)
+{
+    (void)tick_counter;
+    *current_ms = (tickcounter_ms_t)ticks_get();
+    return 0;
+}
 
 //
 // pal to gb rand adapter

@@ -128,8 +128,7 @@ decl_inline_3(int32_t, prx_buffer_set_size,
     size_t, length
 )
 {
-    if (!buffer_factory)
-        return er_fault;
+    chk_arg_fault_return(buffer_factory);
     dbg_assert_ptr(buffer_factory->on_set_size);
     return buffer_factory->on_set_size(buffer_factory->context, buffer, length);
 }

@@ -7,7 +7,7 @@
 #include "pal_types.h"
 #include "pal_err.h"
 #include "util_string.h"
-
+#include "util_misc.h"
 
 //
 // Returns a networking stack error as pal error

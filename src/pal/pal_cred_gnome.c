@@ -3,6 +3,7 @@
 
 #include "os.h"
 #include "util_mem.h"
+#include "util_misc.h"
 #include "util_string.h"
 #include "pal_cred.h"
 

@@ -366,8 +366,7 @@ static int32_t prx_ns_generic_entry_create(
     int32_t result;
     prx_ns_generic_entry_t* entry;
 
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
 
     entry = mem_zalloc_type(prx_ns_generic_entry_t);
     if (!entry)
@@ -1022,35 +1021,25 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
     HTTPAPIEX_HANDLE http_handle
 )
 {
-    int32_t result;
     HTTP_PROXY_OPTIONS proxy_options;
     const char* ptr;
-    char* buffer;
 
     dbg_assert_ptr(http_handle);
 
     ptr = __prx_config_get(prx_config_key_proxy_host, NULL);
     if (!ptr)
         return;
+
+    proxy_options.host_address = ptr;
     proxy_options.username = __prx_config_get(prx_config_key_proxy_user, NULL);
     proxy_options.password = __prx_config_get(prx_config_key_proxy_pwd, NULL);
-    // Create a copy so we can parse the port number
-    result = string_clone(ptr, &buffer);
-    if (result != er_ok)
-        return;
-    proxy_options.host_address = ptr = buffer; ///< @bug issue #14: Now proxy_options.host_address points to the memory allocated for buffer
-    proxy_options.port = 0;
-    while (*ptr && *ptr != ':')
-        ptr++;
-    if (*ptr)
-    {
-        *(char*)ptr = 0;
-        proxy_options.port = atoi(++ptr);
-    }
-    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, ///< @bug issue #14: This copies the _pointers_ in proxy_options to the http_handle. And this means, that the memory allocated to proxy_options.host_address ( = buffer) must not be freed in this function!
+    proxy_options.port = __prx_config_get_int(prx_config_key_proxy_port, 0);
+
+    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
         &proxy_options))
     {
-        log_debug(NULL, "Failed to configure proxy settings with httpapi");
+        log_trace(NULL, "Failed to configure proxy settings using httpapi option."
+            "Proxy settings need to be configured using platform mechanisms.");
     }
 }
 
@@ -2320,8 +2309,8 @@ int32_t prx_ns_iot_hub_create_from_cs(
     int32_t result;
     prx_ns_iot_hub_registry_t* registry;
 
-    if (!created || !hub_cs)
-        return er_fault;
+    chk_arg_fault_return(created);
+    chk_arg_fault_return(hub_cs);
 
     registry = mem_zalloc_type(prx_ns_iot_hub_registry_t);
     if (!registry)
@@ -2376,8 +2365,8 @@ int32_t prx_ns_iot_hub_create(
     prx_ns_iot_hub_composite_t* registry;
     const char* file_name = NULL;
 
-    if (!config || !created)
-        return er_fault;
+    chk_arg_fault_return(created);
+    chk_arg_fault_return(config);
 
     registry = mem_zalloc_type(prx_ns_iot_hub_composite_t);
     if (!registry)
@@ -2466,8 +2455,9 @@ int32_t prx_ns_entry_to_prx_socket_address(
     int32_t result;
     const char* name;
     io_ref_t id;
-    if (!entry || !socket_address)
-        return er_fault;
+
+    chk_arg_fault_return(entry);
+    chk_arg_fault_return(socket_address);
 
     memset(socket_address, 0, sizeof(prx_socket_address_t));
     socket_address->un.family = family;
@@ -2513,8 +2503,8 @@ int32_t prx_ns_entry_create_from_cs(
     int32_t result;
     prx_ns_generic_entry_t* entry;
         
-    if (!cs || !created)
-        return er_fault;
+    chk_arg_fault_return(cs);
+    chk_arg_fault_return(created);
 
     result = prx_ns_generic_entry_create(type, address, NULL, cs, &entry);
     if (result != er_ok)
@@ -2538,8 +2528,8 @@ int32_t prx_ns_entry_create(
     prx_ns_generic_entry_t* entry;
     io_cs_t* cs;
 
-    if (!name || !created)
-        return er_fault;
+    chk_arg_fault_return(name);
+    chk_arg_fault_return(created);
 
     result = io_cs_create("proxy.localhost", id, NULL, NULL, &cs);
     if (result != er_ok)

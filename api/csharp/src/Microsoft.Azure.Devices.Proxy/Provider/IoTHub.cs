@@ -268,11 +268,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
 
                 var proxyList = new List<INameRecord>(results);
-                for (int attempts = 0; !ct.IsCancellationRequested && proxyList.Any(); attempts++) {
+                for (int attempts = 1; !ct.IsCancellationRequested && proxyList.Any(); attempts++) {
                     var tasks = new Dictionary<Task<Message>, INameRecord>();
+
+                    proxyList.Shuffle();
                     foreach (var proxy in proxyList) {
+                        // 3 second initial timeout on method call here to keep broadcasts moving
+                        // We retry all failed invocations if none responds within 3 seconds
                         tasks.Add(TryInvokeDeviceMethodAsync(proxy, message, 
-                            TimeSpan.FromMinutes(5), cts.Token), proxy);
+                            TimeSpan.FromSeconds(3 * attempts), cts.Token), proxy);
                     }
                     proxyList.Clear();
 
@@ -299,11 +303,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         }
                     }
 
-                    ProxyEventSource.Log.PingRetry(this, attempts + 1, proxyList.Count);
+                    ProxyEventSource.Log.PingRetry(this, attempts, proxyList.Count);
                     if (!proxyList.Any()) {
                         break;
                     }
-                    await Task.Delay(3 * attempts, ct).ConfigureAwait(false);
                 }
                 if (!ct.IsCancellationRequested) {
                     last(null);
@@ -505,8 +508,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             /// <param name="methodName"></param>
             /// <param name="responseTimeout"></param>
             public MethodCallRequest(Message message, TimeSpan responseTimeout) {
-                if (responseTimeout == TimeSpan.MaxValue)
+                if (responseTimeout > TimeSpan.FromMinutes(5))
                     responseTimeout = TimeSpan.FromMinutes(5); // Max value for iothub is 5 minutes
+                else if (responseTimeout < TimeSpan.FromSeconds(5))
+                    responseTimeout = TimeSpan.FromSeconds(5);
                 this.ResponseTimeoutInSeconds = (int)responseTimeout.TotalSeconds;
                 this.Payload = message;
             }

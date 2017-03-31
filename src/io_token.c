@@ -12,7 +12,11 @@
 #include "azure_c_shared_utility/urlencode.h"
 #include "azure_c_shared_utility/buffer_.h"
 
-#define DEFAULT_RENEWAL_TIMEOUT_SEC 10 * 60
+#if !defined(DEBUG)
+#define DEFAULT_RENEWAL_TIMEOUT_SEC 8 * 60 * 60 
+#else
+#define DEFAULT_RENEWAL_TIMEOUT_SEC     30 * 60 
+#endif // !defined(DEBUG)
 
 //
 // Concrete sas token provider
@@ -189,8 +193,10 @@ static int32_t io_token_provider_on_new_iothub_token(
 )
 {
     int32_t result;
-    if (!provider || !token || !ttl)
-        return er_fault;
+    chk_arg_fault_return(token);
+    chk_arg_fault_return(ttl);
+
+    dbg_assert_ptr(provider);
     // Create token
     result = io_sas_token_create(provider->shared_access_key, 
         STRING_c_str(provider->scope), STRING_c_str(provider->policy), 

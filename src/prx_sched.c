@@ -208,7 +208,7 @@ static prx_task_entry_t* prx_scheduler_get_next(
 }
 
 // 
-// Runs the amqp protocol thread for one connection
+// Runs the scheduler tasks queued
 //
 static int32_t prx_scheduler_work(
     void* context
@@ -302,7 +302,7 @@ int32_t prx_scheduler_create(
             &scheduler->worker_thread, prx_scheduler_work, scheduler);
         if (THREADAPI_OK != thread_result)
         {
-            result = er_fault;
+            result = er_fatal;
             scheduler->should_run = false;
             break;
         }
@@ -332,9 +332,9 @@ intptr_t prx_scheduler_queue(
     bool inserted;
     prx_task_entry_t* entry, *next;
 
-    if (!scheduler || !task)
-        return er_fault;
-        
+    chk_arg_fault_return(scheduler);
+    chk_arg_fault_return(task);
+
     entry = (prx_task_entry_t*)prx_buffer_alloc(scheduler->task_pool, NULL);
     if (!entry)
     {
@@ -404,8 +404,7 @@ int32_t prx_scheduler_kill(
 {
     prx_task_entry_t* next;
 
-    if (!scheduler)
-        return er_fault;
+    chk_arg_fault_return(scheduler);
 
     rw_lock_enter_w(scheduler->lock);
     next = prx_scheduler_remove_by_id(&scheduler->now, id);

@@ -212,6 +212,12 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_ringbuf.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_log.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c">
@@ -245,9 +251,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_handle.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_log.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_mem.c">
@@ -313,10 +316,13 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_buffer.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_ringbuf.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_log.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

@@ -5,7 +5,6 @@
 #include "io_url.h"
 #include "util_string.h"
 
-
 //
 // Returns true if both urls are logically equal
 //
@@ -100,8 +99,8 @@ int32_t io_url_create(
     int32_t result = er_out_of_memory;
     io_url_t* address;
 
-    if (!host_name || !created)
-        return er_fault;
+    chk_arg_fault_return(host_name);
+    chk_arg_fault_return(created);
 
     address = mem_zalloc_type(io_url_t);
     if (!address)
@@ -178,8 +177,8 @@ int32_t io_url_clone(
     int32_t result;
     io_url_t* copy;
 
-    if (!address || !cloned)
-        return er_fault;
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(cloned);
 
     copy = mem_zalloc_type(io_url_t);
     if (!copy)

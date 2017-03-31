@@ -360,7 +360,7 @@ static void io_ws_connection_reset(
         !connection->reconnect_cb(connection->reconnect_ctx))
         return;
 
-    log_trace(connection->log, "Reconnecting in %d seconds...",
+    log_info(connection->log, "Reconnecting in %d seconds...",
         connection->back_off_in_seconds);
 
     __do_later(connection, io_ws_connection_reconnect,
@@ -740,7 +740,7 @@ static void io_ws_connection_monitor(
     // If connection has expired, reset connection
     if (connection->expiry && connection->expiry < now)
     {
-        log_trace(connection->log, "Need to refresh credentials, disconnect...");
+        log_info(connection->log, "Need to refresh credentials, disconnect...");
         __do_next(connection, io_ws_connection_disconnect);
         return;
     }
@@ -865,10 +865,11 @@ static void io_ws_connection_reconnect(
             if (result != er_ok)
                 break;
         }
+    } 
+    while (0);
 
-        if (token)
-            STRING_delete(token);
-    } while (0);
+    if (token)
+        STRING_delete(token);
 
     // Connect client
     do
@@ -885,9 +886,6 @@ static void io_ws_connection_reconnect(
         __do_next(connection, io_ws_connection_monitor);
         return;
     } while (0);
-
-    if (token)
-        STRING_delete(token);
 
     // Attempt to reconnect
     __do_next(connection, io_ws_connection_reset);
@@ -909,8 +907,8 @@ int32_t io_ws_connection_create(
     int32_t result;
     io_ws_connection_t* connection;
 
-    if (!address || !created)
-        return er_fault;
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(created);
 
     connection = mem_zalloc_type(io_ws_connection_t);
     if (!connection)
@@ -983,8 +981,7 @@ int32_t io_ws_connection_connect(
     void* reconnect_ctx
 )
 {
-    if (!connection)
-        return er_fault;
+    chk_arg_fault_return(connection);
     dbg_assert_is_task(connection->scheduler);
 
     connection->reconnect_cb = reconnect_cb;
@@ -1008,8 +1005,8 @@ int32_t io_ws_connection_send(
 {
     int32_t result;
     io_queue_buffer_t* buffer;
-    if (!connection || !sender_cb)
-        return er_fault;
+    chk_arg_fault_return(connection);
+    chk_arg_fault_return(sender_cb);
     dbg_assert_is_task(connection->scheduler);
 
     // Let sender write to the outbound frame queue
@@ -1048,8 +1045,7 @@ int32_t io_ws_connection_close(
 )
 {
     dbg_assert_is_task(connection->scheduler);
-    if (!connection)
-        return er_fault;
+    chk_arg_fault_return(connection);
 
     dbg_assert(connection->status != io_ws_connection_status_closing && 
         connection->status != io_ws_connection_status_closed,

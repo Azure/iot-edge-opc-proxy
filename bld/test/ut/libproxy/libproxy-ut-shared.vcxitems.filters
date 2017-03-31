@@ -82,9 +82,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_server_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_log_ut.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_mem_ut.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -95,6 +92,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\xio_ws_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Data\git\azure\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\util_ringbuf_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\Data\git\azure\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\prx_log_ut.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

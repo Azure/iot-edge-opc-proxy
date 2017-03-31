@@ -415,8 +415,8 @@ int32_t io_cs_append_to_STRING(
 {
     int32_t result;
 
-    if (!cs || !c_string)
-        return er_fault;
+    chk_arg_fault_return(cs);
+    chk_arg_fault_return(c_string);
     
     result = io_cs_append_entry_to_STRING(
         cs, io_cs_entry_host_name, "HostName=", c_string);
@@ -493,8 +493,9 @@ int32_t io_cs_create_from_string(
 {
     int32_t result;
     io_cs_t* cs;
-    if (!c_string || !created)
-        return er_fault;
+
+    chk_arg_fault_return(c_string);
+    chk_arg_fault_return(created);
 
     cs = mem_zalloc_type(io_cs_t);
     if (!cs)
@@ -538,8 +539,9 @@ int32_t io_cs_create_from_raw_file(
     size_t read;
     char* buf = NULL;
 
-    if (!file_name || !created)
-        return er_fault;
+    chk_arg_fault_return(file_name);
+    chk_arg_fault_return(created);
+
     result = pal_get_real_path(file_name, &real_file);
     if (result != er_ok)
         return result;
@@ -598,8 +600,9 @@ int32_t io_cs_create(
 {
     int32_t result;
     io_cs_t* cs;
-    if (!host_name || !created)
-        return er_fault;
+
+    chk_arg_fault_return(host_name);
+    chk_arg_fault_return(created);
 
     cs = mem_zalloc_type(io_cs_t);
     if (!cs)
@@ -663,8 +666,9 @@ int32_t io_cs_clone(
 {
     int32_t result = er_ok;
     io_cs_t* cs;
-    if (!orig || !cloned)
-        return er_fault;
+
+    chk_arg_fault_return(orig);
+    chk_arg_fault_return(cloned);
 
     cs = mem_zalloc_type(io_cs_t);
     if (!cs)
@@ -884,8 +888,7 @@ int32_t io_cs_set_entry(
     const char* entry
 )
 {
-    if (!cs)
-        return er_fault;
+    chk_arg_fault_return(cs);
     if (id >= io_cs_entry_max)
         return er_arg;
     if (cs->entries[id])
@@ -910,8 +913,8 @@ int32_t io_cs_set_host_name(
 )
 {
     int32_t result;
-    if (!cs || !host_name)
-        return er_fault;
+    chk_arg_fault_return(cs);
+    chk_arg_fault_return(host_name);
 
     result = io_cs_validate_host_name(host_name);
     if (result != er_ok)
@@ -934,8 +937,7 @@ int32_t io_cs_set_device_id(
 )
 {
     int32_t result;
-    if (!cs)
-    return er_fault;
+    chk_arg_fault_return(cs);
 
     if (device_id)
     {
@@ -955,8 +957,7 @@ int32_t io_cs_set_endpoint(
 )
 {
     size_t val_len;
-    if (!cs)
-        return er_fault;
+    chk_arg_fault_return(cs);
     if (!endpoint)
         return io_cs_set_entry(cs, io_cs_entry_endpoint, NULL);
     if (cs->entries[io_cs_entry_endpoint])
@@ -1037,8 +1038,7 @@ int32_t io_cs_create_token_provider(
     STRING_HANDLE scope = NULL;
     STRING_HANDLE key;
   
-    if (!cs)
-        return er_fault;
+    chk_arg_fault_return(cs);
     key = cs->entries[io_cs_entry_shared_access_token];
     if (key)
         return io_passthru_token_provider_create(STRING_c_str(key), provider);

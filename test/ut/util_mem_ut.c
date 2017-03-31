@@ -73,8 +73,8 @@ TEST_FUNCTION(mem_alloc__neg)
         .SetFailReturn(NULL);
 
     // act 
-        UMOCK_C_NEGATIVE_TESTS_ACT();
-        result = mem_alloc(k_size_valid);
+    UMOCK_C_NEGATIVE_TESTS_ACT();
+    result = mem_alloc(k_size_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);

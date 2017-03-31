@@ -17,8 +17,6 @@
     <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Perf|net46|AnyCPU'" />
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Azure.Devices.Opc.Ua.Proxy\Microsoft.Azure.Devices.Opc.Ua.Proxy.csproj" />
   </ItemGroup>

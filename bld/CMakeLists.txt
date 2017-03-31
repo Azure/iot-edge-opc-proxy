@@ -30,7 +30,6 @@ set(_GETOPT_ROOT ${_DEPS_ROOT}/getopt CACHE PATH "Getopt Root")
 set(_PARSON_ROOT ${_DEPS_ROOT}/parson CACHE PATH "Parson Root")
 set(_ZLOG_ROOT ${_DEPS_ROOT}/zlog CACHE PATH "Zlog Root")
 set(_HASHTABLE_ROOT ${_DEPS_ROOT}/hashtable CACHE PATH "Hashtable Root")
-set(_UAMQP_ROOT ${_DEPS_ROOT}/uamqp CACHE PATH "Azure uAMQP Root")
 set(_UMQTT_ROOT ${_DEPS_ROOT}/umqtt CACHE PATH "Azure uMQTT Root")
 set(_SHARED_ROOT ${_DEPS_ROOT}/shared CACHE PATH "Azure C Shared Root")
 set(_LIBWEBSOCKETS_ROOT ${_DEPS_ROOT}/lws CACHE PATH "Libwebsockets Root")
@@ -41,7 +40,6 @@ set(_CTEST_ROOT ${_DEPS_ROOT}/ctest CACHE PATH "Azure ctest harness Root")
 #
 # Internal include folders of external dependencies 
 #
-set(_UAMQP_INC ${_UAMQP_ROOT}/inc CACHE INTERNAL "" FORCE)
 set(_UMQTT_INC ${_UMQTT_ROOT}/inc CACHE INTERNAL "" FORCE)
 set(_IOTSDK_INC ${_SHARED_ROOT}/inc CACHE INTERNAL "" FORCE)
 set(_IOTSDK_SRC ${_SHARED_ROOT}/src CACHE INTERNAL "" FORCE)

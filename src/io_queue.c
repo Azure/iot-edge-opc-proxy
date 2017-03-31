@@ -4,6 +4,7 @@
 // #define DBG_MEM
 
 #include "util_mem.h"
+#include "util_misc.h"
 #include "io_queue.h"
 #include "prx_buffer.h"
 #include "pal_mt.h"
@@ -180,8 +181,8 @@ int32_t io_queue_create_buffer(
     int32_t result = er_out_of_memory;
     io_queue_buffer_t* queue_buffer;
 
-    if (!created || !queue)
-        return er_fault;
+    chk_arg_fault_return(queue);
+    chk_arg_fault_return(created);
 
     queue_buffer = (io_queue_buffer_t*)prx_buffer_new(
         queue->factory, length + sizeof(io_queue_buffer_t));
@@ -270,13 +271,11 @@ int32_t io_queue_buffer_write(
 {
     size_t write;
 
-    if (!queue_buffer)
-        return er_fault;
+    chk_arg_fault_return(queue_buffer);
     dbg_assert_buf(queue_buffer);
     if (len == 0)
         return er_ok;
-    if (!buf)
-        return er_fault;
+    chk_arg_fault_return(buf);
 
     write = min(queue_buffer->length - queue_buffer->write_offset, len);
 
@@ -298,11 +297,8 @@ int32_t io_queue_buffer_read(
 {
     size_t available;
 
-    if (!queue_buffer)
-        return er_fault;
+    chk_arg_fault_return(queue_buffer);
     dbg_assert_buf(queue_buffer);
-    if (!queue_buffer)
-        return er_fault;
     if (len == 0)
         return er_ok;
 
@@ -387,8 +383,7 @@ int32_t io_queue_create(
     io_queue_t* queue;
     int32_t result;
 
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
 
     queue = mem_zalloc_type(io_queue_t);
     if (!queue) 

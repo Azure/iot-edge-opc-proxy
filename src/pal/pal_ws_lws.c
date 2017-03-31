@@ -116,7 +116,7 @@ static void pal_wsclient_lws_log(
     }
     else if (level & LLL_WARN)
     {
-        log_info(global_wsworker_pool->log, "WARNING: %s", msg);
+        log_info(global_wsworker_pool->log, " -- WARNING -- %s", msg);
     }
     else if (level & LLL_INFO)
     {
@@ -124,7 +124,7 @@ static void pal_wsclient_lws_log(
     }
     else if (level & LLL_NOTICE)
     {
-        log_trace(global_wsworker_pool->log, "NOTICE: %s", msg);
+        log_info(global_wsworker_pool->log, "%s", msg);
     }
 #ifdef LOG_VERBOSE
     else if (level & LLL_DEBUG)
@@ -401,7 +401,10 @@ static void pal_wsworker_lws_copy_in(
     void* buf;
 
     dbg_assert_ptr(wsclient);
-    dbg_assert_ptr(wsclient->send_buffer_offset == wsclient->send_buffer_size);
+
+    dbg_assert(wsclient->send_buffer_offset == wsclient->send_buffer_size, 
+        "Expected entire buffer to be sent by wsclient! (offset %d != size %d)", 
+            wsclient->send_buffer_offset, wsclient->send_buffer_size);
 
     wsclient->cb(wsclient->context, pal_wsclient_event_begin_send,
         &out, &wsclient->send_buffer_size, &type, er_ok);
@@ -701,7 +704,7 @@ static int pal_wsworker_lws_on_disconnect(
     dbg_assert_ptr(wsclient);
     dbg_assert(wsclient->wsi == wsi, "Unexpected");
 
-    log_trace(wsclient->log, "lws reported remote side closed");
+    log_info(wsclient->log, "lws reported remote side closed");
 
     wsclient->last_error = er_closed;
     wsclient->wsi = NULL;
@@ -1032,6 +1035,7 @@ static int32_t pal_wsworker_get_proxy_info(
 {
     size_t buf_len;
     const char* proxy;
+    const char* port_str;
     const char* user;
     const char* pwd;
 
@@ -1045,16 +1049,23 @@ static int32_t pal_wsworker_get_proxy_info(
         *port = 0;
         return er_ok;  // No proxy configured, return success
     }
+    port_str = __prx_config_get(prx_config_key_proxy_port, NULL);
     user = __prx_config_get(prx_config_key_proxy_user, NULL);
     pwd = __prx_config_get(prx_config_key_proxy_pwd, NULL);
 
-    buf_len = strlen(proxy) + (user ? strlen(user) : 0 ) + (pwd ? strlen(pwd) : 0)
-        + 2 + 1;  // plus 2 for pwd/user sep and null terminator
+    buf_len = 
+          strlen(proxy) 
+        + (port_str ? strlen(port_str) + 1 : 0)  // Add port sep
+        + (user ? strlen(user) + 1 : 0) // user sep @
+        + (pwd ? strlen(pwd) + 1 : 0) // add pwd sep :
+        + 1;  // plus null term
     
-    *proxy_address = (char*)crt_alloc(buf_len); // Use malloc for lws to free
+    // Use malloc for lws to free
+    *proxy_address = (char*)crt_alloc(buf_len); 
     if (!*proxy_address)
         return er_out_of_memory;
-    memset(*proxy_address, 0, buf_len); // Avoid use of uninitialized memory, issue #27
+
+    *proxy_address = 0;
     // Concat proxy address string
     if (user)
     {
@@ -1066,15 +1077,13 @@ static int32_t pal_wsworker_get_proxy_info(
         }
         strcat(*proxy_address, "@");
     }
-    strcpy(*proxy_address, proxy);
-
-    // Now parse port from host
-    while (*proxy && *proxy != ':') 
-        proxy++;
-    if (!*proxy)
-        *port = 0;
-    else
-        *port = atoi(++proxy);
+    strcat(*proxy_address, proxy);
+    if (port_str)
+    {
+        strcat(*proxy_address, ":");
+        strcat(*proxy_address, port_str);
+    }
+    *port = atoi(port_str);
     return er_ok;
 }
 

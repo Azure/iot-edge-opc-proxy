@@ -1256,8 +1256,7 @@ int32_t pal_socket_open(
     pal_socket_t *sock
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
 
     dbg_assert(!sock->prx_ai_cur && !sock->prx_ai_count && !sock->prx_ai,
         "Should not have an address list");
@@ -1278,8 +1277,7 @@ int32_t pal_socket_can_send(
     bool ready
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
     if (sock->sock_fd == INVALID_SOCKET)
         return er_closed;
     if (ready)
@@ -1295,8 +1293,7 @@ int32_t pal_socket_can_recv(
     bool ready
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
     if (sock->sock_fd == INVALID_SOCKET)
         return er_closed;
     if (ready)
@@ -1314,8 +1311,10 @@ int32_t pal_socket_create(
 {
     int32_t result;
     pal_socket_t* sock;
-    if (!itf || !created || !itf->cb)
-        return er_fault;
+
+    chk_arg_fault_return(itf);
+    chk_arg_fault_return(created);
+    chk_arg_fault_return(itf->cb);
 
     sock = mem_zalloc_type(pal_socket_t);
     if (!sock)
@@ -1416,8 +1415,7 @@ int32_t pal_socket_getsockopt(
     int32_t opt_val;
     u_long avail;
 
-    if (!value)
-        return er_fault;
+    chk_arg_fault_return(sock);
 
     if (socket_option == prx_so_shutdown)
         return er_not_supported;
@@ -1521,8 +1519,8 @@ int32_t pal_socket_getpeername(
     prx_socket_address_t* socket_address
 )
 {
-    if (!sock || !socket_address)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(socket_address);
     memcpy(socket_address, &sock->peer, sizeof(prx_socket_address_t));
     return er_ok;
 }
@@ -1535,8 +1533,8 @@ int32_t pal_socket_getsockname(
     prx_socket_address_t* socket_address
 )
 {
-    if (!sock || !socket_address)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(socket_address);
     memcpy(socket_address, &sock->local, sizeof(prx_socket_address_t));
     return er_ok;
 }
@@ -1549,8 +1547,8 @@ int32_t pal_socket_get_properties(
     prx_socket_properties_t* props
 )
 {
-    if (!sock || !props)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(props);
     memcpy(props, &sock->itf.props, sizeof(prx_socket_properties_t));
     return er_ok;
 }
@@ -1567,8 +1565,8 @@ int32_t pal_socket_leave_multicast_group(
     struct ipv6_mreq opt6;
     struct ip_mreq opt;
 
-    if (!option)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(option);
 
     switch (option->family)
     {
@@ -1603,8 +1601,8 @@ int32_t pal_socket_join_multicast_group(
     struct ipv6_mreq opt6;
     struct ip_mreq opt;
 
-    if (!option)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(option);
 
     switch (option->family)
     {

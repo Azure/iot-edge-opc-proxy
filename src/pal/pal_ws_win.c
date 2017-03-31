@@ -792,8 +792,9 @@ int32_t pal_wsclient_add_header(
     const char* value
 )
 {
-    if (!wsclient || !key || !value)
-        return er_fault;
+    chk_arg_fault_return(wsclient);
+    chk_arg_fault_return(key);
+    chk_arg_fault_return(value);
     if (!strlen(key))
         return er_arg;
 
@@ -832,12 +833,16 @@ int32_t pal_wsclient_create(
     int32_t result;
     DWORD max_conns;
     BOOL non_blocking;
+    char* buf;
     const char* value;
     wchar_t* w_value = NULL;
     pal_wsclient_t* wsclient;
 
-    if (!host || !path || !created || !callback)
-        return er_fault;
+    chk_arg_fault_return(created);
+    chk_arg_fault_return(host);
+    chk_arg_fault_return(path);
+    chk_arg_fault_return(callback);
+
     wsclient = mem_zalloc_type(pal_wsclient_t);
     if (!wsclient)
         return er_out_of_memory;
@@ -882,10 +887,26 @@ int32_t pal_wsclient_create(
         }
         else
         {
-            // Proxy configuration passed from command line or configuration
-            result = pal_string_clone_as_wide_string(value, &w_value);
+            // Create <host>:<port> name for proxy to connect to
+            buf = (char*)mem_alloc(strlen(value) + 12);
+            if (!buf)
+                result = er_out_of_memory;
+            else
+            {
+                strcpy(buf, value);
+                value = __prx_config_get(prx_config_key_proxy_port, NULL);
+                if (value && atoi(value))
+                {
+                    strcat(buf, ":");
+                    strcat(buf, value);
+                }
+                // Proxy configuration passed from command line or configuration
+                result = pal_string_clone_as_wide_string(buf, &w_value);
+                mem_free(buf);
+            }
             if (result != er_ok)
                 break;
+
             wsclient->h_session = WinHttpOpen(NULL,
                 WINHTTP_ACCESS_TYPE_NAMED_PROXY, w_value, L"<local>", WINHTTP_FLAG_ASYNC);
             if (!wsclient->h_session)
@@ -988,8 +1009,7 @@ int32_t pal_wsclient_connect(
     LPWSTR headers = NULL;
     DWORD max_retries = 10;
 
-    if (!wsclient)
-        return er_fault;
+    chk_arg_fault_return(wsclient);
     if (wsclient->h_connection)
         return er_bad_state;
     dbg_assert(!wsclient->h_request && !wsclient->h_connection &&
@@ -1100,8 +1120,7 @@ int32_t pal_wsclient_can_recv(
     bool enable
 )
 {
-    if (!wsclient)
-        return er_fault;
+    chk_arg_fault_return(wsclient);
     if (wsclient->can_recv == enable)
         return er_ok;
 
@@ -1118,8 +1137,7 @@ int32_t pal_wsclient_can_send(
     bool enable
 )
 {
-    if (!wsclient)
-        return er_fault;
+    chk_arg_fault_return(wsclient);
     if (wsclient->can_send == enable)
         return er_ok;
 
@@ -1135,9 +1153,7 @@ int32_t pal_wsclient_disconnect(
     pal_wsclient_t* wsclient
 )
 {
-    if (!wsclient)
-        return er_fault;
-
+    chk_arg_fault_return(wsclient);
     atomic_bit_set(wsclient->state, pal_wsclient_disconnected_bit);
 
     // Return buffers to caller to break dependencies

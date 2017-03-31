@@ -1,6 +1,3 @@
-[submodule "deps/uamqp"]
-	path = deps/uamqp
-	url = https://github.com/Azure/azure-uamqp-c.git
 [submodule "deps/umqtt"]
 	path = deps/umqtt
 	url = https://github.com/marcschier/azure-umqtt-c.git

@@ -24,6 +24,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_log.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_module.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_host.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_client.h" />
@@ -63,6 +64,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_rand.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_ws.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_types.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_ringbuf.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_stream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_dbg.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_handle.h" />
@@ -105,14 +107,14 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_ns.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_ws.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\pal.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_ringbuf.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_stream.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_handle.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_log.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_log.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_mem.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_misc.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_signal.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_string.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_time.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_sk.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\xio_ws.c" />
   </ItemGroup>

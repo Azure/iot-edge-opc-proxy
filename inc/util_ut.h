@@ -178,6 +178,15 @@ static bool k_true = true;
         umock_c_negative_tests_reset(); \
         umock_c_negative_tests_fail_call(__i)
 
+
+#if !defined(min)
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
+#if !defined(_MSC_VER) || !defined(_countof)
+#define _countof(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+
 //
 // Assert for each failed iteration result
 //
@@ -257,6 +266,28 @@ __declspec(dllexport) int C2(UNIT_TEST, _init)(
     return (int)failed;
 }
 
+//
+// Remove logging in unit tests
+//
+#define log_t \
+    void*
+#define log_read_config(x) \
+    er_not_supported
+#define log_set_log_file(x) \
+    er_not_supported
+#define log_get(x) \
+    NULL
+
+#define log_error_b(log, b, len) (void)0
+#define log_error(log, fmt, ...) (void)0
+#define  log_info_b(log, b, len) (void)0
+#define  log_info(log, fmt, ...) (void)0
+#define log_trace_b(log, b, len) (void)0
+#define log_trace(log, fmt, ...) (void)0
+#define log_debug_b(log, b, len) (void)0
+#define log_debug(log, fmt, ...) (void)0
+
+#define dbg_assert_ptr(arg) (void)arg
 
 //
 // Simplify ref counting in unit tests - UT is always single threaded...

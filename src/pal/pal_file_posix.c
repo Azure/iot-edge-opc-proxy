@@ -44,8 +44,8 @@ int32_t pal_get_real_path(
     size_t path_max;
     int err;
     char *buf, *ptr;
-    if (!file_name || !path)
-        return er_fault;
+    chk_arg_fault_return(file_name);
+    chk_arg_fault_return(path);
 
     // Get max path, if this fails, then we see if realpath will malloc
     path_max = (size_t)pathconf(".", _PC_PATH_MAX);

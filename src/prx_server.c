@@ -4,14 +4,17 @@
 #include "util_mem.h"
 #include "prx_server.h"
 #include "prx_ns.h"
+#include "prx_log.h"
+#include "prx_buffer.h"
+
 #include "pal.h"
 #include "pal_sk.h"
 #include "pal_net.h"
 #include "pal_mt.h"
 #include "pal_time.h"
+
 #include "io_proto.h"
 #include "io_transport.h"
-#include "prx_buffer.h"
 #include "util_string.h"
 
 #include "hashtable.h"
@@ -148,7 +151,7 @@ static void prx_server_socket_free(
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
-    log_trace(server_sock->log, "Server socket %p freed!", server_sock);
+    log_info(server_sock->log, "Server socket %p destroyed!", server_sock);
     mem_free_type(prx_server_socket_t, server_sock);
 }
 
@@ -1954,8 +1957,8 @@ int32_t prx_server_create(
     int32_t result;
     prx_server_t* server;
 
-    if (!transport || !created)
-        return er_fault;
+    chk_arg_fault_return(transport);
+    chk_arg_fault_return(created);
 
     server = mem_zalloc_type(prx_server_t);
     if (!server)

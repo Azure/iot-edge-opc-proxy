@@ -9,6 +9,8 @@
 //
 #include "prx_ns.h"
 #include "prx_buffer.h"
+#include "prx_log.h"
+#include "prx_sched.h"
 #include "io_proto.h"
 
 //
@@ -30,8 +32,6 @@ END_DECLARE_TEST_SUITE()
 // 4. Setup and run tests
 //
 DECLARE_TEST_SETUP()
-
-
 
 #ifdef io_connection_send
 

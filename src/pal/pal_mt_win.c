@@ -14,9 +14,9 @@ int32_t rw_lock_create(
     rw_lock_t* created
 )
 {
-    if (!created)
-        return er_fault;
-    SRWLOCK* lock = mem_zalloc_type(SRWLOCK);
+    SRWLOCK* lock;
+    chk_arg_fault_return(created);
+    lock = mem_zalloc_type(SRWLOCK);
     if (!lock)
         return er_out_of_memory;
     InitializeSRWLock(lock);
@@ -96,8 +96,7 @@ int32_t lock_create(
 #else
     int32_t result;
     LOCK_HANDLE lock;
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
     do
     {
         /* EnterCriticalSection lock is reentrant */

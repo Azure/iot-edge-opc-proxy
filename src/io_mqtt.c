@@ -392,6 +392,9 @@ static void io_mqtt_connection_publish_message(
 {
     io_mqtt_message_t* message, *next;
 
+    if (connection->status != io_mqtt_status_connected)
+        return;
+
     message = NULL;
     for (PDLIST_ENTRY p = connection->send_queue.Flink;
         p != &connection->send_queue; p = p->Flink)
@@ -434,7 +437,10 @@ static void io_mqtt_connection_monitor(
     // If connection has expired, reset connection
     if (connection->expiry && connection->expiry < now)
     {
-        log_trace(connection->log, "Need to refresh token, soft reset...");
+        log_info(connection->log, "Need to refresh token, soft reset...");
+        // Ensure we stay on the current transport
+        if (!connection->address->scheme)
+            connection->is_websocket = !connection->is_websocket;
         io_mqtt_connection_clear_failures(connection);
         __do_next(connection, io_mqtt_connection_soft_reset);
         return;
@@ -694,7 +700,9 @@ static int32_t io_mqtt_connection_handle_CONNECT_ACK(
     case CONNECTION_ACCEPTED:
         // Connection established, complete connect
         log_info(connection->log, "Connection established (%s:%d)!", 
-            STRING_c_str(connection->address->host_name), connection->address->port);
+            STRING_c_str(connection->address->host_name), 
+            connection->address->port ? connection->address->port : 
+                (connection->is_websocket ? 443 : 8883));
         connection->status = io_mqtt_status_connected;
         __do_next(connection, io_mqtt_connection_subscribe_all);
         __do_next(connection, io_mqtt_connection_publish_message);
@@ -778,7 +786,7 @@ static void io_mqtt_connection_operation_callback(
         if (connection->status == io_mqtt_status_connecting ||
             connection->status == io_mqtt_status_connected)
         {
-            log_trace(connection->log, "Remote side disconnected.");
+            log_info(connection->log, "Remote side disconnected.");
         }
         break;
 
@@ -1174,10 +1182,15 @@ int32_t io_mqtt_properties_add(
     const char* value
 )
 {
-    STRING_HANDLE prop_string = (STRING_HANDLE)properties;
-    if (!properties || !key || !value || 0 == strlen(value))
-        return er_fault;
+    STRING_HANDLE prop_string;
 
+    chk_arg_fault_return(properties);
+    chk_arg_fault_return(key);
+    chk_arg_fault_return(value);
+    if (0 == strlen(value))
+        return er_arg;
+
+    prop_string = (STRING_HANDLE)properties;
     if (0 != STRING_concat(prop_string, "&") ||
         0 != STRING_concat(prop_string, key) ||
         0 != STRING_concat(prop_string, "=") ||
@@ -1200,8 +1213,11 @@ int32_t io_mqtt_properties_get(
 {
     size_t found_len = 0;
     const char* found;
-    if (!properties || !key || !value_buf || !value_len)
-        return er_fault;
+
+    chk_arg_fault_return(properties);
+    chk_arg_fault_return(key);
+    chk_arg_fault_return(value_buf);
+    chk_arg_fault_return(value_len);
 
     found = string_find_nocase(
         STRING_c_str((STRING_HANDLE)properties), key);
@@ -1240,8 +1256,9 @@ int32_t io_mqtt_connection_publish(
     char* prop_string;
     STRING_HANDLE topic_name = NULL;
 
-    if (!connection || !uri || !buffer)
-        return er_fault;
+    chk_arg_fault_return(connection);
+    chk_arg_fault_return(uri);
+    chk_arg_fault_return(buffer);
 
     message = mem_zalloc_type(io_mqtt_message_t);
     if (!message)
@@ -1316,8 +1333,9 @@ int32_t io_mqtt_connection_subscribe(
     int32_t result;
     io_mqtt_subscription_t* subscription;
 
-    if (!connection || !created || !uri)
-        return er_fault;
+    chk_arg_fault_return(connection);
+    chk_arg_fault_return(uri);
+    chk_arg_fault_return(created);
 
     subscription = mem_zalloc_type(io_mqtt_subscription_t);
     if (!subscription)
@@ -1364,8 +1382,8 @@ int32_t io_mqtt_connection_create(
     int32_t result;
     io_mqtt_connection_t* connection;
 
-    if (!address || !created)
-        return er_fault;
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(created);
 
     connection = mem_zalloc_type(io_mqtt_connection_t);
     if (!connection)
@@ -1463,8 +1481,7 @@ int32_t io_mqtt_connection_connect(
     void* reconnect_ctx
 )
 {
-    if (!connection)
-        return er_fault;
+    chk_arg_fault_return(connection);
     dbg_assert_is_task(connection->scheduler);
 
     connection->reconnect_cb = reconnect_cb;

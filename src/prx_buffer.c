@@ -4,10 +4,12 @@
 // #define DBG_MEM
 
 #include "util_mem.h"
+#include "util_misc.h"
 #include "prx_buffer.h"
+#include "pal_mt.h"
+
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/refcount.h"
-#include "pal_mt.h"
 
 //
 // Universal buffer header
@@ -371,8 +373,8 @@ static int32_t prx_dynamic_buffer_set_size(
 {
     int32_t result;
     prx_buffer_t* buf, *orig;
-    if (!buffer || !*buffer)
-        return er_fault;
+    chk_arg_fault_return(buffer);
+    chk_arg_fault_return(*buffer);
 
     orig = __prx_buffer(*buffer);
     dbg_assert_buf(orig);

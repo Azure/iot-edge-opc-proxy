@@ -108,7 +108,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 Links.AddRange(results.Where(v => v != null));
                 return results.Any();
             }
-            catch (Exception) {
+            catch (Exception ex) {
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, ex);
                 // continue...
             }
             return false;
@@ -137,7 +138,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     return true;
                 }
             }
-            catch(Exception) {
+            catch(Exception ex) {
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, ex);
                 // continue...
             }
             return false;
@@ -186,12 +188,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         private async Task<IProxyLink> CreateLinkAsync(INameRecord proxy, 
             CancellationToken ct) {
+
+            ProxyEventSource.Log.LinkCreate(this, proxy.Name, Info.Address);
             // Create link, i.e. perform bind, connect, listen, etc. on proxy
             Message response = await Provider.ControlChannel.CallAsync(proxy,
                 new Message(Id, Reference.Null, new LinkRequest {
                     Properties = Info
                 }), ct);
             if (response == null || response.Error != (int)SocketError.Success) {
+                ProxyEventSource.Log.LinkFailure(this, proxy.Name, Info, response, null);
                 return null;
             }
 
@@ -203,21 +208,22 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             try {
                 // Broker connection string to proxy
                 var openRequest = await link.BeginOpenAsync(ct).ConfigureAwait(false);
+                ProxyEventSource.Log.LinkOpen(this, proxy.Name, Info.Address);
 
-                response = await Provider.ControlChannel.CallAsync(proxy,
+                await Provider.ControlChannel.CallAsync(proxy,
                     new Message(Id, linkResponse.LinkId, openRequest), ct).ConfigureAwait(false);
 
-                if (response == null || response.Error == (int)SocketError.Success) {
-                    // Wait until remote side opens stream connection
-                    bool success = await link.TryCompleteOpenAsync(ct).ConfigureAwait(false);
-                    if (success)
-                        return link;
+                // Wait until remote side opens stream connection
+                bool success = await link.TryCompleteOpenAsync(ct).ConfigureAwait(false);
+                if (success) {
+                    ProxyEventSource.Log.LinkComplete(this, proxy.Name, Info.Address);
+                    return link;
                 }
             }
             catch (Exception e) {
                 // Try to close remote side
                 await link.CloseAsync(CancellationToken.None).ConfigureAwait(false);
-                ProxyEventSource.Log.HandledExceptionAsError(this, e);
+                ProxyEventSource.Log.LinkFailure(this, proxy.Name, Info.Address, null, e);
             }
             return null;
         }

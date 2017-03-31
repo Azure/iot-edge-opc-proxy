@@ -11,10 +11,12 @@ static int32_t init_called = 0;
     "[global]\n" \
 	"strict init = true\n" \
 	"buffer min = 1024\n" \
+	"file perms = 644\n" \
 	"buffer max = 0\n" \
 	"rotate lock file = zlog.lock\n" \
 	"default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
 	"[rules]\n" \
+	"*.notice $default\n" \
 	"*.info >stdout\n" \
     "*.error >stderr\n"
 
@@ -35,9 +37,7 @@ int32_t zlog_initialize(
         return er_ok;
     if (0 != dzlog_init(NULL, "root"))
         return er_fatal;
-#if !defined(DEBUG)
 	zlog_reload_from_string(ZLOG_DEFAULT_CONFIG);
-#endif
     return er_ok;
 }
 
@@ -123,6 +123,18 @@ int32_t zlog_register(
 {
     if (0 != zlog_set_record(target, (zlog_record_fn)callback))
         return er_bad_state;
+    return er_ok;
+}
+
+//
+// Unregister callback for target
+//
+int32_t zlog_unregister(
+    const char* target
+)
+{
+   // if (0 != zlog_set_record(target, NULL))
+   //     return er_bad_state;
     return er_ok;
 }
 

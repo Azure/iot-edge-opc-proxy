@@ -33,8 +33,8 @@ int32_t string_key_value_parser(
     const char* val;
     size_t val_len;
 
-    if (!cstr || !visitor)
-        return er_fault;
+    chk_arg_fault_return(cstr);
+    chk_arg_fault_return(visitor);
 
     key = cstr;
     while(true)
@@ -74,8 +74,8 @@ int32_t STRING_clone_c_str(
 )
 {
     size_t len;
-    if (!copy || !string)
-        return er_fault;
+    chk_arg_fault_return(copy);
+    chk_arg_fault_return(string);
     len = STRING_length(string);
     *copy = (char*)mem_alloc(len + 1);
     if (!*copy)
@@ -99,8 +99,8 @@ int32_t string_clone(
 )
 {
     size_t len;
-    if (!copy || !string)
-        return er_fault;
+    chk_arg_fault_return(copy);
+    chk_arg_fault_return(string);
     len = strlen(string);
     *copy = (char*)mem_alloc(len + 1);
     if (!*copy)
@@ -340,8 +340,9 @@ int32_t string_from_int(
     size_t len
 )
 {
-    if (!string || len <= 0)
-        return er_fault;
+    chk_arg_fault_return(string);
+    if (len == 0)
+        return er_arg;
     if (radix != 10 && radix != 16)
         return er_arg;
     return
@@ -363,8 +364,8 @@ int32_t string_to_int(
 )
 {
     char* end_ptr;
-    if (!string || !value)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(value);
     if (radix != 10 && radix != 16)
         return er_arg;
     
@@ -398,8 +399,7 @@ int32_t STRING_compare_c_str(
     const char* compare_to
 )
 {
-    if (!string)
-        return er_fault;
+    chk_arg_fault_return(string);
     return string_compare(STRING_c_str(string), compare_to);
 }
 
@@ -411,8 +411,7 @@ int32_t STRING_compare_c_str_nocase(
     const char* compare_to
 )
 {
-    if (!string)
-        return er_fault;
+    chk_arg_fault_return(string);
     return string_compare_nocase(STRING_c_str(string), compare_to);
 }
 
@@ -424,8 +423,7 @@ int32_t STRING_compare_nocase(
     STRING_HANDLE compare_to
 )
 {
-    if (!compare_to)
-        return er_fault;
+    chk_arg_fault_return(compare_to);
     return STRING_compare_c_str_nocase(string, STRING_c_str(compare_to));
 }
 
@@ -550,8 +548,8 @@ int32_t STRING_concat_n(
     int32_t result = er_ok;
     STRING_HANDLE tmp;
 
-    if (!string || !buffer)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(buffer);
 
     tmp = STRING_safe_construct_n(buffer, len);
     if (!tmp)
@@ -575,8 +573,7 @@ int32_t STRING_concat_int(
 {
     int32_t result;
     char buffer[32];
-    if (!string)
-        return er_fault;
+    chk_arg_fault_return(string);
     result = string_from_int(value, radix, buffer, sizeof(buffer));
     if (result == er_ok)
         result = STRING_concat(string, buffer) == 0 ? er_ok : er_out_of_memory;
@@ -643,8 +640,8 @@ int32_t STRING_update(
     const char* val
 )
 {
-    if (!string || !val)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(val);
 
     if (0 == STRING_compare_c_str(string, val))
         return er_ok;
@@ -782,8 +779,9 @@ int32_t string_base16_to_byte_array(
 {
     int32_t result;
     size_t min_len;
-    if (!buffer || !len || !val)
-        return er_fault;
+    chk_arg_fault_return(buffer);
+    chk_arg_fault_return(len);
+    chk_arg_fault_return(val);
     min_len = (strlen(val) / 2);
     if (!min_len)
         return er_arg;
@@ -812,8 +810,9 @@ int32_t string_base64_to_byte_array(
 {
     int32_t result;
     BUFFER_HANDLE handle;
-    if (!buffer || !len || !val)
-        return er_fault;
+    chk_arg_fault_return(buffer);
+    chk_arg_fault_return(len);
+    chk_arg_fault_return(val);
 
     handle = Base64_Decoder(val);
     if (!handle)
@@ -845,8 +844,8 @@ int32_t string_to_uuid(
 )
 {
     int32_t result;
-    if (!string || !uuid)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(uuid);
     if (strlen(string) + 1 < UUID_PRINTABLE_STRING_LENGTH)
         return er_arg;
 
@@ -883,8 +882,8 @@ int32_t string_from_uuid(
     size_t len            // must be >= UUID_PRINTABLE_STRING_LENGTH
 )
 {
-    if (!string || !uuid)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(uuid);
     if (len < UUID_PRINTABLE_STRING_LENGTH)
         return er_arg;
     // 8-4-4-4-12
