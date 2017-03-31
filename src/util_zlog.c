@@ -17,8 +17,7 @@ static int32_t init_called = 0;
 	"default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
 	"[rules]\n" \
 	"*.notice $default\n" \
-	"*.info >stdout\n" \
-    "*.error >stderr\n"
+	"*.info >stdout\n"
 
 //
 // Initialize zlog library
