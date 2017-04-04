@@ -123,8 +123,7 @@ int32_t pal_os_from_prx_client_getnameinfo_flags(
     int *plat_flags
 )
 {
-    if (!plat_flags)
-        return er_fault;
+    chk_arg_fault_return(plat_flags);
     *plat_flags = 0;
     if (flags & ~(prx_ni_flag_namereqd))
         return er_arg;
@@ -143,8 +142,7 @@ int32_t pal_os_to_prx_client_getnameinfo_flags(
     int32_t* prx_flags
 )
 {
-    if (!prx_flags)
-        return er_fault;
+    chk_arg_fault_return(prx_flags);
     *prx_flags = 0;
 
     if (NI_NAMEREQD == (flags & NI_NAMEREQD))
@@ -168,8 +166,9 @@ int32_t pal_os_from_prx_socket_address(
     struct sockaddr_in6* sa_in6;
     struct sockaddr_in* sa_in4;
 
-    if (!sa || !sa_len || !prx_address)
-        return er_fault;
+    chk_arg_fault_return(sa);
+    chk_arg_fault_return(sa_len);
+    chk_arg_fault_return(prx_address);
 
     switch (prx_address->un.family)
     {
@@ -222,7 +221,10 @@ int32_t pal_os_to_prx_socket_address(
     struct sockaddr_in6* sa_in6;
     struct sockaddr_in* sa_in4;
 
-    if (!sa || sa_len < sizeof(struct sockaddr) || !prx_address)
+    chk_arg_fault_return(sa);
+    chk_arg_fault_return(prx_address);
+
+    if (sa_len < sizeof(struct sockaddr))
         return er_fault;
 
     result = pal_os_to_prx_address_family(sa->sa_family, &prx_address->un.family);
@@ -270,8 +272,7 @@ int32_t pal_os_from_prx_message_flags(
     int* plat_flags
 )
 {
-    if (!plat_flags)
-        return er_fault;
+    chk_arg_fault_return(plat_flags);
 
     *plat_flags = 0;
     if (flags & ~(prx_msg_flag_oob | prx_msg_flag_peek | 
@@ -300,8 +301,7 @@ int32_t pal_os_to_prx_message_flags(
     int32_t* prx_flags
 )
 {
-    if (!prx_flags)
-        return er_fault;
+    chk_arg_fault_return(prx_flags);
 
     if (flags & ~(MSG_OOB | MSG_PEEK | MSG_DONTROUTE | MSG_TRUNC | MSG_CTRUNC))
         return er_not_supported;
@@ -331,8 +331,7 @@ int32_t pal_os_to_prx_socket_option(
     prx_socket_option_t* option
 )
 {
-    if (!option)
-        return er_fault;
+    chk_arg_fault_return(option);
 
     switch (opt_lvl)
     {
@@ -460,8 +459,8 @@ int32_t pal_os_from_prx_socket_option(
 )
 {
     int result;
-    if (!opt_lvl || !opt_name)
-        return er_fault;
+    chk_arg_fault_return(opt_lvl);
+    chk_arg_fault_return(opt_name);
 
     result = er_ok;
     switch (socket_option)
@@ -607,8 +606,7 @@ int32_t pal_os_to_prx_shutdown_op(
     prx_shutdown_op_t* prx_shutdown
 )
 {
-    if (!prx_shutdown)
-        return er_fault;
+    chk_arg_fault_return(prx_shutdown);
     switch (platform_shutdown)
     {
     case SHUT_RD:         
@@ -634,8 +632,7 @@ int32_t pal_os_from_prx_shutdown_op(
     int* platform_shutdown
 )
 {
-    if (!platform_shutdown)
-        return er_fault;
+    chk_arg_fault_return(platform_shutdown);
     switch (prx_shutdown)
     {
     case prx_shutdown_op_read:  
@@ -661,8 +658,7 @@ int32_t pal_os_to_prx_address_family(
     prx_address_family_t* prx_af
 )
 {
-    if (!prx_af)
-        return er_fault;
+    chk_arg_fault_return(prx_af);
     switch (platform_af)
     {
     case AF_UNSPEC:   
@@ -691,9 +687,7 @@ int32_t pal_os_from_prx_address_family(
     int* platform_af
 )
 {
-    if (!platform_af)
-        return er_fault;
-
+    chk_arg_fault_return(platform_af);
     switch (prx_af)
     {
     case prx_address_family_unspec:    
@@ -722,8 +716,7 @@ int32_t pal_os_to_prx_protocol_type(
     prx_protocol_type_t* prx_proto
 )
 {
-    if (!prx_proto)
-        return er_fault;
+    chk_arg_fault_return(prx_proto);
     switch (platform_proto)
     {
     case IPPROTO_TCP:           
@@ -755,8 +748,7 @@ int32_t pal_os_from_prx_protocol_type(
     int* platform_proto
 )
 {
-    if (!platform_proto)
-        return er_fault;
+    chk_arg_fault_return(platform_proto);
     switch (prx_proto)
     {
     case prx_protocol_type_tcp:         
@@ -789,9 +781,7 @@ int32_t pal_os_to_prx_socket_type(
     prx_socket_type_t* prx_socktype
 )
 {
-    if (!prx_socktype)
-        return er_fault;
-
+    chk_arg_fault_return(prx_socktype);
     switch (platform_socktype)
     {
     case SOCK_DGRAM:       
@@ -823,8 +813,7 @@ int32_t pal_os_from_prx_socket_type(
     int* platform_socktype
 )
 {
-    if (!platform_socktype)
-        return er_fault;
+    chk_arg_fault_return(platform_socktype);
     switch (prx_socktype)
     {
     case prx_socket_type_dgram:
@@ -856,9 +845,7 @@ int32_t pal_os_to_prx_client_getaddrinfo_flags(
     int32_t* prx_flags
 )
 {
-    if (!prx_flags)
-        return er_fault;
-
+    chk_arg_fault_return(prx_flags);
     *prx_flags = 0;
 
     if (AI_PASSIVE == (flags & AI_PASSIVE))
@@ -878,9 +865,7 @@ int32_t pal_os_from_prx_client_getaddrinfo_flags(
     int* platform_flags
 )
 {
-    if (!platform_flags)
-        return er_fault;
-
+    chk_arg_fault_return(platform_flags);
     *platform_flags = 0;
 
     if (flags & ~(prx_ai_passive))
@@ -902,8 +887,8 @@ int32_t pal_os_to_prx_addrinfo(
 {
     int result;
 
-    if (!ai || !prx_ai)
-        return er_fault;
+    chk_arg_fault_return(ai);
+    chk_arg_fault_return(prx_ai);
 
     result = pal_os_to_prx_socket_address(
         ai->ai_addr, (socklen_t)ai->ai_addrlen, &prx_ai->address);
@@ -925,8 +910,8 @@ int32_t pal_os_from_prx_addrinfo(
     struct addrinfo* ai
 )
 {
-    (void)prx_ai;
-    (void)ai;
+    chk_arg_fault_return(ai);
+    chk_arg_fault_return(prx_ai);
     return er_not_impl;
 }
 
@@ -944,10 +929,11 @@ int32_t pal_getaddrinfo(
 {
     struct addrinfo hint, *info, *ai = NULL;
     int32_t result;
+    int attempt = 0;
     prx_size_t alloc_count = 0;
 
-    if (!prx_ai || !prx_ai_count)
-        return er_fault;
+    chk_arg_fault_return(prx_ai_count);
+    chk_arg_fault_return(prx_ai);
 
     *prx_ai_count = 0;
     *prx_ai = NULL;
@@ -964,17 +950,23 @@ int32_t pal_getaddrinfo(
         return result;
 
     hint.ai_flags |= AI_CANONNAME;
-
-    result = getaddrinfo(address, service, &hint, &info);
-    if (result != 0)
+    while (true)
     {
-#ifndef _WIN32
-        log_error(NULL, "getaddrinfo returned error '%s' (%d)", 
-            gai_strerror(result), result);
-#endif
-        return pal_os_to_prx_gai_error(result);
-    }
+        result = getaddrinfo(address, service, &hint, &info);
+        if (result == 0)
+            break;
 
+        // Intermittent dns outages can result in E_AGAIN, try 3 times
+#define GAI_MAX_ATTEMPTS 3
+        if (result != EAI_AGAIN || attempt++ >= GAI_MAX_ATTEMPTS)
+        {
+            log_error(NULL, "getaddrinfo returned error '%s' (%d)",
+                gai_strerror(result), result);
+            return pal_os_to_prx_gai_error(result);
+        }
+        log_info(NULL, "getaddrinfo returned error '%s' (%d) - try again...",
+            gai_strerror(result), result);
+    }
     do
     {
         for (ai = info; ai != NULL; ai = ai->ai_next)
@@ -1041,8 +1033,7 @@ int32_t pal_freeaddrinfo(
     prx_addrinfo_t* info
 )
 {
-    if (!info)
-        return er_fault;
+    chk_arg_fault_return(info);
 
     for (int32_t i = 0; info[i].reserved != 0; i++)
     {
@@ -1073,8 +1064,11 @@ int32_t pal_getnameinfo(
     uint8_t sa_in[MAX_SOCKET_ADDRESS_BYTES];
     socklen_t sa_len = sizeof(sa_in);
 
-    if (!address || !host || !service || host_length <= 0 || service_length <= 0)
-        return er_fault;
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(host);
+    chk_arg_fault_return(service);
+    chk_arg_fault_return(host_length);
+    chk_arg_fault_return(service_length);
 
     result = pal_os_from_prx_socket_address(address, (struct sockaddr*)sa_in, &sa_len);
     if (result != er_ok)
@@ -1106,8 +1100,8 @@ int32_t pal_pton(
     struct addrinfo* info = NULL;
     struct addrinfo hint;
     int32_t result;
-    if (!address || !addr_string)
-        return er_fault;
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(addr_string);
 
     memset(&hint, 0, sizeof(hint));
     hint.ai_family = AF_UNSPEC;

@@ -3,6 +3,7 @@
 
 #include "util_mem.h"
 #include "prx_host.h"
+#include "prx_log.h"
 #include "prx_module.h"
 #include "prx_sched.h"
 #include "prx_server.h"
@@ -14,6 +15,7 @@
 #include "pal_file.h"
 #include "pal_net.h"  // for pal_gethostname
 
+#include "util_misc.h"
 #include "util_signal.h"
 #include "util_string.h"
 
@@ -264,7 +266,28 @@ static int32_t prx_host_init_from_command_line(
                 __prx_config_set_int(prx_config_key_connect_flag, 1);
                 break;
             case 'p':
-                __prx_config_set(prx_config_key_proxy_host, optarg);
+                for (c = 0; c < _countof(buffer) - 1 && optarg[c] && optarg[c] != ':'; c++)
+                    buffer[c] = optarg[c];
+                if (c >= _countof(buffer) - 1)
+                {
+                    printf("ERROR: Proxy host cannot be longer than %d characters!\n",
+                        (int)(_countof(buffer) - 1));
+                    result = er_arg;
+                    break;
+                }
+                buffer[c] = 0;
+                __prx_config_set(prx_config_key_proxy_host, buffer);
+                if (optarg[c++] == ':')
+                {
+                    if (!atoi(&optarg[c]))
+                    {
+                        printf("ERROR: Bad arg for --proxy option (%s). \n\n",
+                            optarg ? optarg : "");
+                        result = er_arg;
+                        break;
+                    }
+                    __prx_config_set(prx_config_key_proxy_port, &optarg[c]);
+                }
                 break;
             case 'x':
                 __prx_config_set(prx_config_key_proxy_user, optarg);
@@ -558,8 +581,8 @@ static int32_t prx_host_init_from_command_line(
                         prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                     break;
                 }
-                printf("Proxy %s %s\n", server_name,
-                    !is_uninstall ? "installed" : "uninstalled");
+                printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ? 
+                    "installed" : "uninstalled");
                 server_name = NULL;
             }
         }
@@ -737,8 +760,7 @@ int32_t prx_host_start(
 {
     int32_t result;
 
-    if (!host)
-        return er_fault;
+    chk_arg_fault_return(host);
     do
     {
         host->running = true;
@@ -764,8 +786,7 @@ int32_t prx_host_stop(
     prx_host_t* host
 )
 {
-    if (!host)
-        return er_fault;
+    chk_arg_fault_return(host);
     if (!host->running)
         return er_ok;
 
@@ -781,8 +802,7 @@ int32_t prx_host_sig_wait(
     prx_host_t* host
 )
 {
-    if (!host)
-        return er_fault;
+    chk_arg_fault_return(host);
     return signal_wait(host->exit_signal, ~0);
 }
 
@@ -793,8 +813,7 @@ int32_t prx_host_sig_break(
     prx_host_t* host
 )
 {
-    if (!host)
-        return er_fault;
+    chk_arg_fault_return(host);
     if (!host->exit_signal)
         return er_bad_state;
     return signal_set(host->exit_signal);
@@ -808,14 +827,14 @@ int32_t prx_host_get(
 )
 {
     int32_t result;
-    if (!cloned)
-        return er_fault;
+    chk_arg_fault_return(cloned);
     if (!process_host)
     {
         // Lazy create
         result = prx_host_init(proxy_type_server, 0, NULL);
         if (result != er_ok)
             return result;
+        dbg_assert_ptr(process_host);
     }
 
     INC_REF(prx_host_t, process_host);

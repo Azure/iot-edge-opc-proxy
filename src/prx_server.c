@@ -4,14 +4,17 @@
 #include "util_mem.h"
 #include "prx_server.h"
 #include "prx_ns.h"
+#include "prx_log.h"
+#include "prx_buffer.h"
+
 #include "pal.h"
 #include "pal_sk.h"
 #include "pal_net.h"
 #include "pal_mt.h"
 #include "pal_time.h"
+
 #include "io_proto.h"
 #include "io_transport.h"
-#include "prx_buffer.h"
 #include "util_string.h"
 
 #include "hashtable.h"
@@ -148,7 +151,7 @@ static void prx_server_socket_free(
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
-    log_trace(server_sock->log, "Server socket %p freed!", server_sock);
+    log_info(server_sock->log, "Server socket %p destroyed!", server_sock);
     mem_free_type(prx_server_socket_t, server_sock);
 }
 
@@ -1784,8 +1787,6 @@ static void prx_server_handle_pingrequest(
     prx_addrinfo_t* prx_ai = NULL;
     prx_size_t prx_ai_count = 0;
 
-    // Note: In case of error, we just do not respond...
-
     dbg_assert_ptr(message);
     dbg_assert_ptr(server);
     dbg_assert_is_task(server->scheduler);
@@ -1793,48 +1794,60 @@ static void prx_server_handle_pingrequest(
     // Todo: ntop and then resolve.
     // Todo: pal_ping, with SendArp or alike...
 
-    if (message->content.ping_request.address.un.family != prx_address_family_inet6 &&
-        message->content.ping_request.address.un.family != prx_address_family_inet &&
-        message->content.ping_request.address.un.family != prx_address_family_proxy)
+    do
     {
-        log_error(server->log, "Ping request for address with invalid address family %d",
-            message->content.ping_request.address.un.family);
-        return;
-    }
-
-    result = string_from_int(
-        message->content.ping_request.address.un.ip.port, 10, port, sizeof(port));
-    if (result != er_ok)
-        return;
-
-    if (message->content.ping_request.address.un.family == prx_address_family_proxy)
-    {
-        if (strlen(message->content.ping_request.address.un.proxy.host) == 0)
-            return;
-
-        result = pal_getaddrinfo(message->content.ping_request.address.un.proxy.host, port,
-            prx_address_family_unspec, 0, &prx_ai, &prx_ai_count);
-        if (result != er_ok)
+        if (message->content.ping_request.address.un.family != prx_address_family_inet6 &&
+            message->content.ping_request.address.un.family != prx_address_family_inet &&
+            message->content.ping_request.address.un.family != prx_address_family_proxy)
         {
-            log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
-                message->content.ping_request.address.un.proxy.host, port,
-                prx_err_string(result));
+            log_error(server->log, "Ping request for address with invalid address family %d",
+                message->content.ping_request.address.un.family);
+            result = er_invalid_format;
+            break;
         }
-    }
-    else 
-    {
-        result = pal_ntop(&message->content.ping_request.address, host_ip, sizeof(host_ip));
-        if (result != er_ok)
-            return;
 
-        result = pal_getaddrinfo(host_ip, port,
-            message->content.ping_request.address.un.family, 0, &prx_ai, &prx_ai_count);
+        result = string_from_int(
+            message->content.ping_request.address.un.ip.port, 10, port, sizeof(port));
         if (result != er_ok)
+            break;
+
+        if (message->content.ping_request.address.un.family == prx_address_family_proxy)
         {
-            log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
-                host_ip, port, prx_err_string(result));
+            if (strlen(message->content.ping_request.address.un.proxy.host) == 0)
+            {
+                result = er_invalid_format;
+                break;
+            }
+
+            result = pal_getaddrinfo(message->content.ping_request.address.un.proxy.host,
+                port, prx_address_family_unspec, 0, &prx_ai, &prx_ai_count);
+            if (result != er_ok)
+            {
+                log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
+                    message->content.ping_request.address.un.proxy.host, port,
+                    prx_err_string(result));
+                break;
+            }
         }
-    }
+        else
+        {
+            result = pal_ntop(&message->content.ping_request.address, host_ip,
+                sizeof(host_ip));
+            if (result != er_ok)
+                break;
+
+            result = pal_getaddrinfo(host_ip, port,
+                message->content.ping_request.address.un.family, 0, &prx_ai, &prx_ai_count);
+            if (result != er_ok)
+            {
+                log_error(server->log, "pal_getaddrinfo for %s:%s failed (%s).",
+                    host_ip, port, prx_err_string(result));
+                break;
+            }
+        }
+        result = er_ok;
+    } 
+    while (0);
 
     io_message_as_response(message);
     message->error_code = result;
@@ -1954,8 +1967,8 @@ int32_t prx_server_create(
     int32_t result;
     prx_server_t* server;
 
-    if (!transport || !created)
-        return er_fault;
+    chk_arg_fault_return(transport);
+    chk_arg_fault_return(created);
 
     server = mem_zalloc_type(prx_server_t);
     if (!server)

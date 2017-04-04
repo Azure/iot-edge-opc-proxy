@@ -87,8 +87,7 @@ decl_inline_1(int32_t, io_stream_reset,
     io_stream_t*, stream
 )
 {
-    if (!stream)
-        return er_fault;
+    chk_arg_fault_return(stream);
     if (!stream->reset)
         return er_ok;
     return stream->reset(stream->context);
@@ -104,10 +103,9 @@ decl_inline_4(int32_t, io_stream_read,
     size_t*, read
 )
 {
-    if (!stream)
-        return er_fault;
+    chk_arg_fault_return(stream);
     if (!stream->read)
-        return er_reading;  // Cannot read from stream
+        return er_not_supported;  // Cannot read from stream
     return stream->read(stream->context, buf, len, read);
 }
 
@@ -134,10 +132,9 @@ decl_inline_3(int32_t, io_stream_write,
     size_t, len
 )
 {
-    if (!stream)
-        return er_fault;
+    chk_arg_fault_return(stream);
     if (!stream->write)
-        return er_writing;  // Cannot write to stream
+        return er_not_supported;  // Cannot write to stream
     return stream->write(stream->context, buf, len);
 }
 

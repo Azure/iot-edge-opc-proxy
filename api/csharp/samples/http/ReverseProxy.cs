@@ -10,28 +10,31 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
     using System.IO.Compression;
     using System.Net.Security;
     using System.Text;
+    using System.Diagnostics;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Http;
     using Microsoft.AspNetCore.Hosting.Server.Features;
     using Microsoft.Azure.Devices.Proxy;
-    
+
     /// <summary>
     /// Forwarder middleware
     /// </summary>
     public class ReverseProxy {
         private readonly RequestDelegate _next;
         private readonly IApplicationBuilder _app;
+        private readonly string _root;
 
         /// <summary>
         /// Creates middleware to forward requests to proxy
         /// </summary>
         /// <param name="next"></param>
         /// <param name="app"></param>
-        public ReverseProxy(RequestDelegate next, IApplicationBuilder app) {
+        public ReverseProxy(RequestDelegate next, IApplicationBuilder app, string root) {
             _next = next;
             _app = app;
+            _root = root;
         }
 
         /// <summary>
@@ -40,48 +43,42 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <param name="context"></param>
         /// <returns></returns>
         public async Task Invoke(HttpContext context) {
-            Uri realUri = GetRealUri(context.Request);
+            var realUri = GetRealUri(context.Request);
             if (realUri != null) {
-                try {
-                    await ServeAsync(context, realUri, val => {
-                        // Rewrite uris
-                        Uri parsed;
-                        try {
-                            if (Uri.TryCreate(val, UriKind.RelativeOrAbsolute, out parsed)) {
-                                var mappedUri = new UriBuilder();
-                                // Handle relative paths...
-                                if (!parsed.IsAbsoluteUri || string.IsNullOrEmpty(parsed.Scheme)) {
-                                    mappedUri.Scheme = realUri.Scheme;
-                                }
-                                else {
-                                    mappedUri.Scheme = parsed.Scheme;
-                                }
-
-                                mappedUri.Host = context.Request.Host.Host;
-                                mappedUri.Port = GetPort(mappedUri.Scheme);
-
-                                // Everything else stays as is...
-                                var newUri = mappedUri.ToString().Trim('/');
-                                // Format of rewrite is http(s)://host:port/realHost/realPath
-                                if (parsed.IsAbsoluteUri) {
-                                    newUri += $"/{parsed.Host}/{parsed.PathAndQuery.TrimStart('/')}";
-                                }
-                                else {
-                                    newUri += $"/{realUri.Host}/{parsed.OriginalString.TrimStart('/')}";
-                                }
-                                Console.WriteLine($"... rewriting {val} \n\t\t=> {newUri}");
-                                return newUri;
+                await ServeAsync(context, realUri, val => {
+                    // Rewrite uris
+                    Uri parsed;
+                    try {
+                        if (Uri.TryCreate(val, UriKind.RelativeOrAbsolute, out parsed)) {
+                            var mappedUri = new UriBuilder();
+                            // Handle relative paths...
+                            if (!parsed.IsAbsoluteUri || string.IsNullOrEmpty(parsed.Scheme)) {
+                                mappedUri.Scheme = realUri.Scheme;
                             }
+                            else {
+                                mappedUri.Scheme = parsed.Scheme;
+                            }
+
+                            mappedUri.Host = context.Request.Host.Host;
+                            mappedUri.Port = GetPort(mappedUri.Scheme);
+
+                            // Everything else stays as is...
+                            var newUri = mappedUri.ToString().Trim('/');
+                            // Format of rewrite is http(s)://host:port/realHost/realPath
+                            if (parsed.IsAbsoluteUri) {
+                                newUri += $"/{_root}/{parsed.Host}/{parsed.PathAndQuery.TrimStart('/')}";
+                            }
+                            else {
+                                newUri += $"/{_root}/{realUri.Host}/{parsed.OriginalString.TrimStart('/')}";
+                            }
+                            Trace.TraceInformation($"... rewriting {val} \n\t\t=> {newUri}");
+                            return newUri;
                         }
-                        catch { }
-                        Console.WriteLine($"  FAILED to rewrite {val}!");
-                        return val;
-                    }).ConfigureAwait(false);
-                }
-                catch (Exception ex) {
-                    Console.WriteLine(ex.ToString());
-                    context.Abort();
-                }
+                    }
+                    catch { }
+                    Trace.TraceError($"  FAILED to rewrite {val}!");
+                    return val;
+                }).ConfigureAwait(false);
             }
             else {
                 await _next(context);
@@ -100,9 +97,10 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             // Connect a proxy socket to http endpoint
 
             TcpClient client = null;
+            string host = uri.Host;
+            string res = uri.PathAndQuery;
             Stream stream = null;
             try {
-                var target = uri.ToString(); // $"{uri.Scheme}://{uri.Host}{uri.PathAndQuery}";
                 while (true) {
 
                     // Connect a stream
@@ -112,30 +110,29 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                     }
 
                     // Write request to stream
-                    await WriteAsync(stream,
-                        context.Request, uri.Host, target).ConfigureAwait(false);
+                    await WriteAsync(stream, context.Request, host, res).ConfigureAwait(false);
 
                     // Read from stream the response back.
-                    target = await ReadAsync(stream,
-                        context.Response, rewrite).ConfigureAwait(false);
+                    var target = await ReadAsync(stream,
+                        context.Response, host, rewrite).ConfigureAwait(false);
                     if (string.IsNullOrEmpty(target))
                         break;
 
                     // Handle redirect to new target - 
                     Uri redirect;
-                    if (!Uri.TryCreate(target, UriKind.RelativeOrAbsolute, out redirect) ||
-                        redirect.IsAbsoluteUri) {
-                        // if it is absolute, reconnect to the new host
-                        uri = redirect;
-                        target = uri.ToString();
+                    if (Uri.TryCreate(target, UriKind.RelativeOrAbsolute, out redirect)) {
+                        res = redirect.PathAndQuery;
+                        if (redirect.IsAbsoluteUri) {
+                            // if it is absolute, reconnect to the new host
+                            host = redirect.Host;
+                        }
+                        else {
+                    //   // if target is relative, host is the same - see if we can reuse...
+                    //   if (context.Response.Headers["Connection"] == "keep-alive") {
+                    //       continue;
+                    //   }
+                        }
                     }
-                    else {
-                        //   // if target is relative, host is the same - see if we can reuse...
-                        //   if (context.Response.Headers["Connection"] == "keep-alive") {
-                        //       continue;
-                        //   }
-                    }
-
                     stream.Dispose();
                     client.Dispose();
 
@@ -143,7 +140,8 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                 }
             }
             catch (Exception ex) {
-                Console.WriteLine(ex.ToString());
+                Console.WriteLine($"  EXCEPTION: {ex.Message}!");
+                Trace.TraceError($"  EXCEPTION: {ex.ToString()}!");
                 context.Abort();
             }
             finally {
@@ -164,7 +162,11 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         protected virtual Uri GetRealUri(HttpRequest request) {
 
             var path = request.Path.ToUriComponent().TrimStart('/');
-            if (!string.IsNullOrEmpty(path)) {
+            var port = request.IsHttps ? 443 : 80;
+            string target = null;
+
+            if (!string.IsNullOrEmpty(path) && path.StartsWith(_root)) {
+                path = path.Substring(_root.Length).TrimStart('/');
 
                 // Parse out target, which is url encoded host:port before path?query
                 var index = path.IndexOf('/');
@@ -180,19 +182,24 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                 }
 
                 // Decode actual server name from dest
-                var target = WebUtility.UrlDecode(dest).Split(':');
-                var port = request.IsHttps ? 443 : 80;
-                if (target.Length > 1) {
-                    port = int.Parse(target[1]);
+                var parts = WebUtility.UrlDecode(dest).Split(':');
+                if (parts.Length > 1) {
+                    port = int.Parse(parts[1]);
                 }
-
-                var uri = new UriBuilder(request.IsHttps ? "https" : "http",
-                    target[0], port, path);
-
-                uri.Query = request.QueryString.Value;
-                return uri.Uri;
+                target = parts[0];
             }
-            return null;
+            else if (request.Cookies.ContainsKey("host")) {
+                // Use fallback cookie if exists...
+                target = request.Cookies["host"];
+            }
+            else {
+                return null;
+            }
+
+            var uri = new UriBuilder(request.IsHttps ? "https" : "http",
+                target, port, path);
+            uri.Query = request.QueryString.Value;
+            return uri.Uri;
         }
 
         /// <summary>
@@ -204,7 +211,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         protected async Task<Stream> ConnectAsync(TcpClient client, Uri uri) {
             await client.ConnectAsync(new ProxySocketAddress(uri.Host, uri.Port)).ConfigureAwait(false);
             var stream = (Stream)client.GetStream();
-            if (!uri.Scheme.EndsWith("s")) {  // Crude way to find if we need to connect via ssl...
+            if (!uri.Scheme.EndsWith("s")) {  // simplistic way to find if we need to connect via ssl...
                 return stream;
             }
             var sslStream = new SslStream(stream, true, (o, c, ch, e) => true, null);
@@ -272,7 +279,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <param name="rewrite"></param>
         /// <returns>redirected target</returns>
         protected async Task<string> ReadAsync(Stream stream, HttpResponse response,
-            Func<string, string> rewrite) {
+            string host, Func<string, string> rewrite) {
             // Now read response back and write out to response
             var reader = new HttpResponseReader(stream);
 
@@ -311,6 +318,10 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                     StringComparison.CurrentCultureIgnoreCase)) {
                     contentEncoding = val.ToLowerInvariant();
                 }
+                else if (key.Equals("Set-Cookie")) {
+                    // TODO: 
+                    // continue;
+                }
                 else {
                     if (key.Equals("Location",
                         StringComparison.CurrentCultureIgnoreCase)) {
@@ -348,6 +359,10 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                 await response.Body.FlushAsync();
             }
             else if (IsTextContent(response.ContentType, out encoder)) {
+                
+                // Remember host as fallback
+                response.Cookies.Append("host", host);
+
                 await reader.ReadBodyAsync(response, isChunked, (body, len) => {
                     if (!string.IsNullOrWhiteSpace(contentEncoding)) {
                         var mem = new MemoryStream(body, 0, len);
@@ -371,20 +386,22 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                         s = encoder.GetString(body, 0, len);
                     }
 
-                    // We use a very stupid algorithm here, one could make 
-                    // this a lot better...
+                    // We use a very simple algorithm here, one could make 
+                    // this a lot more elaborate...
 
                     // 1. find any fully qualified urls
                     s = _urls.Replace(s, (f) => rewrite(f.Value));
 
                     // 2. find any href="/ and src="/ and rewrite content.
                     s = _rels.Replace(s, (f) => {
-                        var val = f.Groups["url"].Value;
+                        var val = f.Groups["url"].Value.TrimStart().TrimStart('.');
                         if (!val.StartsWith("/") || val.StartsWith("//")) {
                             return f.Value;
                         }
-                        return f.Value.Replace(val, rewrite(val));
+                        return f.Value.Replace(f.Groups["url"].Value, rewrite(val));
                     });
+
+                    // Console.WriteLine(s);
 
                     body = encoder.GetBytes(s);
                     if (!string.IsNullOrWhiteSpace(contentEncoding)) {

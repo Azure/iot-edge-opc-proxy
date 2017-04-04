@@ -15,7 +15,6 @@ endif()
 
 add_lib_subdirectory(libiotsdk)
 add_lib_subdirectory(libproxy)
-add_lib_subdirectory(libuamqp)
 add_lib_subdirectory(libumqtt)
 
 add_subdirectory(proxyd)

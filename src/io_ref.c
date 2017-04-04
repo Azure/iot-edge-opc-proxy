@@ -16,8 +16,7 @@ int32_t io_ref_new(
     io_ref_t* ref
 )
 {
-    if (!ref)
-        return er_fault;
+    chk_arg_fault_return(ref);
     return pal_rand_fill(ref->un.u8, sizeof(ref->un.u8));
 }
 
@@ -43,8 +42,7 @@ int32_t io_ref_to_string(
     size_t len
 )
 {
-    if (!ref)
-        return er_fault;
+    chk_arg_fault_return(ref);
     return string_from_uuid(ref->un.u8, string, len);
 }
 
@@ -58,8 +56,8 @@ int32_t io_ref_from_string(
 {
     int32_t result;
     prx_socket_address_t sa;
-    if (!string || !ref)
-        return er_fault;
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(ref);
 
     // Trim any curly braces for convinience
     if (string[0] == '{')
@@ -116,8 +114,8 @@ int32_t io_ref_append_to_STRING(
     char tmp[UUID_PRINTABLE_STRING_LENGTH];
     tmp[0] = 0;
     
-    if (!string)
-        return er_fault;
+    chk_arg_fault_return(ref);
+    chk_arg_fault_return(string);
 
     result = io_ref_to_string(ref, tmp, sizeof(tmp));
     if (result != er_ok)
@@ -202,8 +200,8 @@ int32_t io_ref_from_prx_socket_address(
     io_ref_t* ref
 )
 {
-    if (!ref || !sa)
-        return er_fault;
+    chk_arg_fault_return(ref);
+    chk_arg_fault_return(sa);
 
     dbg_assert(sa->un.family == prx_address_family_inet6, "");
 
@@ -221,8 +219,8 @@ int32_t io_ref_to_prx_socket_address(
     prx_socket_address_t* sa
 )
 {
-    if (!ref || !sa)
-        return er_fault;
+    chk_arg_fault_return(ref);
+    chk_arg_fault_return(sa);
 
     sa->un.family = prx_address_family_inet6;
 

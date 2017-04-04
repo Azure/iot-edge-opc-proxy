@@ -143,8 +143,9 @@ decl_inline_3(int32_t, prx_ns_get_entry_by_addr,
     prx_ns_entry_t**, entry
 )
 {
-    if (!ns || !address || !entry)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(address);
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(ns->get_by_addr);
     return ns->get_by_addr(ns->context, address, entry);
 }
@@ -158,8 +159,9 @@ decl_inline_3(int32_t, prx_ns_get_entry_by_name,
     prx_ns_result_t**, results
 )
 {
-    if (!ns || !name || !results)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(name);
+    chk_arg_fault_return(results);
     dbg_assert_ptr(ns->get_by_name);
     return ns->get_by_name(ns->context, name, results);
 }
@@ -173,8 +175,8 @@ decl_inline_3(int32_t, prx_ns_get_entry_by_type,
     prx_ns_result_t**, results
 )
 {
-    if (!ns || !results)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(results);
     dbg_assert_ptr(ns->get_by_type);
     return ns->get_by_type(ns->context, type, results);
 }
@@ -187,8 +189,8 @@ decl_inline_2(int32_t, prx_ns_create_entry,
     prx_ns_entry_t*, entry
 )
 {
-    if (!ns || !entry)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(ns->create);
     return ns->create(ns->context, entry);
 }
@@ -201,8 +203,8 @@ decl_inline_2(int32_t, prx_ns_update_entry,
     prx_ns_entry_t*, entry
 )
 {
-    if (!ns || !entry)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(ns->update);
     return ns->update(ns->context, entry);
 }
@@ -215,8 +217,8 @@ decl_inline_2(int32_t, prx_ns_remove_entry,
     prx_ns_entry_t*, entry
 )
 {
-    if (!ns || !entry)
-        return er_fault;
+    chk_arg_fault_return(ns);
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(ns->remove);
     return ns->remove(ns->context, entry);
 }
@@ -397,8 +399,7 @@ decl_inline_2(int32_t, prx_ns_entry_clone,
     prx_ns_entry_t**, clone
 )
 {
-    if (!entry)
-        return er_fault;
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(entry->clone);
     return entry->clone(entry->context, clone);
 }
@@ -411,8 +412,7 @@ decl_inline_2(int32_t, prx_ns_entry_get_cs,
     io_cs_t**, cs
 )
 {
-    if (!entry)
-        return er_fault;
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(entry->get_cs);
     return entry->get_cs(entry->context, cs);
 }
@@ -477,8 +477,8 @@ decl_inline_2(int32_t, prx_ns_entry_get_addr,
     io_ref_t*, address
 )
 {
-    if (!entry || !address)
-        return er_fault;
+    chk_arg_fault_return(entry);
+    chk_arg_fault_return(address);
     dbg_assert_ptr(entry->get_addr);
     return entry->get_addr(entry->context, address);
 }
@@ -491,8 +491,7 @@ decl_inline_2(int32_t, prx_ns_entry_get_links,
     prx_ns_result_t**, results
 )
 {
-    if (!entry)
-        return er_fault;
+    chk_arg_fault_return(entry);
     dbg_assert_ptr(entry->get_links);
     return entry->get_links(entry->context, results);
 }

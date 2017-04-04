@@ -109,8 +109,8 @@ int32_t pal_cred_import(
 )
 {
     CREDENTIALA cred;
-    if (!handle || !key_val)
-        return er_fault;
+    chk_arg_fault_return(handle);
+    chk_arg_fault_return(key_val);
     if (!key_len)
         return er_arg;
 
@@ -180,8 +180,9 @@ int32_t pal_cred_hmac_sha256(
     size_t key_len;
     CREDENTIALA* pcred = NULL;
 
-    if (!handle || !buf || !sig)
-        return er_fault;
+    chk_arg_fault_return(handle);
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(sig);
     if (!buf_len || sig_len < 32)
         return er_arg;
 

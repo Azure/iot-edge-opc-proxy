@@ -29,6 +29,8 @@ static const char* prx_config_key_name(
     {
     case prx_config_key_proxy_host:
         return "proxy_host";
+    case prx_config_key_proxy_port:
+        return "proxy_port";
     case prx_config_key_proxy_user:
         return "proxy_user";
     case prx_config_key_proxy_pwd:
@@ -68,8 +70,7 @@ int32_t prx_config_create(
 )
 {
     prx_config_t* config;
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
 
     config = mem_zalloc_type(prx_config_t);
     if (!config)
@@ -116,8 +117,7 @@ int32_t prx_config_set_string(
     const char* val
 )
 {
-    if (!config)
-        return er_fault;
+    chk_arg_fault_return(config);
     if (key >= prx_config_key_max)
         return er_arg;
     if (config->values[key])

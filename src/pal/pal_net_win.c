@@ -207,9 +207,9 @@ int32_t pal_os_from_prx_ifaddrinfo(
     ifaddr_t* iaddr
 )
 {
-    (void)prx_ifa;
-    (void)ifinfo;
-    (void)iaddr;
+    chk_arg_fault_return(prx_ifa);
+    chk_arg_fault_return(ifinfo);
+    chk_arg_fault_return(iaddr);
     return er_not_impl;
 }
 
@@ -230,8 +230,8 @@ int32_t pal_getifaddrinfo(
     ULONG alloc_size = 15000;
     (void)flags;
 
-    if (!prx_ifa || !prx_ifa_count)
-        return er_fault;
+    chk_arg_fault_return(prx_ifa);
+    chk_arg_fault_return(prx_ifa_count);
 
     *prx_ifa_count = 0;
     *prx_ifa = NULL;
@@ -343,8 +343,7 @@ int32_t pal_freeifaddrinfo(
     prx_ifaddrinfo_t* info
 )
 {
-    if (!info)
-        return er_fault;
+    chk_arg_fault_return(info);
     mem_free(info);
     return er_ok;
 }
@@ -359,10 +358,10 @@ int32_t pal_getifnameinfo(
     uint64_t *if_index
 )
 {
-    (void)if_address;
-    (void)if_name;
-    (void)if_name_length;
-    (void)if_index;
+    chk_arg_fault_return(if_address);
+    chk_arg_fault_return(if_name);
+    chk_arg_fault_return(if_index);
+    chk_arg_fault_return(if_name_length);
     return er_not_impl;
 }
 
@@ -375,8 +374,8 @@ int32_t pal_gethostname(
 )
 {
     int32_t result;
-    if (!name || namelen <= 0)
-        return er_fault;
+    chk_arg_fault_return(name);
+    chk_arg_fault_return(namelen);
 
     result = gethostname((char*)name, (uint32_t)namelen);
     if (result >= 0)

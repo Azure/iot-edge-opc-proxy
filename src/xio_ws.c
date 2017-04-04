@@ -426,8 +426,9 @@ static int32_t xio_wsclient_send(
     io_queue_buffer_t* buffer;
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
 
-    if (!ws || !buf || !size)
-        return er_fault;
+    chk_arg_fault_return(handle);
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(size);
 
     result = io_queue_create_buffer(ws->outbound, buf, size, &buffer);
     if (result != er_ok)
@@ -458,8 +459,7 @@ static int32_t xio_wsclient_open(
 {
     int32_t result;
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
-    if (!ws)
-        return er_fault;
+    chk_arg_fault_return(handle);
 
     if (!ws->scheduler)
     {
@@ -492,8 +492,7 @@ static int32_t xio_wsclient_close(
 )
 {
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
-    if (!ws)
-        return er_fault;
+    chk_arg_fault_return(handle);
 
     ws->on_bytes_received = NULL;
     ws->on_io_open_complete = NULL;
@@ -577,8 +576,7 @@ static int32_t xio_wsclient_setoption(
 {
     int32_t result;
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
-    if (!ws)
-        return er_fault;
+    chk_arg_fault_return(handle);
     if (0 == string_compare(option_name, xio_opt_scheduler))
         result = prx_scheduler_create((prx_scheduler_t*)buffer, &ws->scheduler);
     else

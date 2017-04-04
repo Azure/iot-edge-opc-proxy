@@ -542,8 +542,8 @@ static int32_t prx_client_socket_connect_local(
 {
     int32_t result;
 
-    if (!r_addr || !sock)
-        return er_fault;
+    chk_arg_fault_return(r_addr);
+    chk_arg_fault_return(sock);
     if (!sock->host)
         return er_bad_state;
     if (sock->stream)
@@ -1068,8 +1068,7 @@ static int32_t prx_client_socket_get_prx_host_ref(
     prx_host_t** host
 )
 {
-    if (!host)
-        return er_fault;
+    chk_arg_fault_return(host);
 
     if (!global_state.host)
         return er_bad_state;
@@ -1152,8 +1151,7 @@ int32_t prx_client_freeaddrinfo(
     prx_addrinfo_t* prx_ai
 )
 {
-    if (!prx_ai)
-        return er_fault;
+    chk_arg_fault_return(prx_ai);
 
     for (int32_t i = 0; prx_ai[i].name != NULL; i++)
         mem_free(prx_ai[i].name);
@@ -1181,8 +1179,8 @@ int32_t prx_client_getaddrinfo(
     prx_ns_result_t* resultset = NULL;
     prx_addrinfo_t* prx_ai_cur;
 
-    if (!prx_ai || !prx_ai_count)
-        return er_fault;
+    chk_arg_fault_return(prx_ai);
+    chk_arg_fault_return(prx_ai_count);
 
     if (family != prx_address_family_unspec &&
         family != prx_address_family_inet &&
@@ -1301,8 +1299,7 @@ int32_t prx_client_getnameinfo(
 
     (void)flags;
 
-    if (!address)
-        return er_fault;
+    chk_arg_fault_return(address);
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1353,8 +1350,7 @@ int32_t prx_client_freeifaddrinfo(
     prx_ifaddrinfo_t* prx_ifa
 )
 {
-    if (!prx_ifa)
-        return er_fault;
+    chk_arg_fault_return(prx_ifa);
     mem_free(prx_ifa);
     return er_ok;
 }
@@ -1378,8 +1374,9 @@ int32_t prx_client_getifaddrinfo(
 
     (void)flags;
 
-    if (!prx_ifa || !prx_ifa_count)
-        return er_fault;
+
+    chk_arg_fault_return(prx_ifa);
+    chk_arg_fault_return(prx_ifa_count);
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1458,8 +1455,9 @@ int32_t prx_client_getifnameinfo(
     prx_ns_entry_t* itf = NULL;
     io_ref_t address;
 
-    if (!if_address || !if_name || if_name_length <= 0)
-        return er_fault;
+    chk_arg_fault_return(if_address);
+    chk_arg_fault_return(if_name);
+    chk_arg_fault_return(if_name_length);
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1541,8 +1539,8 @@ int32_t prx_gethostname(
     prx_host_t* host;
     STRING_HANDLE id;
 
-    if (!name || !namelen)
-        return er_fault;
+    chk_arg_fault_return(name);
+    chk_arg_fault_return(namelen);
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1567,8 +1565,8 @@ int32_t prx_client_getpeername(
 )
 {
     prx_client_socket_t* sock;
-    if (!s || !address)
-        return er_fault;
+    chk_arg_fault_return(s);
+    chk_arg_fault_return(address);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -1592,8 +1590,7 @@ int32_t prx_client_socket(
     prx_client_socket_t* sock;
     prx_host_t* host;
 
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
 
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
@@ -1624,8 +1621,7 @@ int32_t prx_client_poll(
     ticks_t timer;
     prx_host_t* host;
 
-    if (!timeout_ms)
-        return er_fault;
+    chk_arg_fault_return(timeout_ms);
 
     // TODO: not supported yet, we will just wait for activity and let
     // caller figure it out...
@@ -1753,8 +1749,7 @@ int32_t prx_client_accept(
     prx_client_socket_t* sock, *remote = NULL;
     (void)key;
 
-    if (!accepted)
-        return er_fault;
+    chk_arg_fault_return(accepted);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -1910,8 +1905,8 @@ int32_t prx_client_sendto(
     (void)key;
     (void)flags;
 
-    if (!buf || !sent)
-        return er_fault;
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(sent);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -1939,8 +1934,8 @@ int32_t prx_client_send(
     (void)key;
     (void)flags;
 
-    if (!buf || !sent)
-        return er_fault;
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(sent);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -1969,8 +1964,8 @@ int32_t prx_client_recvfrom(
     (void)key;
     (void)flags;
 
-    if (!buf || !received)
-        return er_fault;
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(received);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -1998,8 +1993,8 @@ int32_t prx_client_recv(
     (void)key;
     (void)flags;
 
-    if (!buf || !received)
-        return er_fault;
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(received);
 
     sock = prx_client_socket_get_by_id((int32_t)s, true);
     if (!sock)
@@ -2123,8 +2118,7 @@ int32_t prx_client_getsockopt(
     io_getopt_request_t getopt_request;
     io_getopt_response_t getopt_response;
 
-    if (!value)
-        return er_fault;
+    chk_arg_fault_return(value);
 
     sock = prx_client_socket_get_by_id((int32_t)s, false);
     if (!sock)

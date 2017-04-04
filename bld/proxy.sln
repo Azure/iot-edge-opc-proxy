@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyd-shared", "src\proxyd\proxyd-shared.vcxitems", "{C0464CB1-8C41-40CB-ADDC-99A256FD5978}"
 EndProject
@@ -40,15 +40,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzlog-shared", "src\libzlog\libzlog-shared.vcxitems", "{9DE32F51-262E-471C-B74B-8189FD1920F8}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libzlog-win32", "src\libzlog\libzlog-win32.vcxproj", "{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libuamqp", "libuamqp", "{CAC7EA99-AB33-4DEC-989E-D1F70189C490}"
-	ProjectSection(SolutionItems) = preProject
-		src\libuamqp\CMakeLists.txt = src\libuamqp\CMakeLists.txt
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuamqp-shared", "src\libuamqp\libuamqp-shared.vcxitems", "{E113EC9B-1D47-437E-87B9-2044F68F086C}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libuamqp-win32", "src\libuamqp\libuamqp-win32.vcxproj", "{225A3E54-A551-4100-AE8B-42D5EE7C7261}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libumqtt", "libumqtt", "{C1C80961-650E-49FA-A7C0-96208D18DE6E}"
 	ProjectSection(SolutionItems) = preProject
@@ -109,7 +100,6 @@ Global
 		src\libproxy\libproxy-shared.vcxitems*{0f7e0590-fcef-4fd9-ac3d-8a202dfc20c3}*SharedItemsImports = 4
 		test\ut\libpal\libpal-win-ut-shared.vcxitems*{1efb4d4d-6cd7-4fd7-b203-5a1cb8076f2b}*SharedItemsImports = 9
 		test\libtest\libtest-shared.vcxitems*{225282ae-47fc-4538-b087-795ac8fb1160}*SharedItemsImports = 9
-		src\libuamqp\libuamqp-shared.vcxitems*{225a3e54-a551-4100-ae8b-42d5ee7c7261}*SharedItemsImports = 4
 		src\libumqtt\libumqtt-shared.vcxitems*{225a3e54-b551-4100-ae8b-42d5ee7c7261}*SharedItemsImports = 4
 		test\compat\libproto\libproto-shared.vcxitems*{23153b11-af0a-4bba-85e0-390d0b3bfc89}*SharedItemsImports = 4
 		test\ut\libpal\libpal-linux-ut-shared.vcxitems*{277304a3-797b-4a63-8ca9-3cf5ddc4aec0}*SharedItemsImports = 9
@@ -130,7 +120,6 @@ Global
 		src\libzlog\libzlog-shared.vcxitems*{b1f92e2e-23c2-48e8-94ba-2d73dce95ebc}*SharedItemsImports = 4
 		src\proxyd\proxyd-shared.vcxitems*{c0464cb1-8c41-40cb-addc-99a256fd5978}*SharedItemsImports = 9
 		test\ut\libpal\libpal-win-ut-shared.vcxitems*{cc3f298f-e748-43a7-8662-9c99985d76bb}*SharedItemsImports = 4
-		src\libuamqp\libuamqp-shared.vcxitems*{e113ec9b-1d47-437e-87b9-2044f68f086c}*SharedItemsImports = 9
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM = Debug|ARM
@@ -201,18 +190,6 @@ Global
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}.Release|x64.Build.0 = Release|x64
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}.Release|x86.ActiveCfg = Release|Win32
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC}.Release|x86.Build.0 = Release|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|ARM.ActiveCfg = Debug|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|ARM.Build.0 = Debug|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|x64.ActiveCfg = Debug|x64
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|x64.Build.0 = Debug|x64
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|x86.ActiveCfg = Debug|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Debug|x86.Build.0 = Debug|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|ARM.ActiveCfg = Release|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|ARM.Build.0 = Release|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|x64.ActiveCfg = Release|x64
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|x64.Build.0 = Release|x64
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|x86.ActiveCfg = Release|Win32
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261}.Release|x86.Build.0 = Release|Win32
 		{225A3E54-B551-4100-AE8B-42D5EE7C7261}.Debug|ARM.ActiveCfg = Debug|Win32
 		{225A3E54-B551-4100-AE8B-42D5EE7C7261}.Debug|ARM.Build.0 = Debug|Win32
 		{225A3E54-B551-4100-AE8B-42D5EE7C7261}.Debug|x64.ActiveCfg = Debug|x64
@@ -312,9 +289,6 @@ Global
 		{6CFB85CE-0674-4FAA-8E68-E53602AE53B2} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{9DE32F51-262E-471C-B74B-8189FD1920F8} = {6CFB85CE-0674-4FAA-8E68-E53602AE53B2}
 		{B1F92E2E-23C2-48E8-94BA-2D73DCE95EBC} = {6CFB85CE-0674-4FAA-8E68-E53602AE53B2}
-		{CAC7EA99-AB33-4DEC-989E-D1F70189C490} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
-		{E113EC9B-1D47-437E-87B9-2044F68F086C} = {CAC7EA99-AB33-4DEC-989E-D1F70189C490}
-		{225A3E54-A551-4100-AE8B-42D5EE7C7261} = {CAC7EA99-AB33-4DEC-989E-D1F70189C490}
 		{C1C80961-650E-49FA-A7C0-96208D18DE6E} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
 		{225A3E54-B551-4100-AE8B-42D5EE7C7261} = {C1C80961-650E-49FA-A7C0-96208D18DE6E}
 		{46A5FF79-0746-4D81-990D-684AE2229753} = {C1C80961-650E-49FA-A7C0-96208D18DE6E}

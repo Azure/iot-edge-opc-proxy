@@ -12,6 +12,7 @@ set(_PROXY_COMPONENTS
     prx_client
     prx_server
     prx_sched
+    prx_log
     prx_buffer
     prx_ns
     io_codec
@@ -27,13 +28,12 @@ set(_PROXY_COMPONENTS
     io_ws
     pal
     util_handle
-    util_log
     util_mem
     util_misc
+    util_ringbuf
     util_signal
     util_stream
     util_string
-    util_time
     xio_sk
     xio_ws
 )
@@ -182,7 +182,6 @@ endforeach()
 
     add_library(libproxy SHARED 
         $<TARGET_OBJECTS:libiotsdk> 
-        $<TARGET_OBJECTS:libuamqp> 
         $<TARGET_OBJECTS:libumqtt> 
         ${source_c_files}
     )
@@ -192,7 +191,6 @@ endforeach()
     target_include_directories(libproxy
         PUBLIC ${_PROJECT_INC}
         PUBLIC ${_IOTSDK_INC}
-        PRIVATE ${_UAMQP_INC}
         PRIVATE ${_UMQTT_INC}
         PRIVATE ${_CMP_ROOT}
         PRIVATE ${_HASHTABLE_ROOT}
@@ -256,7 +254,6 @@ endif()
     target_include_directories(libproxy-static
         PUBLIC ${_PROJECT_INC}
         PUBLIC ${_IOTSDK_INC}
-        PUBLIC ${_UAMQP_INC}
         PUBLIC ${_UMQTT_INC}
         PUBLIC ${_CMP_ROOT}
         PUBLIC ${_HASHTABLE_ROOT}

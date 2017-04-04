@@ -43,8 +43,8 @@ int32_t pal_get_real_path(
 {
     DWORD copied;
     char *buf = NULL;
-    if (!file_name || !path)
-        return er_fault;
+    chk_arg_fault_return(file_name);
+    chk_arg_fault_return(path);
 
     buf = (char*)mem_alloc(MAX_PATH);
     if (!buf)

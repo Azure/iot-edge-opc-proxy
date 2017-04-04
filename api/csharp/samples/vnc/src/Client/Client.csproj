@@ -16,8 +16,6 @@
     <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Perf|AnyCPU'" />
-
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
     <ProjectReference Include="..\..\..\provider\relay\src\Microsoft.Azure.Devices.Proxy.Relay\Microsoft.Azure.Devices.Proxy.Relay.csproj" />

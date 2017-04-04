@@ -14,10 +14,17 @@ void* c_realloc(
     int32_t line_number
 )
 {
+    void* result;
     (void)file;
     (void)file_len;
     (void)line_number;
-    return realloc(ptr, size);
+    result = realloc(ptr, size);
+    if (!result)
+    {
+        log_error(NULL, "c_realloc (%d) at %s:%d failed.",
+            size, file, line_number);
+    }
+    return result;
 }
 
 //
@@ -53,7 +60,14 @@ void* h_realloc(
     (void)file_len;
     (void)line_number;
     result = realloc(ptr, size);
-    if (!result || !zero_mem)
+    if (!result)
+    {
+        log_error(NULL, "h_realloc (%d) at %s:%d failed.", 
+            size, file, line_number);
+        return NULL;
+    }
+        
+    if (!zero_mem)
         return result;
     memset(result, 0, size);
     return result;

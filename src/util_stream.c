@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "util_mem.h"
+#include "util_misc.h"
 #include "util_stream.h"
 #include "pal.h"
 

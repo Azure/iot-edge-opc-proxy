@@ -13,6 +13,7 @@
 //
 #undef ENABLE_MOCKS
 #include UNIT_H
+#include "azure_c_shared_utility/tickcounter.h"
 #define ENABLE_MOCKS
 #include UNIT_C
 

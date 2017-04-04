@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Diagnostics;
     using System.Diagnostics.Tracing;
     using System.Globalization;
-    using Microsoft.Azure.Devices.Proxy.Provider;
+    using Microsoft.Azure.Devices.Proxy.Model;
 
     /// <summary>
     /// EventSource for the new Dynamic EventSource type of Microsoft-Azure-Devices-Proxy traces.
@@ -111,8 +111,41 @@ namespace Microsoft.Azure.Devices.Proxy {
             Trace.TraceWarning($"Ping broadcast attempt {attempt} failed - Remaining # of records to try: {remaining}...");
         }
 
-        // 40222 - 40247 Available
+        [Event(40222, Message = "{0} start linking through {1} to {2}.")]
+        public void LinkCreate(object source, object proxy, object info) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40222, CreateSourceString(source), proxy, info);
+            }
+            Trace.TraceInformation($"Begin linking through {proxy} to {info}...");
+        }
 
+        [Event(40223, Message = "{0} opening link through {1} to {2}.")]
+        public void LinkOpen(object source, object proxy, object info) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40223, CreateSourceString(source), proxy, info);
+            }
+            Trace.TraceInformation($"Opening link through {proxy} to {info}...");
+        }
+
+        [Event(40224, Message = "{0} failed to link through {1} to {2}. Response {3} : {4}")]
+        public void LinkFailure(object source, object proxy, object info, object response, Exception e) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40224, CreateSourceString(source), proxy, info, response, ExceptionToString(e));
+            }
+            if (e != null) {
+                Trace.TraceError($"Failed to link through {proxy} to {info} ({e})...");
+            }
+        }
+
+        [Event(40225, Message = "{0} linked through {1} to {2}.")]
+        public void LinkComplete(object source, object proxy, object info) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40225, CreateSourceString(source), proxy, info);
+            }
+            Trace.TraceInformation($"Linked through {proxy} to {info}...");
+        }
+
+        // 40226 - 40247 Available
 
         [Event(40248, Level = EventLevel.Warning, Message = "{0} Retry {1} after exception: {2}")]
         public void Retry(object source, int k, Exception ex) {
@@ -187,7 +220,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         void GetTokenStop(string tokenExpiry) {
             this.WriteEvent(40256, tokenExpiry);
         }
-
 
         [NonEvent]
         public ArgumentNullException ArgumentNull(string paramName, object source = null, EventLevel level = EventLevel.Error) {

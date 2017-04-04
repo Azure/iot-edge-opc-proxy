@@ -848,8 +848,8 @@ int32_t io_message_create_empty(
 {
     io_message_t* message;
 
-    if (!pool || !created)
-        return er_fault;
+    chk_arg_fault_return(pool);
+    chk_arg_fault_return(created);
 
     message = (io_message_t*)prx_buffer_alloc(pool->messages, NULL);
     if (!message)
@@ -875,6 +875,10 @@ int32_t io_message_create(
     int32_t result;
     io_message_t* message;
 
+    chk_arg_fault_return(source);
+    chk_arg_fault_return(target);
+    chk_arg_fault_return(created);
+
     result = io_message_create_empty(pool, &message);
     if (result != er_ok)
         return result;
@@ -896,8 +900,8 @@ int32_t io_message_clone(
 )
 {
     io_message_t* message;
-    if (!original || !created)
-        return er_fault;
+    chk_arg_fault_return(original);
+    chk_arg_fault_return(created);
 
     dbg_assert_msg(original);
     message = (io_message_t*)prx_buffer_alloc(
@@ -934,8 +938,8 @@ int32_t io_message_allocate_buffer(
     int32_t result;
     size_t current_size;
 
-    if (!message || !mem)
-        return er_fault;
+    chk_arg_fault_return(message);
+    chk_arg_fault_return(mem);
     dbg_assert_msg(message);
     if (!size) // No need to free, buffer is freed when message released.
     {

@@ -430,8 +430,9 @@ static int xio_socket_send(
     io_queue_buffer_t* buffer;
     xio_socket_t* sk = (xio_socket_t*)handle;
 
-    if (!sk || !buf || !size)
-        return er_fault;
+    chk_arg_fault_return(handle);
+    chk_arg_fault_return(buf);
+    chk_arg_fault_return(size);
 
     result = io_queue_create_buffer(sk->outbound, buf, size, &buffer);
     if (result != er_ok)
@@ -462,9 +463,7 @@ static int xio_socket_open(
 {
     int result;
     xio_socket_t* sk = (xio_socket_t*)handle;
-
-    if (!sk)
-        return er_fault;
+    chk_arg_fault_return(handle);
 
     if (!sk->scheduler)
     {
@@ -497,8 +496,7 @@ static int xio_socket_close(
 )
 {
     xio_socket_t* sk = (xio_socket_t*)handle;
-    if (!handle)
-        return er_fault;
+    chk_arg_fault_return(handle);
 
     sk->on_bytes_received = NULL;
     sk->on_io_open_complete = NULL;
@@ -523,7 +521,7 @@ static void xio_socket_destroy(
 )
 {
     xio_socket_t* sk = (xio_socket_t*)handle;
-    if (!sk)
+    if (!handle)
         return;
 
     // Detach any callbacks from buffers
@@ -620,8 +618,7 @@ int xio_socket_setoption(
     int result;
     xio_socket_t* sk = (xio_socket_t*)handle;
 
-    if (!sk)
-        return er_fault;
+    chk_arg_fault_return(handle);
     if (0 == string_compare(option_name, xio_opt_scheduler))
         result = prx_scheduler_create((prx_scheduler_t*)buffer, &sk->scheduler);
     else

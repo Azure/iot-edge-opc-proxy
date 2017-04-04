@@ -70,4 +70,9 @@ extern "C"
 #define dbg_assert_ptr(arg) dbg_assert(arg, "Pointer null") 
 #endif // dbg_assert_ptr
 
+#ifndef chk_arg_fault_return
+#define chk_arg_fault_return(p) \
+    if (!(p)) { log_error(NULL, "arg " #p " is null - return er_fault..."); return er_fault; }
+#endif // chk_arg_ptr_fail_er_fault
+
 #endif // _util_dbg_h_

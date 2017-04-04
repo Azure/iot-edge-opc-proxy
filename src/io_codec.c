@@ -313,6 +313,9 @@ static int32_t json_write_bin(
     int32_t result;
     STRING_HANDLE base64;
 
+    if (!size)
+        return json_write_string(ctx, name, "");
+
     base64 = Base64_Encode_Bytes((const unsigned char*)value, size);
     if (!base64)
         return er_out_of_memory;
@@ -637,6 +640,7 @@ static int32_t json_read_bin(
 {
     int32_t result;
     JSON_Value* val;
+    const char* string_value;
     size_t len;
     BUFFER_HANDLE decoded;
     
@@ -648,7 +652,16 @@ static int32_t json_read_bin(
     if (!val || JSONString != json_value_get_type(val))
         return er_invalid_format;
 
-    decoded = Base64_Decoder(json_value_get_string(val));
+    string_value = json_value_get_string(val);
+    dbg_assert_ptr(string_value);
+    if (!strlen(string_value))
+    {
+        *value = NULL;
+        *size = 0;
+        return er_ok;
+    }
+
+    decoded = Base64_Decoder(string_value);
     if (!decoded)
         return er_out_of_memory;
     do
@@ -1189,7 +1202,7 @@ static int32_t mpack_read_string(
         return result;
     do
     {
-        if (*size != len32 + 1)
+        if (*size != (len32 + 1))
         {
             result = er_out_of_memory;
             break;
@@ -1226,6 +1239,12 @@ static int32_t mpack_read_bin(
     mpack_read_begin(ctx);
     if (!cmp_read_bin_size(cmp_ctx, &len32))
         return cmp_ctx_get_err(cmp_ctx);
+    if (!len32)
+    {
+        *value = NULL;
+        *size = 0;
+        return er_ok;
+    }
 
     result = allocator(ctx, len32, value, size);
     if (result != er_ok)

@@ -39,8 +39,8 @@ int32_t signal_create(
     int32_t result = er_out_of_memory;
     signal_t* signal;
 
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
+
     signal = mem_zalloc_type(signal_t);
     if (!signal)
         return er_out_of_memory;
@@ -90,8 +90,8 @@ int32_t signal_wait_ex(
     ticks_t time;
     COND_RESULT cond_result;
 
-    if (!signal || !timeout_ms)
-        return er_fault;
+    chk_arg_fault_return(signal);
+    chk_arg_fault_return(timeout_ms);
 
     if (*timeout_ms == 0) // Immediate
         time_to_wait = 1;
@@ -168,8 +168,7 @@ int32_t signal_set(
     signal_t* signal
 )
 {
-    if (!signal)
-        return er_fault;
+    chk_arg_fault_return(signal);
     Lock(signal->lock);
     signal->state = signal_state_set;
     Condition_Post(signal->cond);
@@ -184,8 +183,7 @@ int32_t signal_clear(
     signal_t* signal
 )
 {
-    if (!signal)
-        return er_fault;
+    chk_arg_fault_return(signal);
     Lock(signal->lock);
     signal->state = signal_state_clear;
     Unlock(signal->lock);

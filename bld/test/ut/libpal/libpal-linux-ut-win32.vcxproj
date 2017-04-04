@@ -136,7 +136,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>CPP_UNITTEST;WIN32;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\uamqp\inc;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -168,7 +168,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>CPP_UNITTEST;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\uamqp\inc;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <CompileAs>CompileAsCpp</CompileAs>
@@ -202,7 +202,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <PreprocessorDefinitions>CPP_UNITTEST;WIN32;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\uamqp\inc;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <CompileAs>CompileAsCpp</CompileAs>
       <DisableSpecificWarnings>4211</DisableSpecificWarnings>
@@ -240,7 +240,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>CPP_UNITTEST;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\uamqp\inc;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\..\inc;..\..\..\..\src\pal;..\..\..\..\deps\cmp;..\..\..\..\deps\parson;..\..\..\..\deps\getopt\src;..\..\..\..\deps\umqtt\inc;..\..\..\..\deps\shared\inc;..\..\..\..\deps\shared\src;..\..\..\..\deps\shared\inc\azure_c_shared_utility;..\..\..\..\deps\ctest\inc;..\..\..\..\deps\umock\inc;..\..\..\..\deps\trunner\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>/d2MPX %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <CompileAs>CompileAsCpp</CompileAs>

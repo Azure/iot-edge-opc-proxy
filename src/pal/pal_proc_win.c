@@ -4,6 +4,7 @@
 #include "os.h"
 #include "util_mem.h"
 #include "util_string.h"
+#include "pal_err.h"
 #include "pal_proc.h"
 
 //
@@ -28,8 +29,7 @@ int32_t pal_process_spawn(
 {
     int32_t result;
     process_t* proc;
-    if (!created)
-        return er_fault;
+    chk_arg_fault_return(created);
     proc = mem_zalloc_type(process_t);
     if (!proc)
         return er_out_of_memory;
@@ -64,13 +64,14 @@ int32_t pal_process_spawn(
             break;
 
         proc->si.cb = sizeof(proc->si);
-        if (!CreateProcess(NULL, (LPSTR)STRING_c_str(proc->cmd_line),
+        if (!CreateProcessA(NULL, (LPSTR)STRING_c_str(proc->cmd_line),
             NULL, NULL, FALSE,
             CREATE_NEW_CONSOLE | NORMAL_PRIORITY_CLASS,
             NULL, NULL, &proc->si, &proc->pi))
         {
-            log_error(NULL, "CreateProcess failed (%d).", GetLastError());
-            result = er_out_of_memory;
+            result = pal_os_last_error_as_prx_error();
+            log_error(NULL, "CreateProcess(%s) failed (%s).",
+                STRING_c_str(proc->cmd_line), prx_err_string(result));
             break;
         }
         *created = proc;

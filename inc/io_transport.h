@@ -61,8 +61,7 @@ decl_inline_2(int32_t, io_connection_send,
     io_message_t*, message
 )
 {
-    if (!connection)
-        return er_fault;
+    chk_arg_fault_return(connection);
     dbg_assert_ptr(connection->on_send);
     return connection->on_send(connection->context, message);
 }
@@ -125,20 +124,12 @@ typedef int32_t (*io_transport_create_connection_t)(
     io_connection_t** connection
 );
 
-// 
-// Release transport
-//
-typedef void (*io_transport_release_t)(
-    void* context
-    );
-
 //
 // Transport interface
 //
 struct io_transport
 {
     io_transport_create_connection_t on_create;    // Create connection
-    io_transport_release_t on_release;             // Release transport
     void* context;                   // Actual transport implementation
 };
 
@@ -154,24 +145,10 @@ decl_inline_6(int32_t, io_transport_create,
     io_connection_t**, connection
 )
 {
-    if (!transport)
-        return er_fault;
+    chk_arg_fault_return(transport);
     dbg_assert_ptr(transport->on_create);
     return transport->on_create(transport->context, 
         entry, cb, context, scheduler, connection);
-}
-
-//
-// Release transport interface
-//
-decl_inline_1(void, io_transport_release,
-    io_transport_t*, transport
-)
-{
-    if (!transport)
-        return;
-    dbg_assert_ptr(transport->on_release);
-    transport->on_release(transport->context);
 }
 
 #endif // _io_transport_h_
