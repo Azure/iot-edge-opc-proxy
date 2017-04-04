@@ -105,11 +105,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 if (!proxyList.Any()) {
                     ProxyEventSource.Log.NoProxyInstalled(this);
                 }
-<<<<<<< HEAD:api/csharp/src/Microsoft.Azure.Devices.Proxy/Provider/IoTHubService.cs
-=======
 
-                var proxyList = new List<INameRecord>(results);
->>>>>>> 5fad161f23ea3fddb35767ef7c66f43b191a2b04:api/csharp/src/Microsoft.Azure.Devices.Proxy/Provider/IoTHub.cs
                 for (int attempts = 1; !ct.IsCancellationRequested && proxyList.Any(); attempts++) {
                     var tasks = new Dictionary<Task<Message>, INameRecord>();
 
