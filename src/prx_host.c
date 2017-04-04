@@ -266,9 +266,8 @@ static int32_t prx_host_init_from_command_line(
                 __prx_config_set_int(prx_config_key_connect_flag, 1);
                 break;
             case 'p':
-                c = 0;
-                while (c < _countof(buffer) - 1 && optarg[c] && optarg[c] != ':')
-                    buffer[c++] = optarg[c];
+                for (c = 0; c < _countof(buffer) - 1 && optarg[c] && optarg[c] != ':'; c++)
+                    buffer[c] = optarg[c];
                 if (c >= _countof(buffer) - 1)
                 {
                     printf("ERROR: Proxy host cannot be longer than %d characters!\n",
@@ -582,8 +581,8 @@ static int32_t prx_host_init_from_command_line(
                         prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                     break;
                 }
-                printf("Proxy %s %s\n", server_name,
-                    !is_uninstall ? "installed" : "uninstalled");
+                printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ? 
+                    "installed" : "uninstalled");
                 server_name = NULL;
             }
         }
@@ -835,6 +834,7 @@ int32_t prx_host_get(
         result = prx_host_init(proxy_type_server, 0, NULL);
         if (result != er_ok)
             return result;
+        dbg_assert_ptr(process_host);
     }
 
     INC_REF(prx_host_t, process_host);
