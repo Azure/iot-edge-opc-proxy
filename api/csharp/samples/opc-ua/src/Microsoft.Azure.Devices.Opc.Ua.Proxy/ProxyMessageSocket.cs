@@ -256,7 +256,7 @@ namespace Opc.Ua.Bindings.Proxy
 
             ProxyMessageSocketAsyncEventArgs args = new ProxyMessageSocketAsyncEventArgs();
             args.UserToken = state;
-            args.m_args.SocketError = SocketError.Host_unknown;
+            args.m_args.SocketError = SocketError.HostUnknown;
 
             ProxySocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 

@@ -13,6 +13,8 @@
 /**/*.vc.db
 /**/zlog.lock
 /**/TestResults/**
+/**/*.vsp*
+/**/*.psess
 /.vscode/**
 /build/**
 *.user

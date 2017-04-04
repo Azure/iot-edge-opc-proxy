@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             return Task.FromResult(bytes);
         }
 
-        private static Random rng = new Random();
+        private static readonly Random rng = new Random();
         public static void Shuffle<T>(this IList<T> list) {
             int n = list.Count;
             while (n > 1) {
@@ -31,6 +31,19 @@ namespace Microsoft.Azure.Devices.Proxy {
                 list[k] = list[n];
                 list[n] = value;
             }
+        }
+
+        public static void AddRange<T>(this ISet<T> set, IEnumerable<T> enumerable) {
+            foreach (var item in enumerable)
+                set.Add(item);
+        }
+
+        public static IEnumerable<T> AsEnumerable<T>(this T obj) {
+            yield return obj;
+        }
+
+        public static bool SameAs<T>(this IEnumerable<T> enumerable1, IEnumerable<T> enumerable2) {
+            return new HashSet<T>(enumerable1).SetEquals(enumerable2);
         }
 
         public static string GetCombinedExceptionMessage(this AggregateException ae) {

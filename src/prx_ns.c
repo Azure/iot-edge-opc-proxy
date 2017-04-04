@@ -1318,7 +1318,7 @@ static int32_t prx_ns_iot_hub_twin_entry_get_addr(
     obj = json_value_get_object(entry->twin);
     dbg_assert_ptr(obj);
 
-    id_string = json_object_dotget_string(obj, "tags.id");
+    id_string = json_object_dotget_string(obj, "tags.address");
     if (!id_string)
         return er_not_found;
     return io_ref_from_string(id_string, id);
@@ -1541,7 +1541,8 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
             break;
 
         type = prx_ns_entry_get_type(entry);
-        if (0 != json_object_dotset_number(obj, "tags.type", (type & ~prx_ns_entry_type_startup)))
+        if (0 != json_object_dotset_number(obj, "tags.type", 
+                (type & ~prx_ns_entry_type_startup)))
             break;
 
         // No support for bit queries ...
@@ -1560,7 +1561,7 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
             break;
         id_string = io_ref_to_STRING(&id);
         if (!id_string ||
-            0 != json_object_dotset_string(obj, "tags.id", STRING_c_str(id_string)))
+            0 != json_object_dotset_string(obj, "tags.address", STRING_c_str(id_string)))
             break;
         name = prx_ns_entry_get_name(entry);
         if (name &&
@@ -1569,8 +1570,8 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
 
         // Patch existing document
         if (0 != BUFFER_enlarge(request, json_serialization_size(json) + 1) ||
-            0 != json_serialize_to_buffer(
-                json, (char*)BUFFER_u_char(request), BUFFER_length(request)))
+            0 != json_serialize_to_buffer(json, (char*)BUFFER_u_char(request), 
+                BUFFER_length(request)))
             break;
         result = prx_ns_iot_hub_rest_call(registry->hub_entry->cs, HTTPAPI_REQUEST_PATCH, 
             "*", STRING_c_str(uri), request, NULL, NULL, NULL, &status_code);
@@ -1807,7 +1808,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_addr(
     dbg_assert_ptr(created);
 
     sql_query_string = STRING_construct(
-        "SELECT * FROM devices WHERE tags.id='");
+        "SELECT * FROM devices WHERE tags.address='");
     if (!sql_query_string)
         return er_out_of_memory;
     do

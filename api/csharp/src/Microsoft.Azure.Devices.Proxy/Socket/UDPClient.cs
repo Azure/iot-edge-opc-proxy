@@ -6,11 +6,10 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Threading.Tasks;
-    using Model;
 
     public class UdpClient : IDisposable {
-        private bool _cleanedUp = false;
-        private byte[] _buffer = new byte[0x4000];
+        private bool _cleanedUp;
+        private readonly byte[] _buffer = new byte[0x4000];
 
         //
         // Initializes a new instance of the System.Net.Sockets.UdpClientclass.
@@ -35,11 +34,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Returns how many bytes are available to read
         //
-        public int Available {
-            get {
-                return Socket.Available;
-            }
-        }
+        public int Available => Socket.Available;
 
         //
         // Make the underlying socket a broadcast socket

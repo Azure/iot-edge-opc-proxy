@@ -23,6 +23,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Send message and receive response in one call
         /// </summary>
+        /// <param name="proxy"></param>
         /// <param name="message"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
@@ -34,6 +35,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="message"></param>
         /// <param name="handler"></param>
+        /// <param name="last"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task BroadcastAsync(Message message,

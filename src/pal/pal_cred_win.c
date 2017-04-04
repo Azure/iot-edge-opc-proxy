@@ -247,7 +247,7 @@ int32_t pal_cred_hmac_sha256(
     BUFFER_delete(hash);
 
     // Ensure we remove the key from memory asap
-    if (key_len > 0)
+    if (key_len > 0 && key_val)
         RtlSecureZeroMemory(key_val, key_len);
     if (pcred)
         CredFree(pcred);

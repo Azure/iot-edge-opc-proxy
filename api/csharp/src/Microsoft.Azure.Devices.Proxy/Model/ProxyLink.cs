@@ -40,20 +40,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Proxy the socket is bound on.  
         /// </summary>
-        public SocketAddress ProxyAddress {
-            get {
-                return Proxy.Address.ToSocketAddress();
-            }
-        }
+        public SocketAddress ProxyAddress => Proxy.Address.ToSocketAddress();
 
         /// <summary>
         /// Constructor for proxy link object
         /// </summary>
-        /// <param name="socket">Owning proxy link</param>
-        /// <param name="remoteId">Remote endpoint id assigned by proxy</param>
-        /// <param name="localAddress">Remote local address</param>
-        /// <param name="peerAddress">Remote peer address</param>
-        /// <returns></returns>
+        /// <param name="socket"></param>
+        /// <param name="proxy"></param>
+        /// <param name="remoteId"></param>
+        /// <param name="localAddress"></param>
+        /// <param name="peerAddress"></param>
         internal ProxyLink(ProxySocket socket, INameRecord proxy, Reference remoteId, 
             SocketAddress localAddress, SocketAddress peerAddress) {
             _streamId = new Reference();

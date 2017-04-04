@@ -11,10 +11,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         public SocketError Error { get; private set; }
 
         internal string _message;
-        public override string Message { get { return _message; } }
+        public override string Message => _message; 
 
         internal Exception _innerException;
-        public new Exception InnerException { get { return _innerException; } }
+        public new Exception InnerException => _innerException; 
 
         public SocketException(string message, Exception e,
             SocketError errorCode)

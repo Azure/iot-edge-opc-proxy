@@ -145,7 +145,39 @@ namespace Microsoft.Azure.Devices.Proxy {
             Trace.TraceInformation($"Linked through {proxy} to {info}...");
         }
 
-        // 40226 - 40247 Available
+
+        [Event(40226, Message = "{0} record {1} added...")]
+        public void RecordAdded(object source, object record) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40226, CreateSourceString(source), record);
+            }
+            Trace.TraceInformation($"Record {record} added...");
+        }
+
+        [Event(40227, Message = "{0} patching record {1} : {2}...")]
+        public void PatchingRecord(object source, object record, object patch) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40227, CreateSourceString(source), record, patch);
+            }
+        }
+
+        [Event(40228, Message = "{0} record {1} patched : {2}.")]
+        public void RecordPatched(object source, object record, object patch) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40228, CreateSourceString(source), record, patch);
+            }
+            Trace.TraceInformation($"Record {record} patched: {patch}...");
+        }
+
+        [Event(40229, Message = "{0} record {1} removed.")]
+        public void RecordRemoved(object source, object record) {
+            if (this.IsEnabled()) {
+                this.WriteEvent(40229, CreateSourceString(source), record);
+            }
+            Trace.TraceInformation($"Record {record} removed...");
+        }
+
+        // 40230 - 40247 Available
 
         [Event(40248, Level = EventLevel.Warning, Message = "{0} Retry {1} after exception: {2}")]
         public void Retry(object source, int k, Exception ex) {

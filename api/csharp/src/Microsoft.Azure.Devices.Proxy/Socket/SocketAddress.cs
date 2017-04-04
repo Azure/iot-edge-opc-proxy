@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as NullSocketAddress);
         }
 
@@ -137,7 +137,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as UnixSocketAddress);
         }
 
@@ -252,7 +252,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as Inet4SocketAddress);
         }
 
@@ -302,7 +302,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Buffer constructor
         /// </summary>
-        /// <param name="buffer"></param>
+        /// <param name="address"></param>
         public Inet6SocketAddress(byte[] address) {
             base.Family = AddressFamily.InterNetworkV6;
             Address = address;
@@ -349,7 +349,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as Inet6SocketAddress);
         }
 
@@ -422,10 +422,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="port"></param>
         public ProxySocketAddress(string host, int port) : this() {
             if (host == null) {
-                throw new ArgumentNullException("host");
+                throw new ArgumentNullException(nameof(host));
             }
             if (port <= 0 || port > ushort.MaxValue) {
-                throw new ArgumentNullException("port");
+                throw new ArgumentNullException(nameof(port));
             }
             Host = host;
             Port = (ushort)port;
@@ -439,6 +439,19 @@ namespace Microsoft.Azure.Devices.Proxy {
             Port = port;
             Flow = flow;
             Host = host;
+        }
+
+        /// <summary>
+        /// Creates an address from a proxy socket address string representation
+        /// </summary>
+        public ProxySocketAddress(string address) : this() {
+            int index = address.IndexOf(':');
+            if (index <= 0) {
+                throw new ArgumentException($"{address} is not a proxy address!");
+            }
+            Host = address.Substring(0, index);
+            Port = ushort.Parse(address.Substring(index + 1));
+            Flow = 0;
         }
 
         /// <summary>
@@ -466,7 +479,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as ProxySocketAddress);
         }
 
@@ -509,11 +522,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="addresses"></param>
         /// <returns></returns>
         public static SocketAddress Create(IEnumerable<SocketAddress> addresses) {
-            if (!addresses.Any()) {
+            var set = new HashSet<SocketAddress>(addresses);
+            if (!set.Any()) {
                 return null;
             } else {
                 var address = new SocketAddressCollection {
-                    Inner = new HashSet<SocketAddress>(addresses)
+                    Inner = set
                 };
                 try {
                     return address.Addresses().Single();
@@ -535,8 +549,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public IEnumerable<SocketAddress> Addresses() {
             foreach(var address in Inner) {
-                if (address is SocketAddressCollection) {
-                    foreach (var r in ((SocketAddressCollection)address).Addresses()) {
+                var collection = address as SocketAddressCollection;
+                if (collection != null) {
+                    foreach (var r in collection.Addresses()) {
                         yield return r;
                     }
                 }
@@ -565,7 +580,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as SocketAddressCollection);
         }
 

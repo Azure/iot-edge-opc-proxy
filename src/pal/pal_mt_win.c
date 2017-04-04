@@ -65,6 +65,7 @@ void rw_lock_exit_w(
 )
 {
     dbg_assert_ptr(lock);
+    __analysis_suppress(26110)
     ReleaseSRWLockExclusive((SRWLOCK*)lock);
 }
 

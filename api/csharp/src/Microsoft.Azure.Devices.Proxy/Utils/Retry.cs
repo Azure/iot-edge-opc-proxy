@@ -55,12 +55,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retries a piece of work
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="backoff"></param>
+        /// <param name="policy"></param>
         /// <param name="maxRetry"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static async Task Do(CancellationToken ct, Func<Task> work, 
             Func<Exception, bool> cont, Func<int, int> policy, int maxRetry) {
@@ -88,11 +87,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Retries a piece of work with return type
         /// </summary>
         /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="backoff"></param>
+        /// <param name="policy"></param>
         /// <param name="maxRetry"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static async Task<T> Do<T>(CancellationToken ct, Func<Task<T>> work,
             Func<Exception, bool> cont, Func<int, int> policy, int maxRetry) {
@@ -118,10 +117,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="maxRetry"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithLinearBackoff(CancellationToken ct,
             Func<Task> work, Func<Exception, bool> cont) {
@@ -131,19 +129,18 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithLinearBackoff(CancellationToken ct, 
             Func<Task> work) {
-            return WithLinearBackoff(ct, work, (ex) => ex is ITransientException);
+            return WithLinearBackoff(ct, work, ex => ex is ITransientException);
         }
 
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithLinearBackoff(Func<Task> work) {
             return WithLinearBackoff(CancellationToken.None, work);
@@ -152,10 +149,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="maxRetry"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithLinearBackoff<T>(CancellationToken ct,
             Func<Task<T>> work, Func<Exception, bool> cont) {
@@ -165,8 +162,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithLinearBackoff<T>(CancellationToken ct,
             Func<Task<T>> work) {
@@ -176,8 +174,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with linear backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithLinearBackoff<T>(Func<Task<T>> work) {
             return WithLinearBackoff(CancellationToken.None, work);
@@ -186,9 +184,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with exponential backoff
         /// </summary>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithExponentialBackoff(CancellationToken ct,
             Func<Task> work,
@@ -199,8 +197,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with exponential backoff
         /// </summary>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithExponentialBackoff(CancellationToken ct,
             Func<Task> work) {
@@ -211,7 +209,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Retry with exponential backoff
         /// </summary>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task WithExponentialBackoff(Func<Task> work) {
             return WithExponentialBackoff(CancellationToken.None, work);
@@ -220,9 +217,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with exponential backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <param name="cont"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithExponentialBackoff<T>(CancellationToken ct,
             Func<Task<T>> work, Func<Exception, bool> cont) {
@@ -232,8 +230,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with exponential backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ct"></param>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithExponentialBackoff<T>(CancellationToken ct,
             Func<Task<T>> work) {
@@ -243,8 +242,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Retry with exponential backoff
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="work"></param>
-        /// <param name="tracer"></param>
         /// <returns></returns>
         public static Task<T> WithExponentialBackoff<T>(Func<Task<T>> work) {
             return WithExponentialBackoff(CancellationToken.None, work);

@@ -4,7 +4,7 @@
 // ------------------------------------------------------------
 
 namespace System {
-    using System.Reflection;
+    using Reflection;
 
     public class VersionEx {
         /// <summary>

@@ -4,6 +4,11 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy {
+    using System;
+
     public interface ITransientException {
+    }
+
+    public class TransientException : Exception, ITransientException {
     }
 }

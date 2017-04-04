@@ -5,6 +5,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
+    using System.Collections.Generic;
     using System.Runtime.Serialization;
 
     [Flags]
@@ -54,20 +55,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public string Id { get; set; }
 
         /// <summary>
+        /// References for this entry to support serializing
+        /// </summary>
+        [DataMember(Name = "references", Order = 6)]
+        public HashSet<Reference> ReferenceSet { get; set; } = new HashSet<Reference>();
+
+        /// <summary>
+        /// References as enumerable
+        /// </summary>
+        public IEnumerable<Reference> References => ReferenceSet;
+
+        /// <summary>
         /// Default constructor
         /// </summary>
         public Record() {
             // no op
-        }
-
-        /// <summary>
-        /// Create entry info
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="name"></param>
-        /// <param name="id"></param>
-        public Record(RecordType type, Reference address, string name, string id) {
-
         }
 
         /// <summary>
@@ -79,6 +81,88 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             Type = record.Type;
             Id = record.Id;
             Name = record.Name;
+            ReferenceSet.AddRange(record.References);
+        }
+
+        /// <summary>
+        /// Construct a new record
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <param name="address"></param>
+        public Record(RecordType type, string name, Reference address = null) {
+            Name = name;
+            Id = name;
+            Address = address ?? new Reference();
+            Type = type;
+        }
+
+        /// <summary>
+        /// Add a address
+        /// </summary>
+        /// <param name="address"></param>
+        public void AddReference(Reference address) {
+            ReferenceSet.Add(address);
+        }
+
+        /// <summary>
+        /// Add a address
+        /// </summary>
+        /// <param name="address"></param>
+        public void RemoveReference(Reference address) {
+            ReferenceSet.Remove(address);
+        }
+
+        /// <summary>
+        /// Copies members from passed in record
+        /// </summary>
+        /// <param name="record"></param>
+        public INameRecord Assign(INameRecord record) {
+            if (!Id.Equals(record.Id)) {
+                return record;
+            }
+
+            Type = record.Type;
+            Name = record.Name;
+
+            ReferenceSet.Clear();
+            ReferenceSet.AddRange(record.References);
+            return this;
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public bool Equals(INameRecord that) {
+            if (that == null) {
+                return false;
+            }
+            return
+                Address.Equals(that.Address) &&
+                Type.Equals(that.Type) &&
+                Id.Equals(that.Id) &&
+                Name.Equals(that.Name, StringComparison.CurrentCultureIgnoreCase) &&
+                ReferenceSet.SetEquals(that.References)
+                ;
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public override bool Equals(Object that) {
+            return Equals(that as INameRecord);
+        }
+
+        /// <summary>
+        /// Returns hash for efficient lookup in list
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() {
+            return Address.GetHashCode();
         }
     }
 }

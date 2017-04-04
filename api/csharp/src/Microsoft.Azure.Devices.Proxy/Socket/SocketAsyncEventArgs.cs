@@ -74,10 +74,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                 // Offset and count can't be negative and the 
                 // combination must be in bounds of the array.
                 if (offset < 0 || offset > buffer.Length) {
-                    throw new ArgumentOutOfRangeException("offset");
+                    throw new ArgumentOutOfRangeException(nameof(offset));
                 }
                 if (count < 0 || count > (buffer.Length - offset)) {
-                    throw new ArgumentOutOfRangeException("count");
+                    throw new ArgumentOutOfRangeException(nameof(count));
                 }
 
                 Buffer = buffer;
@@ -135,10 +135,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         internal virtual void OnCompleted(SocketAsyncEventArgs e) {
-            EventHandler<SocketAsyncEventArgs> handler = _completed;
-            if (handler != null) {
-                handler(e.CurrentSocket, e);
-            }
+            _completed?.Invoke(e.CurrentSocket, e);
         }
 
         public void Dispose() {

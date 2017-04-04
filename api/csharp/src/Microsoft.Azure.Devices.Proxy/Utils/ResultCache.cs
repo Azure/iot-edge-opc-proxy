@@ -8,6 +8,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Collections.Concurrent;
     using System.Threading;
+    using System.Threading.Tasks;
 
     /// <summary>
     /// Helper class to cache delegates. 
@@ -23,7 +24,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Clear all funcs
         /// </summary>
-        public void Invalidate() =>
+        public virtual void Invalidate() =>
             _funcs.Clear();
 
         /// <summary>
@@ -35,24 +36,18 @@ namespace Microsoft.Azure.Devices.Proxy {
                 _invalidateTimer.Change(period, period);
             }
             else {
-                _invalidateTimer = new Timer(new TimerCallback((o) => Invalidate()), null, period, period);
+                _invalidateTimer = new Timer(_ => Invalidate(), null, period, period);
             }
         }
 
         /// <summary>
         /// Stop invalidate timer
         /// </summary>
-        /// <param name="period"></param>
         public void StopTimer() {
             if (_invalidateTimer != null) {
                 _invalidateTimer.Dispose();
                 _invalidateTimer = null;
             }
-        }
-
-        private static Func<T1, TResult> Cached<T1, TResult>(Func<T1, TResult> func) {
-            var cache = new ConcurrentDictionary<T1, TResult>();
-            return (arg) => cache.GetOrAdd(arg, func(arg));
         }
 
         /// <summary>
@@ -62,25 +57,23 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         /// <param name="arg"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public TResult Call<T1, TResult>(Func<T1, TResult> func, T1 arg) =>
-            ((Func<T1, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg);
-
-
-        /// <summary>
-        /// Invalidate results
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        public void Invalidate<T1, TResult>(Func<T1, TResult> func) =>
-            _funcs.TryRemove(func, out _tmp);
-
-
-        private static Func<T1, T2, TResult> Cached<T1, T2, TResult>(Func<T1, T2, TResult> func) {
-            var cache = new ConcurrentDictionary<Tuple<T1, T2>, TResult>();
-            return (arg1, arg2) => cache.GetOrAdd(
-                Tuple.Create(arg1, arg2), ck => func(arg1, arg2));
+        public Task<TResult> Call<T1, TResult>(Func<T1, CancellationToken, Task<TResult>> func, T1 arg, CancellationToken ct) =>
+            ((Func<T1, CancellationToken, Task<TResult>>)_funcs.GetOrAdd(func, Cached(func)))(arg, ct);
+        private static Func<T1, CancellationToken, Task<TResult>> Cached<T1, TResult>(
+            Func<T1, CancellationToken, Task<TResult>> func) {
+            var cache = new ConcurrentDictionary<T1, Task<TResult>>();
+            return (arg, ct) => {
+                var k = arg;
+                var t = cache.GetOrAdd(k, ck => func(ck, ct));
+                if (t.IsCompleted) {
+                    return t;
+                }
+                cache.TryRemove(k, out t);
+                ct.ThrowIfCancellationRequested();
+                return cache.GetOrAdd(k, ck => func(ck, ct));
+            };
         }
 
         /// <summary>
@@ -92,26 +85,23 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="func"></param>
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public TResult Call<T1, T2, TResult>(Func<T1, T2, TResult> func, T1 arg1, T2 arg2) =>
-            ((Func<T1, T2, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2);
-
-        /// <summary>
-        /// Invalidate method results
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        public void Invalidate<T1, T2, TResult>(Func<T1, T2, TResult> func) =>
-            _funcs.TryRemove(func, out _tmp);
-
-
-        private static Func<T1, T2, T3, TResult> Cached<T1, T2, T3, TResult>(
-            Func<T1, T2, T3, TResult> func) {
-            var cache = new ConcurrentDictionary<Tuple<T1, T2, T3>, TResult>();
-            return (arg1, arg2, arg3) => cache.GetOrAdd(
-                Tuple.Create(arg1, arg2, arg3), ck => func(arg1, arg2, arg3));
+        public Task<TResult> Call<T1, T2, TResult>(Func<T1, T2, CancellationToken, Task<TResult>> func, T1 arg1, T2 arg2, CancellationToken ct) =>
+            ((Func<T1, T2, CancellationToken, Task<TResult>>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, ct);
+        private static Func<T1, T2, CancellationToken, Task<TResult>> Cached<T1, T2, TResult>(
+            Func<T1, T2, CancellationToken, Task<TResult>> func) {
+            var cache = new ConcurrentDictionary<Tuple<T1, T2>, Task<TResult>>();
+            return (arg1, arg2, ct) => {
+                var k = Tuple.Create(arg1, arg2);
+                var t = cache.GetOrAdd(k, ck =>  func(ck.Item1, ck.Item2, ct));
+                if (t.IsCompleted) {
+                    return t;
+                }
+                cache.TryRemove(k, out t);
+                ct.ThrowIfCancellationRequested();
+                return cache.GetOrAdd(k, ck => func(ck.Item1, ck.Item2, ct));
+            };
         }
 
         /// <summary>
@@ -125,26 +115,23 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg1"></param>
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public TResult Call<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func, T1 arg1, T2 arg2, T3 arg3) =>
-            ((Func<T1, T2, T3, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3);
-
-        /// <summary>
-        /// Invalidate method results
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        public void Invalidate<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func) =>
-            _funcs.TryRemove(func, out _tmp);
-
-        private static Func<T1, T2, T3, T4, TResult> Cached<T1, T2, T3, T4, TResult>(
-                Func<T1, T2, T3, T4, TResult> func) {
-            var cache = new ConcurrentDictionary<Tuple<T1, T2, T3, T4>, TResult>();
-            return (arg1, arg2, arg3, arg4) => cache.GetOrAdd(
-                Tuple.Create(arg1, arg2, arg3, arg4), ck => func(arg1, arg2, arg3, arg4));
+        public Task<TResult> Call<T1, T2, T3, TResult>(Func<T1, T2, T3, CancellationToken, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, CancellationToken ct) =>
+            ((Func<T1, T2, T3, CancellationToken, Task<TResult>>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, ct);
+        private static Func<T1, T2, T3, CancellationToken, Task<TResult>> Cached<T1, T2, T3, TResult>(
+            Func<T1, T2, T3, CancellationToken, Task<TResult>> func) {
+            var cache = new ConcurrentDictionary<Tuple<T1, T2, T3>, Task<TResult>>();
+            return (arg1, arg2, arg3, ct) => {
+                var k = Tuple.Create(arg1, arg2, arg3);
+                var t = cache.GetOrAdd(k, ck => func(ck.Item1, ck.Item2, ck.Item3, ct));
+                if (t.IsCompleted) {
+                    return t;
+                }
+                cache.TryRemove(k, out t);
+                ct.ThrowIfCancellationRequested();
+                return cache.GetOrAdd(k, ck => func(ck.Item1, ck.Item2, ck.Item3, ct));
+            };
         }
 
         /// <summary>
@@ -160,62 +147,25 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="arg2"></param>
         /// <param name="arg3"></param>
         /// <param name="arg4"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public TResult Call<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4) =>
-            ((Func<T1, T2, T3, T4, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4);
-
-        /// <summary>
-        /// Invalidate method results
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        public void Invalidate<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func) =>
-            _funcs.TryRemove(func, out _tmp);
-
-        private static Func<T1, T2, T3, T4, T5, TResult> Cached<T1, T2, T3, T4, T5, TResult>(
-                Func<T1, T2, T3, T4, T5, TResult> func) {
-            var cache = new ConcurrentDictionary<Tuple<T1, T2, T3, T4, T5>, TResult>();
-            return (arg1, arg2, arg3, arg4, arg5) => cache.GetOrAdd(
-                Tuple.Create(arg1, arg2, arg3, arg4, arg5), ck => func(arg1, arg2, arg3, arg4, arg5));
+        public Task<TResult> Call<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, CancellationToken ct) =>
+            ((Func<T1, T2, T3, T4, CancellationToken, Task<TResult>>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4, ct);
+        private static Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> Cached<T1, T2, T3, T4, TResult>(
+            Func<T1, T2, T3, T4, CancellationToken, Task<TResult>> func) {
+            var cache = new ConcurrentDictionary<Tuple<T1, T2, T3, T4>, Task<TResult>>();
+            return (arg1, arg2, arg3, arg4, ct) => {
+                var k = Tuple.Create(arg1, arg2, arg3, arg4);
+                var t = cache.GetOrAdd(k, ck => func(ck.Item1, ck.Item2, ck.Item3, ck.Item4, ct));
+                if (t.IsCompleted) {
+                    return t;
+                }
+                cache.TryRemove(k, out t);
+                ct.ThrowIfCancellationRequested();
+                return cache.GetOrAdd(k, ck => func(ck.Item1, ck.Item2, ck.Item3, ck.Item4, ct));
+            };
         }
 
-        /// <summary>
-        /// Call method
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="T5"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        /// <param name="arg1"></param>
-        /// <param name="arg2"></param>
-        /// <param name="arg3"></param>
-        /// <param name="arg4"></param>
-        /// <param name="arg5"></param>
-        /// <returns></returns>
-        public TResult Call<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> func, T1 arg1, T2 arg2, T3 arg3, T4 arg4, T5 arg5) =>
-            ((Func<T1, T2, T3, T4, T5, TResult>)_funcs.GetOrAdd(func, Cached(func)))(arg1, arg2, arg3, arg4, arg5);
-
-        /// <summary>
-        /// Invalidate method results
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <typeparam name="T3"></typeparam>
-        /// <typeparam name="T4"></typeparam>
-        /// <typeparam name="T5"></typeparam>
-        /// <typeparam name="TResult"></typeparam>
-        /// <param name="func"></param>
-        public void Invalidate<T1, T2, T3, T4, T5, TResult>(Func<T1, T2, T3, T4, T5, TResult> func) =>
-            _funcs.TryRemove(func, out _tmp);
-
-        private Delegate _tmp;
         private Timer _invalidateTimer;
     }
 }
