@@ -1065,7 +1065,7 @@ static int32_t pal_wsworker_get_proxy_info(
     if (!*proxy_address)
         return er_out_of_memory;
 
-    *proxy_address = 0;
+    memset(*proxy_address, 0, buf_len);
     // Concat proxy address string
     if (user)
     {
