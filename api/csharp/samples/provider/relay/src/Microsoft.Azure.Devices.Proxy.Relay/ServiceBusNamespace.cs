@@ -3,11 +3,10 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-using System.Threading;
-
 namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System;
     using System.IO;
+    using System.Threading;
     using System.Threading.Tasks;
     using System.Collections.Generic;
     using System.Xml;
