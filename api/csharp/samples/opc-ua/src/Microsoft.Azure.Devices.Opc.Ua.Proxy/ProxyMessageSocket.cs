@@ -396,7 +396,7 @@ namespace Opc.Ua.Bindings.Proxy
                 BufferManager.UnlockBuffer(m_receiveBuffer);
             }
 
-            if (bytesRead == 0)
+            if (bytesRead == 0 || e.SocketError != (int)SocketError.Success)
             {
                 // free the empty receive buffer.
                 if (m_receiveBuffer != null)
@@ -405,7 +405,12 @@ namespace Opc.Ua.Bindings.Proxy
                     m_receiveBuffer = null;
                 }
 
-                return ServiceResult.Good;
+                if (bytesRead == 0)
+                { 
+                    return ServiceResult.Create(StatusCodes.BadConnectionClosed, "Remote side closed connection");
+                }
+
+                return ServiceResult.Create(StatusCodes.BadTcpInternalError, "Error {0} on connection during receive", e.SocketError.ToString());
             }
 
             // Utils.Trace("Bytes read: {0}", bytesRead);

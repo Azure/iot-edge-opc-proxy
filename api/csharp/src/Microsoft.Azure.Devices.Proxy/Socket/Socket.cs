@@ -445,8 +445,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Same, but sync
         //
-        public Socket Accept() =>
-            TaskToSync.Run(() => AcceptAsync());
+        public Socket Accept() => TaskToSync.Run(AcceptAsync);
 
         //
         // Same, but with async event args
@@ -455,6 +454,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             AcceptAsync().ContinueWith(t => {
                 try { 
                     e.AcceptSocket = t.Result;
+                    e.SocketError = SocketError.Success;
                 }
                 catch (Exception ex) {
                     e.SocketError = ex.GetSocketError();
@@ -597,6 +597,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             Task t2 = t1.ContinueWith(t => {
                 try { 
                     e.BytesTransferred = t.Result;
+                    e.SocketError = SocketError.Success;
                 }
                 catch (Exception ex) {
                     e.SocketError = ex.GetSocketError();
@@ -772,6 +773,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             Task t2 = t1.ContinueWith(t => {
                 try { 
                     e.BytesTransferred = t.Result;
+                    e.SocketError = SocketError.Success;
                 }
                 catch (Exception ex) {
                     e.SocketError = ex.GetSocketError();
@@ -1008,6 +1010,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             Task t2 = t1.ContinueWith(t => {
                 try { 
                     e.BytesTransferred = t.Result;
+                    e.SocketError = SocketError.Success;
                 }
                 catch (Exception ex) {
                     e.SocketError = ex.GetSocketError();
@@ -1151,6 +1154,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 try {
                     e.Endpoint = t.Result.Item1;
                     e.BytesTransferred = t.Result.Item2;
+                    e.SocketError = SocketError.Success;
                 }
                 catch (Exception ex) {
                     e.SocketError = ex.GetSocketError();
