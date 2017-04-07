@@ -340,7 +340,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             while (true) {
                 foreach (var link in Links) {
                     Message message;
-                    while (link.ReceiveQueue.TryDequeue(out message)) {
+                    var queue = link.ReceiveQueue;
+                    if (queue == null) {
+                        throw new SocketException(SocketError.Closed);
+                    }
+                    while (queue.TryDequeue(out message)) {
                         if (message.TypeId == MessageContent.Close) {
                             // Remote side closed, close link
                             Links.Remove(link);
@@ -413,6 +417,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
         public abstract Task ListenAsync(
             int backlog, CancellationToken ct);
+
+        /// <summary>
+        /// Returns a string that represents the socket.
+        /// </summary>
+        /// <returns>A string that represents the socket.</returns>
+        public override string ToString() {
+            return $"Socket {Id} : {Info}";
+        }
 
         //
         // Helper to throw if error code is not success

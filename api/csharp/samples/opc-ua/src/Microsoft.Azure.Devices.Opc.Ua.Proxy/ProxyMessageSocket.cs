@@ -396,6 +396,8 @@ namespace Opc.Ua.Bindings.Proxy
                 BufferManager.UnlockBuffer(m_receiveBuffer);
             }
 
+            Utils.Trace("Bytes read: {0}", bytesRead);
+
             if (bytesRead == 0 || e.SocketError != (int)SocketError.Success)
             {
                 // free the empty receive buffer.
@@ -412,8 +414,6 @@ namespace Opc.Ua.Bindings.Proxy
 
                 return ServiceResult.Create(StatusCodes.BadTcpInternalError, "Error {0} on connection during receive", e.SocketError.ToString());
             }
-
-            // Utils.Trace("Bytes read: {0}", bytesRead);
 
             m_bytesReceived += bytesRead;
 

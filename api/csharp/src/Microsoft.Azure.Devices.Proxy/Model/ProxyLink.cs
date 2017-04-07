@@ -171,9 +171,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     // Only throw if all tasks failed.
                     throw new SocketException("Exception during close", ae.GetSocketError());
                 }
-                else {
-                    ProxyEventSource.Log.HandledExceptionAsInformation(this, ae);
-                }
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, ae);
             }
             catch (Exception e) {
                 ProxyEventSource.Log.HandledExceptionAsInformation(this, e);
@@ -191,11 +189,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             _connection = null;
             _stream = null;
             try {
+                ProxyEventSource.Log.StreamClosing(this, _stream);
                 await stream.SendAsync(new Message(_socket.Id, RemoteId, 
                     new CloseRequest()), ct).ConfigureAwait(false);
             }
             finally {
                 await connection.CloseAsync().ConfigureAwait(false);
+                ProxyEventSource.Log.StreamClosed(this, null);
             }
         }
 
@@ -208,6 +208,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
                 new Message(_socket.Id, RemoteId, 
                     new CloseRequest()), ct).ConfigureAwait(false);
+            ProxyEventSource.Log.ObjectDestroyed(this);
             if (response != null) {
                 SocketError errorCode = (SocketError)response.Error;
                 if (errorCode != SocketError.Success &&
@@ -221,9 +222,19 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             }
         }
 
+        /// <summary>
+        /// Returns a string that represents the current object.
+        /// </summary>
+        /// <returns>A string that represents the current object.</returns>
+        public override string ToString() {
+            return 
+                $"Link {PeerAddress} through {LocalAddress} on {Proxy} "
+              + $"with stream {_streamId} (Socket {_socket})";
+        }
+
         private IMessageStream _stream;
-        private ProxySocket _socket;
+        private readonly ProxySocket _socket;
         private IConnection _connection;
-        private Reference _streamId;
+        private readonly Reference _streamId;
     }
 }
