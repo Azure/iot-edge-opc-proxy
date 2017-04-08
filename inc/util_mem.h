@@ -6,6 +6,7 @@
 
 // #define LEAK_DETECT
 // #define MEM_CHECK
+// #define DBG_MEM
 
 #if defined(DBG_MEM)
 #define DEBUG 1

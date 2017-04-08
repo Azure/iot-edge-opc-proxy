@@ -7,10 +7,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Model;
 
     internal class UDPSocket : ProxySocket {
-
         /// <summary>
         /// Constructor
         /// </summary>
@@ -20,11 +18,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             base(info, provider) {
             if (info.Type != SocketType.Dgram)
                 throw new ArgumentException("Udp only supports datagrams");
-        }
-
-        public override Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
-            _stream = new PacketStream(this);
-            throw new NotImplementedException();
         }
 
         public override Task ConnectAsync(SocketAddress address, CancellationToken ct) {

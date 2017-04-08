@@ -4,11 +4,13 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Model {
+    using System;
+    using System.Collections.Generic;
 
     /// <summary>
     /// Name record interface
     /// </summary>
-    public interface INameRecord {
+    public interface INameRecord : IEquatable<INameRecord> {
 
         /// <summary>
         /// Name
@@ -29,5 +31,29 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Record type
         /// </summary>
         RecordType Type { get; set; }
+
+        /// <summary>
+        /// Returns list of references for this record
+        /// </summary>
+        IEnumerable<Reference> References { get; }
+        
+        /// <summary>
+        /// Add a address to another record 
+        /// </summary>
+        /// <param name="address"></param>
+        void AddReference(Reference address);
+
+        /// <summary>
+        /// Remove a address
+        /// </summary>
+        /// <param name="address"></param>
+        void RemoveReference(Reference address);
+
+        /// <summary>
+        /// Assign name record to this record
+        /// </summary>
+        /// <param name="record"></param>
+        /// <returns></returns>
+        INameRecord Assign(INameRecord record);
     }
 }

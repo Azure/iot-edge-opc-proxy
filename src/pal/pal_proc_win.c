@@ -64,6 +64,7 @@ int32_t pal_process_spawn(
             break;
 
         proc->si.cb = sizeof(proc->si);
+        __analysis_suppress(6335)
         if (!CreateProcessA(NULL, (LPSTR)STRING_c_str(proc->cmd_line),
             NULL, NULL, FALSE,
             CREATE_NEW_CONSOLE | NORMAL_PRIORITY_CLASS,

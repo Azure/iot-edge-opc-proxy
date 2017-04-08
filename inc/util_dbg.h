@@ -47,9 +47,12 @@ extern "C"
 
 #include "util_log.h"
 
+#define __analysis_suppress(w)
 #ifndef dbg_assert
 #if !defined(UNIT_TEST)
 #if defined(_MSC_VER)
+#undef __analysis_suppress
+#define __analysis_suppress(w) __pragma(warning(suppress: w))
 #define dbg_assert(cond, fmt, ...) \
     do { __analysis_assume(cond); \
     if (!(cond)) { log_error(NULL, "[!!! ASSERT !!!] " fmt, __VA_ARGS__); dbg_brk(); } \

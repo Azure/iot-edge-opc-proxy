@@ -256,7 +256,7 @@ namespace Opc.Ua.Bindings.Proxy
 
             ProxyMessageSocketAsyncEventArgs args = new ProxyMessageSocketAsyncEventArgs();
             args.UserToken = state;
-            args.m_args.SocketError = SocketError.Host_unknown;
+            args.m_args.SocketError = SocketError.HostUnknown;
 
             ProxySocket = new Socket(SocketType.Stream, ProtocolType.Tcp);
 
@@ -396,7 +396,9 @@ namespace Opc.Ua.Bindings.Proxy
                 BufferManager.UnlockBuffer(m_receiveBuffer);
             }
 
-            if (bytesRead == 0)
+            Utils.Trace("Bytes read: {0}", bytesRead);
+
+            if (bytesRead == 0 || e.SocketError != (int)SocketError.Success)
             {
                 // free the empty receive buffer.
                 if (m_receiveBuffer != null)
@@ -405,10 +407,13 @@ namespace Opc.Ua.Bindings.Proxy
                     m_receiveBuffer = null;
                 }
 
-                return ServiceResult.Good;
-            }
+                if (bytesRead == 0)
+                { 
+                    return ServiceResult.Create(StatusCodes.BadConnectionClosed, "Remote side closed connection");
+                }
 
-            // Utils.Trace("Bytes read: {0}", bytesRead);
+                return ServiceResult.Create(StatusCodes.BadTcpInternalError, "Error {0} on connection during receive", e.SocketError.ToString());
+            }
 
             m_bytesReceived += bytesRead;
 

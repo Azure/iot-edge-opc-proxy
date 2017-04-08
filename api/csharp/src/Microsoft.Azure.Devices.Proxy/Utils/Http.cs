@@ -46,7 +46,13 @@ namespace Microsoft.Azure.Devices.Proxy {
     }
 
     public class Http {
-        private HttpClient _client;
+        private readonly HttpClient _client;
+
+        public static readonly HttpMethod Patch = new HttpMethod("PATCH");
+        public static readonly HttpMethod Get = HttpMethod.Get;
+        public static readonly HttpMethod Put = HttpMethod.Put;
+        public static readonly HttpMethod Post = HttpMethod.Post;
+        public static readonly HttpMethod Delete = HttpMethod.Delete;
 
         /// <summary>
         /// Default constructor
@@ -62,16 +68,18 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="uri"></param>
         /// <param name="method"></param>
         /// <param name="addHeaders"></param>
+        /// <param name="queryHeaders"></param>
         /// <param name="ct"></param>
         /// <param name="payload"></param>
         /// <param name="contentType"></param>
         /// <returns></returns>
         public async Task<string> CallAsync(Uri uri, HttpMethod method,
-            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpResponseHeaders> queryHeaders,
+            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpStatusCode, HttpResponseHeaders> queryHeaders,
             CancellationToken ct, string payload = null, string contentType = null) {
             using (var msg = new HttpRequestMessage(method, uri)) {
-                if (addHeaders != null)
+                if (addHeaders != null) {
                     await addHeaders(msg.Headers).ConfigureAwait(false);
+                }
                 if (contentType == null) {
                     if (payload != null) {
                         msg.Content = new StringContent(payload);
@@ -85,36 +93,20 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
                 try { 
                     var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
+                    queryHeaders(resp.StatusCode, resp.Headers);
                     if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
                         throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
                     }
-                    queryHeaders(resp.Headers);
                     return await resp.Content.ReadAsStringAsync().ConfigureAwait(false); 
                 }
                 catch (TaskCanceledException ex) {
                     if (!ct.IsCancellationRequested) {
                         throw new TimeoutException("SendAsync timed out", ex);
                     }
-                    else {
-                        throw;
-                    }
+                    throw;
                 }
             }
         }
-
-        /// <summary>
-        /// Without cancellation token
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="method"></param>
-        /// <param name="addHeaders"></param>
-        /// <param name="payload"></param>
-        /// <param name="contentType"></param>
-        /// <returns></returns>
-        public Task<string> CallAsync(Uri uri, HttpMethod method,
-            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpResponseHeaders> queryHeaders,
-            string payload = null, string contentType = null) =>
-            CallAsync(uri, method, addHeaders, queryHeaders, CancellationToken.None, payload, contentType);
 
 
         /// <summary>
@@ -123,12 +115,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="uri"></param>
         /// <param name="method"></param>
         /// <param name="addHeaders"></param>
+        /// <param name="queryHeaders"></param>
         /// <param name="ct"></param>
         /// <param name="payload"></param>
         /// <param name="contentType"></param>
         /// <returns></returns>
         public async Task<Stream> StreamAsync(Uri uri, HttpMethod method,
-            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpResponseHeaders> queryHeaders,
+            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpStatusCode, HttpResponseHeaders> queryHeaders,
             CancellationToken ct, string payload = null, string contentType = null) {
             using (var msg = new HttpRequestMessage(method, uri)) {
                 if (addHeaders != null)
@@ -146,37 +139,19 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
                 try {
                     var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
-                    if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
+                    queryHeaders(resp.StatusCode, resp.Headers);
+                    if ((int)resp.StatusCode < 200 || (int)resp.StatusCode >= 300) {
                         throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
                     }
-                    else {
-                        queryHeaders(resp.Headers);
-                        return await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    }
+                    return await resp.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 }
                 catch (TaskCanceledException ex) {
                     if (!ct.IsCancellationRequested) {
                         throw new TimeoutException("SendAsync timed out", ex);
                     }
-                    else {
-                        throw;
-                    }
+                    throw;
                 }
             }
         }
-
-        /// <summary>
-        /// Without cancellation token
-        /// </summary>
-        /// <param name="uri"></param>
-        /// <param name="method"></param>
-        /// <param name="addHeaders"></param>
-        /// <param name="payload"></param>
-        /// <param name="contentType"></param>
-        /// <returns></returns>
-        public Task<Stream> StreamAsync(Uri uri, HttpMethod method,
-            Func<HttpRequestHeaders, Task> addHeaders, Action<HttpResponseHeaders> queryHeaders,
-            string payload = null, string contentType = null) =>
-            StreamAsync(uri, method, addHeaders, queryHeaders, CancellationToken.None, payload, contentType);
     }
 }

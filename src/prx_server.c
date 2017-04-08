@@ -389,32 +389,45 @@ static void prx_server_worker(
                     result = hashtable_iterator_remove(itr);
                     break;
 
-                case prx_server_socket_created:
                 case prx_server_socket_opened:
                     if (!timedout && !server->exit)
                         break;
-                    next->state = prx_server_socket_collect;
-                    if (timedout)
+
+                    next->state = prx_server_socket_created;
+                    if (timedout && !server->exit)
+                    {
                         log_info(next->log, "No activity on socket %p, closing...",
                             next);
 
-                    // Add close message now, if we run out of memory, continue
-                    result = io_message_create(next->message_pool,
-                        io_message_type_close, &next->id, &next->stream_id,
-                        &closerequest);
-                    if (result != er_ok)
-                    {
+                        // Add close message now, if we run out of memory, continue
+                        result = io_message_create(next->message_pool,
+                            io_message_type_close, &next->id, &next->stream_id,
+                            &closerequest);
+                        if (result == er_ok)
+                        {
+                            // add close response to receive queue and deliver all
+                            lock_enter(next->recv_lock);
+                            DList_InsertTailList(&next->recv_queue, &closerequest->link);
+                            lock_exit(next->recv_lock);
+                            prx_server_socket_deliver_results(next);
+                            next->last_activity = now;
+                            break;
+                        }
+
                         log_error(next->log, "Failed to create closerequest (%s)",
                             prx_err_string(result));
                     }
-                    else
+
+                    // Fall through
+                case prx_server_socket_created:
+                    if (!timedout && !server->exit)
+                        break;
+                    if (timedout && !server->exit)
                     {
-                        // add close response to receive queue and deliver all
-                        lock_enter(next->recv_lock);
-                        DList_InsertTailList(&next->recv_queue, &closerequest->link);
-                        lock_exit(next->recv_lock);
-                        prx_server_socket_deliver_results(next);
+                        log_info(next->log, "No activity on socket %p, destroying...",
+                            next);
                     }
+                    next->state = prx_server_socket_collect;
 
                     // Free send queue
                     lock_enter(next->send_lock);
@@ -429,8 +442,8 @@ static void prx_server_worker(
                         io_message_release(containingRecord(DList_RemoveHeadList(
                             &next->recv_queue), io_message_t, link));
                     lock_exit(next->recv_lock);
-                    // fall through
 
+                    // Fall through
                 case prx_server_socket_collect:
                     if (!next->sock)
                     {

@@ -49,9 +49,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Create real proxy socket based on passed socket description
         /// </summary>
-        /// <param name="family"></param>
-        /// <param name="sockType"></param>
-        /// <param name="protocolType"></param>
+        /// <param name="info"></param>
         /// <param name="provider"></param>
         /// <returns></returns>
         public static ProxySocket Create(SocketInfo info, IProvider provider) {
@@ -119,7 +117,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Perform excatly one or zero link handshakes with one of the passed proxies 
         /// and populate streams
         /// </summary>
-        /// <param name="proxies">The proxies (interfaces) to bind the link on</param>
+        /// <param name="proxy">The proxy to bind the link on</param>
         /// <param name="address">Address to connect to, or null if proxy bound</param>
         /// <param name="ct">Cancels operation</param>
         /// <returns></returns>
@@ -201,6 +199,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             }
 
             var linkResponse = response.Content as LinkResponse;
+            if (linkResponse == null) {
+                ProxyEventSource.Log.LinkFailure(this, proxy.Name, Info, response, null);
+                return null;
+            }
 
             // now create local link and open link for streaming
             var link = new ProxyLink(this, proxy, linkResponse.LinkId,
@@ -226,51 +228,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 ProxyEventSource.Log.LinkFailure(this, proxy.Name, Info.Address, null, e);
             }
             return null;
-        }
-
-        /// <summary>
-        /// Returns records for socket address
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        protected async Task<IEnumerable<INameRecord>> LookupRecordsForAddressAsync(
-            SocketAddress address, CancellationToken ct) {
-            if (address.Family == AddressFamily.Proxy) {
-                return await Provider.NameService.LookupAsync(
-                    ((ProxySocketAddress)address).Host, 
-                        RecordType.Proxy, ct).ConfigureAwait(false);
-            }
-            else if (address.Family == AddressFamily.InterNetworkV6) {
-                return await Provider.NameService.LookupAsync(
-                    ((Inet6SocketAddress)address).ToReference(), 
-                        RecordType.Proxy, ct).ConfigureAwait(false);
-            }
-            else {
-                throw new NotSupportedException("Can only bind to proxy reference");
-            }
-        }
-
-        /// <summary>
-        /// Returns a proxy socket address for a user provided socket address by
-        /// e.g. translating id into name.  Returns proxy socket address as is.
-        /// </summary>
-        /// <param name="address"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        protected async Task<SocketAddress> TranslateAddressAsync(
-            SocketAddress address, CancellationToken ct) {
-            if (address.Family != AddressFamily.InterNetwork &&
-                address.Family != AddressFamily.InterNetworkV6) {
-                return address;
-            }
-
-            var records = await LookupRecordsForAddressAsync(address, ct).ConfigureAwait(false);
-            if (!records.Any()) {
-                return address; // Try our luck with the original address
-            }
-            return new ProxySocketAddress(
-                records.First().Name, ((InetSocketAddress)address).Port);
         }
 
         /// <summary>
@@ -380,10 +337,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             // Fill receive queue from any of the link's receive queue.  If queue is empty
             // replenish it from all streams...
-            Message message;
             while (true) {
                 foreach (var link in Links) {
-                    while (link.ReceiveQueue.TryDequeue(out message)) {
+                    Message message;
+                    var queue = link.ReceiveQueue;
+                    if (queue == null) {
+                        throw new SocketException(SocketError.Closed);
+                    }
+                    while (queue.TryDequeue(out message)) {
                         if (message.TypeId == MessageContent.Close) {
                             // Remote side closed, close link
                             Links.Remove(link);
@@ -391,7 +352,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                                 await link.CloseAsync(CancellationToken.None).ConfigureAwait(false);
                             }
                             catch { }
-
                             if (!Links.Any()) {
                                 throw new SocketException("Remote side closed",
                                     null, SocketError.Closed);
@@ -435,9 +395,22 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 throw new SocketException(e);
             }
         }
-        
-        public abstract Task BindAsync(
-            SocketAddress endpoint, CancellationToken ct);
+
+        /// <summary>
+        /// Select the proxy to bind to
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public virtual async Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
+            // Proxy selected, look up name records for the proxy address
+            var bindList = await Provider.NameService.LookupAsync(
+                endpoint.ToString(), RecordType.Proxy, ct).ConfigureAwait(false);
+            _bindList = bindList;
+            if (!_bindList.Any()) {
+                throw new SocketException(SocketError.NoAddress);
+            }
+        }
 
         public abstract Task ConnectAsync(
             SocketAddress address, CancellationToken ct);
@@ -445,6 +418,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public abstract Task ListenAsync(
             int backlog, CancellationToken ct);
 
+        /// <summary>
+        /// Returns a string that represents the socket.
+        /// </summary>
+        /// <returns>A string that represents the socket.</returns>
+        public override string ToString() {
+            return $"Socket {Id} : {Info}";
+        }
 
         //
         // Helper to throw if error code is not success
@@ -460,6 +440,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             }
         }
 
-        private Dictionary<SocketOption, ulong> _optionCache = new Dictionary<SocketOption, ulong>();
+        protected IEnumerable<INameRecord> _bindList;
+        private readonly Dictionary<SocketOption, ulong> _optionCache = 
+            new Dictionary<SocketOption, ulong>();
     }
 }

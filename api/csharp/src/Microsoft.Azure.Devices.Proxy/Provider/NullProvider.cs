@@ -29,7 +29,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Initialize default provider
         /// </summary>
-        /// <param name="iothub"></param>
         /// <returns></returns>
         public static IProvider Create() {
             var iothub = Environment.GetEnvironmentVariable("_HUB_CS");

@@ -958,7 +958,7 @@ static int32_t pal_socket_async_connect_begin(
 )
 {
     int32_t result;
-    DWORD error;
+    DWORD error, tmp;
 
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
@@ -984,7 +984,7 @@ static int32_t pal_socket_async_connect_begin(
         
         if (!_ConnectEx(async_op->sock->sock_fd,
             (const struct sockaddr*)async_op->addr_buf, (int)async_op->addr_len,
-            NULL, 0, NULL, &async_op->ov))
+            NULL, 0, &tmp, &async_op->ov))
         {
             error = WSAGetLastError();
             if (error == ERROR_IO_PENDING)
@@ -1422,6 +1422,7 @@ int32_t pal_socket_getsockopt(
 
     if (socket_option == prx_so_available)
     {
+        avail = 0;
         result = ioctlsocket(sock->sock_fd, FIONREAD, &avail);
         if (result == SOCKET_ERROR)
             return pal_os_last_net_error_as_prx_error();

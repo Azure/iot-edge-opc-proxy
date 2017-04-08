@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(Object that) {
+        public override bool Equals(object that) {
             return Equals(that as SocketInfo);
         }
 
@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             str.Append("\nFamily:   "); str.Append(Family);
             str.Append("\nAddress:  "); str.Append(Address);
             str.Append("\nFlags:    "); str.Append(Flags);
-            str.Append("\nOptions:\n"); str.Append(Options);
+        //  str.Append("\nOptions:\n"); str.Append(Options);
             str.Append("\n");
             return str.ToString();
         }
@@ -116,7 +116,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public override int GetHashCode() {
             return
                 Address.GetHashCode() ^
-            //    Options.GetHashCode() ^
+        //      Options.GetHashCode() ^
                 Flags.GetHashCode() ^
                 Family.GetHashCode() ^
                 Protocol.GetHashCode() ^

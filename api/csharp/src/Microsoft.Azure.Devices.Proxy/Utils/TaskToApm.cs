@@ -26,7 +26,7 @@ namespace System.Threading.Tasks {
             IAsyncResult asyncResult;
             if (task.IsCompleted) {
                 // Synchronous completion.
-                asyncResult = new TaskWrapperAsyncResult(task, state, completedSynchronously: true);
+                asyncResult = new TaskWrapperAsyncResult(task, state, true);
                 if (callback != null) {
                     callback(asyncResult);
                 }

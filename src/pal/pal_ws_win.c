@@ -1053,7 +1053,7 @@ int32_t pal_wsclient_connect(
                 WINHTTP_OPTION_CLIENT_CERT_CONTEXT, NULL, 0) ||
             !WinHttpSetOption(wsclient->h_request,
                 WINHTTP_OPTION_CONNECT_RETRIES, &max_retries, sizeof(DWORD)) ||
-            !WinHttpSetOption(wsclient->h_request, 
+            __analysis_suppress(6387) !WinHttpSetOption(wsclient->h_request,
                 WINHTTP_OPTION_UPGRADE_TO_WEB_SOCKET, NULL, 0) ||
             !WinHttpSetTimeouts(wsclient->h_request, 0, 0, 0, 0))
         {
