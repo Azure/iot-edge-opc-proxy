@@ -27,7 +27,11 @@ int32_t pal_os_to_prx_gai_error(
         return er_retry;
     case EAI_BADFLAGS:      
         return er_bad_flags;
-    case EAI_FAMILY:       
+    case EAI_FAMILY:
+#ifdef EAI_ADDRFAMILY
+        // EAI_ADDRFAMILY is defined in netdb.h if __USE_GNU is defined
+    case EAI_ADDRFAMILY:
+#endif
         return er_address_family;
     case EAI_NONAME:     
         return er_host_unknown;
@@ -938,6 +942,7 @@ int32_t pal_getaddrinfo(
     *prx_ai_count = 0;
     *prx_ai = NULL;
 
+    log_info(NULL, "getaddrinfo for \"%s\", \"%s\" family: %d",address,service,family);
     // Get all address families and the canonical name
     memset(&hint, 0, sizeof(hint));
 
@@ -956,6 +961,21 @@ int32_t pal_getaddrinfo(
         if (result == 0)
             break;
 
+        // Workaround for issue #32
+        // The connect message wants always AF_INET even if the requested
+        // address is an IPv6 address
+        if (
+#ifdef EAI_ADDRFAMILY
+            (result == EAI_ADDRFAMILY) ||
+#endif
+            (family == EAI_FAMILY))
+        {
+            if (hint.ai_family == AF_INET)
+            {
+                hint.ai_family = AF_INET6;
+                continue; // try again with IPv6, if IPv4 has failed
+            }
+        }
         // Intermittent dns outages can result in E_AGAIN, try 3 times
 #define GAI_MAX_ATTEMPTS 3
         if (result != EAI_AGAIN || attempt++ >= GAI_MAX_ATTEMPTS)
