@@ -958,6 +958,17 @@ int32_t pal_getaddrinfo(
         if (result == 0)
             break;
 
+        // Workaround for issue #32
+        // The connect message wants always AF_INET even if the requested
+        // address is an IPv6 address
+        if ((result == EAI_ADDRFAMILY) || (family == EAI_FAMILY))
+        {
+            if (hint.ai_family == AF_INET)
+            {
+                hint.ai_family = AF_INET6;
+                continue; // try again with IPv6, if IPv4 has failed
+            }
+        }
         // Intermittent dns outages can result in E_AGAIN, try 3 times
 #define GAI_MAX_ATTEMPTS 3
         if (result != EAI_AGAIN || attempt++ >= GAI_MAX_ATTEMPTS)
