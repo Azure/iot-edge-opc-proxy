@@ -27,7 +27,8 @@ int32_t pal_os_to_prx_gai_error(
         return er_retry;
     case EAI_BADFLAGS:      
         return er_bad_flags;
-    case EAI_FAMILY:       
+    case EAI_FAMILY:
+    case EAI_ADDRFAMILY:
         return er_address_family;
     case EAI_NONAME:     
         return er_host_unknown;
