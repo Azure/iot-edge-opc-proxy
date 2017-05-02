@@ -28,7 +28,10 @@ int32_t pal_os_to_prx_gai_error(
     case EAI_BADFLAGS:      
         return er_bad_flags;
     case EAI_FAMILY:
+#ifdef EAI_ADDRFAMILY
+        // EAI_ADDRFAMILY is defined in netdb.h if __USE_GNU is defined
     case EAI_ADDRFAMILY:
+#endif
         return er_address_family;
     case EAI_NONAME:     
         return er_host_unknown;
@@ -961,7 +964,11 @@ int32_t pal_getaddrinfo(
         // Workaround for issue #32
         // The connect message wants always AF_INET even if the requested
         // address is an IPv6 address
-        if ((result == EAI_ADDRFAMILY) || (family == EAI_FAMILY))
+        if (
+#ifdef EAI_ADDRFAMILY
+            (result == EAI_ADDRFAMILY) ||
+#endif
+            (family == EAI_FAMILY))
         {
             if (hint.ai_family == AF_INET)
             {
