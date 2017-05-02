@@ -938,6 +938,7 @@ int32_t pal_getaddrinfo(
     *prx_ai_count = 0;
     *prx_ai = NULL;
 
+    log_info(NULL, "getaddrinfo for \"%s\", \"%s\" family: %d",address,service,family);
     // Get all address families and the canonical name
     memset(&hint, 0, sizeof(hint));
 
