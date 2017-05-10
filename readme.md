@@ -1,9 +1,8 @@
 This project has adopted the Microsoft Open Source Code of Conduct. For more information see the Code of Conduct FAQ or contact opencode@microsoft.com with any additional questions or comments.
 
-# Azure IoT Field Gateway OPC-UA-Proxy Module
+# Azure IoT Edge OPC Proxy Module
 
-This module is a OPC-UA command and control proxy for Azure IoT written in C and intended to be hosted in an Edge Gateway built using the
-[Azure IoT Gateway SDK](https://github.com/Azure/azure-iot-gateway-sdk).  
+This module is a OPC-UA command and control proxy for Azure IoT written in C and intended to be hosted in an Edge Gateway built using Azure IoT Edge.
 
 It can tunnel binary channel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local
 network gateways to a server in the local network.  It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name 
@@ -21,7 +20,7 @@ Visit http://azure.com/iotdev to learn more about developing applications for Az
 |------|-------------|
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-opc-ua-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-gateway-opc-ua-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-gateway-opc-ua-proxy)|
 
-The Azure IoT Field Gateway Proxy module depends on several components which are included as submodules. Hence, if you did
+The Azure IoT Edge OPC Proxy module depends on several components which are included as submodules. Hence, if you did
 not specify the ```--recursive``` option when using ```git clone``` to clone this repo, you need to first run 
 ```git submodule update --init``` in a console or terminal window before continuing...
 
@@ -50,10 +49,10 @@ The Proxy module was successfully built and tested on Windows 10 with Visual Stu
 
 Run the build script with the ```--help``` option to see all configuration options available.
 
-# Azure IoT Gateway SDK compatibility
-The current version of the Proxy module is targeted at the Azure IoT Gateway SDK 2016-12-16 version.
+# Azure IoT Edge compatibility
+The current version of the Proxy module is targeted at the Azure IoT Edge 2016-12-16 version.
 
-Use the following command line to clone the compatible version Azure IoT Gateway SDK, then follow the build instructions included:
+Use the following command line to clone the compatible version Azure IoT Edge, then follow the build instructions included:
 ```
 git clone -b "2016-12-16" --recursive https://github.com/Azure/azure-iot-gateway-sdk.git
 ```
