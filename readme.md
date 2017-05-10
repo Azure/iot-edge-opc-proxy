@@ -72,7 +72,7 @@ For simplicity, the default Iot Hub provider used by most of the samples reads t
 
 ## Proxy Host 
 
-While the Proxy module can be hosted by a Gateway built using the Field gateway SDK, the ```proxyd``` executable is an 
+While the Proxy module can be hosted by a Gateway built using Azure IoT Edge, the ```proxyd``` executable is an 
 alternative host which can be configured from the command line.  An IoT Hub connection string can be provided via the 
 ```-c```, ```-C``` or ```-s``` command line arguments or through the ```_HUB_CS ``` environment variable (which allows you 
 to run the host without any command line arguments).   
