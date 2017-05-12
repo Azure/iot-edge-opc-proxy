@@ -18,7 +18,7 @@ Visit http://azure.com/iotdev to learn more about developing applications for Az
 
 |Branch|Status|
 |------|-------------|
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-edge-opc-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-opc-ua-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
 
 The Azure IoT Edge OPC Proxy module depends on several components which are included as submodules. Hence, if you did
 not specify the ```--recursive``` option when using ```git clone``` to clone this repo, you need to first run 
