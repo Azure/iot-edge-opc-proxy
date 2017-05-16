@@ -70,6 +70,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 Host = host;
                 break;
             }
+
             // If there is no host in the registry, create a fake host record for this address
             if (Host == null) {
                 Host = new Record(RecordType.Host, address.ToString());
@@ -86,7 +87,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 foreach (var proxyRef in Host.References) {
                     var results = await Provider.NameService.LookupAsync(
                         proxyRef, RecordType.Proxy, ct).ConfigureAwait(false);
-                    bindList.AddRange(bindList);
+                    bindList.AddRange(results);
                 }
                 _bindList = bindList.Any() ? bindList : null;
             }

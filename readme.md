@@ -91,7 +91,7 @@ A docker container that contains the proxy module host can be built and run dire
 so already, install docker on your machine, then in a terminal or console window, run:
 
 ```
-docker build -t <tag> https://github.com/Azure/iot-gateway-proxy
+docker build -t <tag> https://github.com/Azure/iot-edge-opc-proxy.git
 docker run <tag> <commandlineargs>
 ```
 

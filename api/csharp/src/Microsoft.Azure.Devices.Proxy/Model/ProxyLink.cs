@@ -102,19 +102,20 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <summary>
         /// Receive queue from stream to read from
         /// </summary>
-        public ConcurrentQueue<Message> ReceiveQueue {
-            get {
-                return _stream.ReceiveQueue;
-            }
-        }
+        public ConcurrentQueue<Message> ReceiveQueue => 
+            _stream?.ReceiveQueue;
 
         /// <summary>
         /// Receive more on link stream
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task ReceiveAsync(CancellationToken ct) =>
-            _stream.ReceiveAsync(ct);
+        public async Task ReceiveAsync(CancellationToken ct) {
+            if (_stream == null) {
+                throw new SocketException(SocketError.Closed);
+            }
+            await _stream.ReceiveAsync(ct);
+        }
 
         /// <summary>
         /// Forward cloned message through this link
@@ -122,8 +123,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="message"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task SendAsync(Message message, CancellationToken ct) =>
-            _stream.SendAsync(new Message(_streamId, RemoteId, Proxy.Address, message.Content), ct);
+        public async Task SendAsync(Message message, CancellationToken ct) {
+            if (_stream == null) {
+                throw new SocketException(SocketError.Closed);
+            }
+            await _stream.SendAsync(new Message(
+                _streamId, RemoteId, Proxy.Address, message.Content), ct);
+        }
 
 
         /// <summary>

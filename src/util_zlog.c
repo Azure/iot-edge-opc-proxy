@@ -49,8 +49,9 @@ int32_t zlog_set_log_file(
 {
     int32_t result;
     char* config;
-    static const char* pre_config = ZLOG_DEFAULT_CONFIG "*.debug \"";
-    static const char* post_config = "\",1M*3 \n";
+    static const char* pre_config = ZLOG_DEFAULT_CONFIG "*.!debug \"";
+    static const char* size_config = "\", 10MB * 3 ~ \"";
+    static const char* post_config = ".#r\"\n";
 
     config = (char*)malloc(
         strlen(pre_config) + strlen(file_name) + strlen(post_config) + 1);
@@ -59,6 +60,8 @@ int32_t zlog_set_log_file(
     do
     {
         strcpy(config, pre_config);
+        strcat(config, file_name);
+        strcpy(config, size_config);
         strcat(config, file_name);
         strcat(config, post_config);
 

@@ -156,7 +156,7 @@ TEST_FUNCTION(io_ref_from_string__success_1)
 // 
 TEST_FUNCTION(io_ref_from_string__success_2)
 {
-    static const char* k_string_valid = "{some_uuid_with_braces}";
+    static const char* k_string_valid = "{3231F694-589F-48C2-944E-49E36BAC2056}";
     io_ref_t ref_valid;
     int32_t result;
 
@@ -180,7 +180,8 @@ TEST_FUNCTION(io_ref_from_string__success_2)
 // 
 TEST_FUNCTION(io_ref_from_string__success_3)
 {
-    static const char* k_string_valid = "some_ipv6ref_without_braces";
+    static const char* k_string_valid = 
+        "00000000000000000000000000000000000000000000000000000000000000";
     io_ref_t ref_valid;
     prx_socket_address_t mock_sa;
     int32_t result;
@@ -209,7 +210,7 @@ TEST_FUNCTION(io_ref_from_string__success_3)
 // 
 // Test io_ref_from_string passing as string argument an invalid const char* value 
 // 
-TEST_FUNCTION(io_ref_from_string__arg_string_invalid)
+TEST_FUNCTION(io_ref_from_string__arg_string_invalid_1)
 {
     io_ref_t ref_valid;
     int32_t result;
@@ -222,6 +223,26 @@ TEST_FUNCTION(io_ref_from_string__arg_string_invalid)
     // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test io_ref_from_string passing as string argument an invalid const char* value 
+// 
+TEST_FUNCTION(io_ref_from_string__arg_string_invalid_2)
+{
+    static const char* k_string_invalid =
+        "000000000000000000000000000000000000000000000000000000000000001";
+    io_ref_t ref_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = io_ref_from_string(k_string_invalid, &ref_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 // 
@@ -1134,6 +1155,7 @@ TEST_FUNCTION(io_decode_ref__success_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x23654;
+    static const char* k_string_valid = "some_uuid_without_braces";
     static uint64_t k_val_0 = 1;
     static uint64_t k_val_1 = 2;
 
@@ -1149,8 +1171,8 @@ TEST_FUNCTION(io_decode_ref__success_2)
         .CopyOutArgumentBuffer_string(&k_string_handle_valid, sizeof(k_string_handle_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(STRING_c_str(k_string_handle_valid))
-        .SetReturn(UT_MEM);
-    STRICT_EXPECTED_CALL(string_to_uuid(UT_MEM, ref_valid.un.u8))
+        .SetReturn(k_string_valid);
+    STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
     STRICT_EXPECTED_CALL(io_decode_type_end(k_ctx_valid))
@@ -1210,6 +1232,7 @@ TEST_FUNCTION(io_decode_ref__neg_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x23654;
+    static const char* k_string_valid = "some_uuid_without_braces";
     static uint64_t k_val_0 = 1;
     static uint64_t k_val_1 = 2;
 
@@ -1229,9 +1252,9 @@ TEST_FUNCTION(io_decode_ref__neg_2)
         .SetReturn(er_ok)
         .SetFailReturn(er_invalid_format);
     STRICT_EXPECTED_CALL(STRING_c_str(k_string_handle_valid))
-        .SetReturn(UT_MEM)
-        .SetFailReturn(UT_MEM);
-    STRICT_EXPECTED_CALL(string_to_uuid(UT_MEM, ref_valid.un.u8))
+        .SetReturn(k_string_valid)
+        .SetFailReturn(k_string_valid);
+    STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
         .SetReturn(er_ok)
         .SetFailReturn(er_ok);
     STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));

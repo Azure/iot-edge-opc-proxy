@@ -70,7 +70,7 @@ static void service_status_cb_dummy(
     switch (state)
     {
     case service_status_init:
-        printf("=== Azure IoT Proxy Gateway === \n");
+        printf("=== " MODULE_NAME " " MODULE_VERSION " === \n");
         break;
     case service_status_deinit:
         printf("Proxy exits... Goodbye!\n");

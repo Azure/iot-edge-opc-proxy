@@ -40,7 +40,8 @@ io_dynamic_buffer_stream_t;
 typedef struct io_file_stream
 {
     io_stream_t itf;           // codec stream interface
-    void* fd;
+    void* in_fd;
+    void* out_fd;
 }
 io_file_stream_t;
 
@@ -69,8 +70,8 @@ decl_internal_3(io_stream_t*, io_dynamic_buffer_stream_init,
 //
 decl_internal_3(io_stream_t*, io_file_stream_init,
     io_file_stream_t*, fs,
-    const char*, file_name,
-    const char*, mode
+    const char*, in_file,
+    const char*, out_file
 );
 
 #endif // _util_stream_h_

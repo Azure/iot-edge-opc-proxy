@@ -17,7 +17,7 @@ int32_t pal_cred_init(
     void
 )
 {
-    log_error(NULL, "Pal does not provide credential storage support. "
+    log_info(NULL, "Pal does not provide credential storage support. "
         "Ensure you properly safeguard all secrets on this device!");
 
     //

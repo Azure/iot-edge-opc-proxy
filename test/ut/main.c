@@ -1,5 +1,9 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#if !defined(NO_LOGGING)
 #define NO_LOGGING
+#endif
 #include "util_mem.h"
 
 #if _WIN32
