@@ -13,7 +13,7 @@
 #endif
 
 #if !defined(MODULE_REL_VER)
-#define MODULE_REL_VER 3
+#define MODULE_REL_VER 4
 #endif
 
 #if !defined(SCM_VERSION)
@@ -31,6 +31,6 @@
     "." _TOSTRING(MODULE_REL_VER) \
     "." SCM_VERSION
 
-#define MODULE_NAME "iot-gateway-proxy"
+#define MODULE_NAME "iot-edge-reverse-proxy"
 
 #endif // _version_h_

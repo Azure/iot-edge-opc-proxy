@@ -75,7 +75,7 @@ static void prx_module_destroy(
 }
 
 //
-// Creates a proxy module instance to be managed by field gateway
+// Creates a proxy module instance to be managed by edge
 //
 static prx_module_t* prx_module_create(
     broker_handle_t* broker,
@@ -135,7 +135,7 @@ static void prx_module_start(
 }
 
 //
-// Callback when field gateway received message 
+// Callback when edge received message 
 //
 static void prx_module_receive(
     prx_module_t* module,

@@ -39,6 +39,8 @@ static const char* prx_config_key_name(
         return "token_ttl";
     case prx_config_key_policy_import:
         return "policy_import";
+    case prx_config_key_log_telemetry:
+        return "log_telemetry";
     case prx_config_key_max:
     default:
         return NULL;

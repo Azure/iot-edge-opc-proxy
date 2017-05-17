@@ -565,12 +565,19 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         if (result != er_ok)
             break;
 
-        connection->log_stream = log_stream_get();
-        if (!connection->log_stream)
-            log_error(connection->log, "Failed to create telemetry log stream (%s).",
-                prx_err_string(result));
-        else // Start sending initial logs
-            __do_next(connection, io_iot_hub_umqtt_server_transport_send_telemetry);
+        if (__prx_config_get_int(prx_config_key_log_telemetry, 0))
+        {
+            connection->log_stream = log_stream_get();
+            if (!connection->log_stream)
+                log_error(connection->log, "Failed to create telemetry log stream (%s).",
+                    prx_err_string(result));
+            else
+            {
+                // Start sending initial logs
+                __do_next(connection,
+                    io_iot_hub_umqtt_server_transport_send_telemetry);
+            }
+        }
 
         STRING_delete(path);
         path = NULL;

@@ -56,31 +56,44 @@ int32_t io_ref_from_string(
 {
     int32_t result;
     prx_socket_address_t sa;
+    size_t len;
+    char *ptr, copy[64];
+
     chk_arg_fault_return(string);
     chk_arg_fault_return(ref);
 
-    // Trim any curly braces for convinience
-    if (string[0] == '{')
+    // Artificially limit length to fit copy buffer
+    len = strlen(string);
+    if (len >= sizeof(copy) - 1)
     {
-        char copy[128];
-        strcpy(copy, string + 1);
-        string_trim_back(copy, "}");
-        return io_ref_from_string(copy, ref);
+        log_error(NULL, "Reference string too long (%d)!", len);
+        return er_arg;
     }
 
-    result = string_to_uuid(string, ref->un.u8);
+    // Copy to local buffer
+    strcpy(copy, string);
+    ptr = copy;
+
+    // Trim any curly braces from local buffer for convinience
+    if (copy[0] == '{')
+    {
+        ptr++;
+        string_trim_back(copy, "}");
+    }
+
+    result = string_to_uuid(ptr, ref->un.u8);
     if (result == er_ok)
         return result;
     
-    result = pal_pton(string, &sa);
+    result = pal_pton(ptr, &sa);
     if (result == er_ok)
     {
         result = io_ref_from_prx_socket_address(&sa, ref);
         if (result == er_ok)
             return result;
     }
-
-    log_error(NULL, "%s is not an ref string (%s).",
+    
+    log_error(NULL, "Invalid reference string %s passed (%s).",
         string, prx_err_string(result));
     return result;
 }

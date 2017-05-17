@@ -52,7 +52,7 @@ struct prx_host
     DLIST_ENTRY modules;                  // List of modules managed by host
     bool running;
     signal_t* exit_signal;                // Allows waiting for host to exit
-    prx_module_api_t* module;      // entry points to manage gateway modules
+    prx_module_api_t* module;         // entry points to manage edge modules
     log_t log;
 };
 
@@ -239,7 +239,7 @@ static int32_t prx_host_init_from_command_line(
         { "proxy-pwd",                  required_argument,      NULL, 'y' },
         { "token-ttl",                  required_argument,      NULL, 't' },
 #if defined(DEBUG)
-        { "test",                       required_argument,      NULL, 'T' },
+        { "test",                       required_argument,      NULL, '<' },
 #endif
         { 0,                            0,                      NULL,  0  }
     };
@@ -250,7 +250,7 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwdhvs:n:c:l:L:C:H:D:p:x:y:t:T:",
+            c = getopt_long(argc, argv, "iuwdhvTs:n:c:l:L:C:H:D:p:x:y:t:<:",
                 long_options, &option_index);
             if (c == -1)
                 break;
@@ -281,13 +281,16 @@ static int32_t prx_host_init_from_command_line(
                 {
                     if (!atoi(&optarg[c]))
                     {
-                        printf("ERROR: Bad arg for --proxy option (%s). \n\n",
+                        printf("ERROR: Bad arg for --proxy option (%.128s). \n\n",
                             optarg ? optarg : "");
                         result = er_arg;
                         break;
                     }
                     __prx_config_set(prx_config_key_proxy_port, &optarg[c]);
                 }
+                break;
+            case 'T':
+                __prx_config_set(prx_config_key_log_telemetry, optarg);
                 break;
             case 'x':
                 __prx_config_set(prx_config_key_proxy_user, optarg);
@@ -316,14 +319,14 @@ static int32_t prx_host_init_from_command_line(
                 printf("Version: <UNKNOWN>\n");
 #endif
                 break;
-            case 'T':
+            case '<':
                 is_test = true;
                 if (!optarg)
                     break;
                 loops = atoi(optarg);
                 if (!loops)
                 {
-                    printf("ERROR: Bad arg for --test option (%s). \n\n",
+                    printf("ERROR: Bad arg for --test option (%.128s). \n\n",
                         optarg ? optarg : "");
                     result = er_arg;
                 }
@@ -378,13 +381,13 @@ static int32_t prx_host_init_from_command_line(
                 result = io_cs_create_from_raw_file(optarg, &cs);
                 if (result != er_ok)
                     printf("ERROR: Failed to load iothubowner connection string from "
-                        "--connection-string-file '%s' arg. \n\n", optarg ? optarg : "");
+                        "--connection-string-file '%.128s' arg. \n\n", optarg ? optarg : "");
                 break;
             case 'H':
                 result = prx_ns_iot_hub_create(optarg, &host->remote);
                 if (result != er_ok)
                     printf("ERROR: Failed to load iot hub registry from "
-                        "--hub-config-file '%s' arg. \n\n", optarg ? optarg : "");
+                        "--hub-config-file '%.128s' arg. \n\n", optarg ? optarg : "");
                 break;
             case 'L':
                 log_config = optarg;
@@ -633,10 +636,11 @@ static int32_t prx_host_init_from_command_line(
     printf(" -p, --proxy <host:port>  Local web proxy to use for all outbound traffic, \n");
     printf("                    with user name and password if required.               \n");
 #if !defined(NO_ZLOG)                                                              
-    printf(" -l, --log-file     A file to log to using standard formatting.            \n");
+    printf(" -l, --log-file <file-name>  A file to log to using standard formatting.   \n");
     printf(" -L, --log-config-file <file-name>  For more advanced settings, the log    \n");
     printf("                    configuration file to use. Defaults to ./log.config.   \n");
 #endif                                                                             
+    printf(" -T, --log-telemetry  Send log output to telemetry event hub endpoint.     \n");
     printf(" -t, --token-ttl <time-to-live-in-seconds>  for all sas tokens provided to \n");
     printf("                    Azure, if you prefer a value different from default.   \n");
     printf(" -i, --install      Installs a proxy server in the IoT Hub device registry \n");

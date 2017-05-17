@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public Reference Address {
             get {
                 var addr = this[_addressTag];
-                return addr == null ? null : Reference.Parse(addr);
+                return addr == null ? Reference.Null : Reference.Parse(addr);
             }
             set {
                 // Do not update an existing address...
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         public string Name {
             get {
-                return this[_nameTag];
+                return this[_nameTag] ?? "";
             }
             set {
                 this[_nameTag] = value;

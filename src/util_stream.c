@@ -171,10 +171,9 @@ static int32_t io_file_stream_reader(
     dbg_assert_ptr(read);
     dbg_assert_ptr(data);
     dbg_assert_ptr(fs);
+    dbg_assert_ptr(fs->in_fd);
 
-    if (!fs->fd)
-        return er_disk_io;
-    *read = fread(data, 1, count, (FILE*)fs->fd);
+    *read = fread(data, 1, count, (FILE*)fs->in_fd);
     if (*read < 1)
         return er_reading;
     return er_ok;
@@ -192,9 +191,9 @@ static int32_t io_file_stream_writer(
     io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(data);
     dbg_assert_ptr(fs);
-    if (!fs->fd)
-        return er_disk_io;
-    if (1 > fwrite(data, 1, count, (FILE*)fs->fd))
+    dbg_assert_ptr(fs->out_fd);
+
+    if (1 > fwrite(data, 1, count, (FILE*)fs->out_fd))
         return er_writing;
     return er_ok;
 }
@@ -209,12 +208,12 @@ static size_t io_file_stream_readable(
     io_file_stream_t* fs = (io_file_stream_t*)context;
     long pos, avail;
     dbg_assert_ptr(fs);
-    if (!fs->fd)
-        return 0;
-    pos = ftell((FILE*)fs->fd);
-    fseek((FILE*)fs->fd, 0L, SEEK_END);
-    avail = ftell((FILE*)fs->fd);
-    fseek((FILE*)fs->fd, pos, SEEK_SET);
+    dbg_assert_ptr(fs->in_fd);
+
+    pos = ftell((FILE*)fs->in_fd);
+    fseek((FILE*)fs->in_fd, 0L, SEEK_END);
+    avail = ftell((FILE*)fs->in_fd);
+    fseek((FILE*)fs->in_fd, pos, SEEK_SET);
 
     return (size_t)(avail - pos);
 }
@@ -240,7 +239,9 @@ static int32_t io_file_stream_reset(
     io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(fs);
 
-    if (0 == ftell((FILE*)fs->fd))
+    if (fs->in_fd)
+        (void)fseek((FILE*)fs->in_fd, 0, SEEK_SET);
+    if (!fs->out_fd || 0 == ftell((FILE*)fs->out_fd))
         return er_ok;
 
     //
@@ -259,7 +260,10 @@ static void io_file_stream_close(
 {
     io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(fs);
-    fclose((FILE*)fs->fd);
+    if (fs->out_fd)
+        fclose((FILE*)fs->out_fd);
+    if (fs->in_fd)
+        fclose((FILE*)fs->in_fd);
 }
 
 //
@@ -336,27 +340,60 @@ io_stream_t* io_dynamic_buffer_stream_init(
 //
 io_stream_t* io_file_stream_init(
     io_file_stream_t* fs,
-    const char* file_name,
-    const char* mode
+    const char* in_file,
+    const char* out_file
 )
 {
-    fs->fd = fopen(file_name, mode);
-    if (!fs->fd)
+    if (!in_file && !out_file)
         return NULL;
+
     fs->itf.context =
         fs;
-    fs->itf.read =
-        io_file_stream_reader;
-    fs->itf.readable =
-        io_file_stream_readable;
-    fs->itf.write =
-        io_file_stream_writer;
-    fs->itf.writeable =
-        io_file_stream_writeable;
     fs->itf.reset =
         io_file_stream_reset;
     fs->itf.close =
         io_file_stream_close;
+    fs->itf.read =
+        NULL;
+    fs->itf.readable =
+        NULL;
+    fs->in_fd = 
+        NULL;
+    fs->out_fd = 
+        NULL;
+    fs->itf.write =
+        NULL;
+    fs->itf.writeable =
+        NULL;
+
+    if (in_file)
+    {
+        fs->in_fd = fopen(in_file, "r");
+        if (!fs->in_fd)
+        {
+            io_file_stream_close(fs);
+            return NULL;
+        }
+        fs->itf.read =
+            io_file_stream_reader;
+        fs->itf.readable =
+            io_file_stream_readable;
+    }
+
+    if (out_file)
+    {
+        fs->out_fd = fopen(out_file, "w");
+        if (!fs->out_fd)
+        {
+            io_file_stream_close(fs);
+            return NULL;
+        }
+        fs->itf.write =
+            io_file_stream_writer;
+        fs->itf.writeable =
+            io_file_stream_writeable;
+    }
+
     return &fs->itf;
 }
 

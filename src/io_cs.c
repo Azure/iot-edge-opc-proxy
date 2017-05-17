@@ -552,7 +552,7 @@ int32_t io_cs_create_from_raw_file(
             result = er_not_found;
             break;
         }
-        stream = io_file_stream_init(&fs, real_file, "r");
+        stream = io_file_stream_init(&fs, real_file, NULL);
         if (!stream)
         {
             result = er_reading;

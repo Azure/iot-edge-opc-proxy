@@ -629,7 +629,7 @@ static int32_t prx_ns_generic_registry_load(
     if (!registry->file_name)
         return er_ok;
 
-    stream = io_file_stream_init(&fs, registry->file_name, "r");
+    stream = io_file_stream_init(&fs, registry->file_name, NULL);
     if (!stream)
         return er_not_found;
 
@@ -660,7 +660,7 @@ static int32_t prx_ns_generic_registry_save(
     if (!registry->file_name)
         return er_ok;
 
-    stream = io_file_stream_init(&fs, registry->file_name, "w");
+    stream = io_file_stream_init(&fs, NULL, registry->file_name);
     if (!stream)
         return er_not_found;
 
@@ -1218,7 +1218,7 @@ static int32_t prx_ns_iot_hub_twin_entry_get_cs(
         result = prx_ns_iot_hub_rest_status_code_to_prx_error(status_code);
         if (result != er_ok)
         {
-            log_error(NULL, "REST call returned %d : %s", status_code,
+            log_error(NULL, "REST call returned %d : %.256s", status_code,
                 (char*)BUFFER_u_char(response));
             break;
         }
@@ -1730,7 +1730,7 @@ static int32_t prx_ns_iot_hub_registry_entry_query(
             result = prx_ns_iot_hub_rest_status_code_to_prx_error(status_code);
             if (result != er_ok)
             {
-                log_error(NULL, "REST call returned %d : %s", status_code,
+                log_error(NULL, "REST call returned %d : %.256s", status_code,
                     (char*)BUFFER_u_char(response));
                 break;
             }
@@ -2286,7 +2286,7 @@ int32_t prx_ns_generic_create(
             if (result != er_ok)
             {
                 log_error(registry->log,
-                    "Failed to load registry from file %s (%s)",
+                    "Failed to load registry from file %.256s (%s)",
                     registry->file_name, prx_err_string(result));
                 break;
             }
@@ -2387,11 +2387,11 @@ int32_t prx_ns_iot_hub_create(
             break;
         }
 
-        stream = io_file_stream_init(&fs, file_name, "r");
+        stream = io_file_stream_init(&fs, file_name, NULL);
         if (!stream)
         {
             log_error(registry->log,
-                "Could not load registry from %s.", file_name);
+                "Could not load registry from %.256s.", file_name);
             result = er_reading;
             break;
         }
@@ -2408,7 +2408,7 @@ int32_t prx_ns_iot_hub_create(
         if (result != er_ok)
         {
             log_error(registry->log,
-                "Failed to load registry from file %s (%s)",
+                "Failed to load registry from file %.256s (%s)",
                 file_name, prx_err_string(result));
             break;
         }

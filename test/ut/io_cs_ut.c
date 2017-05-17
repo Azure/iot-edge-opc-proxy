@@ -1034,7 +1034,7 @@ TEST_FUNCTION(io_cs_create_from_raw_file__neg_3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
         .SetReturn(true);
-    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, NULL))
         .IgnoreArgument(1)
         .SetReturn(NULL);
     STRICT_EXPECTED_CALL(pal_free_path(k_real_name_valid));
@@ -1064,7 +1064,7 @@ TEST_FUNCTION(io_cs_create_from_raw_file__neg_4)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
         .SetReturn(true);
-    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, NULL))
         .IgnoreArgument(1)
         .SetReturn(k_stream_valid);
     STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
@@ -1097,7 +1097,7 @@ TEST_FUNCTION(io_cs_create_from_raw_file__neg_5)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
         .SetReturn(true);
-    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, NULL))
         .IgnoreArgument(1)
         .SetReturn(k_stream_valid);
     STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
@@ -1130,7 +1130,7 @@ TEST_FUNCTION(io_cs_create_from_raw_file__neg_6)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
         .SetReturn(true);
-    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, NULL))
         .IgnoreArgument(1)
         .SetReturn(k_stream_valid);
     STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
@@ -1166,7 +1166,7 @@ TEST_FUNCTION(io_cs_create_from_raw_file__neg_7)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_file_exists(k_real_name_valid))
         .SetReturn(true);
-    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, "r"))
+    STRICT_EXPECTED_CALL(io_file_stream_init(IGNORED_PTR_ARG, k_real_name_valid, NULL))
         .IgnoreArgument(1)
         .SetReturn(k_stream_valid);
     STRICT_EXPECTED_CALL(io_stream_readable(k_stream_valid))
