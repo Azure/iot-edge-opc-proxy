@@ -54,14 +54,15 @@ int32_t zlog_set_log_file(
     static const char* post_config = ".#r\"\n";
 
     config = (char*)malloc(
-        strlen(pre_config) + strlen(file_name) + strlen(post_config) + 1);
+        strlen(pre_config) + strlen(file_name) + strlen(file_name) +
+        strlen(post_config) + strlen(size_config) + 1);
     if (!config)
         return er_out_of_memory;
     do
     {
         strcpy(config, pre_config);
         strcat(config, file_name);
-        strcpy(config, size_config);
+        strcat(config, size_config);
         strcat(config, file_name);
         strcat(config, post_config);
 

@@ -105,7 +105,7 @@
 #define mem_init()              mtrace()
 #endif
 
-#define mem_deinit              (void)0  /* muntrace */
+#define mem_deinit()            /* muntrace() */
 #define mem_alloc               malloc
 #define mem_realloc             realloc
 #define mem_free                free

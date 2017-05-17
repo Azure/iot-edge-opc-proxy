@@ -208,6 +208,7 @@ static int32_t prx_host_init_from_command_line(
     const char *log_config = NULL;
     const char *log_file = NULL;
     const char *ns_registry = NULL;
+    const char *c_string = NULL;
 
     char buffer[128];
     bool is_install = false;
@@ -351,7 +352,11 @@ static int32_t prx_host_init_from_command_line(
                 printf("Importing connection string...\n");
                 __prx_config_set(prx_config_key_policy_import, optarg);
                 should_exit = true;
-                result = io_cs_create_from_string(optarg, &cs);
+                c_string = optarg;
+                if (c_string && strlen(c_string) > 0)
+                    result = io_cs_create_from_string(c_string, &cs);
+                else
+                    result = er_arg;
                 if (result != er_ok)
                     printf("ERROR: Malformed --import argument. \n\n");
                 break;
@@ -363,7 +368,11 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                result = io_cs_create_from_string(optarg, &cs);
+                c_string = optarg;
+                if (c_string && strlen(c_string) > 0)
+                    result = io_cs_create_from_string(c_string, &cs);
+                else
+                    result = er_arg;
                 if (result != er_ok)
                     printf("ERROR: Malformed --connection-string argument. \n\n");
                 break;
@@ -459,7 +468,13 @@ static int32_t prx_host_init_from_command_line(
 
         if (!cs)
         {
-            (void)io_cs_create_from_string(getenv("_HUB_CS"), &cs);
+            c_string = getenv("_HUB_CS");
+            if (c_string && strlen(c_string) > 0)
+            {
+                result = io_cs_create_from_string(c_string, &cs);
+                if (result != er_ok)
+                    break;
+            }
         }
 
         // Load registry from file or create in memory one if no file specified
