@@ -4,7 +4,7 @@ This project has adopted the Microsoft Open Source Code of Conduct. For more inf
 
 This module is a OPC-UA command and control proxy for Azure IoT Hub written in C and intended to be hosted in an edge gateway built using Azure IoT Edge.
 
-It can tunnel binary channel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local network gateways to a server in the local network. It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name service provider, and only requires port 443 (outbound) open to Azure. To implements the [service-assisted communication pattern](https://blogs.msdn.microsoft.com/clemensv/2014/02/09/service-assisted-communication-for-connected-devices).
+It can tunnel binary channel streams (at this point TCP based streams only) at the application level, from a cloud service via one or more local network gateways to a server in the local network. It uses IoT Hub Methods as protocol layer and IoT Hub device registry as a name service provider, and only requires port 443 (outbound) open to Azure. It implements the [service-assisted communication pattern](https://blogs.msdn.microsoft.com/clemensv/2014/02/09/service-assisted-communication-for-connected-devices).
 
 This allows cloud OPC-UA applications to send and receive raw buffers to and from IoT server devices that are accessible on the local
 gateway network.  Using the API one can quickly implement command and control scenarios from a cloud application 
