@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>1.0.1</VersionPrefix>
-    <Version>1.0.1-preview</Version>
+    <VersionPrefix>0.2.0</VersionPrefix>
+    <Version>0.2.0-preview</Version>
     <Description>Simple Reverse Webproxy sample application</Description>
     <AssemblyTitle>Simple Reverse Webproxy sample</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>

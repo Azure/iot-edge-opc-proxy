@@ -84,16 +84,21 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Perform a link handshake with the passed proxies and populate streams
         /// </summary>
         /// <param name="proxies">The proxies (interfaces) to bind the link on</param>
-        /// <param name="address">Address to connect to, or null if proxy bound</param>
+        /// <param name="address">Address to connect to, or null if passive</param>
         /// <param name="ct">Cancels operation</param>
         /// <returns></returns>
         public async Task<bool> LinkAllAsync(IEnumerable<INameRecord> proxies, SocketAddress address, 
             CancellationToken ct) {
 
             // Complete socket info
-            Info.Address = address ?? new NullSocketAddress();
-            Info.Flags = address != null ? 0 : (uint)SocketFlags.Passive;
-            Info.Options.UnionWith(_optionCache.Select(p => new SocketOptionValue(p.Key, p.Value)));
+            Info.Address = address;
+
+            if (Info.Address == null) {
+                Info.Address = new NullSocketAddress();
+                Info.Flags |= (uint)SocketFlags.Passive;
+            }
+            Info.Options.UnionWith(_optionCache.Select(p => new Property<ulong>(
+                (uint)p.Key, p.Value)));
 
             var tasks = new List<Task<IProxyLink>>();
             foreach (var proxy in proxies) {
@@ -127,7 +132,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             // Complete socket info
             Info.Address = address ?? new NullSocketAddress();
             Info.Flags = address != null ? 0 : (uint)SocketFlags.Passive;
-            Info.Options.UnionWith(_optionCache.Select(p => new SocketOptionValue(p.Key, p.Value)));
+            Info.Options.UnionWith(_optionCache.Select(p => new Property<ulong>(
+                (uint)p.Key, p.Value)));
 
             try {
                 var link = await CreateLinkAsync(proxy, ct).ConfigureAwait(false);
@@ -287,7 +293,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Close all socket streams and thus this socket
         /// </summary>
         /// <param name="ct"></param>
-        public async Task CloseAsync(CancellationToken ct) {
+        public virtual async Task CloseAsync(CancellationToken ct) {
             try {
                 await Task.WhenAll(Links.Select(i => i.CloseAsync(ct))).ConfigureAwait(false);
             }
@@ -342,25 +348,30 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     Message message;
                     var queue = link.ReceiveQueue;
                     if (queue == null) {
-                        throw new SocketException(SocketError.Closed);
+                        Links.Remove(link);
                     }
-                    while (queue.TryDequeue(out message)) {
-                        if (message.TypeId == MessageContent.Close) {
-                            // Remote side closed, close link
-                            Links.Remove(link);
-                            try {
-                                await link.CloseAsync(CancellationToken.None).ConfigureAwait(false);
+                    else {
+                        while (queue.TryDequeue(out message)) {
+                            if (message.TypeId == MessageContent.Close) {
+                                // Remote side closed, close link
+                                Links.Remove(link);
+                                try {
+                                    await link.CloseAsync(ct).ConfigureAwait(false);
+                                }
+                                catch { }
                             }
-                            catch { }
-                            if (!Links.Any()) {
-                                throw new SocketException("Remote side closed",
-                                    null, SocketError.Closed);
+                            else {
+                                ReceiveQueue.Enqueue(message);
                             }
                         }
-                        else {
-                            ReceiveQueue.Enqueue(message);
+                    }
+                    if (!Links.Any()) {
+                        if (!Links.Any()) {
+                            throw new SocketException("Remote side closed",
+                                null, SocketError.Closed);
                         }
                     }
+
                 }
                 if (ReceiveQueue.Any()) { 
                     return;
@@ -368,11 +379,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 else {
                     try {
                         var tasks = Links.Select(i => i.ReceiveAsync(ct));
-                        await Task.WhenAny(tasks).ConfigureAwait(false);
+                        var selected = await Task.WhenAny(tasks).ConfigureAwait(false);
+                        await selected.ConfigureAwait(false); 
                     }
-                    catch(AggregateException ae) {
-                        throw new SocketException("Receive await failed", 
-                            ae, ae.GetSocketError());
+                    catch (OperationCanceledException) {
+                        throw;
+                    }
+                    catch(Exception e) {
+                        ct.ThrowIfCancellationRequested();
+                        throw new SocketException("Receive await failed",
+                            e, e.GetSocketError());
                     }
                 }
             }
@@ -404,27 +420,57 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public virtual async Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
             // Proxy selected, look up name records for the proxy address
-            var bindList = await Provider.NameService.LookupAsync(
-                endpoint.ToString(), RecordType.Proxy, ct).ConfigureAwait(false);
-            _bindList = bindList;
-            if (!_bindList.Any()) {
+
+            if (endpoint.Family == AddressFamily.Bound) {
+                // Unwrap bound address
+                endpoint = ((BoundSocketAddress)endpoint).LocalAddress;
+            }
+
+            IEnumerable<SocketAddress> addresses;
+            if (endpoint.Family == AddressFamily.Collection) {
+                // Unwrap collection
+                addresses = ((SocketAddressCollection) endpoint).Addresses();
+            }
+            else {
+                addresses = endpoint.AsEnumerable();
+            }
+            var bindList = new HashSet<INameRecord>();
+            foreach (var address in addresses) {
+                var result = await Provider.NameService.LookupAsync(
+                    address.ToString(), RecordType.Proxy, ct).ConfigureAwait(false);
+                bindList.AddRange(result);
+            }
+            if (!bindList.Any()) {
                 throw new SocketException(SocketError.NoAddress);
             }
+            _bindList = bindList;
         }
 
-        public abstract Task ConnectAsync(
-            SocketAddress address, CancellationToken ct);
+        /// <summary>
+        /// Connect - only for tcp
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public virtual Task ConnectAsync(SocketAddress address, CancellationToken ct) {
+            throw new NotSupportedException("Cannot call connect on this socket");
+        }
 
-        public abstract Task ListenAsync(
-            int backlog, CancellationToken ct);
+        /// <summary>
+        /// Listen - only for tcp
+        /// </summary>
+        /// <param name="backlog"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public virtual Task ListenAsync(int backlog, CancellationToken ct) {
+            throw new NotSupportedException("Cannot call listen on this socket");
+        }
 
         /// <summary>
         /// Returns a string that represents the socket.
         /// </summary>
         /// <returns>A string that represents the socket.</returns>
-        public override string ToString() {
-            return $"Socket {Id} : {Info}";
-        }
+        public override string ToString() => $"Socket {Id} : {Info}";
 
         //
         // Helper to throw if error code is not success

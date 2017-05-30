@@ -1,24 +1,19 @@
 FROM ubuntu:xenial
 
-ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
-ENV COMMIT_ID master
-
 RUN \
-		set -ex \
-	&& \
-		apt-get update && apt-get install -y \
-			build-essential \
-			clang \
-			git \
-			cmake \
-			valgrind \
-			pkg-config \
-			libssl-dev \
-			libcurl4-openssl-dev \
-	&& \
-		update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 \
-	&& \
-		update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100
-
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+        set -ex \
+    && \
+        apt-get update && apt-get install -y \
+            build-essential \
+            clang \
+            git \
+            cmake \
+            valgrind \
+            pkg-config \
+            libssl-dev \
+            libcurl4-openssl-dev \
+            libavahi-client-dev \
+    && \
+        update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 \
+    && \
+        update-alternatives --install /usr/bin/c++ c++ /usr/bin/clang++ 100

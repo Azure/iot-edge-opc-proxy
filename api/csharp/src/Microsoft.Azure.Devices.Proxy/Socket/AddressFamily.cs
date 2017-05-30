@@ -17,6 +17,9 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         // Non standard first come first serve af for proxy
         Proxy = 28165,
-        Collection = 28166
+
+        // .net internal family identifiers, not known to proxy
+        Collection,
+        Bound
     }
 }

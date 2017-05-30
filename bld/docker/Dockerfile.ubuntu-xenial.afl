@@ -1,0 +1,62 @@
+FROM ubuntu:xenial
+
+RUN \
+        set -ex \
+    && \
+        apt-get update && apt-get install -y \
+            build-essential \
+            curl libcurl4-openssl-dev \
+            git \
+            cmake \
+            screen \
+            libssl-dev \
+            clang llvm-dev \
+            gdb \
+            python3-dbg python3-dev python3-setuptools \
+            golang \
+            pkg-config
+            libavahi-client-dev \
+    && \
+        curl -sSL -o afl.tgz http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz \
+    &&  tar -xvf afl.tgz && rm -f afl.tgz \
+    &&  cd afl-* \
+    &&  export CC=/usr/bin/clang && export CXX=/usr/bin/clang++ \
+    &&  make \
+    &&  cd llvm_mode && LLVM_CONFIG=llvm-config-3.8 make && cd .. \
+    &&  make install \
+    &&  cd libdislocator && make && make install && cd .. \
+    &&  update-alternatives --install /usr/bin/cc cc /usr/local/bin/afl-clang-fast 10 \
+    &&  update-alternatives --set cc /usr/local/bin/afl-clang-fast \
+    &&  update-alternatives --install /usr/bin/c++ c++ /usr/local/bin/afl-clang-fast++ 20 \
+    &&  update-alternatives --set c++ /usr/local/bin/afl-clang-fast++ \
+    &&  cd .. \
+    && \
+        git clone https://github.com/rc0r/afl-utils.git \
+    &&  cd afl-utils && git checkout v1.32a \
+    &&  python3 setup.py build && LANG=C.UTF-8 python3 setup.py install \
+    &&  cd .. \
+    && \
+        git clone https://github.com/jfoote/exploitable.git \
+    &&  cd exploitable \
+    &&  python3 setup.py build && LANG=C.UTF-8 python3 setup.py install \
+    &&  cd .. \
+    && \
+        export GOPATH=/usr/go \
+    &&  go get -u github.com/bnagy/crashwalk/cmd/... \
+    && \
+        curl -fsSLO https://get.docker.com/builds/Linux/x86_64/docker-17.04.0-ce.tgz \
+    &&  tar xzvf docker-17.04.0-ce.tgz \
+    &&  mv docker/docker /usr/local/bin \
+    &&  rm -r docker docker-17.04.0-ce.tgz \
+    && \
+        cd /usr/local/lib/python3.*/dist-packages/exploitable-*_rcor-py3.*.egg/exploitable \
+    &&  echo "source $(pwd)/exploitable.py" >> /root/.gdbinit \
+    &&  cd /usr/local/lib/python3.*/dist-packages/exploitable-*-py3.*.egg/exploitable \
+    &&  echo "export CW_EXPLOITABLE=$(pwd)" >> /root/.bashrc \
+    && \
+        cd /
+       
+ENV CC /usr/local/bin/afl-clang-fast
+ENV CXX /usr/local/bin/afl-clang-fast++
+ENV PATH "/usr/go/bin:${PATH}"
+ENV GOPATH "/usr/go"

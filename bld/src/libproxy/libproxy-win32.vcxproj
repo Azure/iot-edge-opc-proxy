@@ -18,48 +18,6 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\libiotsdk\libiotsdk-win32.vcxproj">
-      <Project>{6d8be690-5bd5-4964-8c98-c18e6117877f}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\libumqtt\libumqtt-win32.vcxproj">
-      <Project>{225a3e54-b551-4100-ae8b-42d5ee7c7261}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\libzlog\libzlog-win32.vcxproj">
-      <Project>{b1f92e2e-23c2-48e8-94ba-2d73dce95ebc}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="..\..\..\deps\getopt\src\getopt.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_cred_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_err_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_file_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_main_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_mt_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_net_posix.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_net_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_proc_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_rand_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_sk_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_time_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\deps\getopt\src\getopt.h" />
-    <ClInclude Include="..\..\..\inc\os_win.h" />
-    <ClInclude Include="..\..\..\inc\pal.h" />
-    <ClInclude Include="..\..\..\inc\pal_cred.h" />
-    <ClInclude Include="..\..\..\inc\pal_err.h" />
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
-    <ClInclude Include="..\..\..\inc\pal_file.h" />
-    <ClInclude Include="..\..\..\inc\pal_mt.h" />
-    <ClInclude Include="..\..\..\inc\pal_net.h" />
-    <ClInclude Include="..\..\..\inc\pal_proc.h" />
-    <ClInclude Include="..\..\..\inc\pal_rand.h" />
-    <ClInclude Include="..\..\..\inc\pal_sk.h" />
-    <ClInclude Include="..\..\..\inc\pal_types.h" />
-    <ClInclude Include="..\..\..\inc\pal_ws.h" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0F7E0590-FCEF-4FD9-AC3D-8A202DFC20C3}</ProjectGuid>
     <RootNamespace>
@@ -144,7 +102,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;..\..\..\deps\dnssd\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>LEAK_DETECT;MEM_CHECK;_CRTDBG_MAP_ALLOC;API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -158,7 +116,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;..\..\..\deps\dnssd\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>LEAK_DETECT;MEM_CHECK;_CRTDBG_MAP_ALLOC;API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -174,7 +132,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;..\..\..\deps\dnssd\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -191,7 +149,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\inc;..\..\..\deps\cmp;..\..\..\deps\parson;..\..\..\deps\hashtable;..\..\..\deps\getopt\src;..\..\..\deps\shared\inc;..\..\..\deps\umqtt\inc;..\..\..\deps\dnssd\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>API_EXPORT;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>/d2MPX %(AdditionalOptions)</AdditionalOptions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -202,6 +160,52 @@
       <AdditionalDependencies>iphlpapi.lib;crypt32.lib;winhttp.lib;ws2_32.lib;secur32.lib;schannel.lib;kernel32.lib;%(AdditionalDependencies);</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\libdnssd\libdnssd-win32.vcxproj">
+      <Project>{2bfc69d2-0912-4c08-9b6c-2af422fa823b}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libiotsdk\libiotsdk-win32.vcxproj">
+      <Project>{6d8be690-5bd5-4964-8c98-c18e6117877f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\libzlog\libzlog-win32.vcxproj">
+      <Project>{b1f92e2e-23c2-48e8-94ba-2d73dce95ebc}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\deps\getopt\src\getopt.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_cred_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_err_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_ev_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_file_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_main_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_mt_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_net_posix.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_net_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_proc_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_rand_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_sk_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_time_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\..\iot-gateway-proxy2\inc\pal_ev.h" />
+    <ClInclude Include="..\..\..\deps\getopt\src\getopt.h" />
+    <ClInclude Include="..\..\..\inc\os_win.h" />
+    <ClInclude Include="..\..\..\inc\pal.h" />
+    <ClInclude Include="..\..\..\inc\pal_cred.h" />
+    <ClInclude Include="..\..\..\inc\pal_err.h" />
+    <ClInclude Include="..\..\..\inc\pal_ev.h" />
+    <ClInclude Include="..\..\..\inc\pal_file.h" />
+    <ClInclude Include="..\..\..\inc\pal_mt.h" />
+    <ClInclude Include="..\..\..\inc\pal_net.h" />
+    <ClInclude Include="..\..\..\inc\pal_proc.h" />
+    <ClInclude Include="..\..\..\inc\pal_rand.h" />
+    <ClInclude Include="..\..\..\inc\pal_sd.h" />
+    <ClInclude Include="..\..\..\inc\pal_sk.h" />
+    <ClInclude Include="..\..\..\inc\pal_types.h" />
+    <ClInclude Include="..\..\..\inc\pal_ws.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

@@ -107,6 +107,12 @@ struct sockaddr_in6
     struct in6_addr sin6_addr;
 };
 
+struct sockaddr_un
+{
+    int sun_family;
+    char sun_path[108];
+};
+
 struct addrinfo
 {
     int ai_flags; 
@@ -136,6 +142,9 @@ struct linger
 #define SOMAXCONN 0x7fffffff
 
 #define INADDR_ANY 0xffffffff
+#define INADDR_LOOPBACK 0x7f000001
+
+#define htonl(l) l
 
 enum __SO
 {
@@ -190,7 +199,15 @@ enum __SHUT
     SHUT_RANGE_END
 };
 
-struct timespec;
+// time.h
+struct timespec
+#if !defined(_MSC_VER) || defined(_CRT_NO_TIME_T)
+{
+    int64_t tv_sec;	
+    long tv_nsec;
+}
+#endif
+;
 
 enum __ERRNO
 {
@@ -426,6 +443,7 @@ enum __EAI
     EAI_NONAME,
     EAI_NODATA,
     EAI_FAIL,
+    EAI_ADDRFAMILY,
 
     EAI_RANGE_END,
 };
@@ -484,9 +502,28 @@ typedef size_t SIZE_T;
 #define WINAPI
 #define MAX_PATH 256
 #define WAIT_OBJECT_0 0
+#define WAIT_FAILED -1
 typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEWORD(a, b) (WORD)((a << 8) + b)
 #define rsize_t size_t
+
+typedef struct 
+{
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+} 
+FILETIME;
+
+typedef union 
+{
+    struct 
+    {
+        DWORD LowPart;
+        DWORD HighPart;
+    } u;
+    ULONGLONG QuadPart;
+} 
+ULARGE_INTEGER;
 
 enum __ERRORS
 {
@@ -505,6 +542,13 @@ enum __ERRORS
     ERROR_INVALID_HANDLE,
     ERROR_IO_PENDING,
     ERROR_NOT_FOUND,
+    ERROR_FILE_NOT_FOUND,
+    ERROR_NO_MORE_FILES,
+    ERROR_PIPE_BUSY,
+    ERROR_BROKEN_PIPE,
+    ERROR_PIPE_NOT_CONNECTED,
+    ERROR_PATH_NOT_FOUND,
+    ERROR_ACCESS_DENIED,
 
     WIN32_ERRORS_RANGE_END,
 
@@ -516,6 +560,8 @@ enum __ERRORS
     STATUS_REQUEST_ABORTED,
     STATUS_CONNECTION_RESET,
     STATUS_CONNECTION_REFUSED,
+    STATUS_PIPE_BROKEN,
+    STATUS_PIPE_DISCONNECTED,
 
     NTSTATUS_ERRORS_RANGE_END,
 
@@ -541,6 +587,30 @@ enum __ERRORS
 
 #define INVALID_FILE_ATTRIBUTES 0xffff
 #define FILE_ATTRIBUTE_DIRECTORY 0x2
+
+typedef struct _WIN32_FIND_DATAA 
+{
+    DWORD dwFileAttributes;
+    char cFileName[MAX_PATH];
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeLow;
+    DWORD nFileSizeHigh;
+}
+WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
+
+#define GENERIC_READ 0x1
+#define GENERIC_WRITE 0x2
+#define OPEN_EXISTING 0x4
+#define FILE_FLAG_OVERLAPPED 0x8
+
+// namedpipeapi.h
+#define PIPE_TYPE_MESSAGE 0x1
+#define PIPE_TYPE_BYTE 0x2
+#define PIPE_READMODE_BYTE 0x10
+#define PIPE_READMODE_MESSAGE 0x20
+#define PIPE_ACCESS_DUPLEX 0x400
+#define PIPE_UNLIMITED_INSTANCES 10000
 
 // synchapi.h
 typedef int SRWLOCK, *PSRWLOCK;
@@ -658,6 +728,7 @@ typedef struct _WSADATA
 WSADATA,  *LPWSADATA;
 typedef OVERLAPPED WSAOVERLAPPED, *LPWSAOVERLAPPED;
 typedef LPOVERLAPPED_COMPLETION_ROUTINE LPWSAOVERLAPPED_COMPLETION_ROUTINE;
+typedef void(*WAITORTIMERCALLBACK) (PVOID, BOOLEAN);
 
 typedef int GROUP;
 typedef struct _WSAPROTOCOL_INFO
@@ -673,6 +744,26 @@ typedef struct _WSABUF
     char *buf; 
 } 
 WSABUF, *LPWSABUF;
+
+enum __FD_EVENT
+{
+    FD_READ_BIT = 1,
+#define FD_READ   (1 << FD_READ_BIT)
+    FD_ACCEPT_BIT,
+#define FD_ACCEPT (1 << FD_ACCEPT_BIT)
+    FD_CLOSE_BIT,
+#define FD_CLOSE  (1 << FD_CLOSE_BIT)
+    FD_WRITE_BIT,
+#define FD_WRITE  (1 << FD_WRITE_BIT)
+    FD_MAX_EVENTS
+};
+
+typedef struct _WSANETWORKEVENTS
+{
+    long lNetworkEvents;
+    int iErrorCode[FD_MAX_EVENTS];
+}
+WSANETWORKEVENTS, *LPWSANETWORKEVENTS;
 
 struct ip_mreq 
 {
@@ -966,7 +1057,8 @@ struct ifaddrs
     unsigned int ifa_flags; 
     struct sockaddr *ifa_addr; 
     struct sockaddr *ifa_netmask;
-    union {
+    union 
+    {
         struct sockaddr *ifu_broadaddr;
         struct sockaddr *ifu_dstaddr;
     } ifa_ifu;
@@ -981,7 +1073,8 @@ struct ifaddrs
 
 
 // in.h
-struct ip_mreqn {
+struct ip_mreqn 
+{
     struct in_addr imr_multiaddr;
     struct in_addr imr_address;
     int imr_ifindex;
@@ -1012,7 +1105,8 @@ typedef struct posix_spawnattr posix_spawnattr_t;
 typedef struct posix_spawn_file_actions posix_spawn_file_actions_t;
 
 // sys/event.h
-struct kevent {
+struct kevent 
+{
     uintptr_t ident;  
     int16_t filter; 
     uint16_t flags;  
@@ -1033,6 +1127,28 @@ enum EVFILT
 #define EV_CLEAR 0x800
 #define EV_RECEIPT 0x1000
 #define EV_DELETE 0x2000
+
+// dirent.h
+
+typedef int DIR;
+struct dirent
+{
+    char* d_name;
+};
+
+typedef unsigned short mode_t;
+struct stat
+{
+    mode_t st_mode;
+    int st_ino;
+    int st_dev;
+    int st_size;
+    int st_atime;
+    int st_mtime;
+};
+
+#define S_IFDIR 1
+#define S_ISDIR(m) (m == S_IFDIR)
 
 // libwebsockets.h
 struct lws;
@@ -1058,7 +1174,8 @@ enum lws_callback_reasons
     LWS_CALLBACK_UNLOCK_POLL
 };
 
-enum lws_close_status {
+enum lws_close_status 
+{
     LWS_CLOSE_STATUS_NOSTATUS,
     LWS_CLOSE_STATUS_NORMAL,
     LWS_CLOSE_STATUS_GOINGAWAY
@@ -1154,6 +1271,210 @@ typedef void GCancellable;
 #define SECRET_COLLECTION_SESSION "bar"
 #define SECRET_SCHEMA_NONE 1
 #define SECRET_SCHEMA_ATTRIBUTE_STRING 3
+
+// dns_sd
+
+enum __DNSSERVICEERR
+{
+    DNSSERVICEERR_RANGE_BEGIN = 0,
+
+    kDNSServiceErr_NoError = DNSSERVICEERR_RANGE_BEGIN,
+    kDNSServiceErr_Unknown,
+    kDNSServiceErr_NoSuchName,
+    kDNSServiceErr_NoMemory,
+    kDNSServiceErr_BadParam,
+    kDNSServiceErr_BadReference,
+    kDNSServiceErr_BadState,
+    kDNSServiceErr_BadFlags,
+    kDNSServiceErr_Unsupported,
+    kDNSServiceErr_NotInitialized,
+    kDNSServiceErr_AlreadyRegistered,
+    kDNSServiceErr_NameConflict,
+    kDNSServiceErr_Invalid,
+    kDNSServiceErr_Firewall,
+    kDNSServiceErr_Incompatible,
+    kDNSServiceErr_BadInterfaceIndex,
+    kDNSServiceErr_Refused,
+    kDNSServiceErr_NoSuchRecord,
+    kDNSServiceErr_NoAuth,
+    kDNSServiceErr_NoSuchKey,
+    kDNSServiceErr_NATTraversal,
+    kDNSServiceErr_DoubleNAT,
+    kDNSServiceErr_BadTime, 
+    kDNSServiceErr_BadSig,
+    kDNSServiceErr_BadKey,
+    kDNSServiceErr_Transient,
+    kDNSServiceErr_ServiceNotRunning,
+    kDNSServiceErr_NATPortMappingUnsupported,
+    kDNSServiceErr_NATPortMappingDisabled,
+    kDNSServiceErr_NoRouter,
+    kDNSServiceErr_PollingMode,
+    kDNSServiceErr_Timeout,
+
+    DNSSERVICEERR_RANGE_END
+};
+
+typedef int DNSServiceErrorType, DNSServiceFlags, dnssd_sock_t;
+typedef void* DNSServiceRef;
+
+#define kDNSServiceFlagsBrowseDomains   0x20
+#define kDNSServiceFlagsShareConnection 0x40
+#define kDNSServiceFlagsAdd             0x80
+#define kDNSServiceFlagsMoreComing      0x10
+
+#define kDNSServiceInterfaceIndexAny 0
+
+#define DNSSD_API
+
+typedef void (*DNSServiceResolveReply) (
+    DNSServiceRef sdRef, DNSServiceFlags flags,
+    uint32_t interfaceIndex, DNSServiceErrorType errorCode,
+    const char* fullname, const char* hosttarget, uint16_t port, 
+    uint16_t txtLen, const unsigned char* txtRecord, void* context
+    );
+typedef void (*DNSServiceBrowseReply) (
+    DNSServiceRef sdRef, DNSServiceFlags flags,
+    uint32_t interfaceIndex, DNSServiceErrorType errorCode,
+    const char*serviceName, const char* regtype,
+    const char* replyDomain, void* context
+    );
+typedef void (*DNSServiceDomainEnumReply) (
+    DNSServiceRef sdRef, DNSServiceFlags flags,
+    uint32_t interfaceIndex, DNSServiceErrorType errorCode,
+    const char *replyDomain, void *context
+    );
+
+// avahi-error.h
+
+enum __AVAHIERR
+{
+    AVAHIERR_RANGE_BEGIN = 0,
+
+    AVAHI_OK = 0,
+    AVAHI_ERR_FAILURE,
+    AVAHI_ERR_BAD_STATE,
+    AVAHI_ERR_INVALID_HOST_NAME,
+    AVAHI_ERR_INVALID_DOMAIN_NAME,
+    AVAHI_ERR_NO_NETWORK,
+    AVAHI_ERR_INVALID_TTL,
+    AVAHI_ERR_IS_PATTERN,
+    AVAHI_ERR_COLLISION,
+    AVAHI_ERR_INVALID_RECORD,
+
+    AVAHI_ERR_INVALID_SERVICE_NAME,
+    AVAHI_ERR_INVALID_SERVICE_TYPE,
+    AVAHI_ERR_INVALID_PORT,
+    AVAHI_ERR_INVALID_KEY,
+    AVAHI_ERR_INVALID_ADDRESS,
+    AVAHI_ERR_TIMEOUT,
+    AVAHI_ERR_TOO_MANY_CLIENTS,
+    AVAHI_ERR_TOO_MANY_OBJECTS,
+    AVAHI_ERR_TOO_MANY_ENTRIES,
+    AVAHI_ERR_OS,
+
+    AVAHI_ERR_ACCESS_DENIED,
+    AVAHI_ERR_INVALID_OPERATION,
+    AVAHI_ERR_DBUS_ERROR,
+    AVAHI_ERR_DISCONNECTED,
+    AVAHI_ERR_NO_MEMORY,
+    AVAHI_ERR_INVALID_OBJECT,
+    AVAHI_ERR_NO_DAEMON,
+    AVAHI_ERR_INVALID_INTERFACE,
+    AVAHI_ERR_INVALID_PROTOCOL,
+    AVAHI_ERR_INVALID_FLAGS,
+
+    AVAHI_ERR_NOT_FOUND,
+    AVAHI_ERR_INVALID_CONFIG,
+    AVAHI_ERR_VERSION_MISMATCH,
+    AVAHI_ERR_INVALID_SERVICE_SUBTYPE,
+    AVAHI_ERR_INVALID_PACKET,
+    AVAHI_ERR_INVALID_DNS_ERROR,
+    AVAHI_ERR_DNS_FORMERR,
+    AVAHI_ERR_DNS_SERVFAIL,
+    AVAHI_ERR_DNS_NXDOMAIN,
+    AVAHI_ERR_DNS_NOTIMP,
+
+    AVAHI_ERR_DNS_REFUSED,
+    AVAHI_ERR_DNS_YXDOMAIN,
+    AVAHI_ERR_DNS_YXRRSET,
+    AVAHI_ERR_DNS_NXRRSET,
+    AVAHI_ERR_DNS_NOTAUTH,
+    AVAHI_ERR_DNS_NOTZONE,
+    AVAHI_ERR_INVALID_RDATA,
+    AVAHI_ERR_INVALID_DNS_CLASS,
+    AVAHI_ERR_INVALID_DNS_TYPE,
+    AVAHI_ERR_NOT_SUPPORTED,
+
+    AVAHI_ERR_NOT_PERMITTED,
+    AVAHI_ERR_INVALID_ARGUMENT,
+    AVAHI_ERR_IS_EMPTY,
+    AVAHI_ERR_NO_CHANGE,
+
+    AVAHIERR_RANGE_END
+};
+
+
+typedef int AvahiIfIndex, AvahiProtocol, AvahiBrowserEvent;
+#define AVAHI_IF_UNSPEC 0
+#define AVAHI_PROTO_UNSPEC 0
+typedef void AvahiAddress;
+typedef struct AvahiStringList 
+{
+    struct AvahiStringList *next;
+    size_t size;
+    uint8_t* text;
+} 
+AvahiStringList;
+
+#define AVAHI_BROWSER_FAILURE 1
+#define AVAHI_BROWSER_REMOVE 2
+#define AVAHI_BROWSER_NEW 3
+#define AVAHI_BROWSER_CACHE_EXHAUSTED 4
+#define AVAHI_BROWSER_ALL_FOR_NOW 43
+#define AVAHI_RESOLVER_FAILURE 24
+
+
+#define AVAHI_CLIENT_FAILURE 102
+#define AVAHI_CLIENT_S_RUNNING 1523
+#define AVAHI_CLIENT_CONNECTING 105
+
+#define AVAHI_CLIENT_NO_FAIL 1
+
+// avahi-watch
+typedef void AvahiPoll, AvahiThreadedPoll;
+
+// avahi-client
+typedef void AvahiClient;
+typedef int AvahiClientState, AvahiClientFlags;
+typedef void (*AvahiClientCallback) (AvahiClient *s, AvahiClientState state, void* userdata);
+
+// avahi-lookup
+#define AVAHI_DOMAIN_BROWSER_BROWSE 1
+#define AVAHI_DOMAIN_BROWSER_BROWSE_DEFAULT 2
+
+typedef int AvahiLookupResultFlags, AvahiLookupFlags, AvahiDomainBrowserType, AvahiResolverEvent;
+typedef void AvahiDomainBrowser, AvahiServiceBrowser, AvahiServiceTypeBrowser, AvahiServiceResolver;
+typedef void(*AvahiDomainBrowserCallback) (
+    AvahiDomainBrowser *b, AvahiIfIndex interface,
+    AvahiProtocol protocol, AvahiBrowserEvent event,
+    const char *domain, AvahiLookupResultFlags flags, void *userdata);
+typedef void(*AvahiServiceBrowserCallback) (
+    AvahiServiceBrowser *b, AvahiIfIndex interface,
+    AvahiProtocol protocol, AvahiBrowserEvent event,
+    const char *name, const char *type,
+    const char *domain, AvahiLookupResultFlags flags, void *userdata);
+typedef void(*AvahiServiceTypeBrowserCallback) (
+    AvahiServiceTypeBrowser *b, AvahiIfIndex interface,
+    AvahiProtocol protocol, AvahiBrowserEvent event,
+    const char *type, 
+    const char *domain, AvahiLookupResultFlags flags, void *userdata);
+typedef void(*AvahiServiceResolverCallback) (
+    AvahiServiceResolver *r, AvahiIfIndex interface,
+    AvahiProtocol protocol, AvahiResolverEvent event,
+    const char *name, const char *type,
+    const char *domain, const char *host_name,
+    const AvahiAddress *a, uint16_t port,
+    AvahiStringList *txt, AvahiLookupResultFlags flags, void *userdata);
 
 //
 // Adapter types

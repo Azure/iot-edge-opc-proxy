@@ -49,7 +49,7 @@ decl_public_1(void, pal_event_port_close,
 //
 decl_public_5(int32_t, pal_event_port_register,
     uintptr_t, port,
-    intptr_t, socket,
+    intptr_t, sock,
     pal_event_port_handler_t, cb,
     void*, context,
     uintptr_t*, event_handle
@@ -74,8 +74,9 @@ decl_public_2(int32_t, pal_event_clear,
 //
 // Closes the event
 //
-decl_public_1(void, pal_event_close,
-    uintptr_t, event_handle
+decl_public_2(void, pal_event_close,
+    uintptr_t, event_handle,
+    bool, close_fd
 );
 
 #endif // _pal_ev_h_

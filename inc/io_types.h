@@ -29,7 +29,7 @@ decl_public_2(int32_t, io_decode_prx_addrinfo,
 //
 decl_public_2(int32_t, io_encode_prx_ifaddrinfo,
     io_codec_ctx_t*, ctx,
-    const prx_ifaddrinfo_t*, prx_ifa
+    const prx_ifaddrinfo_t*, prx_ifai
 );
 
 //
@@ -37,7 +37,23 @@ decl_public_2(int32_t, io_encode_prx_ifaddrinfo,
 //
 decl_public_2(int32_t, io_decode_prx_ifaddrinfo,
     io_codec_ctx_t*, ctx,
-    prx_ifaddrinfo_t*, prx_ifa
+    prx_ifaddrinfo_t*, prx_ifai
+);
+
+//
+// Encode file stat
+//
+decl_public_2(int32_t, io_encode_prx_file_info,
+    io_codec_ctx_t*, ctx,
+    const prx_file_info_t*, prx_fi
+);
+
+//
+// Decode file stat
+//
+decl_public_2(int32_t, io_decode_prx_file_info,
+    io_codec_ctx_t*, ctx,
+    prx_file_info_t*, prx_fi
 );
 
 //
@@ -75,18 +91,17 @@ decl_public_2(int32_t, io_decode_prx_socket_properties,
 //
 // Encode a socket option value
 //
-decl_public_2(int32_t, io_encode_prx_socket_option_value,
+decl_public_2(int32_t, io_encode_prx_property,
     io_codec_ctx_t*, ctx,
-    const prx_socket_option_value_t*, prx_so_val
+    const prx_property_t*, prx_sop
 );
 
 //
 // Decode a socket option value
 //
-decl_public_2(int32_t, io_decode_prx_socket_option_value,
+decl_public_2(int32_t, io_decode_prx_property,
     io_codec_ctx_t*, ctx,
-    prx_socket_option_value_t*, prx_so_val
+    prx_property_t*, prx_sop
 );
-
 
 #endif // _io_types_h_

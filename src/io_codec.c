@@ -123,7 +123,7 @@ static int32_t json_fini_ctx(
         result = io_stream_reset(stream);
         if (result != er_ok)
             break;
-        result = stream->write(stream->context, buffer, buf_size-1);  // omit '\0'
+        result = io_stream_write(stream, buffer, buf_size-1);  // omit '\0'
         break;
     } 
     while (0);
@@ -837,7 +837,7 @@ static int32_t cmp_ctx_get_err(
     if (ctx->error == 0) /* ERROR_NONE */
         return er_ok;
 
-    log_error(NULL, "Message Pack context with error %s", cmp_strerror(ctx));
+    log_error(NULL, "Message Pack error '%s' occurred.", cmp_strerror(ctx));
 
     switch (ctx->error)
     {

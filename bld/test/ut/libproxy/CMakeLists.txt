@@ -38,6 +38,7 @@ set(_PROXY_UNITS_UNDER_TEST
     prx_log
     prx_ns
     prx_sched
+    io_browse
     io_codec
     io_mqtt
     io_ref
@@ -49,7 +50,6 @@ set(_PROXY_UNITS_UNDER_TEST
     io_transport
     io_ws
     pal
-    util_handle
     util_misc
     util_signal
     util_string

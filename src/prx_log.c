@@ -191,11 +191,11 @@ static int32_t log_system_create_stream(
 
         stream->itf.context =
             stream;
-        stream->itf.write =
+        stream->itf.writer =
             NULL;
         stream->itf.writeable =
             NULL;
-        stream->itf.read = (io_stream_read_t)
+        stream->itf.reader = (io_stream_reader_t)
             log_stream_reader;
         stream->itf.readable = (io_stream_available_t)
             log_stream_readable;
@@ -241,7 +241,8 @@ static int32_t log_system_create(
         if (result != er_ok)
             break;
 
-        dbg_assert(!DList_IsListEmpty(&ls->streams), "unexpected");
+        dbg_assert(!DList_IsListEmpty(&ls->streams), 
+            "unexpected");
         *created = ls;
         return er_ok;
     } while (0);
@@ -260,9 +261,7 @@ static void log_system_log(
 )
 {
     log_stream_t* next;
-    dbg_assert_ptr(ls);
-
-    if (!len || !message)
+    if (!ls || !len || !message)
         return;
 
     rw_lock_enter(ls->streams_lock);

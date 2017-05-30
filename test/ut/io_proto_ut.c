@@ -247,352 +247,6 @@ TEST_FUNCTION(io_decode_ping_response__neg)
 }
 
 // 
-// Test io_encode_resolve_request happy path 
-// 
-TEST_FUNCTION(io_encode_resolve_request__success)
-{
-    static const char* k_host_valid = "host32";
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_request_t request_valid;
-    int32_t result;
-
-    memset(&request_valid, 0xef, sizeof(request_valid));
-    strcpy(request_valid.host, k_host_valid);
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, family);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, flags);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint16, &request_valid, port);
-    STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "host", request_valid.host))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_encode_resolve_request(&k_ctx_valid, &request_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-// 
-// Test io_encode_resolve_request unhappy path 
-// 
-TEST_FUNCTION(io_encode_resolve_request__neg)
-{
-    static const char* k_host_valid = "host32";
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_request_t request_valid;
-    int32_t result;
-
-    memset(&request_valid, 0xef, sizeof(request_valid));
-    strcpy(request_valid.host, k_host_valid);
-
-    // arrange
-    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, family);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, flags);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint16, &request_valid, port);
-    STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "host", request_valid.host))
-        .SetReturn(er_ok)
-        .SetFailReturn(er_writing);
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
-
-
-    // act
-    UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = io_encode_resolve_request(&k_ctx_valid, &request_valid);
-
-    // assert
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_writing);
-}
-
-// 
-// Test io_decode_resolve_request happy path 
-// 
-TEST_FUNCTION(io_decode_resolve_request__success)
-{
-    static const char* k_host_valid = "fagabaef";
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_request_t request_valid;
-    int32_t result;
-
-    memset(&request_valid, 0xff, sizeof(request_valid));
-    request_valid.host[0] = 0;
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, family);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, flags);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint16, &request_valid, port);
-    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(request_valid.host)))
-        .IgnoreArgument(3)
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_decode_resolve_request(&k_ctx_valid, &request_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_ARE_EQUAL(int32_t, 0, request_valid.reserved);
-}
-
-// 
-// Test io_decode_resolve_request unhappy path 
-// 
-TEST_FUNCTION(io_decode_resolve_request__neg)
-{
-    static const char* k_host_valid = "fagabaef";
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_request_t request_valid;
-    int32_t result;
-
-    memset(&request_valid, 0xff, sizeof(request_valid));
-    request_valid.host[0] = 0;
-
-    // arrange
-    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, family);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, flags);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint16, &request_valid, port);
-    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(request_valid.host)))
-        .IgnoreArgument(3)
-        .SetReturn(er_ok)
-        .SetFailReturn(er_out_of_memory);
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
-
-    // act
-    UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = io_decode_resolve_request(&k_ctx_valid, &request_valid);
-
-    // assert
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_invalid_format, er_out_of_memory);
-}
-
-// 
-// Test io_encode_resolve_response happy path 
-// 
-TEST_FUNCTION(io_encode_resolve_response__success_1)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    response_valid.result_count = 0;
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_encode_array(&k_ctx_valid, "results", 0, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_encode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-// 
-// Test io_encode_resolve_response happy path 
-// 
-TEST_FUNCTION(io_encode_resolve_response__success_2)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    prx_addrinfo_t results_valid[3];
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    response_valid.result_count = _countof(results_valid);
-    response_valid.results = results_valid;
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_encode_array(&k_ctx_valid, "results", _countof(results_valid), IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .SetReturn(er_ok);
-    for (size_t i = 0; i < _countof(results_valid); i++)
-    {
-        STRICT_EXPECTED_CALL(io_encode_object(IGNORED_PTR_ARG, NULL, false, IGNORED_PTR_ARG))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .CopyOutArgumentBuffer_object(&k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok);
-        STRICT_EXPECTED_CALL(io_encode_prx_addrinfo(IGNORED_PTR_ARG, &results_valid[i]))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok);
-    }
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_encode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-// 
-// Test io_encode_resolve_response unhappy path 
-// 
-TEST_FUNCTION(io_encode_resolve_response__neg)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    prx_addrinfo_t results_valid[3];
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    response_valid.result_count = _countof(results_valid);
-    response_valid.results = results_valid;
-
-    // arrange
-    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_encode_array(&k_ctx_valid, "results", _countof(results_valid), IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .SetReturn(er_ok)
-        .SetFailReturn(er_writing);
-    for (size_t i = 0; i < _countof(results_valid); i++)
-    {
-        STRICT_EXPECTED_CALL(io_encode_object(IGNORED_PTR_ARG, NULL, false, IGNORED_PTR_ARG))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .CopyOutArgumentBuffer_object(&k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok)
-            .SetFailReturn(er_writing);
-        STRICT_EXPECTED_CALL(io_encode_prx_addrinfo(IGNORED_PTR_ARG, &results_valid[i]))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok)
-            .SetFailReturn(er_writing);
-    }
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
-
-    // act
-    UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = io_encode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_writing);
-}
-
-// 
-// Test io_decode_resolve_response happy path 
-// 
-TEST_FUNCTION(io_decode_resolve_response__success_1)
-{
-    static const size_t k_size_valid = 0;
-    static io_codec_ctx_t k_ctx_valid;
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_decode_array(&k_ctx_valid, "results", IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_size(&k_size_valid, sizeof(k_size_valid))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_decode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_NULL(response_valid.results);
-}
-
-// 
-// Test io_decode_resolve_response happy path 
-// 
-TEST_FUNCTION(io_decode_resolve_response__success_2)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    prx_addrinfo_t results_valid[4];
-    const size_t k_size_valid = _countof(results_valid) - 1;
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_decode_array(&k_ctx_valid, "results", IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_size(&k_size_valid, sizeof(k_size_valid))
-        .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(h_realloc(sizeof(results_valid), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)&results_valid[0]);
-    for (size_t i = 0; i < k_size_valid; i++)
-    {
-        STRICT_EXPECTED_CALL(io_decode_object(IGNORED_PTR_ARG, NULL, NULL, IGNORED_PTR_ARG))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .CopyOutArgumentBuffer_object(&k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok);
-        STRICT_EXPECTED_CALL(io_decode_prx_addrinfo(IGNORED_PTR_ARG, &results_valid[i]))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok);
-    }
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    result = io_decode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_ARE_EQUAL(void_ptr, (void*)&results_valid[0], (void*)response_valid.results);
-}
-
-// 
-// Test io_decode_resolve_response unhappy path 
-// 
-TEST_FUNCTION(io_decode_resolve_response__neg)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    prx_addrinfo_t results_valid[2];
-    const size_t k_size_valid = _countof(results_valid);
-    io_resolve_response_t response_valid;
-    int32_t result;
-
-    // arrange
-    UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL(io_decode_array(&k_ctx_valid, "results", IGNORED_PTR_ARG, IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer_array(&k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_size(&k_size_valid, sizeof(k_size_valid))
-        .SetReturn(er_ok)
-        .SetFailReturn(er_out_of_memory);
-    STRICT_EXPECTED_CALL(h_realloc(sizeof(results_valid), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)&results_valid[0])
-        .SetFailReturn(NULL);
-    for (size_t i = 0; i < _countof(results_valid); i++)
-    {
-        STRICT_EXPECTED_CALL(io_decode_object(IGNORED_PTR_ARG, NULL, NULL, IGNORED_PTR_ARG))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok)
-            .SetFailReturn(er_out_of_memory);
-        STRICT_EXPECTED_CALL(io_decode_prx_addrinfo(IGNORED_PTR_ARG, &results_valid[i]))
-            .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-            .SetReturn(er_ok)
-            .SetFailReturn(er_out_of_memory);
-    }
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
-
-    // act 
-    UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = io_decode_resolve_response(&k_ctx_valid, &response_valid);
-
-    // assert
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_invalid_format, er_out_of_memory);
-}
-
-// 
 // Test io_encode_link_request happy path 
 // 
 TEST_FUNCTION(io_encode_link_request__success)
@@ -799,7 +453,7 @@ TEST_FUNCTION(io_encode_setopt_request__success)
 
     // arrange
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &request_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_property, &request_valid, so_val);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -822,7 +476,7 @@ TEST_FUNCTION(io_encode_setopt_request__neg)
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &request_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_property, &request_valid, so_val);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -844,7 +498,7 @@ TEST_FUNCTION(io_decode_setopt_request__success)
 
     // arrange
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &request_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_property, &request_valid, so_val);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -867,7 +521,7 @@ TEST_FUNCTION(io_decode_setopt_request__neg)
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &request_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_property, &request_valid, so_val);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -983,7 +637,7 @@ TEST_FUNCTION(io_encode_getopt_response__success)
 
     // arrange
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &response_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_property, &response_valid, so_val);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -1006,7 +660,7 @@ TEST_FUNCTION(io_encode_getopt_response__neg)
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &response_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_property, &response_valid, so_val);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -1028,7 +682,7 @@ TEST_FUNCTION(io_decode_getopt_response__success)
 
     // arrange
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &response_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_property, &response_valid, so_val);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -1051,7 +705,7 @@ TEST_FUNCTION(io_decode_getopt_response__neg)
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
-    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_option_value, &response_valid, so_val);
+    STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_property, &response_valid, so_val);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -1074,13 +728,17 @@ TEST_FUNCTION(io_encode_open_request__success)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.max_recv = 800;
+    request_valid.type = 0;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "connection-string", k_cs_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -1103,14 +761,18 @@ TEST_FUNCTION(io_encode_open_request__neg)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.max_recv = 800;
+    request_valid.type = 0;
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "connection-string", k_cs_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -1119,7 +781,7 @@ TEST_FUNCTION(io_encode_open_request__neg)
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_writing, er_writing, er_writing, er_ok, er_writing);
+        er_writing, er_writing, er_writing, er_writing, er_ok, er_writing);
 }
 
 // 
@@ -1133,12 +795,14 @@ TEST_FUNCTION(io_decode_open_request__success)
     int32_t result;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 5);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL(io_decode_string_default(&k_ctx_valid, "connection-string", IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_string(&k_cs_valid, sizeof(k_cs_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -1161,12 +825,14 @@ TEST_FUNCTION(io_decode_open_request__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 5);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL(io_decode_string_default(&k_ctx_valid, "connection-string", IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_string(&k_cs_valid, sizeof(k_cs_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -1175,7 +841,8 @@ TEST_FUNCTION(io_decode_open_request__neg)
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_invalid_format, er_out_of_memory, er_out_of_memory, er_ok, er_out_of_memory);
+        er_invalid_format, er_out_of_memory, er_out_of_memory, er_out_of_memory, 
+        er_ok, er_out_of_memory);
 }
 
 // 
@@ -1336,7 +1003,7 @@ TEST_FUNCTION(io_encode_data_message__neg)
 // 
 TEST_FUNCTION(io_decode_data__success)
 {
-    static const prx_size_t k_read_valid = 10;
+    static const size_t k_read_valid = 10;
     static void* k_value_valid = UT_MEM;
     static io_codec_ctx_t k_ctx_valid;
     io_data_message_t message_valid;

@@ -13,7 +13,7 @@
 typedef struct pal_socket pal_socket_t;
 
 //
-// Websocket client events
+// Socket client events
 //
 typedef enum pal_socket_event
 {
@@ -37,7 +37,7 @@ typedef void (*pal_socket_event_handler_t)(
     pal_socket_event_t ev,
     uint8_t** buffer,         // The buffer for the event or null
     size_t* size,        // Size of buffer or amount read/written
-    prx_socket_address_t* addr,    // Socket address if applicable
+    prx_socket_address_t* addr,   // Socket address if applicable
     int32_t* flags,                 // Flags describing operation
     int32_t error,   // Error that occurred, e.g. as result of op
     void** op_context        // A user provided operation context
@@ -54,6 +54,12 @@ typedef struct pal_socket_client_itf
 }
 pal_socket_client_itf_t;
 
+//
+// Call before using socket layer 
+//
+decl_public_1(int32_t, pal_socket_init,
+    uint32_t*, caps
+);
 
 //
 // Create socket and bind to passed in client interface
@@ -68,6 +74,16 @@ decl_internal_2(int32_t, pal_socket_create,
 //
 decl_internal_1(int32_t, pal_socket_open,
     pal_socket_t*, sock
+);
+
+//
+// Create an opened / connected pair of local sockets 
+//
+decl_internal_4(int32_t, pal_socket_pair,
+    pal_socket_client_itf_t*, itf1,
+    pal_socket_t**, sock1,
+    pal_socket_client_itf_t*, itf2,
+    pal_socket_t**, sock2
 );
 
 //
@@ -156,13 +172,6 @@ decl_internal_1(void, pal_socket_close,
 //
 decl_internal_1(void, pal_socket_free,
     pal_socket_t*, sock
-);
-
-//
-// Call before using socket layer 
-//
-decl_public_0(int32_t, pal_socket_init,
-    void
 );
 
 //

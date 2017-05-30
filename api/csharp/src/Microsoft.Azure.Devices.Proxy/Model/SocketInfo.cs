@@ -15,7 +15,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     /// Flags for socket properties, determine how socket is opened
     /// </summary>
     public enum SocketFlags {
-        Passive = 0x1
+        Passive = 0x1,
+        Internal = 0x2
     }
 
     /// <summary>
@@ -64,7 +65,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Socket options that apply to the socket
         /// </summary>
         [DataMember(Name = "options", Order = 7)]
-        public HashSet<SocketOptionValue> Options { get; set; } = new HashSet<SocketOptionValue>();
+        public HashSet<PropertyBase> Options { get; set; } = new HashSet<PropertyBase>();
 
         /// <summary>
         /// Comparison
@@ -99,13 +100,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public override string ToString() {
             var str = new StringBuilder();
-              str.Append("Type:     "); str.Append(Type);
-            str.Append("\nProtocol: "); str.Append(Protocol);
-            str.Append("\nFamily:   "); str.Append(Family);
-            str.Append("\nAddress:  "); str.Append(Address);
-            str.Append("\nFlags:    "); str.Append(Flags);
-        //  str.Append("\nOptions:\n"); str.Append(Options);
-            str.Append("\n");
+            str.Append("Type:     "); str.AppendLine(Type.ToString());
+            str.Append("Protocol: "); str.AppendLine(Protocol.ToString());
+            str.Append("Family:   "); str.AppendLine(Family.ToString());
+            str.Append("Address:  "); str.AppendLine(Address.ToString());
+            str.Append("Flags:    "); str.AppendLine(Flags.ToString());
+        //  str.AppendLine("Options:\n"); str.AppendLine(Options.ToString());
             return str.ToString();
         }
 
@@ -114,13 +114,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            return
-                Address.GetHashCode() ^
-        //      Options.GetHashCode() ^
-                Flags.GetHashCode() ^
-                Family.GetHashCode() ^
-                Protocol.GetHashCode() ^
-                Type.GetHashCode();
+            return ((((
+                Address.GetHashCode() * 31) ^
+               //      Options.GetHashCode() ^
+               Flags.GetHashCode() * 31) ^
+               Family.GetHashCode() * 31) ^
+               Protocol.GetHashCode() * 31) ^
+               Type.GetHashCode();
         }
     }
 }

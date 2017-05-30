@@ -14,13 +14,13 @@ MOCKABLE_FUNCTION(, int, poll,
     struct pollfd*, fds, int, nfds, int, timeout);
 MOCKABLE_FUNCTION(, int, fcntl, 
     fd_t, s, int, cmd, int, val);
-MOCKABLE_FUNCTION(, int, pipe, 
-    fd_t*, fd);
-MOCKABLE_FUNCTION(, int, read, 
-    fd_t, fd, void*, buf, int, len);
-MOCKABLE_FUNCTION(, int, write,
-    fd_t, fd, const void*, buf, int, len);
-MOCKABLE_FUNCTION(, int, close, 
+MOCKABLE_FUNCTION(, int, socketpair,
+    int, domain, int, type, int, protocol, int*, sv);
+MOCKABLE_FUNCTION(, sockssize_t, recv,
+    fd_t, s, sockbuf_t*, buf, socksize_t, len, int, flags);
+MOCKABLE_FUNCTION(, sockssize_t, send,
+    fd_t, s, const sockbuf_t*, buf, socksize_t, len, int, flags);
+MOCKABLE_FUNCTION(, int, closesocket,
     fd_t, fd);
 
 //
@@ -41,6 +41,8 @@ BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(pal_event_type, int);
 REGISTER_UMOCK_ALIAS_TYPE(fd_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(sockssize_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(socksize_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(uintptr_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(THREADAPI_RESULT, int);
 REGISTER_UMOCK_ALIAS_TYPE(THREAD_HANDLE, void*);
@@ -81,11 +83,11 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__success)
     STRICT_EXPECTED_CALL(lock_create(IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_created(&k_lock_valid, sizeof(k_lock_valid))
         .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(pipe(IGNORED_PTR_ARG))
-        .CopyOutArgumentBuffer(1, pipe_valid, sizeof(pipe_valid))
+    STRICT_EXPECTED_CALL(socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, IGNORED_PTR_ARG))
+        .CopyOutArgumentBuffer(4, pipe_valid, sizeof(pipe_valid))
         .SetReturn(0)
         .SetFailReturn(-1);
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1)
         .SetFailReturn(0);
@@ -145,7 +147,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__neg)
         .CopyOutArgumentBuffer_created(&k_lock_valid, sizeof(k_lock_valid))
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1)
         .SetFailReturn(0);
@@ -183,7 +185,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_1)
     port_valid.poll_buffer = (struct pollfd*)UT_MEM;
 
     // arrange 
-    STRICT_EXPECTED_CALL(close(k_valid_fd))
+    STRICT_EXPECTED_CALL(closesocket(k_valid_fd))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_res(&k_thread_result_valid, sizeof(k_thread_result_valid))
@@ -276,7 +278,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_register__success)
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
     STRICT_EXPECTED_CALL(DList_InsertTailList(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1).IgnoreArgument(2);
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
@@ -401,7 +403,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_register__neg)
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
     STRICT_EXPECTED_CALL(DList_InsertTailList(IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .IgnoreArgument(1).IgnoreArgument(2);
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1)
         .SetFailReturn(0);
@@ -439,7 +441,7 @@ TEST_FUNCTION(pal_nix_poll_event_select__success_1)
 
     // arrange 
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
@@ -476,7 +478,7 @@ TEST_FUNCTION(pal_nix_poll_event_select__success_2)
 
     // arrange 
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
@@ -580,7 +582,7 @@ TEST_FUNCTION(pal_nix_poll_event_select__neg)
     // arrange 
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1)
         .SetFailReturn(0);
@@ -618,7 +620,7 @@ TEST_FUNCTION(pal_nix_poll_event_clear__success_1)
 
     // arrange 
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
@@ -655,7 +657,7 @@ TEST_FUNCTION(pal_nix_poll_event_clear__success_2)
 
     // arrange 
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
@@ -756,7 +758,7 @@ TEST_FUNCTION(pal_nix_poll_event_clear__neg)
     // arrange 
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1)
         .SetFailReturn(0);
@@ -793,13 +795,13 @@ TEST_FUNCTION(pal_nix_poll_event_close__success)
 
     // arrange 
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(write(k_valid_fd, IGNORED_PTR_ARG, 1))
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
         .IgnoreArgument(2)
         .SetReturn(1);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
 
     // act 
-    pal_event_close(event_handle_valid);
+    pal_event_close(event_handle_valid, true);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -814,7 +816,7 @@ TEST_FUNCTION(pal_nix_poll_event_close__arg_event_handle_null)
     // arrange 
 
     // act 
-    pal_event_close(0);
+    pal_event_close(0, true);
 
     // assert 
     ASSERT_EXPECTED_CALLS();

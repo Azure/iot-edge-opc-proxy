@@ -49,12 +49,17 @@ namespace NetCoreConsoleClient
             {
                 Console.WriteLine("Exit due to Exception: {0}", e.Message);
             }
+            Console.ReadKey(true);
         }
 
         public static async Task ConsoleSampleClient(string endpointURL)
         {
+            Utils.SetTraceMask(0x3ff);
+            Utils.SetTraceOutput(Utils.TraceOutput.StdOutAndFile);
+            Utils.SetTraceLog("./opc.client.log", false);
+
             Console.WriteLine("1 - Create an Application Configuration.");
-            var config = new ApplicationConfiguration()
+            var config = new ApplicationConfiguration
             {
                 ApplicationName = "UA Core Sample Client",
                 ApplicationType = ApplicationType.Client,
@@ -86,8 +91,8 @@ namespace NetCoreConsoleClient
                     AutoAcceptUntrustedCertificates = true
                 },
                 TransportConfigurations = new TransportConfigurationCollection(),
-                TransportQuotas = new TransportQuotas { OperationTimeout = 15000 },
-                ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 60000 }
+                TransportQuotas = new TransportQuotas { OperationTimeout = 120000 },
+                ClientConfiguration = new ClientConfiguration { DefaultSessionTimeout = 120000 }
             };
 
             await config.Validate(ApplicationType.Client);
@@ -107,7 +112,6 @@ namespace NetCoreConsoleClient
                     );
 
                 config.SecurityConfiguration.ApplicationCertificate.Certificate = certificate;
-
             }
 
             haveAppCertificate = config.SecurityConfiguration.ApplicationCertificate.Certificate != null;
@@ -126,23 +130,23 @@ namespace NetCoreConsoleClient
                 Console.WriteLine("    WARN: missing application certificate, using unsecure connection.");
             }
 
-#if PERF
-    while(true) {
-        try {
-            // Console.Clear();
-#endif
             Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
             Uri endpointURI = new Uri(endpointURL);
             var endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
             var selectedEndpoint = SelectUaTcpEndpoint(endpointCollection, haveAppCertificate);
-            Console.WriteLine("    Selected endpoint uses: {0}", 
+            Console.WriteLine("    Selected endpoint uses: {0}",
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
+#if !PERF
+        for (int i = 1; ; i++)
+        {
+#endif
             Console.WriteLine("3 - Create a session with OPC UA server.");
             var endpointConfiguration = EndpointConfiguration.Create(config);
             var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
             endpoint.Update(selectedEndpoint);
-            var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, null, null);
+            var session = await Session.Create(config, endpoint, true, ".Net Core OPC UA Console Client", 60000, null,
+                null);
 
             // Access underlying proxy socket
             var channel = session.TransportChannel as IMessageSocketChannel;
@@ -154,14 +158,10 @@ namespace NetCoreConsoleClient
             Byte[] continuationPoint;
 
             references = session.FetchReferences(ObjectIds.ObjectsFolder);
-#if PERF
             Stopwatch w = Stopwatch.StartNew();
-            for (int i = 1; i <= 5; i++) {
-                // Console.Clear();
-                Console.WriteLine($"4 - Browse the OPC UA server namespace ({i}).");
-#else
-                Console.WriteLine($"4 - Browse the OPC UA server namespace.");
-#endif
+
+            Console.WriteLine($"4 - Browse the OPC UA server namespace.");
+
             session.Browse(
                 null,
                 null,
@@ -170,42 +170,16 @@ namespace NetCoreConsoleClient
                 BrowseDirection.Forward,
                 ReferenceTypeIds.HierarchicalReferences,
                 true,
-                (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
+                (uint) NodeClass.Variable | (uint) NodeClass.Object | (uint) NodeClass.Method,
                 out continuationPoint,
                 out references);
 
             Console.WriteLine(" DisplayName, BrowseName, NodeClass");
-            foreach (var rd in references)
-            {
-                Console.WriteLine(" {0}, {1}, {2}", rd.DisplayName, rd.BrowseName, rd.NodeClass);
-                ReferenceDescriptionCollection nextRefs;
-                byte[] nextCp;
-                session.Browse(
-                    null,
-                    null,
-                    ExpandedNodeId.ToNodeId(rd.NodeId, session.NamespaceUris),
-                    0u,
-                    BrowseDirection.Forward,
-                    ReferenceTypeIds.HierarchicalReferences,
-                    true,
-                    (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
-                    out nextCp,
-                    out nextRefs);
-
-                foreach (var nextRd in nextRefs)
-                {
-                    Console.WriteLine("   + {0}, {1}, {2}", nextRd.DisplayName, nextRd.BrowseName, nextRd.NodeClass);
-                }
-            }
-#if PERF
-            }
+            BrowseChildren("", references, session);
             Console.WriteLine($" ....        took {w.ElapsedMilliseconds} ms...");
+#if !PERF
             session.Close();
         }
-        catch (Exception e) {
-            Console.WriteLine(e.ToString());
-        }
-    }
 #else
 
             Console.WriteLine("5 - Create a subscription with publishing interval of 1 second.");
@@ -226,8 +200,38 @@ namespace NetCoreConsoleClient
             subscription.Create();
 
             Console.WriteLine("8 - Running...Press any key to exit...");
-            Console.ReadKey(true);
 #endif
+        }
+
+        private static void BrowseChildren(string prefix, ReferenceDescriptionCollection references, Session session)
+        {
+            foreach (var rd in references)
+            {
+                Console.WriteLine("{0}+ {1}, {2}, {3}", prefix, rd.DisplayName, rd.BrowseName, rd.NodeClass);
+                try
+                {
+                    ReferenceDescriptionCollection nextRefs;
+                    byte[] nextCp;
+
+                    session.Browse(
+                        null,
+                        null,
+                        ExpandedNodeId.ToNodeId(rd.NodeId, session.NamespaceUris),
+                        0u,
+                        BrowseDirection.Forward,
+                        ReferenceTypeIds.HierarchicalReferences,
+                        true,
+                        (uint) NodeClass.Variable | (uint) NodeClass.Object | (uint) NodeClass.Method,
+                        out nextCp,
+                        out nextRefs);
+
+                    BrowseChildren(prefix + "   ", nextRefs, session);
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
         }
 
         private static void OnNotification(MonitoredItem item, MonitoredItemNotificationEventArgs e)

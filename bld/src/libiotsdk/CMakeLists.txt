@@ -42,6 +42,9 @@
         ${_SHARED_ROOT}/src/vector.c
         ${_SHARED_ROOT}/src/xio.c
         ${_SHARED_ROOT}/src/xlogging.c
+        ${_UMQTT_ROOT}/src/mqtt_client.c
+        ${_UMQTT_ROOT}/src/mqtt_codec.c
+        ${_UMQTT_ROOT}/src/mqtt_message.c
     )
 if(WIN32)
     set(source_c_files ${source_c_files}
@@ -85,12 +88,16 @@ compileAsC99()
     set_property(TARGET libiotsdk PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32)
-    target_include_directories(libiotsdk PUBLIC ${_IOTSDK_INC})
+    target_include_directories(libiotsdk 
+        PUBLIC ${_IOTSDK_INC}
+        PUBLIC ${_UMQTT_INC}
+    )
 else()
     target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
     target_include_directories(libiotsdk 
         PUBLIC ${_IOTSDK_INC}
+        PUBLIC ${_UMQTT_INC}
         PRIVATE ${CURL_INCLUDE_DIRS}
     )
 endif()

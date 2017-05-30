@@ -100,7 +100,7 @@ static int32_t io_cs_validate_device_id(
 {
     size_t i, count;
 
-    // Not valid chars: °, ^, §, &, /, [, ], {, }, :, <, >, |, ~, ...
+    // Not valid chars: ï¿½, ^, ï¿½, &, /, [, ], {, }, :, <, >, |, ~, ...
     const char valid_chars[] =
     {
         '-', ':', '.', '+', '%', '_', '#', '*', '?',

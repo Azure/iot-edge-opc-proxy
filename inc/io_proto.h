@@ -66,7 +66,7 @@ decl_internal_2(int32_t, io_message_clone,
 //
 decl_internal_2(int32_t, io_encode_message,
     io_codec_ctx_t*, ctx,
-    io_message_t*, message
+    const io_message_t*, message
 );
 
 //
@@ -117,7 +117,6 @@ decl_internal_1(void, io_message_release,
 //
 
 decl_g(const uint32_t, io_message_type_ping,                    10);
-decl_g(const uint32_t, io_message_type_resolve,                 11);
 decl_g(const uint32_t, io_message_type_link,                    12);
 decl_g(const uint32_t, io_message_type_setopt,                  13);
 decl_g(const uint32_t, io_message_type_getopt,                  14);
@@ -161,35 +160,6 @@ typedef struct io_ping_response
     uint32_t time_ms;
 }
 io_ping_response_t;
-
-//
-// Adress resolution are unicast requests that allow a client
-// to do a getaddrinfo like address resolution.  Returned address
-// are only valid on the proxy, not globally.
-//
-
-//
-// Resolve request
-//
-typedef struct io_resolve_request
-{
-    prx_address_family_t family;
-    uint32_t flags;
-    uint16_t port;            // In host byte order, not network
-    uint16_t reserved;
-    char host[MAX_HOST_LENGTH];
-}
-io_resolve_request_t;
-
-//
-// Resolve response
-//
-typedef struct io_resolve_response
-{
-    prx_size_t result_count;
-    prx_addrinfo_t* results;   // Call prx_free_addrinfo
-}
-io_resolve_response_t;
 
 //
 // Link requests are used to create a link between caller and 
@@ -237,7 +207,7 @@ io_link_response_t;
 //
 typedef struct io_setopt_request
 {
-    prx_socket_option_value_t so_val;
+    prx_property_t so_val;
 }
 io_setopt_request_t;
 
@@ -261,7 +231,7 @@ io_getopt_request_t;
 //
 typedef struct io_getopt_response
 {
-    prx_socket_option_value_t so_val;
+    prx_property_t so_val;
 }
 io_getopt_response_t;
 
@@ -280,8 +250,11 @@ io_getopt_response_t;
 typedef struct io_open_request
 {
     io_ref_t stream_id;
+    int32_t type;
     const char* connection_string;
     bool polled;
+    uint32_t max_send;
+    uint32_t max_recv;
 }
 io_open_request_t;
 
@@ -309,9 +282,9 @@ io_poll_message_t;
 typedef struct io_data_message
 {
     prx_socket_address_t source_address;
-    prx_size_t control_buffer_length;
+    size_t control_buffer_length;
     uint8_t* control_buffer;
-    prx_size_t buffer_length;
+    size_t buffer_length;
     uint8_t* buffer;
 }
 io_data_message_t;
@@ -350,8 +323,6 @@ struct io_message
     union {                        // Message content structure
     io_ping_request_t ping_request;
     io_ping_response_t ping_response;
-    io_resolve_request_t resolve_request;
-    io_resolve_response_t resolve_response;
     io_link_request_t link_request;
     io_link_response_t link_response;
     io_setopt_request_t setopt_request;

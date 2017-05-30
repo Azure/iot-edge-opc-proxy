@@ -9,7 +9,7 @@
 #include "io_transport.h"
 
 //
-// Handles remote socket creation and name resolution
+// Handles remote io
 //
 typedef struct prx_server prx_server_t;
 

@@ -1,21 +1,16 @@
 FROM ubuntu:zesty
 
-ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
-ENV COMMIT_ID master
-
 RUN \
-		set -ex \
-	&& \
-		apt-get update && apt-get install -y \
-			apt-transport-https \
-			curl \
-			build-essential \
-			libcurl4-openssl-dev \
-			git \
-			cmake \
-			libssl-dev \
-			valgrind \
-			libglib2.0-dev
-
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+        set -ex \
+    && \
+        apt-get update && apt-get install -y \
+            apt-transport-https \
+            curl \
+            build-essential \
+            libcurl4-openssl-dev \
+            git \
+            cmake \
+            libssl-dev \
+            valgrind \
+            libglib2.0-dev \
+            libavahi-client-dev

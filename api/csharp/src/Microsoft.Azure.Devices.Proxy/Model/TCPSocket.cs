@@ -62,6 +62,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public override async Task ConnectAsync(SocketAddress address, CancellationToken ct) {
 
+            if (address.Family == AddressFamily.Bound) {
+                // Unwrap proxy and connect address.  If not bound, use local address to bind to.
+                if (_bindList == null) {
+                    await BindAsync(((BoundSocketAddress)address).LocalAddress, ct);
+                }
+                address = ((BoundSocketAddress) address).RemoteAddress;
+            }
+
             // Get the named host from the registry if it exists - there should only be one...
             Host = null;
             var hostList = await Provider.NameService.LookupAsync(

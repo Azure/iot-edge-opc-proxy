@@ -16,6 +16,7 @@ typedef unsigned int(*hashfunction_t) (void*);
 typedef int(*key_eq_fn_t) (void*, void*);
 
 MOCKABLE_FUNCTION(, int, hashtable_insert, struct hashtable*, h, void*, k, void*, v);
+MOCKABLE_FUNCTION(, void*, hashtable_remove, struct hashtable*, h, void*, k);
 MOCKABLE_FUNCTION(, void*, hashtable_search, struct hashtable*, h, void*, k);
 MOCKABLE_FUNCTION(, unsigned int, hashtable_count, struct hashtable*, h);
 MOCKABLE_FUNCTION(, void, hashtable_destroy, struct hashtable*, h, int, free_values);
@@ -24,7 +25,6 @@ MOCKABLE_FUNCTION(, int, hashtable_iterator_advance, struct hashtable_itr*, itr)
 MOCKABLE_FUNCTION(, int, hashtable_iterator_remove, struct hashtable_itr*, itr);
 MOCKABLE_FUNCTION(, struct hashtable*, create_hashtable, unsigned int, minsize,
     hashfunction_t, hashfunction, key_eq_fn_t, key_eq_fn);
-
 
 //
 // 2. Include unit under test
@@ -48,7 +48,6 @@ END_DECLARE_TEST_SUITE()
 // 4. Setup and run tests
 //
 DECLARE_TEST_SETUP()
-
 
 
 #ifdef prx_server_create

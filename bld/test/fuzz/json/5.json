@@ -1,0 +1,13 @@
+{
+    "version": 6,
+    "source_id": { "id": "a150ad6c-44db-4373-8c8c-01f840f2b119" },
+    "proxy_id": { "id": "6c8c83a6-fce9-027c-f176-a0596db7d37d" },
+    "target_id": { "id": "5c017616-c8cc-52f1-fb57-ed7e7daf816a" },
+    "error_code": 0,
+    "is_response": false,
+    "type": 20,
+    "content": {
+      "stream_id": { "id": "5dff566a-011b-44e7-94a6-262c74b46071" },
+      "connection-string": "HostName=proxy1.servicebus.windows.net;EndpointName=test;SharedAccessKeyName=proxy;SharedAccessToken=SharedAccessSignature sr=http%3A%2F%2Fproxy1.servicebus.windows.net%2Ftest%2F&sig=wj3I7pZJkuAKTTZqLuAaNv4u0lfDGAicg95LKlJwn%2Bk%3D&se=1488472103&skn=proxy"
+    }
+  }

@@ -57,6 +57,8 @@ else()
     if(${CMAKE_USE_PTHREADS_INIT})
         target_link_libraries(libzlog PRIVATE pthread)
         target_compile_definitions(libzlog PRIVATE _HAVE_PTHREAD_H=1)
+    else()
+        message(FATAL_ERROR "No pthread found, please install")
     endif()
 endif()
 

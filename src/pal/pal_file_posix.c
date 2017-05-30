@@ -160,6 +160,80 @@ int32_t pal_get_real_path(
 }
 
 //
+// Traverse a folder and call callback for each file
+//
+int32_t pal_read_dir(
+    const char* dir_name,
+    pal_dir_cb_t cb,
+    void* context
+)
+{
+    int32_t result;
+    DIR *dir;
+    struct dirent *dp;
+    struct stat statbuf;
+    prx_file_info_t palstat;
+
+    chk_arg_fault_return(dir_name);
+    chk_arg_fault_return(cb);
+
+    if (!*dir_name)
+        dir_name = "/";
+
+    dir = opendir(dir_name);
+    if (dir == NULL)
+        return pal_os_last_error_as_prx_error();
+    result = er_not_found;
+    while (true) 
+    {
+        dp = readdir(dir);
+        if (!dp)
+        {
+            result = pal_os_last_error_as_prx_error();
+            break;
+        }
+
+        if (!dp->d_name[0] ||
+            (dp->d_name[0] == '.' && !dp->d_name[1]) ||
+            (dp->d_name[0] == '.' && dp->d_name[1] == '.' && !dp->d_name[2]))
+        {
+            // Skipping ".", ".." or empty paths...
+            continue;
+        }
+
+        if (0 != stat(dp->d_name, &statbuf))
+        {
+            result = pal_os_last_error_as_prx_error();
+            break;
+        }
+
+        memset(&palstat, 0, sizeof(prx_file_info_t));
+        palstat.inode_number = (uint64_t)statbuf.st_ino;
+        palstat.device_id    = (uint64_t)statbuf.st_dev;
+        palstat.total_size   = (uint64_t)statbuf.st_size;
+        palstat.last_atime   = (uint64_t)statbuf.st_atime;
+        palstat.last_mtime   = (uint64_t)statbuf.st_mtime;
+
+        /**/ if (S_ISDIR(statbuf.st_mode))
+            palstat.type = prx_file_type_dir;
+        else 
+            palstat.type = prx_file_type_file;
+
+        if (er_ok != cb(context, er_ok, dp->d_name, &palstat))
+        {
+            result = er_ok;
+            break;
+        }
+    }
+    (void)closedir(dir);
+    if (result != er_ok)
+        result = cb(context, result, NULL, NULL);
+    if (result == er_nomore)
+        result = er_ok;
+    return result;
+}
+
+//
 // Free path
 //
 void pal_free_path(

@@ -122,7 +122,7 @@ TEST_FUNCTION(prx_client_ntop__success)
 {
     static const prx_socket_address_t* k_address_valid;
     static const char* k_addr_string_valid;
-    static const prx_size_t k_addr_string_size_valid;
+    static const size_t k_addr_string_size_valid;
     int32_t result;
 
     // arrange 
@@ -177,7 +177,7 @@ TEST_FUNCTION(prx_client_ntop__arg_addr_string_invalid)
 }
 
 // 
-// Test prx_client_ntop passing as addr_string_size argument an invalid prx_size_t value 
+// Test prx_client_ntop passing as addr_string_size argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_ntop__arg_addr_string_size_invalid)
 {
@@ -203,7 +203,7 @@ TEST_FUNCTION(prx_client_ntop__neg)
 {
     static const prx_socket_address_t* k_address_valid;
     static const char* k_addr_string_valid;
-    static const prx_size_t k_addr_string_size_valid;
+    static const size_t k_addr_string_size_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -230,7 +230,7 @@ TEST_FUNCTION(prx_client_getifaddrinfo__success)
     static const const char* k_if_name_valid;
     static const uint32_t k_flags_valid;
     static const prx_ifaddrinfo_t** k_info_valid;
-    static const prx_size_t* k_info_count_valid;
+    static const size_t* k_info_count_valid;
     int32_t result;
 
     // arrange 
@@ -305,7 +305,7 @@ TEST_FUNCTION(prx_client_getifaddrinfo__arg_info_invalid)
 }
 
 // 
-// Test prx_client_getifaddrinfo passing as info_count argument an invalid prx_size_t* value 
+// Test prx_client_getifaddrinfo passing as info_count argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_getifaddrinfo__arg_info_count_invalid)
 {
@@ -332,7 +332,7 @@ TEST_FUNCTION(prx_client_getifaddrinfo__neg)
     static const const char* k_if_name_valid;
     static const uint32_t k_flags_valid;
     static const prx_ifaddrinfo_t** k_info_valid;
-    static const prx_size_t* k_info_count_valid;
+    static const size_t* k_info_count_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -421,7 +421,7 @@ TEST_FUNCTION(prx_client_getifnameinfo__success)
 {
     static const prx_socket_address_t* k_if_address_valid;
     static const char* k_if_name_valid;
-    static const prx_size_t k_if_name_length_valid;
+    static const size_t k_if_name_length_valid;
     static const uint64_t* k_if_index_valid;
     int32_t result;
 
@@ -477,7 +477,7 @@ TEST_FUNCTION(prx_client_getifnameinfo__arg_if_name_invalid)
 }
 
 // 
-// Test prx_client_getifnameinfo passing as if_name_length argument an invalid prx_size_t value 
+// Test prx_client_getifnameinfo passing as if_name_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_getifnameinfo__arg_if_name_length_invalid)
 {
@@ -523,7 +523,7 @@ TEST_FUNCTION(prx_client_getifnameinfo__neg)
 {
     static const prx_socket_address_t* k_if_address_valid;
     static const char* k_if_name_valid;
-    static const prx_size_t k_if_name_length_valid;
+    static const size_t k_if_name_length_valid;
     static const uint64_t* k_if_index_valid;
     int32_t result;
 
@@ -553,7 +553,7 @@ TEST_FUNCTION(prx_client_getaddrinfo__success)
     static const prx_address_family_t k_family_valid;
     static const uint32_t k_flags_valid;
     static const prx_addrinfo_t** k_info_valid;
-    static const prx_size_t* k_info_count_valid;
+    static const size_t* k_info_count_valid;
     int32_t result;
 
     // arrange 
@@ -668,7 +668,7 @@ TEST_FUNCTION(prx_client_getaddrinfo__arg_info_invalid)
 }
 
 // 
-// Test prx_client_getaddrinfo passing as info_count argument an invalid prx_size_t* value 
+// Test prx_client_getaddrinfo passing as info_count argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_getaddrinfo__arg_info_count_invalid)
 {
@@ -697,7 +697,7 @@ TEST_FUNCTION(prx_client_getaddrinfo__neg)
     static const prx_address_family_t k_family_valid;
     static const uint32_t k_flags_valid;
     static const prx_addrinfo_t** k_info_valid;
-    static const prx_size_t* k_info_count_valid;
+    static const size_t* k_info_count_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -786,9 +786,9 @@ TEST_FUNCTION(prx_client_getnameinfo__success)
 {
     static const prx_socket_address_t* k_address_valid;
     static const char* k_host_valid;
-    static const prx_size_t k_host_length_valid;
+    static const size_t k_host_length_valid;
     static const char* k_service_valid;
-    static const prx_size_t k_service_length_valid;
+    static const size_t k_service_length_valid;
     static const int32_t k_flags_valid;
     int32_t result;
 
@@ -844,7 +844,7 @@ TEST_FUNCTION(prx_client_getnameinfo__arg_host_invalid)
 }
 
 // 
-// Test prx_client_getnameinfo passing as host_length argument an invalid prx_size_t value 
+// Test prx_client_getnameinfo passing as host_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_getnameinfo__arg_host_length_invalid)
 {
@@ -884,7 +884,7 @@ TEST_FUNCTION(prx_client_getnameinfo__arg_service_invalid)
 }
 
 // 
-// Test prx_client_getnameinfo passing as service_length argument an invalid prx_size_t value 
+// Test prx_client_getnameinfo passing as service_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_getnameinfo__arg_service_length_invalid)
 {
@@ -930,9 +930,9 @@ TEST_FUNCTION(prx_client_getnameinfo__neg)
 {
     static const prx_socket_address_t* k_address_valid;
     static const char* k_host_valid;
-    static const prx_size_t k_host_length_valid;
+    static const size_t k_host_length_valid;
     static const char* k_service_valid;
-    static const prx_size_t k_service_length_valid;
+    static const size_t k_service_length_valid;
     static const int32_t k_flags_valid;
     int32_t result;
 
@@ -958,7 +958,7 @@ TEST_FUNCTION(prx_client_getnameinfo__neg)
 TEST_FUNCTION(prx_gethostname__success)
 {
     static const char* k_name_valid;
-    static const prx_size_t k_name_length_valid;
+    static const size_t k_name_length_valid;
     int32_t result;
 
     // arrange 
@@ -993,7 +993,7 @@ TEST_FUNCTION(prx_gethostname__arg_name_invalid)
 }
 
 // 
-// Test prx_gethostname passing as name_length argument an invalid prx_size_t value 
+// Test prx_gethostname passing as name_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_gethostname__arg_name_length_invalid)
 {
@@ -1018,7 +1018,7 @@ TEST_FUNCTION(prx_gethostname__arg_name_length_invalid)
 TEST_FUNCTION(prx_gethostname__neg)
 {
     static const char* k_name_valid;
-    static const prx_size_t k_name_length_valid;
+    static const size_t k_name_length_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -1729,9 +1729,9 @@ TEST_FUNCTION(prx_client_recv__success)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
-    static const prx_size_t* k_received_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
+    static const size_t* k_received_valid;
     int32_t result;
 
     // arrange 
@@ -1826,7 +1826,7 @@ TEST_FUNCTION(prx_client_recv__arg_buffer_invalid)
 }
 
 // 
-// Test prx_client_recv passing as offset argument an invalid prx_size_t value 
+// Test prx_client_recv passing as offset argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_recv__arg_offset_invalid)
 {
@@ -1846,7 +1846,7 @@ TEST_FUNCTION(prx_client_recv__arg_offset_invalid)
 }
 
 // 
-// Test prx_client_recv passing as length argument an invalid prx_size_t value 
+// Test prx_client_recv passing as length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_recv__arg_length_invalid)
 {
@@ -1866,7 +1866,7 @@ TEST_FUNCTION(prx_client_recv__arg_length_invalid)
 }
 
 // 
-// Test prx_client_recv passing as received argument an invalid prx_size_t* value 
+// Test prx_client_recv passing as received argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_recv__arg_received_invalid)
 {
@@ -1894,9 +1894,9 @@ TEST_FUNCTION(prx_client_recv__neg)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
-    static const prx_size_t* k_received_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
+    static const size_t* k_received_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -1924,10 +1924,10 @@ TEST_FUNCTION(prx_client_recvfrom__success)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
     static const prx_socket_address_t* k_socket_address_valid;
-    static const prx_size_t* k_received_valid;
+    static const size_t* k_received_valid;
     int32_t result;
 
     // arrange 
@@ -2022,7 +2022,7 @@ TEST_FUNCTION(prx_client_recvfrom__arg_buffer_invalid)
 }
 
 // 
-// Test prx_client_recvfrom passing as offset argument an invalid prx_size_t value 
+// Test prx_client_recvfrom passing as offset argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_recvfrom__arg_offset_invalid)
 {
@@ -2042,7 +2042,7 @@ TEST_FUNCTION(prx_client_recvfrom__arg_offset_invalid)
 }
 
 // 
-// Test prx_client_recvfrom passing as length argument an invalid prx_size_t value 
+// Test prx_client_recvfrom passing as length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_recvfrom__arg_length_invalid)
 {
@@ -2082,7 +2082,7 @@ TEST_FUNCTION(prx_client_recvfrom__arg_socket_address_invalid)
 }
 
 // 
-// Test prx_client_recvfrom passing as received argument an invalid prx_size_t* value 
+// Test prx_client_recvfrom passing as received argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_recvfrom__arg_received_invalid)
 {
@@ -2110,10 +2110,10 @@ TEST_FUNCTION(prx_client_recvfrom__neg)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
     static const prx_socket_address_t* k_socket_address_valid;
-    static const prx_size_t* k_received_valid;
+    static const size_t* k_received_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -2141,9 +2141,9 @@ TEST_FUNCTION(prx_client_send__success)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
-    static const prx_size_t* k_sent_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
+    static const size_t* k_sent_valid;
     int32_t result;
 
     // arrange 
@@ -2238,7 +2238,7 @@ TEST_FUNCTION(prx_client_send__arg_buffer_invalid)
 }
 
 // 
-// Test prx_client_send passing as offset argument an invalid prx_size_t value 
+// Test prx_client_send passing as offset argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_send__arg_offset_invalid)
 {
@@ -2258,7 +2258,7 @@ TEST_FUNCTION(prx_client_send__arg_offset_invalid)
 }
 
 // 
-// Test prx_client_send passing as length argument an invalid prx_size_t value 
+// Test prx_client_send passing as length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_send__arg_length_invalid)
 {
@@ -2278,7 +2278,7 @@ TEST_FUNCTION(prx_client_send__arg_length_invalid)
 }
 
 // 
-// Test prx_client_send passing as sent argument an invalid prx_size_t* value 
+// Test prx_client_send passing as sent argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_send__arg_sent_invalid)
 {
@@ -2306,9 +2306,9 @@ TEST_FUNCTION(prx_client_send__neg)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
-    static const prx_size_t* k_sent_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
+    static const size_t* k_sent_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -2336,10 +2336,10 @@ TEST_FUNCTION(prx_client_sendto__success)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
     static const prx_socket_address_t* k_address_valid;
-    static const prx_size_t* k_sent_valid;
+    static const size_t* k_sent_valid;
     int32_t result;
 
     // arrange 
@@ -2434,7 +2434,7 @@ TEST_FUNCTION(prx_client_sendto__arg_buffer_invalid)
 }
 
 // 
-// Test prx_client_sendto passing as offset argument an invalid prx_size_t value 
+// Test prx_client_sendto passing as offset argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_sendto__arg_offset_invalid)
 {
@@ -2454,7 +2454,7 @@ TEST_FUNCTION(prx_client_sendto__arg_offset_invalid)
 }
 
 // 
-// Test prx_client_sendto passing as length argument an invalid prx_size_t value 
+// Test prx_client_sendto passing as length argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_sendto__arg_length_invalid)
 {
@@ -2494,7 +2494,7 @@ TEST_FUNCTION(prx_client_sendto__arg_address_invalid)
 }
 
 // 
-// Test prx_client_sendto passing as sent argument an invalid prx_size_t* value 
+// Test prx_client_sendto passing as sent argument an invalid size_t* value 
 // 
 TEST_FUNCTION(prx_client_sendto__arg_sent_invalid)
 {
@@ -2522,10 +2522,10 @@ TEST_FUNCTION(prx_client_sendto__neg)
     static const uintptr_t k_key_valid;
     static const int32_t k_flags_valid;
     static const uint8_t* k_buffer_valid;
-    static const prx_size_t k_offset_valid;
-    static const prx_size_t k_length_valid;
+    static const size_t k_offset_valid;
+    static const size_t k_length_valid;
     static const prx_socket_address_t* k_address_valid;
-    static const prx_size_t* k_sent_valid;
+    static const size_t* k_sent_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -2933,7 +2933,7 @@ TEST_FUNCTION(prx_leave_multicast_group__neg)
 // 
 TEST_FUNCTION(prx_client_poll__success)
 {
-    static const prx_size_t k_num_valid;
+    static const size_t k_num_valid;
     static const prx_fd_t* k_sockets_valid;
     static const int32_t* k_timeout_ms_valid;
     int32_t result;
@@ -2950,7 +2950,7 @@ TEST_FUNCTION(prx_client_poll__success)
 }
 
 // 
-// Test prx_client_poll passing as num argument an invalid prx_size_t value 
+// Test prx_client_poll passing as num argument an invalid size_t value 
 // 
 TEST_FUNCTION(prx_client_poll__arg_num_invalid)
 {
@@ -3014,7 +3014,7 @@ TEST_FUNCTION(prx_client_poll__arg_timeout_ms_invalid)
 // 
 TEST_FUNCTION(prx_client_poll__neg)
 {
-    static const prx_size_t k_num_valid;
+    static const size_t k_num_valid;
     static const prx_fd_t* k_sockets_valid;
     static const int32_t* k_timeout_ms_valid;
     int32_t result;

@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         [Event(40221, Level = EventLevel.Error, Message = "{0} Ping broadcast attempt {1} failed, remaining records {2}.")]
-        public void PingRetry(object source, int attempt, int remaining) {
+        public void BroadcastRetry(object source, int attempt, int remaining) {
             if (this.IsEnabled()) {
                 this.WriteEvent(40221, CreateSourceString(source), attempt, remaining);
             }
@@ -236,30 +236,6 @@ namespace Microsoft.Azure.Devices.Proxy {
                 this.WriteEvent(40251, source, exception);
             }
             Trace.TraceError($"ERROR CONTINUE: {exception} ({source}).");
-        }
-
-        [NonEvent]
-        public void GetTokenStart(object source) {
-            if (this.IsEnabled()) {
-                this.GetTokenStart(CreateSourceString(source));
-            }
-        }
-
-        [Event(40255, Level = EventLevel.Informational, Message = "GetToken start. Source: {0}")]
-        void GetTokenStart(string source) {
-            this.WriteEvent(40255, source);
-        }
-
-        [NonEvent]
-        public void GetTokenStop(DateTime tokenExpiry) {
-            if (this.IsEnabled()) {
-                this.GetTokenStop(DateTimeToString(tokenExpiry));
-            }
-        }
-
-        [Event(40256, Level = EventLevel.Informational, Message = "GetToken stop. New token expires at {0}.")]
-        void GetTokenStop(string tokenExpiry) {
-            this.WriteEvent(40256, tokenExpiry);
         }
 
         [NonEvent]

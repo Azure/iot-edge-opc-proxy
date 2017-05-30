@@ -1,29 +1,23 @@
 FROM ubuntu:precise
 
-ENV PROXY_REPO https://github.com/Azure/iot-gateway-proxy
-ENV COMMIT_ID master
-
 RUN \
-		set -ex \
-	&& \
-		apt-get update && apt-get install -y \
-			wget \
-			build-essential \
-			git \
-			libssl-dev \
-			libcurl4-openssl-dev \
-	&& \
-		wget https://cmake.org/files/v3.6/cmake-3.6.3.tar.gz \
-	&& \
-		tar xzvf cmake-3.6.3.tar.gz \
-	&& \
-		cd cmake-3.6.3 \
-	&& \
-		./configure \
-	&& \
-		make && make install \
-	&& \
-		ldconfig
-
-COPY docker-entrypoint.sh /
-ENTRYPOINT ["/docker-entrypoint.sh"]
+        set -ex \
+    && \
+        apt-get update && apt-get install -y \
+            wget \
+            build-essential \
+            git \
+            libssl-dev \
+            libcurl4-openssl-dev \
+    && \
+        wget https://cmake.org/files/v3.6/cmake-3.6.3.tar.gz \
+    && \
+        tar xzvf cmake-3.6.3.tar.gz \
+    && \
+        cd cmake-3.6.3 \
+    && \
+        ./configure \
+    && \
+        make && make install \
+    && \
+        ldconfig

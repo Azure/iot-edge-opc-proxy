@@ -13,17 +13,20 @@
 #include "azure_c_shared_utility/threadapi.h"
 
 //
-// Poll Port is a fake event port for poll events
+// Poll Port is a fake event port for poll events for both
+// Linux and Windows.  A socketpair is used for controling
+// the poll thread and adding/removing/destroying events.
 //
 typedef struct pal_poll_port
 {
     lock_t lock;
-    DLIST_ENTRY event_data_list;    // Registered events
+    DLIST_ENTRY event_data_list;      // Registered events
     size_t event_data_list_count;
-    struct pollfd* poll_buffer;
-    fd_t control_fd[2];               // Pipe to control
-    THREAD_HANDLE thread;           // Main polling loop
+    struct pollfd* poll_buffer;  // Buffer to pass to poll
+    fd_t control_fd[2];         // Socket pair for control
+    THREAD_HANDLE thread;             // Main polling loop
     bool running;
+    log_t log;
 }
 pal_poll_port_t;
 
@@ -34,6 +37,7 @@ typedef struct pal_poll_event
 {
     DLIST_ENTRY link;
     struct pollfd poll_struct;
+    bool close_fd;
     pal_event_port_handler_t cb;
     pal_poll_port_t* port;
     void* context;
@@ -47,9 +51,9 @@ static void pal_poll_event_free(
     pal_poll_event_t* ev_data
 )
 {
-    if (ev_data->poll_struct.fd != _invalid_fd)
+    if (ev_data->close_fd && ev_data->poll_struct.fd != _invalid_fd)
     {
-        close(ev_data->poll_struct.fd);
+        closesocket(ev_data->poll_struct.fd);
     }
     ev_data->cb(ev_data->context, pal_event_type_destroy, 0);
     mem_free_type(pal_poll_event_t, ev_data);
@@ -58,7 +62,7 @@ static void pal_poll_event_free(
 //
 // Wait for events
 //
-int32_t pal_poll_event_loop(
+static int32_t pal_poll_event_loop(
     pal_poll_port_t* pal_port
 )
 {
@@ -67,10 +71,11 @@ int32_t pal_poll_event_loop(
     size_t index, poll_len;
     DLIST_ENTRY events;
     char control_char;
-    int32_t result = er_ok;
-
+    int32_t result;
+    int poll_result;
     dbg_assert_ptr(pal_port);
 
+    result = er_ok;
     lock_enter(pal_port->lock);
     while (pal_port->running)
     {
@@ -80,7 +85,8 @@ int32_t pal_poll_event_loop(
         DList_InitializeListHead(&pal_port->event_data_list);
         while (!DList_IsListEmpty(&events))
         {
-            next = containingRecord(DList_RemoveHeadList(&events), pal_poll_event_t, link);
+            next = containingRecord(DList_RemoveHeadList(&events), 
+                pal_poll_event_t, link);
             if (next->port)
             {
                 // lock_exit to prevent deadlock in callback
@@ -104,7 +110,8 @@ int32_t pal_poll_event_loop(
             {
                 // Remove entry
                 pal_port->event_data_list_count--;
-                log_debug(NULL, "Removing event port for %x.", (uint32_t)next->poll_struct.fd);
+                log_trace(pal_port->log, "Removing event port for %x.",
+                    (uint32_t)next->poll_struct.fd);
                 lock_exit(pal_port->lock);
                 pal_poll_event_free(next);
                 lock_enter(pal_port->lock);
@@ -112,7 +119,8 @@ int32_t pal_poll_event_loop(
             else
             {
                 // Add back to event data list
-                DList_InsertTailList(&pal_port->event_data_list, &next->link);
+                DList_InsertTailList(&pal_port->event_data_list,
+                    &next->link);
             }
         }
 
@@ -143,36 +151,49 @@ int32_t pal_poll_event_loop(
         }
 
         // Wait for the first event, do not hold the lock while waiting
+#define POLL_TIMEOUT (10 * 60 * 1000)
         lock_exit(pal_port->lock);
-        result = poll(pal_port->poll_buffer, (unsigned long)poll_len, 1);
+        poll_result = poll(pal_port->poll_buffer, (unsigned long)poll_len,
+            POLL_TIMEOUT);
         lock_enter(pal_port->lock);
 
-        if (result < 0)
+        if (poll_result < 0)
         {
             result = pal_os_last_net_error_as_prx_error();
+            log_error(pal_port->log, "Error returned during polling (%s).",
+                prx_err_string(result));
             if (result != er_ok && result != er_arg)
                 break;
-            result = 0;
+            result = er_ok;
         }
 
-        // Clear control char in pipe
+        // Clear control char in control socket pair
         if (pal_port->poll_buffer[0].revents != 0)
-            read(pal_port->control_fd[1], &control_char, 1);
+        {
+            log_debug(pal_port->log, "Clearing event control channel.");
+            recv(pal_port->control_fd[1], &control_char, 1, 0);
+        }
 
         // Copy back revents
         index = 1;
         for (PDLIST_ENTRY p = pal_port->event_data_list.Flink;
-            p != &pal_port->event_data_list && index < poll_len; p = p->Flink, index++)
+            p != &pal_port->event_data_list && index < poll_len; 
+            p = p->Flink, index++)
         {
             next = containingRecord(p, pal_poll_event_t, link);
             dbg_assert(next->poll_struct.revents == 0,
                 "Poll struct and port out of sync");
             dbg_assert(next->poll_struct.fd == pal_port->poll_buffer[index].fd,
                 "fd out of sync");
+
             next->poll_struct.revents = pal_port->poll_buffer[index].revents;
+            log_debug(pal_port->log, "Event %x on poll socket %x.",
+                next->poll_struct.revents, (int)next->poll_struct.fd);
         }
     }
     lock_exit(pal_port->lock);
+    log_debug(pal_port->log, "Exit event port polling loop (%s).",
+        prx_err_string(result));
     return result;
 }
 
@@ -191,7 +212,7 @@ static int32_t pal_poll_worker_thread(
         result = pal_poll_event_loop(pal_port);
         if (result != er_ok)
         {
-            log_error(NULL, "Error occurred in polling thread: %s.", 
+            log_error(pal_port->log, "Error occurred in polling thread: %s.",
                 prx_err_string(result));
             ThreadAPI_Sleep(100);
         }
@@ -208,12 +229,17 @@ static int32_t pal_poll_signal(
     pal_poll_port_t* pal_port
 )
 {
+    int32_t result = er_ok;
     char control_char = 0xc;
     dbg_assert_ptr(pal_port);
-    dbg_assert(pal_port->control_fd[0] != _invalid_fd, "No control pipe");
-    if (1 != write(pal_port->control_fd[0], &control_char, 1))
-        return pal_os_last_error_as_prx_error();
-    return er_ok;
+    dbg_assert(pal_port->control_fd[0] != _invalid_fd, "No control fd");
+    if (1 != send(pal_port->control_fd[0], &control_char, 1, 0))
+    {
+        result = pal_os_last_error_as_prx_error();
+        log_error(pal_port->log, "Failed sending control signal (%s).",
+            prx_err_string(result));
+    }
+    return result;
 }
 
 //
@@ -227,11 +253,13 @@ int32_t pal_event_port_register(
     uintptr_t* event_handle
 )
 {
+    int32_t result;
     pal_poll_event_t* ev_data;
     pal_poll_port_t* pal_port = (pal_poll_port_t*)port;
     
-    if (!pal_port || !cb || !event_handle)
-        return er_fault;
+    chk_arg_fault_return(pal_port);
+    chk_arg_fault_return(cb);
+    chk_arg_fault_return(event_handle);
     if (sock == _invalid_fd)
         return er_arg;
 
@@ -244,6 +272,7 @@ int32_t pal_event_port_register(
     ev_data->context = context;
     ev_data->port = pal_port;
 
+    result = 1;
     _fd_nonblock(ev_data->poll_struct.fd, result);
 
     lock_enter(pal_port->lock);
@@ -254,7 +283,8 @@ int32_t pal_event_port_register(
 
     *event_handle = (uintptr_t)ev_data;
 
-    log_debug(NULL, "Added event port for %x.", (int32_t)sock);
+    log_debug(pal_port->log, "Added event port for %x.", 
+        (int32_t)sock);
     return er_ok;
 }
 
@@ -272,9 +302,15 @@ static uint32_t pal_event_type_to_poll_event(
     case pal_event_type_write:
         return POLLWRNORM;
     case pal_event_type_close:
+#if defined(WIN32)
+    case pal_event_type_error:
+        // Windows does not support select error/hangup
+        return 0;
+#else
         return POLLHUP;
     case pal_event_type_error:
         return POLLERR;
+#endif
     case pal_event_type_destroy:
     case pal_event_type_unknown:
     default:
@@ -297,8 +333,7 @@ int32_t pal_event_select(
     uint32_t plat_event;
 
     ev_data = (pal_poll_event_t*)event_handle;
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
     plat_event = pal_event_type_to_poll_event(event_type);
     if (!plat_event)
         return er_ok;
@@ -325,8 +360,7 @@ int32_t pal_event_clear(
     uint32_t plat_event;
     
     ev_data = (pal_poll_event_t*)event_handle;
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
     plat_event = pal_event_type_to_poll_event(event_type);
     if (!plat_event)
         return er_ok;
@@ -344,7 +378,8 @@ int32_t pal_event_clear(
 // Closes the event
 //
 void pal_event_close(
-    uintptr_t event_handle
+    uintptr_t event_handle,
+    bool close_fd
 )
 {
     pal_poll_event_t* ev_data;
@@ -357,6 +392,7 @@ void pal_event_close(
     pal_port = ev_data->port;
     lock_enter(pal_port->lock);
     ev_data->port = NULL;
+    ev_data->close_fd = close_fd;
     ev_data->poll_struct.events = 0;
     (void)pal_poll_signal(pal_port);
     lock_exit(pal_port->lock);
@@ -380,6 +416,7 @@ int32_t pal_event_port_create(
     do
     {
         DList_InitializeListHead(&pal_port->event_data_list);
+        pal_port->log = log_get("pal.ev");
         pal_port->event_data_list_count = 0;
         pal_port->control_fd[0] = _invalid_fd;
         pal_port->control_fd[1] = _invalid_fd;
@@ -388,15 +425,18 @@ int32_t pal_event_port_create(
         if (result != er_ok)
             break;
 
-        // Add control pipe
-        if (-1 == pipe(pal_port->control_fd))
+        // Add control sockets
+        if (-1 == socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, 
+            pal_port->control_fd))
         {
             result = pal_os_last_error_as_prx_error();
+            log_error(pal_port->log, "Failed to make control sockets (%s)",
+                prx_err_string(result));
             break;
         }
 
-        _fd_nonblock(sock->control_fd[0], result);
-        _fd_nonblock(sock->control_fd[1], result);
+        _fd_nonblock(pal_port->control_fd[0], result);
+        _fd_nonblock(pal_port->control_fd[1], result);
 
         result = pal_poll_signal(pal_port);
         if (result != er_ok)
@@ -429,38 +469,38 @@ void pal_event_port_close(
 {
     int32_t result;
     pal_poll_port_t* pal_port = (pal_poll_port_t*)port;
-    if (pal_port)
+    if (!pal_port)
+        return;
+
+    pal_port->running = false;
+    if (pal_port->control_fd[0] != _invalid_fd)
     {
-        pal_port->running = false;
-        if (pal_port->control_fd[0] != _invalid_fd)
-        {
-            close(pal_port->control_fd[0]);
-            pal_port->control_fd[0] = _invalid_fd;
-        }
-
-        if (pal_port->control_fd[1] != _invalid_fd)
-        {
-            close(pal_port->control_fd[1]);
-            pal_port->control_fd[1] = _invalid_fd;
-        }
-
-        if (pal_port->thread)
-            ThreadAPI_Join(pal_port->thread, &result);
-        
-        if (pal_port->lock)
-            lock_enter(pal_port->lock);
-        if (pal_port->poll_buffer)
-            mem_free(pal_port->poll_buffer);
-
-        dbg_assert(!DList_IsListEmpty(&pal_port->event_data_list), 
-            "Still events registered, leak.");
-
-        if (pal_port->lock)
-        {
-            lock_exit(pal_port->lock);
-            lock_free(pal_port->lock);
-        }
-        mem_free_type(pal_poll_port_t, pal_port);
+        closesocket(pal_port->control_fd[0]);
+        pal_port->control_fd[0] = _invalid_fd;
     }
+
+    if (pal_port->control_fd[1] != _invalid_fd)
+    {
+        closesocket(pal_port->control_fd[1]);
+        pal_port->control_fd[1] = _invalid_fd;
+    }
+
+    if (pal_port->thread)
+        ThreadAPI_Join(pal_port->thread, &result);
+        
+    if (pal_port->lock)
+        lock_enter(pal_port->lock);
+    if (pal_port->poll_buffer)
+        mem_free(pal_port->poll_buffer);
+
+    dbg_assert(DList_IsListEmpty(&pal_port->event_data_list), 
+        "Leaking events registered when closing event port!");
+
+    if (pal_port->lock)
+    {
+        lock_exit(pal_port->lock);
+        lock_free(pal_port->lock);
+    }
+    mem_free_type(pal_poll_port_t, pal_port);
 }
 

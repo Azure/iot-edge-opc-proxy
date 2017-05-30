@@ -699,7 +699,7 @@ TEST_FUNCTION(pal_nix_kq_event_close__success)
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act 
-    pal_event_close(event_handle_valid);
+    pal_event_close(event_handle_valid, true);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -712,7 +712,7 @@ TEST_FUNCTION(pal_nix_kq_event_close__arg_event_handle_null)
     // arrange 
 
     // act 
-    pal_event_close(0);
+    pal_event_close(0, true);
 
     // assert 
     ASSERT_EXPECTED_CALLS();

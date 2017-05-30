@@ -121,7 +121,8 @@ static int32_t io_ws_connection_stream_reader(
         }
 
         // Read from frame...
-        result = io_queue_buffer_read(connection->inbound.current, 
+        result = io_stream_read(
+            io_queue_buffer_as_stream(connection->inbound.current), 
             &buf[*read], count, &was_read);
         if (result != er_ok)
         {
@@ -235,7 +236,8 @@ static int32_t io_ws_connection_stream_writer(
         }
 
         to_write = count > avail ? avail : count;
-        result = io_queue_buffer_write(connection->outbound.current, buf, to_write);
+        result = io_stream_write(
+            io_queue_buffer_as_stream(connection->outbound.current), buf, to_write);
         if (result != er_ok)
             break;
 
@@ -946,7 +948,7 @@ int32_t io_ws_connection_create(
             break;
         connection->inbound.itf.context =
             connection;
-        connection->inbound.itf.read =
+        connection->inbound.itf.reader =
             io_ws_connection_stream_reader;
         connection->inbound.itf.readable =
             io_ws_connection_stream_readable;
@@ -957,7 +959,7 @@ int32_t io_ws_connection_create(
             break;
         connection->outbound.itf.context =
             connection;
-        connection->outbound.itf.write =
+        connection->outbound.itf.writer =
             io_ws_connection_stream_writer;
         connection->outbound.itf.writeable =
             io_ws_connection_stream_writeable;

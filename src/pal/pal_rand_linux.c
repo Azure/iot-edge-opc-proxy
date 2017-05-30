@@ -42,7 +42,10 @@ int32_t pal_rand_fill(
 	result = er_ok;
     while (len > 0)
     {
-#if !defined(SYS_getrandom)
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+        memset(buf, 0xab, len);
+        returned = len;
+#elif !defined(SYS_getrandom)
         returned = read(fd, buf, len);
 #else
         returned = (int)syscall(SYS_getrandom, buf, len, 0);

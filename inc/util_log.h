@@ -92,7 +92,7 @@ _inl__ void __log_debug(
 #if !defined(NO_ZLOG)
     __zlog_debug_v(log, file, filelen, func, funclen, line, format, va);
 #else
-    (void)log;
+    (void)log; (void)funclen; (void)filelen;
     xlogging_logger_v(AZ_LOG_TRACE, file, func, line, LOG_LINE, format, va);
 #endif
     va_end(va);
@@ -121,7 +121,7 @@ _inl__ void __log_trace(
 #if !defined(NO_ZLOG)
     __zlog_trace_v(log, file, filelen, func, funclen, line, format, va);
 #else
-    (void)log;
+    (void)log; (void)funclen; (void)filelen;
     xlogging_logger_v(AZ_LOG_TRACE, file, func, line, LOG_LINE, format, va);
 #endif
     va_end(va);
@@ -150,7 +150,7 @@ _inl__ void __log_info(
 #if !defined(NO_ZLOG)
     __zlog_info_v(log, file, filelen, func, funclen, line, format, va);
 #else
-    (void)log;
+    (void)log; (void)funclen; (void)filelen;
     xlogging_logger_v(AZ_LOG_INFO, file, func, line, LOG_LINE, format, va);
 #endif
     va_end(va);
@@ -171,21 +171,18 @@ _inl__ void  __log_error(
     ...
 )
 {
-#if defined(NO_LOGGING)
 #ifdef break_on_error
     break_on_error();
 #endif
+#if defined(NO_LOGGING)
     __nolog(log, file, filelen, func, funclen, line, format, 0);
 #else
     va_list va;
-#ifdef break_on_error
-    break_on_error();
-#endif
     va_start(va, format);
 #if !defined(NO_ZLOG)
     __zlog_error_v(log, file, filelen, func, funclen, line, format, va);
 #else
-    (void)log;
+    (void)log; (void)funclen; (void)filelen;
     xlogging_logger_v(AZ_LOG_ERROR, file, func, line, LOG_LINE, format, va);
 #endif
     va_end(va);
@@ -206,13 +203,13 @@ _inl__ void __log_debug_b(
     size_t buflen
 )
 {
-#if defined(NO_LOGGING)
-    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
-#elif !defined(NO_ZLOG)
+#if !defined(NO_ZLOG) && !defined(NO_LOGGING)
     __zlog_debug_b(log, file, filelen, func, funclen, line, buf, buflen);
-#elif defined(LOG_VERBOSE)
-    __nolog(log, file, filelen, func, funclen, line, 0, 0);
+#else
+    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
+#if !defined(NO_LOGGING) && defined(LOG_VERBOSE)
     xlogging_dump_buffer(buf, buflen);
+#endif
 #endif
 }
 
@@ -230,13 +227,13 @@ _inl__ void __log_trace_b(
     size_t buflen
 )
 {
-#if defined(NO_LOGGING)
-    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
-#elif !defined(NO_ZLOG)
+#if !defined(NO_ZLOG) && !defined(NO_LOGGING)
     __zlog_trace_b(log, file, filelen, func, funclen, line, buf, buflen);
 #else
-    __nolog(log, file, filelen, func, funclen, line, 0, 0);
+    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
+#if !defined(NO_LOGGING)
     xlogging_dump_buffer(buf, buflen);
+#endif
 #endif
 }
 
@@ -254,13 +251,13 @@ _inl__ void __log_info_b(
     size_t buflen
 )
 {
-#if defined(NO_LOGGING)
-    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
-#elif !defined(NO_ZLOG)
+#if !defined(NO_ZLOG) && !defined(NO_LOGGING)
     __zlog_info_b(log, file, filelen, func, funclen, line, buf, buflen);
 #else
-    __nolog(log, file, filelen, func, funclen, line, 0, 0);
+    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
+#if !defined(NO_LOGGING)
     xlogging_dump_buffer(buf, buflen);
+#endif
 #endif
 }
 
@@ -278,19 +275,16 @@ _inl__ void __log_error_b(
     size_t buflen
 )
 {
-#if defined(NO_LOGGING)
 #ifdef break_on_error
     break_on_error();
 #endif
-    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
-#elif !defined(NO_ZLOG)
-#ifdef break_on_error
-    break_on_error();
-#endif
+#if !defined(NO_ZLOG) && !defined(NO_LOGGING)
     __zlog_error_b(log, file, filelen, func, funclen, line, buf, buflen);
 #else
-    __nolog(log, file, filelen, func, funclen, line, 0, 0);
+    __nolog(log, file, filelen, func, funclen, line, buf, buflen);
+#if !defined(NO_LOGGING)
     xlogging_dump_buffer(buf, buflen);
+#endif
 #endif
 }
 

@@ -4,7 +4,13 @@
 #ifndef _util_ut_h_
 #define _util_ut_h_
 
+#if !defined(__STRICT_ANSI__)
 #define __STRICT_ANSI__ 1
+#endif
+#if !defined(__STDC__)
+#define __STDC__ 1
+#endif
+
 #ifdef __cplusplus
 #include <cstdlib>
 #include <cstring>

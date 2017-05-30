@@ -21,7 +21,7 @@
 //
 struct prx_scheduler
 {
-    prx_buffer_factory_t* task_pool;        // Pool of task entries
+    prx_buffer_factory_t* task_pool;       // Pool of task entries
     DLIST_ENTRY now;     // Immediately queued tasks in fifo order
     DLIST_ENTRY later;         // queued tasks ordered by deadline
     rw_lock_t lock;
@@ -41,7 +41,7 @@ typedef struct prx_task_entry
     const char* name;                // Name of task for debugging
     ticks_t queued;       // When the task was queued to scheduler
     ticks_t deadline;                   // When it needs to be run
-    prx_task_t task;                                // Task handler
+    prx_task_t task;                               // Task handler
     void* context;                    // this pointer passed to it
     DLIST_ENTRY link;
 #ifdef DEBUG

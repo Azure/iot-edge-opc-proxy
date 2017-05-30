@@ -1,0 +1,26 @@
+{
+    "version": 6,
+    "source_id": { "id": "a150ad6c-44db-4373-8c8c-01f840f2b119" },
+    "proxy_id": { "id": "6c8c83a6-fce9-027c-f176-a0596db7d37d" },
+    "target_id": { "id": "00000000-0000-0000-0000-000000000000" },
+    "error_code": 0,
+    "is_response": false,
+    "type": 12,
+    "content": {
+      "version": 0,
+      "props": {
+        "family": 2,
+        "sock_type": 1,
+        "proto_type": 6,
+        "flags": 0,
+        "timeout": 0,
+        "address": {
+          "family": 28165,
+          "flow": 0,
+          "port": 7,
+          "host": "manipc1"
+        },
+        "options": []
+      }
+    }
+  }

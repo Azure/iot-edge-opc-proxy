@@ -2,11 +2,12 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #include "util_mem.h"
+#include "prx_log.h"
 #include "prx_ns.h"
 #include "util_string.h"
 #include <stdio.h>
 
-log_t log;
+static log_t cat;
 
 //
 // Name service registry add
@@ -131,7 +132,7 @@ int32_t ns_clean(
         result = prx_ns_remove_entry(ns, entry);
         if (result != er_ok)
         {
-            log_error(log, "Failed to remove entry %s (%s)",
+            log_error(cat, "Failed to remove entry %s (%s)",
                 prx_ns_entry_get_id(entry), prx_err_string(result));
         }
         prx_ns_entry_release(entry);
@@ -143,22 +144,14 @@ int32_t ns_clean(
 //
 // Name service registry test utility
 //
-int main(int argc, char *argv[])
+int test_ns(
+    void
+)
 {
     int32_t result;
     prx_ns_t* ns;
     io_cs_t* cs;
     char buffer[64];
-
-    (void)argc;
-    (void)argv;
-    mem_init();
-
-    result = log_init();
-    if (result != er_ok)
-        return result;
-
-    log = log_get("test");
 
     result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
     if (result != er_ok)
@@ -173,7 +166,7 @@ int main(int argc, char *argv[])
         ns_clean(ns);
 
 #define NUM_PROXYS 34
-        log_trace(log, "Creating %d proxy entries", NUM_PROXYS);
+        log_trace(cat, "Creating %d proxy entries", NUM_PROXYS);
         for (int i = 0; i < NUM_PROXYS; i++)
         {
             strcpy(buffer, "proxy_");
@@ -182,13 +175,13 @@ int main(int argc, char *argv[])
             result = ns_add(ns, prx_ns_entry_type_proxy, buffer, "proxy");
             if (result != er_ok)
             {
-                log_error(log, "Failed to add proxy entry %s (%s)",
+                log_error(cat, "Failed to add proxy entry %s (%s)",
                     buffer, prx_err_string(result));
                 break;
             }
         }
 #define NUM_HOSTS 46
-        log_trace(log, "Creating %d host entries", NUM_HOSTS);
+        log_trace(cat, "Creating %d host entries", NUM_HOSTS);
         for (int i = 0; i < NUM_HOSTS; i++)
         {
             strcpy(buffer, "host_");
@@ -197,13 +190,13 @@ int main(int argc, char *argv[])
             result = ns_add(ns, prx_ns_entry_type_host, buffer, "host");
             if (result != er_ok)
             {
-                log_error(log, "Failed to add proxy entry %s (%s)",
+                log_error(cat, "Failed to add proxy entry %s (%s)",
                     buffer, prx_err_string(result));
                 break;
             }
         }
 #define NUM_LINKS 65
-        log_trace(log, "Creating %d link entries", NUM_LINKS);
+        log_trace(cat, "Creating %d link entries", NUM_LINKS);
         for (int i = 0; i < NUM_LINKS; i++)
         {
             strcpy(buffer, "link_");
@@ -212,7 +205,7 @@ int main(int argc, char *argv[])
             result = ns_add(ns, prx_ns_entry_type_link, buffer, "link");
             if (result != er_ok)
             {
-                log_error(log, "Failed to add proxy entry %s (%s)",
+                log_error(cat, "Failed to add proxy entry %s (%s)",
                     buffer, prx_err_string(result));
                 break;
             }
@@ -222,7 +215,7 @@ int main(int argc, char *argv[])
         result = ns_list_by_type(ns, prx_ns_entry_type_proxy | prx_ns_entry_type_link);
         if (result != er_ok)
         {
-            log_error(log, "Failed to list proxy entries (%s)",
+            log_error(cat, "Failed to list proxy entries (%s)",
                 prx_err_string(result));
             break;
         }
@@ -231,7 +224,7 @@ int main(int argc, char *argv[])
         result = ns_list_by_name(ns, "host");
         if (result != er_ok)
         {
-            log_error(log, "Failed to list link entries (%s)",
+            log_error(cat, "Failed to list link entries (%s)",
                 prx_err_string(result));
             break;
         }
@@ -247,8 +240,22 @@ int main(int argc, char *argv[])
 
     io_cs_free(cs);
 
-    log_deinit();
+    return result;
+}
 
-    mem_deinit();
+//
+// Name service registry test utility
+//
+int main_ns(int argc, char *argv[])
+{
+    int32_t result;
+
+    (void)argc;
+    (void)argv;
+
+    cat = log_get("test.ns");
+
+    result = test_ns();
+
     return result;
 }

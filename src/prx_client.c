@@ -6,7 +6,6 @@
 #include "prx_types.h"
 #include "util_misc.h"
 #include "util_string.h"
-#include "util_handle.h"
 #include "io_proto.h"
 #include "io_host.h"
 
@@ -55,7 +54,7 @@ DEFINE_REFCOUNT_TYPE(prx_client_socket_t);
 // Note: Handle map must have been inited
 
 //
-// Global state for aprx_client_socket
+// Global state for prx_client_socket
 //
 static struct
 {
@@ -856,7 +855,7 @@ static int32_t prx_client_socket_bind_by_name(
 )
 {
     int32_t result;
-    prx_size_t prx_ifa_count;
+    size_t prx_ifa_count;
     prx_ifaddrinfo_t* prx_ifa;
 
     // Enumerate interfaces to bind to, then bind to first successful one.
@@ -864,7 +863,7 @@ static int32_t prx_client_socket_bind_by_name(
     if (result != er_ok)
         return result;
 
-    for (prx_size_t i = 0; i < prx_ifa_count; i++)
+    for (size_t i = 0; i < prx_ifa_count; i++)
     {
         // Bind interface (= gw or host) to send or receive data
         prx_ifa[i].address.un.ip.port = port;
@@ -883,10 +882,10 @@ static int32_t prx_client_socket_bind_by_name(
 static int32_t prx_client_socket_send(
     prx_client_socket_t* sock,
     uint8_t * buf,
-    prx_size_t off,
-    prx_size_t len,
+    size_t off,
+    size_t len,
     prx_socket_address_t* address,
-    prx_size_t* sent
+    size_t* sent
 )
 {
     int32_t result;
@@ -941,7 +940,7 @@ static int32_t prx_client_socket_send(
     if (message)
         io_channel_abort_write(sock->stream, message);
 
-    *sent = result == er_ok ? (prx_size_t)len : 0;
+    *sent = result == er_ok ? len : 0;
     return result;
 }
 
@@ -951,10 +950,10 @@ static int32_t prx_client_socket_send(
 static int32_t prx_client_socket_recv(
     prx_client_socket_t* sock,
     uint8_t *buf,
-    prx_size_t off,
-    prx_size_t len,
+    size_t off,
+    size_t len,
     prx_socket_address_t* address,
-    prx_size_t* received
+    size_t* received
 )
 {
     int32_t result;
@@ -972,7 +971,7 @@ static int32_t prx_client_socket_recv(
         {
             if (sock->recv_buffer_size > sock->recv_buffer_offset)
             {
-                *received = (prx_size_t)min(len, 
+                *received = min(len, 
                     sock->recv_buffer_size - sock->recv_buffer_offset);
                 memcpy(&buf[off], &sock->recv_buffer[sock->recv_buffer_offset], *received);
                 sock->recv_buffer_offset += *received;
@@ -1028,7 +1027,7 @@ static int32_t prx_client_socket_recv(
 
             // Stream buffer
             data.buffer = sock->recv_buffer;
-            data.buffer_length = (prx_size_t)io_message_get_size(message);
+            data.buffer_length = io_message_get_size(message);
         }
         else
         {
@@ -1048,11 +1047,11 @@ static int32_t prx_client_socket_recv(
         {
             if (address)
                 memcpy(address, &data.source_address, sizeof(prx_socket_address_t));
-            *received = (prx_size_t)data.buffer_length;
+            *received = data.buffer_length;
             break;
         }
         
-        sock->recv_buffer_size = (size_t)data.buffer_length;
+        sock->recv_buffer_size = data.buffer_length;
         sock->recv_buffer_offset = 0;
 
     } while (true);
@@ -1169,7 +1168,7 @@ int32_t prx_client_getaddrinfo(
     prx_address_family_t family,
     uint32_t flags,
     prx_addrinfo_t** prx_ai,
-    prx_size_t* prx_ai_count
+    size_t* prx_ai_count
 )
 {
     int32_t result;
@@ -1228,7 +1227,7 @@ int32_t prx_client_getaddrinfo(
         if (result != er_ok)
             break;
 
-        *prx_ai_count = (prx_size_t)prx_ns_result_size(resultset);
+        *prx_ai_count = prx_ns_result_size(resultset);
         if (!*prx_ai_count)
         {
             result = er_prx_host_unknown;
@@ -1237,7 +1236,7 @@ int32_t prx_client_getaddrinfo(
 
         result = er_ok;
         *prx_ai = (prx_addrinfo_t*)mem_zalloc((*prx_ai_count + 1) * sizeof(prx_addrinfo_t));
-        for (prx_size_t i = 0; i < *prx_ai_count; i++)
+        for (size_t i = 0; i < *prx_ai_count; i++)
         {
             prx_ai_cur = &(*prx_ai)[i];
             host = prx_ns_result_pop(resultset);
@@ -1284,9 +1283,9 @@ int32_t prx_client_getaddrinfo(
 int32_t prx_client_getnameinfo(
     prx_socket_address_t* address,
     char* prx_host_name,
-    prx_size_t prx_host_length,
+    size_t prx_host_length,
     char* service,
-    prx_size_t service_length,
+    size_t service_length,
     int32_t flags
 )
 {
@@ -1362,7 +1361,7 @@ int32_t prx_client_getifaddrinfo(
     const char* if_name,
     uint32_t flags,
     prx_ifaddrinfo_t** prx_ifa,
-    prx_size_t* prx_ifa_count
+    size_t* prx_ifa_count
 )
 {
     int32_t result;
@@ -1390,7 +1389,7 @@ int32_t prx_client_getifaddrinfo(
         if (result != er_ok)
             break;
 
-        *prx_ifa_count = (prx_size_t)prx_ns_result_size(resultset);
+        *prx_ifa_count = prx_ns_result_size(resultset);
         if (!*prx_ifa_count)
         {
             result = er_prx_host_unknown;
@@ -1400,7 +1399,7 @@ int32_t prx_client_getifaddrinfo(
         result = er_ok;
         *prx_ifa = (prx_ifaddrinfo_t*)
             mem_zalloc((*prx_ifa_count + 1) * sizeof(prx_ifaddrinfo_t));
-        for (prx_size_t i = 0; i < *prx_ifa_count; i++)
+        for (size_t i = 0; i < *prx_ifa_count; i++)
         {
             prx_ifa_cur = &(*prx_ifa)[i];
             itf = prx_ns_result_pop(resultset);
@@ -1445,7 +1444,7 @@ int32_t prx_client_getifaddrinfo(
 int32_t prx_client_getifnameinfo(
     prx_socket_address_t* if_address,
     char* if_name,
-    prx_size_t if_name_length,
+    size_t if_name_length,
     uint64_t *if_index
 )
 {
@@ -1512,7 +1511,7 @@ int32_t prx_client_pton(
 decl_internal_3(int32_t, pal_ntop,
     prx_socket_address_t*, sa, 
     char*, string, 
-    prx_size_t, size
+    size_t, size
 );
 
 //
@@ -1521,7 +1520,7 @@ decl_internal_3(int32_t, pal_ntop,
 int32_t prx_client_ntop(
     prx_socket_address_t* address,
     char* addr_string,
-    prx_size_t addr_string_size
+    size_t addr_string_size
 )
 {
     return pal_ntop(address, addr_string, addr_string_size);
@@ -1532,7 +1531,7 @@ int32_t prx_client_ntop(
 //
 int32_t prx_gethostname(
     char* name,
-    prx_size_t namelen
+    size_t namelen
 )
 {
     int32_t result;
@@ -1612,7 +1611,7 @@ int32_t prx_client_socket(
 // Wait for an activity on any of the passed in sockets
 //
 int32_t prx_client_poll(
-    prx_size_t num,
+    size_t num,
     prx_fd_t* sockets,
     uint64_t* timeout_ms
 )
@@ -1894,10 +1893,10 @@ int32_t prx_client_sendto(
     uintptr_t key,
     int32_t flags,
     uint8_t * buf,
-    prx_size_t off,
-    prx_size_t len,
+    size_t off,
+    size_t len,
     prx_socket_address_t* address,
-    prx_size_t* sent
+    size_t* sent
 )
 {
     int32_t result;
@@ -1924,9 +1923,9 @@ int32_t prx_client_send(
     uintptr_t key,
     int32_t flags,
     uint8_t* buf,
-    prx_size_t off,
-    prx_size_t len,
-    prx_size_t* sent
+    size_t off,
+    size_t len,
+    size_t* sent
 )
 {
     int32_t result;
@@ -1953,10 +1952,10 @@ int32_t prx_client_recvfrom(
     uintptr_t key,
     int32_t flags,
     uint8_t* buf,
-    prx_size_t off,
-    prx_size_t len,
+    size_t off,
+    size_t len,
     prx_socket_address_t* address,
-    prx_size_t* received
+    size_t* received
 )
 {
     int32_t result;
@@ -1983,9 +1982,9 @@ int32_t prx_client_recv(
     uintptr_t key,
     int32_t flags,
     uint8_t *buf,
-    prx_size_t off,
-    prx_size_t len,
-    prx_size_t* received
+    size_t off,
+    size_t len,
+    size_t* received
 )
 {
     int32_t result;
@@ -2093,7 +2092,7 @@ int32_t prx_client_listen(
     if (!sock)
         return er_closed;
 
-    if (0 == (sock->props.flags & socket_flag_passive))
+    if (0 == (sock->props.flags & prx_socket_flag_passive))
         result = er_bad_state;
     else
         sock->props.flags |= socket_flag_acceptconn;
@@ -2238,7 +2237,7 @@ int32_t prx_client_setsockopt(
         result = er_arg;
         break;
     case prx_so_acceptconn:
-        if (0 == (sock->props.flags & socket_flag_passive))
+        if (0 == (sock->props.flags & prx_socket_flag_passive))
             result = er_arg;
         else
             sock->props.flags |= socket_flag_acceptconn;

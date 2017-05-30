@@ -234,7 +234,7 @@ void io_mqtt_connection_free(
 
     //   while (!DList_IsListEmpty(&connection->subscriptions))
     //   {
-    //       io_mqtt_subscription_release(containingRecord(DList_RemoveHeadList(
+    //       io_mqtt_subscription_free(containingRecord(DList_RemoveHeadList(
     //           &connection->subscriptions), io_mqtt_subscription_t, link));
     //   }
 
@@ -554,8 +554,11 @@ static void io_mqtt_connection_receive_message(
     }
 
     dbg_assert_ptr(props);
-    dbg_assert_ptr(subscription->receiver_cb);
     dbg_assert(subscription->subscribed, "Should be subscribed");
+
+    // Check if receiver has released the subscription
+    if (!subscription->receiver_cb)
+        return;
 
     // Get payload and create properties
     properties = STRING_construct(props);
@@ -565,7 +568,6 @@ static void io_mqtt_connection_receive_message(
     // Do callback
     subscription->receiver_cb(subscription->receiver_ctx,
         (io_mqtt_properties_t*)properties, payload->message, payload->length);
-
     STRING_delete(properties);
     io_mqtt_connection_clear_failures(subscription->connection);
 }
@@ -885,8 +887,6 @@ static void io_mqtt_connection_complete_disconnect(
     io_mqtt_subscription_t* subscription;
     dbg_assert_ptr(connection);
 
-    connection->status = io_mqtt_status_reset;
-
     if (connection->socket_io)
     {
         xio_close(connection->socket_io, NULL, NULL);
@@ -1074,7 +1074,15 @@ static void io_mqtt_connection_hard_reset(
 {
     dbg_assert_ptr(connection);
 
+    if (connection->status == io_mqtt_status_closing)
+    {
+        // Completed a full disconnect, now free connection
+        __do_next(connection, io_mqtt_connection_free);
+        return;
+    }
+
     // First hard disconnect, release all resources
+    connection->status = io_mqtt_status_reset;
     io_mqtt_connection_complete_disconnect(connection);
 
     if (connection->reconnect_cb &&
@@ -1109,7 +1117,7 @@ static void io_mqtt_connection_soft_reset(
 //
 // Free the subscription
 //
-void io_mqtt_subscription_release(
+static void io_mqtt_subscription_free(
     io_mqtt_subscription_t* subscription
 )
 {
@@ -1117,11 +1125,11 @@ void io_mqtt_subscription_release(
     io_mqtt_connection_t* connection;
     SUBSCRIBE_PAYLOAD payload;
 
-    if (!subscription)
-        return;
-
     log_trace(subscription->log, "Free subscription for topic %s...",
         STRING_c_str(subscription->uri));
+
+    if (subscription->connection)
+        DList_RemoveEntryList(&subscription->link);
 
     if (__subscription_subscribed(subscription))
     {
@@ -1133,17 +1141,38 @@ void io_mqtt_subscription_release(
             subscription->pktid, &payload.subscribeTopic, 1);
 
         // no matter whether we failed, delete the subscription 
-        log_error(subscription->log,
-            "Failed to unsubscribe (error %d), remove anyway...",
-            result);
+        if (result != 0)
+        {
+            log_error(subscription->log,
+                "Failed to unsubscribe (error %d), remove anyway...",
+                result);
+        }
     }
 
     if (subscription->uri)
         STRING_delete(subscription->uri);
-    if (subscription->connection)
-        DList_RemoveEntryList(&subscription->link);
 
     mem_free_type(io_mqtt_subscription_t, subscription);
+}
+
+//
+// Free the subscription
+//
+void io_mqtt_subscription_release(
+    io_mqtt_subscription_t* subscription
+)
+{
+    if (!subscription)
+        return;
+
+    dbg_assert_ptr(subscription->connection);
+    dbg_assert_ptr(subscription->connection->scheduler);
+
+    subscription->receiver_cb = NULL;
+    subscription->receiver_ctx = NULL;
+
+    __do_next_s(subscription->connection->scheduler,
+        io_mqtt_subscription_free, subscription);
 }
 
 //
@@ -1365,7 +1394,7 @@ int32_t io_mqtt_connection_subscribe(
         return er_ok;
     } while (0);
 
-    io_mqtt_subscription_release(subscription);
+    io_mqtt_subscription_free(subscription);
     return result;
 }
 
@@ -1461,6 +1490,8 @@ void io_mqtt_connection_close(
 
     if (status != io_mqtt_status_reset)
     {
+        log_trace(connection->log, "Begin disconnect and schedule free ...");
+
         __do_next(connection, io_mqtt_connection_begin_disconnect);
         // If we fail after 30 seconds, free the connection 
         __do_later(connection, io_mqtt_connection_free, 30000);

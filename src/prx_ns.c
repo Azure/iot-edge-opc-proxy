@@ -549,7 +549,7 @@ static int32_t prx_ns_generic_registry_encode(
     do
     {
         __io_encode_type_begin(ctx, registry, 1);
-        result = io_encode_array(ctx, "entries", (size_t)registry->num_entries, &arr);
+        result = io_encode_array(ctx, "entries", registry->num_entries, &arr);
         if (result != er_ok)
             break;
         for (PDLIST_ENTRY p = registry->entries.Flink; p != &registry->entries; p = p->Flink)
@@ -590,7 +590,7 @@ static int32_t prx_ns_generic_registry_decode(
         result = io_decode_array(ctx, "entries", &registry->num_entries, &arr);
         if (result != er_ok)
             break;
-        for (prx_size_t i = 0; i < registry->num_entries; i++)
+        for (size_t i = 0; i < registry->num_entries; i++)
         {
             result = io_decode_object(&arr, NULL, NULL, &obj);
             if (result != er_ok)
@@ -2207,7 +2207,7 @@ static int32_t prx_ns_iot_hub_composite_decode(
         result = io_decode_array(ctx, "hubs", &num_hubs, &arr);
         if (result != er_ok)
             break;
-        for (prx_size_t i = 0; i < num_hubs; i++)
+        for (size_t i = 0; i < num_hubs; i++)
         {
             result = io_decode_object(&arr, NULL, NULL, &obj);
             if (result != er_ok)
@@ -2464,13 +2464,18 @@ int32_t prx_ns_entry_to_prx_socket_address(
     socket_address->un.family = family;
     switch (family)
     {
+    case prx_address_family_unix:
     case prx_address_family_proxy:
         name = prx_ns_entry_get_name(entry);
         if (!name)
             name = prx_ns_entry_get_id(entry);
         dbg_assert_ptr(name);
-        name = strncpy(socket_address->un.proxy.host,
-            name, sizeof(socket_address->un.proxy.host));
+        if (family == prx_address_family_proxy)
+            name = strncpy(socket_address->un.proxy.host, name, 
+                sizeof(socket_address->un.proxy.host));
+        else
+            name = strncpy(socket_address->un.ux.path, name, 
+                sizeof(socket_address->un.ux.path));
         dbg_assert_ptr(name);
         result = er_ok;
         break;

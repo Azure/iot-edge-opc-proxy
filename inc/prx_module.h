@@ -36,7 +36,7 @@ typedef void (*prx_module_free_t)(
     );
 
 //
-// Creates a host instance to be managed by field gateway
+// Creates a host instance to be managed by edge
 //
 typedef prx_module_t* (*prx_module_create_t)(
     broker_handle_t* broker, 
@@ -58,7 +58,7 @@ typedef void (*prx_module_destroy_t)(
     );
 
 //
-// Callback when field gateway received message - stub only at this point
+// Callback when edge received message - stub only at this point
 //
 typedef void (*prx_module_receive_t)(
     prx_module_t* module,
@@ -66,7 +66,7 @@ typedef void (*prx_module_receive_t)(
     );
 
 //
-// Represents v1 module api, exported to field gateway - !!!fixed order!!!
+// Represents v1 module api, exported to edge - !!!fixed order!!!
 //
 typedef struct prx_module_api
 {
@@ -81,10 +81,10 @@ typedef struct prx_module_api
 prx_module_api_t;
 
 //
-// Mandatory export for field gateway to load host
+// Mandatory export for edge to load host
 //
 decl_public_1(prx_module_api_t*, Module_GetAPIS,
-    int, gateway_aprx_version
+    int, edge_gw_version
 );
 
 #endif // _prx_module_h_

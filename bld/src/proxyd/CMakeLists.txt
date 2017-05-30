@@ -8,10 +8,11 @@ compileAsC99()
 #
 add_executable(proxyd ${_PROJECT_ROOT}/src/prx_main.c)
 
-target_link_libraries(proxyd libproxy)
+    target_link_libraries(proxyd libproxy)
 if(${use_zlog})
-target_link_libraries(proxyd libzlog)
+    target_link_libraries(proxyd libzlog)
 endif()
+
 if(CMAKE_CROSSCOMPILING)
   if(LINUX)
     # If cross compiling with we need add the shared libraries used by the libraries above.
@@ -52,7 +53,7 @@ if(CMAKE_CROSSCOMPILING)
 endif()
 
 if(WIN32)
-  # Place here the install rule for win32
+    # Place here the install rule for win32
 elseif(LINUX)
     install (TARGETS proxyd RUNTIME DESTINATION bin )
 endif()

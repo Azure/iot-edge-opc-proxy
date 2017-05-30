@@ -5,6 +5,7 @@
 #define _io_queue_h_
 
 #include "common.h"
+#include "io_stream.h"
 #include "azure_c_shared_utility/doublylinkedlist.h"
 
 //
@@ -23,6 +24,7 @@ typedef struct io_queue_buffer
     void (*cb_ptr)(void*, int32_t);   // A space to store a callback
     void* ctx;                     // An opaque context for callback
 
+    io_stream_t itf;         // Stream interface for reading/writing
     int32_t flags;        // Flags, e.g. to support fragment buffers
     int32_t code;            // buffer or error code for convinience
     size_t write_offset;    // Tracks a write offset into the buffer
@@ -150,22 +152,10 @@ decl_internal_1(io_queue_buffer_t*, io_queue_buffer_from_ptr,
 );
 
 //
-// Write to buffer and advance offset
+// Get stream from buffer
 //
-decl_internal_3(int32_t, io_queue_buffer_write,
-    io_queue_buffer_t*, buffer,
-    const void*, buf,
-    size_t, len
-);
-
-//
-// Copy buffer from the buffer and advance offset
-//
-decl_internal_4(int32_t, io_queue_buffer_read,
-    io_queue_buffer_t*, buffer,
-    void*, buf,
-    size_t, len,
-    size_t*, read
+decl_internal_1(io_stream_t*, io_queue_buffer_as_stream,
+    io_queue_buffer_t*, buffer
 );
 
 //

@@ -8,6 +8,13 @@
 #include "prx_types.h"
 
 //
+// Called before the following functions are used
+//
+decl_public_0(int32_t, pal_net_init,
+    void
+);
+
+//
 // Convert an address string into an address
 //
 decl_public_2(int32_t, pal_pton,
@@ -21,7 +28,15 @@ decl_public_2(int32_t, pal_pton,
 decl_public_3(int32_t, pal_ntop,
     prx_socket_address_t*, address,
     char*, addr_string,
-    prx_size_t, addr_string_size
+    size_t, addr_string_size
+);
+
+//
+// Returns the name of the host computer
+//
+decl_public_2(int32_t, pal_gethostname,
+    char*, name,
+    size_t, name_length
 );
 
 //
@@ -31,7 +46,7 @@ decl_public_4(int32_t, pal_getifaddrinfo,
     const char*, if_name,
     uint32_t, flags,
     prx_ifaddrinfo_t**, info,
-    prx_size_t*, info_count
+    size_t*, info_count
 );
 
 //
@@ -47,7 +62,7 @@ decl_public_1(int32_t, pal_freeifaddrinfo,
 decl_public_4(int32_t, pal_getifnameinfo,
     prx_socket_address_t*, if_address,
     char*, if_name,
-    prx_size_t, if_name_length,
+    size_t, if_name_length,
     uint64_t*, if_index
 );
 
@@ -60,7 +75,7 @@ decl_public_6(int32_t, pal_getaddrinfo,
     prx_address_family_t, family,
     uint32_t, flags,
     prx_addrinfo_t**, info,
-    prx_size_t*, info_count
+    size_t*, info_count
 );
 
 //
@@ -76,18 +91,10 @@ decl_public_1(int32_t, pal_freeaddrinfo,
 decl_public_6(int32_t, pal_getnameinfo,
     prx_socket_address_t*, address,
     char*, host,
-    prx_size_t, host_length,
+    size_t, host_length,
     char*, service,
-    prx_size_t, service_length,
+    size_t, service_length,
     int32_t, flags
-);
-
-//
-// Returns the name of the host computer
-//
-decl_public_2(int32_t, pal_gethostname,
-    char*, name,
-    prx_size_t, name_length
 );
 
 //
@@ -102,6 +109,13 @@ decl_public_0(int32_t, pal_os_last_net_error_as_prx_error,
 //
 decl_public_1(void, pal_os_set_net_error_as_prx_error,
     int32_t, error
+);
+
+//
+// Called when done using above functions
+//
+decl_public_0(void, pal_net_deinit,
+    void
 );
 
 #endif // _pal_net_h_

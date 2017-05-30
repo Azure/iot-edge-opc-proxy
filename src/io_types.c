@@ -106,6 +106,54 @@ int32_t io_decode_prx_ifaddrinfo(
 }
 
 //
+// Encode file info
+//
+int32_t io_encode_prx_file_info(
+    io_codec_ctx_t *ctx,
+    const prx_file_info_t* prx_fi
+)
+{
+    int32_t result;
+
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_fi);
+
+    __io_encode_type_begin(ctx, prx_fi, 6);
+    __io_encode_value(ctx, uint64, prx_fi, inode_number);
+    __io_encode_value(ctx, uint64, prx_fi, device_id);
+    __io_encode_value(ctx, int32, prx_fi, type);
+    __io_encode_value(ctx, uint64, prx_fi, total_size);
+    __io_encode_value(ctx, uint64, prx_fi, last_atime);
+    __io_encode_value(ctx, uint64, prx_fi, last_mtime);
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Decode file info
+//
+int32_t io_decode_prx_file_info(
+    io_codec_ctx_t *ctx,
+    prx_file_info_t* prx_fi
+)
+{
+    int32_t result;
+
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_fi);
+
+    __io_decode_type_begin(ctx, prx_fi, 6);
+    __io_decode_value(ctx, uint64, prx_fi, inode_number);
+    __io_decode_value(ctx, uint64, prx_fi, device_id);
+    __io_decode_value(ctx, int32, prx_fi, type);
+    __io_decode_value(ctx, uint64, prx_fi, total_size);
+    __io_decode_value(ctx, uint64, prx_fi, last_atime);
+    __io_decode_value(ctx, uint64, prx_fi, last_mtime);
+    __io_decode_type_end(ctx);
+    return result;
+}
+
+//
 // Encode ip socket address
 //
 static int32_t io_encode_prx_socket_address_inet(
@@ -117,25 +165,26 @@ static int32_t io_encode_prx_socket_address_inet(
     dbg_assert_ptr(ctx);
     dbg_assert_ptr(prx_sa);
 
-    __io_encode_type_begin(ctx, 
-        prx_sa, prx_sa->family == prx_address_family_inet ? 4 : 5);
+    __io_encode_type_begin(ctx,
+        prx_sa, prx_sa->family == prx_address_family_inet ? 3 : 5);
     __io_encode_value(ctx, int32, prx_sa, family);
-    __io_encode_value(ctx, uint32, prx_sa, flow);
     __io_encode_value(ctx, uint16, prx_sa, port);
     if (prx_sa->family == prx_address_family_inet)
     {
-        result = io_encode_bin(ctx, "addr", 
+        result = io_encode_bin(ctx, "addr",
             prx_sa->un.in4.un.u8, sizeof(prx_sa->un.in4.un.u8));
         if (result != er_ok)
             return result;
     }
     else
     {
-        result = io_encode_bin(ctx, "addr", 
+        __io_encode_value(ctx, uint32, prx_sa, flow);
+
+        result = io_encode_bin(ctx, "addr",
             prx_sa->un.in6.un.u8, sizeof(prx_sa->un.in6.un.u8));
         if (result != er_ok)
             return result;
-        result = io_encode_uint32(ctx, "scope_id", 
+        result = io_encode_uint32(ctx, "scope_id",
             prx_sa->un.in6.scope_id);
         if (result != er_ok)
             return result;
@@ -158,20 +207,23 @@ static int32_t io_decode_prx_socket_address_inet(
     dbg_assert_ptr(prx_sa);
 
     // header and family was already decoded
-    __io_decode_value(ctx, uint32, prx_sa, flow);
     __io_decode_value(ctx, uint16, prx_sa, port);
     if (prx_sa->family == prx_address_family_inet)
     {
         size = sizeof(prx_sa->un.in4.un.u8);
-        result = io_decode_bin_fixed(ctx, "addr", 
+        result = io_decode_bin_fixed(ctx, "addr",
             prx_sa->un.in4.un.u8, &size);
         if (result != er_ok)
             return result;
+
+        prx_sa->flow = 0;
     }
     else
     {
+        __io_decode_value(ctx, uint32, prx_sa, flow);
+
         size = sizeof(prx_sa->un.in6.un.u8);
-        result = io_decode_bin_fixed(ctx, "addr", 
+        result = io_decode_bin_fixed(ctx, "addr",
             prx_sa->un.in6.un.u8, &size);
         if (result != er_ok)
             return result;
@@ -181,6 +233,7 @@ static int32_t io_decode_prx_socket_address_inet(
             return result;
     }
     __io_decode_type_end(ctx);
+    prx_sa->_padding = 0;
     return result;
 }
 
@@ -196,10 +249,11 @@ static int32_t io_encode_prx_socket_address_proxy(
     dbg_assert_ptr(ctx);
     dbg_assert_ptr(prx_sa);
 
-    __io_encode_type_begin(ctx, prx_sa, 4);
+    __io_encode_type_begin(ctx, prx_sa, 5);
     __io_encode_value(ctx, int32, prx_sa, family);
-    __io_encode_value(ctx, uint32, prx_sa, flow);
     __io_encode_value(ctx, uint16, prx_sa, port);
+    __io_encode_value(ctx, uint16, prx_sa, flags);
+    __io_encode_value(ctx, int32, prx_sa, itf_index);
     result = io_encode_string(
         ctx, "host", prx_sa->host);
     if (result != er_ok)
@@ -221,8 +275,9 @@ static int32_t io_decode_prx_socket_address_proxy(
     dbg_assert_ptr(prx_sa);
 
     // header and family was already decoded
-    __io_decode_value(ctx, uint32, prx_sa, flow);
     __io_decode_value(ctx, uint16, prx_sa, port);
+    __io_decode_value(ctx, uint16, prx_sa, flags);
+    __io_decode_value(ctx, int32, prx_sa, itf_index);
     result = io_decode_string_fixed(
         ctx, "host", prx_sa->host, sizeof(prx_sa->host));
     if (result != er_ok)
@@ -366,7 +421,8 @@ int32_t io_encode_prx_socket_properties(
 
     for (size_t i = 0; i < _countof(prx_sp->options); i++)
     {
-        if (prx_sp->options[i].option != prx_so_unknown)
+        if (prx_sp->options[i].type > prx_so_unknown &&
+            prx_sp->options[i].type < __prx_so_max)
             size++;
     }
 
@@ -375,13 +431,14 @@ int32_t io_encode_prx_socket_properties(
         return result;
     for (size_t i = 0; i < _countof(prx_sp->options); i++)
     {
-        if (prx_sp->options[i].option != prx_so_unknown)
+        if (prx_sp->options[i].type > prx_so_unknown &&
+            prx_sp->options[i].type < __prx_so_max)
         {
             io_codec_ctx_t obj;
             result = io_encode_object(&arr, NULL, false, &obj);
             if (result != er_ok)
                 break;
-            result = io_encode_prx_socket_option_value(&obj, &prx_sp->options[i]);
+            result = io_encode_prx_property(&obj, &prx_sp->options[i]);
             if (result != er_ok)
                 break;
         }
@@ -402,7 +459,7 @@ int32_t io_decode_prx_socket_properties(
 {
     int32_t result;
     size_t size;
-    prx_socket_option_value_t option;
+    prx_property_t option;
     io_codec_ctx_t arr;
     
     dbg_assert_ptr(ctx);
@@ -427,16 +484,13 @@ int32_t io_decode_prx_socket_properties(
         result = io_decode_object(&arr, NULL, NULL, &obj);
         if (result != er_ok)
             break;
-        option.option = prx_so_unknown;
-        result = io_decode_prx_socket_option_value(&obj, &option);
+        option.type = 0;
+        result = io_decode_prx_property(&obj, &option);
         if (result != er_ok)
             break;
 
-        if (option.option > prx_so_unknown && option.option < __prx_so_max)
-        {
-            prx_sp->options[option.option].option = option.option;
-            prx_sp->options[option.option].value = option.value;
-        }
+        if (option.type > prx_so_unknown && option.type < __prx_so_max)
+            memcpy(&prx_sp->options[option.type], &option, sizeof(option));
     }
     if (result != er_ok)
         return result;
@@ -445,33 +499,279 @@ int32_t io_decode_prx_socket_properties(
 }
 
 //
-// Encode a socket option value
+// Encode ip4 socket address
 //
-int32_t io_encode_prx_socket_option_value(
-    io_codec_ctx_t* ctx,
-    const prx_socket_option_value_t* prx_so_val
+static int32_t io_encode_prx_socket_address_inet4(
+    io_codec_ctx_t *ctx,
+    const prx_socket_address_inet_t *prx_sa
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, prx_so_val, 2);
-    __io_encode_value(ctx, int32, prx_so_val, option);
-    __io_encode_value(ctx, uint64, prx_so_val, value);
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_sa);
+
+    __io_encode_type_begin(ctx, prx_sa, 3);
+    __io_encode_value(ctx, int32, prx_sa, family);
+    __io_encode_value(ctx, uint32, prx_sa, flow);
+    __io_encode_value(ctx, uint16, prx_sa, port);
+
+    result = io_encode_bin(ctx, "addr",
+        prx_sa->un.in4.un.u8, sizeof(prx_sa->un.in4.un.u8));
+    if (result != er_ok)
+        return result;
     __io_encode_type_end(ctx);
     return result;
 }
 
 //
-// Decode a socket option value
+// Encode ip4 socket address
 //
-int32_t io_decode_prx_socket_option_value(
-    io_codec_ctx_t* ctx,
-    prx_socket_option_value_t* prx_so_val
+static int32_t io_decode_prx_socket_address_inet4(
+    io_codec_ctx_t *ctx,
+    prx_socket_address_inet_t *prx_sa
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, prx_so_val, 2);
-    __io_decode_value(ctx, int32, prx_so_val, option);
-    __io_decode_value(ctx, uint64, prx_so_val, value);
+    size_t size;
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_sa);
+
+    // header and family was already decoded
+    __io_decode_value(ctx, uint32, prx_sa, flow);
+    __io_decode_value(ctx, uint16, prx_sa, port);
+
+    size = sizeof(prx_sa->un.in4.un.u8);
+    result = io_decode_bin_fixed(ctx, "addr",
+        prx_sa->un.in4.un.u8, &size);
+    if (result != er_ok)
+        return result;
     __io_decode_type_end(ctx);
     return result;
 }
+
+//
+// Encode ip6 socket address
+//
+static int32_t io_encode_prx_socket_address_inet6(
+    io_codec_ctx_t *ctx,
+    const prx_socket_address_inet_t *prx_sa
+)
+{
+    int32_t result;
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_sa);
+
+    __io_encode_type_begin(ctx, prx_sa, 5);
+    __io_encode_value(ctx, int32, prx_sa, family);
+    __io_encode_value(ctx, uint32, prx_sa, flow);
+    __io_encode_value(ctx, uint16, prx_sa, port);
+
+    result = io_encode_bin(ctx, "addr",
+        prx_sa->un.in6.un.u8, sizeof(prx_sa->un.in6.un.u8));
+    if (result != er_ok)
+        return result;
+    result = io_encode_uint32(ctx, "scope_id",
+        prx_sa->un.in6.scope_id);
+    if (result != er_ok)
+        return result;
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Encode multicast option
+//
+int32_t io_encode_prx_multicast_option(
+    io_codec_ctx_t *ctx,
+    const prx_multicast_option_t *prx_mo
+)
+{
+    int32_t result;
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_mo);
+
+    __io_encode_type_begin(ctx, prx_mo, 3); 
+    __io_encode_value(ctx, int32, prx_mo, family);
+    __io_encode_value(ctx, int32, prx_mo, itf_index);
+    switch (prx_mo->family)
+    {
+    case prx_address_family_inet:
+        result = io_encode_bin(ctx, "addr", prx_mo->addr.in4.un.u8,
+            sizeof(prx_mo->addr.in4.un.u8));
+        break;
+    case prx_address_family_inet6:
+        result = io_encode_bin(ctx, "addr", prx_mo->addr.in6.un.u8,
+            sizeof(prx_mo->addr.in6.un.u8));
+        break;
+    default:
+        dbg_assert(0, "Unexpected family %d during encoding", prx_mo->family);
+        return er_invalid_format;
+    }
+    if (result != er_ok)
+        return result;
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Decode multicast option
+//
+int32_t io_decode_prx_multicast_option(
+    io_codec_ctx_t *ctx,
+    prx_multicast_option_t *prx_mo
+)
+{
+    int32_t result;
+    size_t size;
+    dbg_assert_ptr(ctx);
+    dbg_assert_ptr(prx_mo);
+
+    __io_decode_type_begin(ctx, prx_mo, 3);
+    __io_decode_value(ctx, int32, prx_mo, family);
+    __io_decode_value(ctx, int32, prx_mo, itf_index);
+    switch (prx_mo->family)
+    {
+    case prx_address_family_inet:
+        size = sizeof(prx_mo->addr.in4.un.u8);
+        result = io_decode_bin_fixed(ctx, "addr", prx_mo->addr.in4.un.u8, &size);
+        if (result != er_ok)
+            return result;
+        break;
+    case prx_address_family_inet6:
+        size = sizeof(prx_mo->addr.in6.un.u8);
+        result = io_decode_bin_fixed(ctx, "addr", prx_mo->addr.in6.un.u8, &size);
+        if (result != er_ok)
+            return result;
+        prx_mo->addr.in6.scope_id = prx_mo->itf_index;
+        break;
+    default:
+        dbg_assert(0, "Unexpected family %d during encoding", prx_mo->family);
+        return er_invalid_format;
+    }
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Encode a socket option value
+//
+int32_t io_encode_prx_property(
+    io_codec_ctx_t* ctx,
+    const prx_property_t* prx_prop
+)
+{
+    int32_t result;
+    io_codec_ctx_t obj;
+    __io_encode_type_begin(ctx, prx_prop, 2);
+    __io_encode_value(ctx, int32, prx_prop, type);
+    /**/ if (prx_prop->type == prx_so_ip_multicast_join ||
+             prx_prop->type == prx_so_ip_multicast_leave ||
+             prx_prop->type >= prx_property_type_file_info)
+    {
+        result = io_encode_object(ctx, "property", false, &obj);
+        if (result != er_ok)
+            return result;
+        switch (prx_prop->type)
+        {
+        case prx_so_ip_multicast_join:
+        case prx_so_ip_multicast_leave:
+            result = io_encode_prx_multicast_option(&obj, &prx_prop->property.mcast);
+            break;
+        case prx_property_type_addrinfo:
+            result = io_encode_prx_addrinfo(&obj, &prx_prop->property.addr_info);
+            break;
+        case prx_property_type_ifaddrinfo:
+            result = io_encode_prx_ifaddrinfo(&obj, &prx_prop->property.itf_info);
+            break;
+        case prx_property_type_file_info:
+            result = io_encode_prx_file_info(&obj, &prx_prop->property.file_info);
+            break;
+        default:
+            result = er_writing;
+            break;
+        }
+    }
+    else if (prx_prop->type >= prx_record_type_default &&
+             prx_prop->type < __prx_record_max)
+    {
+        result = io_encode_bin(ctx, "property", prx_prop->property.bin.value, 
+            prx_prop->property.bin.size);
+    }
+    else if (prx_prop->type > prx_so_unknown &&
+             prx_prop->type < __prx_so_max)
+    {
+        result = io_encode_uint64(ctx, "property", prx_prop->property.value);
+    }
+    else
+    {
+        result = er_writing;
+    }
+    if (result != er_ok)
+        return result;
+    __io_encode_type_end(ctx);
+    return result;
+}
+
+//
+// Decode a property value
+//
+int32_t io_decode_prx_property(
+    io_codec_ctx_t* ctx,
+    prx_property_t* prx_prop
+)
+{
+    int32_t result;
+    bool is_null;
+    io_codec_ctx_t obj;
+    __io_decode_type_begin(ctx, prx_prop, 2);
+    __io_decode_value(ctx, int32, prx_prop, type);
+    /**/ if (prx_prop->type == prx_so_ip_multicast_join ||
+             prx_prop->type == prx_so_ip_multicast_leave ||
+             prx_prop->type >= prx_property_type_file_info)
+    {
+        result = io_decode_object(ctx, "property", &is_null, &obj);
+        if (result != er_ok)
+            return result;
+        if (is_null)
+            return er_invalid_format;
+        switch (prx_prop->type)
+        {
+        case prx_so_ip_multicast_join:
+        case prx_so_ip_multicast_leave:
+            result = io_decode_prx_multicast_option(&obj, &prx_prop->property.mcast);
+            break;
+        case prx_property_type_addrinfo:
+            result = io_decode_prx_addrinfo(&obj, &prx_prop->property.addr_info);
+            break;
+        case prx_property_type_ifaddrinfo:
+            result = io_decode_prx_ifaddrinfo(&obj, &prx_prop->property.itf_info);
+            break;
+        case prx_property_type_file_info:
+            result = io_decode_prx_file_info(&obj, &prx_prop->property.file_info);
+            break;
+        default:
+            result = er_invalid_format;
+            break;
+        }
+    }
+    else if (prx_prop->type >= prx_record_type_default && 
+             prx_prop->type < __prx_record_max)
+    {
+        result = io_decode_bin_default(ctx, "property", 
+            (void**)&prx_prop->property.bin.value, &prx_prop->property.bin.size);
+    }
+    else if (prx_prop->type > prx_so_unknown &&
+             prx_prop->type < __prx_so_max)
+    {
+        result = io_decode_uint64(ctx, "property", &prx_prop->property.value);
+    }
+    else
+    {
+        result = er_invalid_format;
+    }
+    if (result != er_ok)
+        return result;
+    __io_decode_type_end(ctx);
+    return result;
+}
+

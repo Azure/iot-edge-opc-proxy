@@ -69,9 +69,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public async Task<Message> CallAsync(INameRecord proxy, Message request, 
             CancellationToken ct) {
             try {
-                return await Retry.Do(ct,
-                    () => InvokeDeviceMethodAsync(proxy, request, TimeSpan.FromMinutes(3), ct),
-                    _ => !ct.IsCancellationRequested, Retry.NoBackoff, int.MaxValue).ConfigureAwait(false);
+                return await InvokeDeviceMethodAsync(proxy, request, TimeSpan.FromMinutes(3), 
+                    ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException) {
             }
@@ -141,7 +140,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         }
                     }
 
-                    ProxyEventSource.Log.PingRetry(this, attempts, proxyList.Count);
+                    ProxyEventSource.Log.BroadcastRetry(this, attempts, proxyList.Count);
                     if (!proxyList.Any()) {
                         break;
                     }
@@ -223,7 +222,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public async Task<IEnumerable<INameRecord>> LookupAsync(string name, RecordType type,
             CancellationToken ct) {
-
+            if (string.IsNullOrEmpty(name)) {
+                throw new ArgumentException(nameof(name));
+            }
             name = name.ToLowerInvariant();
             if (RecordType.Host == (type & RecordType.Host)) {
                 // Use cache to look up a host record
@@ -242,6 +243,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 sql.Append(name);
             }
 
+            Reference address;
+            if (Reference.TryParse(name, out address)) {
+                sql.Append("' OR tags.address = '");
+                sql.Append(address.ToString().ToLower());
+            }
+
             sql.Append("') AND ");
             sql.Append(IoTHubRecord.CreateTypeQueryString(type));
             return await LookupAsync(sql.ToString(), ct).ConfigureAwait(false);
@@ -256,10 +263,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public async Task<IEnumerable<INameRecord>> LookupAsync(Reference address, RecordType type,
             CancellationToken ct) {
+            if (address == null || address == Reference.Null) {
+                throw new ArgumentException(nameof(address));
+            }
             var sql = new StringBuilder("SELECT * FROM devices WHERE ");
-            sql.Append("tags.address = '");
-            sql.Append(address.ToString().ToLower());
-            sql.Append("' AND ");
+            if (address != Reference.All) {
+                sql.Append("tags.address = '");
+                sql.Append(address.ToString().ToLower());
+                sql.Append("' AND ");
+            }
             sql.Append(IoTHubRecord.CreateTypeQueryString(type));
             return await LookupAsync(sql.ToString(), ct).ConfigureAwait(false);
         }
@@ -760,6 +772,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             try {
                 return await InvokeDeviceMethodAsync(
                     record, request, timeout, ct).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
+                throw;
             }
             catch {
                 return null;

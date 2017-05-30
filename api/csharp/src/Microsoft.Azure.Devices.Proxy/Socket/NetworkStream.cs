@@ -9,7 +9,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Runtime.InteropServices;
     using System.Threading;
     using System.Threading.Tasks;
-    using Model;
 
     //
     // Provides the underlying stream for TCP Client network access
@@ -24,7 +23,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         public NetworkStream(Socket socket, bool ownsSocket) {
             if (socket == null) {
-                throw new ArgumentNullException("socket");
+                throw new ArgumentNullException(nameof(socket));
             }
             if (!socket.Connected) {
                 throw new IOException("Socket not connected");

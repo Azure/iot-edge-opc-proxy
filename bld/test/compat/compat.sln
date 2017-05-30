@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Azure.Devices.Proxy.Native", "Microsoft.Azure.Devices.Proxy.Native", "{F3B6C968-6933-4CCF-823E-A47F72C43C0B}"
 	ProjectSection(SolutionItems) = preProject
@@ -47,20 +47,28 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "proto", "..\..\..\test\comp
 		{697C4297-7BB2-4810-8947-BA87EE399EA5} = {697C4297-7BB2-4810-8947-BA87EE399EA5}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-shared", "libproto\libproto-shared.vcxitems", "{782AEA3C-5234-4C34-B5C2-BE8F879A2C9F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-shared", "..\libproto\libproto-shared.vcxitems", "{782AEA3C-5234-4C34-B5C2-BE8F879A2C9F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-win32", "libproto\libproto-win32.vcxproj", "{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproto-win32", "..\libproto\libproto-win32.vcxproj", "{23153B11-AF0A-4BBA-85E0-390D0B3BFC89}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Proxy", "..\..\..\api\csharp\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj", "{7C8855D4-723D-4431-80A6-7DFB7D57347D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "libdnssd", "libdnssd", "{BB8312E1-E83E-4DC6-B4A9-97CB6A6874BA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdnssd-shared", "..\..\src\libdnssd\libdnssd-shared.vcxitems", "{7348426C-23DA-4E24-87AF-243EEB2F326C}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libdnssd-win32", "..\..\src\libdnssd\libdnssd-win32.vcxproj", "{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		libproto\libproto-shared.vcxitems*{23153b11-af0a-4bba-85e0-390d0b3bfc89}*SharedItemsImports = 4
+		..\libproto\libproto-shared.vcxitems*{23153b11-af0a-4bba-85e0-390d0b3bfc89}*SharedItemsImports = 4
+		..\..\src\libdnssd\libdnssd-shared.vcxitems*{2bfc69d2-0912-4c08-9b6c-2af422fa823b}*SharedItemsImports = 4
 		..\..\src\libiotsdk\libiotsdk-shared.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
 		..\..\src\libproxy\libproxy-shared.vcxitems*{4a4bce85-9d92-4b68-92e9-f010c82e3a5f}*SharedItemsImports = 9
 		..\..\src\libproxy\libproxy-shared.vcxitems*{697c4297-7bb2-4810-8947-ba87ee399ea5}*SharedItemsImports = 4
 		..\..\src\libiotsdk\libiotsdk-shared.vcxitems*{6d8be690-5bd5-4964-8c98-c18e6117877f}*SharedItemsImports = 4
-		libproto\libproto-shared.vcxitems*{782aea3c-5234-4c34-b5c2-be8f879a2c9f}*SharedItemsImports = 9
+		..\..\src\libdnssd\libdnssd-shared.vcxitems*{7348426c-23da-4e24-87af-243eeb2f326c}*SharedItemsImports = 9
+		..\libproto\libproto-shared.vcxitems*{782aea3c-5234-4c34-b5c2-be8f879a2c9f}*SharedItemsImports = 9
 		..\..\src\libzlog\libzlog-shared.vcxitems*{9de32f51-262e-471c-b74b-8189fd1920f8}*SharedItemsImports = 9
 		..\..\src\libzlog\libzlog-shared.vcxitems*{b1f92e2e-23c2-48e8-94ba-2d73dce95ebc}*SharedItemsImports = 4
 	EndGlobalSection
@@ -176,6 +184,22 @@ Global
 		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x64.Build.0 = Signed|Any CPU
 		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x86.ActiveCfg = Signed|Any CPU
 		{7C8855D4-723D-4431-80A6-7DFB7D57347D}.Signed|x86.Build.0 = Signed|Any CPU
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Debug|x64.ActiveCfg = Debug|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Debug|x64.Build.0 = Debug|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Debug|x86.ActiveCfg = Debug|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Debug|x86.Build.0 = Debug|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Release|Any CPU.ActiveCfg = Release|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Release|x64.ActiveCfg = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Release|x64.Build.0 = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Release|x86.ActiveCfg = Release|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Release|x86.Build.0 = Release|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|Any CPU.ActiveCfg = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|Any CPU.Build.0 = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|x64.ActiveCfg = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|x64.Build.0 = Release|x64
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|x86.ActiveCfg = Release|Win32
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B}.Signed|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -194,5 +218,8 @@ Global
 		{782AEA3C-5234-4C34-B5C2-BE8F879A2C9F} = {B03F97EC-1946-40BE-9BE1-A58702900ABF}
 		{23153B11-AF0A-4BBA-85E0-390D0B3BFC89} = {B03F97EC-1946-40BE-9BE1-A58702900ABF}
 		{7C8855D4-723D-4431-80A6-7DFB7D57347D} = {5B34AE3B-5CD2-488E-A4A0-EFC9A06B9221}
+		{BB8312E1-E83E-4DC6-B4A9-97CB6A6874BA} = {F3B6C968-6933-4CCF-823E-A47F72C43C0B}
+		{7348426C-23DA-4E24-87AF-243EEB2F326C} = {BB8312E1-E83E-4DC6-B4A9-97CB6A6874BA}
+		{2BFC69D2-0912-4C08-9B6C-2AF422FA823B} = {BB8312E1-E83E-4DC6-B4A9-97CB6A6874BA}
 	EndGlobalSection
 EndGlobal

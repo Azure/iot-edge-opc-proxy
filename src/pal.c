@@ -10,6 +10,8 @@
 #include "pal_err.h"
 #include "pal_file.h"
 #include "pal_ws.h"
+#include "pal_net.h"
+#include "pal_sd.h"
 #include "pal_sk.h"
 #include "pal_time.h"
 #include "pal_rand.h"
@@ -71,16 +73,38 @@ int32_t pal_init(
             break;
         }
 
-        // Initialize socket 
-        result = pal_socket_init();
+        // Initialize networking 
+        result = pal_net_init();
         if (result == er_ok)
-            capabilities |= (pal_cap_sockets | pal_cap_ev);
-        else 
+            capabilities |= pal_cap_net;
+        else
+        {
+            log_error(NULL, "Failed to init networking pal (%s).",
+                prx_err_string(result));
+            break;
+        }
+
+        // Initialize service discovery 
+        result = pal_sd_init();
+        if (result == er_ok)
+            capabilities |= pal_cap_dnssd;
+        else if (result != er_not_supported)
+        {
+            log_error(NULL, "Failed to init name service pal (%s).",
+                prx_err_string(result));
+            break;
+        }
+
+        // Initialize socket 
+        result = pal_socket_init(&capabilities);
+        if (result != er_ok)
         {
             log_error(NULL, "Failed to init socket pal (%s).",
                 prx_err_string(result));
             break;
         }
+
+        capabilities |= pal_cap_sockets;
 
         // Initialize web socket functionality
         result = pal_wsclient_init();
@@ -136,6 +160,12 @@ int32_t pal_deinit(
 
     if (capabilities & pal_cap_sockets)
         pal_socket_deinit();
+
+    if (capabilities & pal_cap_dnssd)
+        pal_sd_deinit();
+
+    if (capabilities & pal_cap_net)
+        pal_net_deinit();
 
     if (capabilities & pal_cap_file)
         pal_file_deinit();

@@ -54,7 +54,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="ct"></param>
         /// <returns></returns>
         public Task<IMessageStream> OpenAsync(CancellationToken ct) {
-            _open = new CancellationTokenSource();
             return Task.FromResult((IMessageStream)this);
         }
 
@@ -63,7 +62,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <returns></returns>
         public Task CloseAsync() {
-            _open.Cancel();
             return Task.FromResult(true);
         }
 
@@ -74,8 +72,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public async Task ReceiveAsync(CancellationToken ct) {
             Message response = await _iotHub.TryInvokeDeviceMethodAsync(_link,
-                new Message(_streamId, _remoteId, new PollRequest(120000)),
-                    TimeSpan.FromMinutes(3), _open.Token).ConfigureAwait(false);
+                new Message(_streamId, _remoteId, new PollRequest(30000)),
+                    TimeSpan.FromMinutes(1), ct).ConfigureAwait(false);
             if (response != null) {
                 ReceiveQueue.Enqueue(response);
             }
@@ -90,13 +88,24 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public async Task SendAsync(Message message, CancellationToken ct) {
             message.Source = _streamId;
             message.Target = _remoteId;
-            Message response = await _iotHub.CallAsync(_link, message, ct).ConfigureAwait(false);
+            try {
+                var response = await Retry.Do(ct,
+                    () => _iotHub.InvokeDeviceMethodAsync(
+                        _link, message, TimeSpan.FromMinutes(1), ct),
+                    (e) => !ct.IsCancellationRequested, Retry.NoBackoff, 
+                        int.MaxValue).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                ProxyEventSource.Log.HandledExceptionAsError(this, e);
+            }
         }
 
         private readonly IoTHubService _iotHub;
         private readonly Reference _streamId;
         private readonly Reference _remoteId;
         private readonly INameRecord _link;
-        private CancellationTokenSource _open;
     }
 }

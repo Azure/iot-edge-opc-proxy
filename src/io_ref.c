@@ -37,7 +37,7 @@ void io_ref_clear(
 // Copy ref to string buffer
 //
 int32_t io_ref_to_string(
-    io_ref_t* ref,
+    const io_ref_t* ref,
     char* string,
     size_t len
 )
@@ -102,7 +102,7 @@ int32_t io_ref_from_string(
 // Convert ref to ref string
 //
 STRING_HANDLE io_ref_to_STRING(
-    io_ref_t* ref
+    const io_ref_t* ref
 )
 {
     STRING_HANDLE result;
@@ -119,7 +119,7 @@ STRING_HANDLE io_ref_to_STRING(
 // Append to string handle
 //
 int32_t io_ref_append_to_STRING(
-    io_ref_t* ref,
+    const io_ref_t* ref,
     STRING_HANDLE string
 )
 {
@@ -143,8 +143,8 @@ int32_t io_ref_append_to_STRING(
 // Returns whether 2 refes are equal
 //
 bool io_ref_equals(
-    io_ref_t* ref1,
-    io_ref_t* ref2
+    const io_ref_t* ref1,
+    const io_ref_t* ref2
 )
 {
     if (!ref1 && !ref2)
@@ -160,7 +160,7 @@ bool io_ref_equals(
 // Copyies one ref to another
 //
 void io_ref_copy(
-    io_ref_t* src,
+    const io_ref_t* src,
     io_ref_t* dst
 )
 {
@@ -197,7 +197,7 @@ void io_ref_swap(
 // Hash ref
 //
 uint32_t io_ref_hash(
-    io_ref_t *ref
+    const io_ref_t *ref
 )
 {
     return 
@@ -209,7 +209,7 @@ uint32_t io_ref_hash(
 // Convert ref from socket ref
 //
 int32_t io_ref_from_prx_socket_address(
-    prx_socket_address_t* sa,
+    const prx_socket_address_t* sa,
     io_ref_t* ref
 )
 {
@@ -228,7 +228,7 @@ int32_t io_ref_from_prx_socket_address(
 // Convert ref to socket ref
 //
 int32_t io_ref_to_prx_socket_address(
-    io_ref_t* ref,
+    const io_ref_t* ref,
     prx_socket_address_t* sa
 )
 {
@@ -248,7 +248,7 @@ int32_t io_ref_to_prx_socket_address(
 //
 int32_t io_encode_ref(
     io_codec_ctx_t *ctx,
-    io_ref_t* ref
+    const io_ref_t* ref
 )
 {
     int32_t result;

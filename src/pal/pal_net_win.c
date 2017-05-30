@@ -158,7 +158,7 @@ int32_t pal_os_last_net_error_as_prx_error(
             NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (char*)&message, 0, NULL);
 
-        log_error(NULL, "Networking error code %d (%s)",
+        log_info(NULL, "Networking error code %d (%s)",
             error, message ? message : "<unknown>");
         LocalFree(message);
     }
@@ -220,11 +220,11 @@ int32_t pal_getifaddrinfo(
     const char* if_name,
     uint32_t flags,
     prx_ifaddrinfo_t** prx_ifa,
-    prx_size_t* prx_ifa_count
+    size_t* prx_ifa_count
 )
 {
     int32_t result;
-    prx_size_t alloc_count = 0;
+    size_t alloc_count = 0;
     PIP_ADAPTER_ADDRESSES ifaddr = NULL, ifa;
     IP_ADAPTER_UNICAST_ADDRESS *uai;
     ULONG alloc_size = 15000;
@@ -354,7 +354,7 @@ int32_t pal_freeifaddrinfo(
 int32_t pal_getifnameinfo(
     prx_socket_address_t* if_address,
     char* if_name,
-    prx_size_t if_name_length,
+    size_t if_name_length,
     uint64_t *if_index
 )
 {
@@ -370,7 +370,7 @@ int32_t pal_getifnameinfo(
 //
 int32_t pal_gethostname(
     char* name,
-    prx_size_t namelen
+    size_t namelen
 )
 {
     int32_t result;
@@ -387,4 +387,29 @@ int32_t pal_gethostname(
             result = er_ok;
     }
     return result;
+}
+
+//
+// Called before using networking layer
+//
+int32_t pal_net_init(
+    void
+)
+{
+    int error;
+    WSADATA wsd;
+    error = WSAStartup(MAKEWORD(2, 2), &wsd);
+    if (error != 0)
+        return pal_os_to_prx_net_error(error);
+    return er_ok;
+}
+
+//
+// Free networking layer
+//
+void pal_net_deinit(
+    void
+)
+{
+    (void)WSACleanup();
 }

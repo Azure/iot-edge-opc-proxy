@@ -46,9 +46,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 else if (message.TypeId == MessageContent.Ping)
                     message.Content = await context.Get<PingResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Resolve)
-                    message.Content = await context.Get<ResolveResponse>().ReadAsync(
-                        reader, context, ct).ConfigureAwait(false);
                 else if (message.TypeId == MessageContent.Link)
                     message.Content = await context.Get<LinkResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
@@ -70,9 +67,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         reader, context, ct).ConfigureAwait(false);
                 else if (message.TypeId == MessageContent.Ping)
                     message.Content = await context.Get<PingRequest>().ReadAsync(
-                        reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Resolve)
-                    message.Content = await context.Get<ResolveRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
                 else if (message.TypeId == MessageContent.Link)
                     message.Content = await context.Get<LinkRequest>().ReadAsync(
@@ -135,12 +129,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             else if (message.Content is LinkResponse)
                 await context.Get<LinkResponse>().WriteAsync(writer,
                     (LinkResponse)message.Content, context, ct).ConfigureAwait(false);
-            else if (message.Content is ResolveResponse)
-                await context.Get<ResolveResponse>().WriteAsync(writer,
-                    (ResolveResponse)message.Content, context, ct).ConfigureAwait(false);
-            else if (message.Content is ResolveRequest)
-                await context.Get<ResolveRequest>().WriteAsync(writer,
-                    (ResolveRequest)message.Content, context, ct).ConfigureAwait(false);
             else if (message.Content is SetOptRequest)
                 await context.Get<SetOptRequest>().WriteAsync(writer,
                     (SetOptRequest)message.Content, context, ct).ConfigureAwait(false);
@@ -196,11 +184,10 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 throw new FormatException($"Bad address family {family}");
             }
             else {
-                if (members < 4) {
+                if (members < 3) {
                     throw new FormatException(
                         $"Unexpected number of properties {members}");
                 }
-                uint flow = await reader.ReadUInt32Async(ct).ConfigureAwait(false);
                 ushort port = await reader.ReadUInt16Async(ct).ConfigureAwait(false);
                 byte[] address;
                 switch (family) {
@@ -210,25 +197,32 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                             throw new FormatException(
                                 $"Bad v4 address size {address.Length}");
                         }
-                        result = new Inet4SocketAddress(address, port, flow);
+                        result = new Inet4SocketAddress(address, port);
                         break;
                     case AddressFamily.InterNetworkV6:
+                        if (members < 5) {
+                            throw new FormatException(
+                                $"Unexpected number of properties {members}");
+                        }
+                        uint flow = await reader.ReadUInt32Async(ct).ConfigureAwait(false);
                         address = await reader.ReadBinAsync(ct).ConfigureAwait(false);
                         if (address.Length != 16) {
                             throw new FormatException(
                                 $"Bad v6 address size {address.Length}");
-                        }
-                        if (members < 5) {
-                            throw new FormatException(
-                                $"Unexpected number of properties {members}");
                         }
                         uint scopeId = await reader.ReadUInt32Async(ct).ConfigureAwait(false);
                         result = new Inet6SocketAddress(address, port, flow, scopeId);
                         break;
                     case AddressFamily.Proxy:
                     default:
+                        if (members < 5) {
+                            throw new FormatException(
+                                $"Unexpected number of properties {members}");
+                        }
+                        ushort flags = await reader.ReadUInt16Async(ct).ConfigureAwait(false);
+                        int interfaceIndex = await reader.ReadInt32Async(ct).ConfigureAwait(false);
                         string host = await reader.ReadStringAsync(ct).ConfigureAwait(false);
-                        result = new ProxySocketAddress(host, port, flow);
+                        result = new ProxySocketAddress(host, port, flags, interfaceIndex);
                         break;
                 }
             }
@@ -244,13 +238,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             switch (addr.Family) {
                 case AddressFamily.InterNetwork:
-                    await writer.WriteObjectHeaderAsync(4, ct).ConfigureAwait(false);
+                    await writer.WriteObjectHeaderAsync(3, ct).ConfigureAwait(false);
                     break;
                 case AddressFamily.InterNetworkV6:
                     await writer.WriteObjectHeaderAsync(5, ct).ConfigureAwait(false);
                     break;
                 case AddressFamily.Proxy:
-                    await writer.WriteObjectHeaderAsync(4, ct).ConfigureAwait(false);
+                    await writer.WriteObjectHeaderAsync(5, ct).ConfigureAwait(false);
                     break;
                 case AddressFamily.Unix:
                     await writer.WriteObjectHeaderAsync(2, ct).ConfigureAwait(false);
@@ -269,8 +263,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     ct).ConfigureAwait(false);
             }
             else if (addr.Family != AddressFamily.Unspecified) {
-                await writer.WriteAsync(((InetSocketAddress)addr).Flow, 
-                    ct).ConfigureAwait(false);
                 await writer.WriteAsync(((InetSocketAddress)addr).Port, 
                     ct).ConfigureAwait(false);
                 switch (addr.Family) {
@@ -279,16 +271,187 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                             ct).ConfigureAwait(false);
                         break;
                     case AddressFamily.InterNetworkV6:
+                        await writer.WriteAsync(((Inet6SocketAddress)addr).Flow,
+                            ct).ConfigureAwait(false);
                         await writer.WriteAsync(((Inet6SocketAddress)addr).Address, 
                             ct).ConfigureAwait(false);
                         await writer.WriteAsync(((Inet6SocketAddress)addr).ScopeId, 
                             ct).ConfigureAwait(false);
                         break;
                     case AddressFamily.Proxy:
-                        await writer.WriteAsync(((ProxySocketAddress)addr).Host, 
+                        await writer.WriteAsync(((ProxySocketAddress)addr).Flags,
+                            ct).ConfigureAwait(false);
+                        await writer.WriteAsync(((ProxySocketAddress)addr).InterfaceIndex,
+                            ct).ConfigureAwait(false);
+                        await writer.WriteAsync(((ProxySocketAddress)addr).Host,
                             ct).ConfigureAwait(false);
                         break;
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Custom multicast option serializer to ensure format expected in native code
+    /// </summary>
+    internal class MulticastOptionSerializer : Serializer<MulticastOption> {
+
+        public async override Task<MulticastOption> ReadAsync(Reader reader,
+            SerializerContext context, CancellationToken ct) {
+            MulticastOption result = null;
+            int members = await reader.ReadObjectHeaderAsync(ct).ConfigureAwait(false);
+            if (members < 3) {
+                throw new FormatException(
+                    $"Unexpected number of properties {members}");
+            }
+            AddressFamily family = (AddressFamily)
+                await reader.ReadInt32Async(ct).ConfigureAwait(false);
+            if (family != AddressFamily.InterNetwork &&
+                family != AddressFamily.InterNetworkV6) {
+                throw new FormatException($"Bad address family {family}");
+            }
+            else {
+                int interfaceIndex = await reader.ReadInt32Async(ct).ConfigureAwait(false);
+                byte[] address = await reader.ReadBinAsync(ct).ConfigureAwait(false);
+                if (family == AddressFamily.InterNetwork) {
+                    if (address.Length != 4) {
+                        throw new FormatException(
+                            $"Bad v4 address size {address.Length}");
+                    }
+                    result = new Inet4MulticastOption {
+                        Address = address,
+                        InterfaceIndex = interfaceIndex
+                    };
+                }
+                else {
+                    if (address.Length != 16) {
+                        throw new FormatException(
+                            $"Bad v6 address size {address.Length}");
+                    }
+                    result = new Inet6MulticastOption {
+                        Address = address,
+                        InterfaceIndex = interfaceIndex
+                    };
+                }
+            }
+            return result;
+        }
+
+        public override async Task WriteAsync(Writer writer,
+            MulticastOption option, SerializerContext context, CancellationToken ct) {
+            if (option == null) {
+                await writer.WriteNilAsync(ct).ConfigureAwait(false);
+                return;
+            }
+            await writer.WriteObjectHeaderAsync(3, ct).ConfigureAwait(false);
+            await writer.WriteAsync((int)option.Family, ct).ConfigureAwait(false);
+            await writer.WriteAsync(option.InterfaceIndex, ct).ConfigureAwait(false);
+            switch (option.Family) {
+                case AddressFamily.InterNetwork:
+                    await writer.WriteAsync(((Inet4MulticastOption)option).Address,
+                        ct).ConfigureAwait(false);
+                    break;
+                case AddressFamily.InterNetworkV6:
+                    await writer.WriteAsync(((Inet6MulticastOption)option).Address,
+                        ct).ConfigureAwait(false);
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Custom property serializer to ensure format expected in native code
+    /// </summary>
+    internal class PropertySerializer : Serializer<PropertyBase> {
+
+        public async override Task<PropertyBase> ReadAsync(Reader reader,
+            SerializerContext context, CancellationToken ct) {
+            PropertyBase result = null;
+            int members = await reader.ReadObjectHeaderAsync(ct).ConfigureAwait(false);
+            if (members != 2) {
+                throw new FormatException(
+                    $"Unexpected number of properties {members}");
+            }
+
+            uint type = await reader.ReadUInt32Async(ct).ConfigureAwait(false);
+            if (type == (uint)SocketOption.IpMulticastJoin ||
+                type == (uint)SocketOption.IpMulticastLeave) {
+                result = new Property<MulticastOption>(type,
+                    await context.Get<MulticastOption>().ReadAsync(
+                        reader, context, ct).ConfigureAwait(false));
+            }
+            else if (type == (uint)PropertyType.FileInfo) {
+                result = new Property<FileInfo>(type,
+                    await context.Get<FileInfo>().ReadAsync(
+                        reader, context, ct).ConfigureAwait(false));
+            }
+            else if (type == (uint)PropertyType.AddressInfo) {
+                result = new Property<AddressInfo>(type,
+                    await context.Get<AddressInfo>().ReadAsync(
+                        reader, context, ct).ConfigureAwait(false));
+            }
+            else if (type == (uint)PropertyType.InterfaceInfo) {
+                result = new Property<InterfaceInfo>(type,
+                    await context.Get<InterfaceInfo>().ReadAsync(
+                        reader, context, ct).ConfigureAwait(false));
+            }
+            else if (type > (uint)DnsRecordType.Simple) {
+                result = new Property<byte[]>(type,
+                    await reader.ReadBinAsync(ct).ConfigureAwait(false));
+            }
+            else if (type < (uint)SocketOption.__prx_so_max) {
+                result = new Property<ulong>(type,
+                    await reader.ReadUInt64Async(ct).ConfigureAwait(false));
+            }
+            else {
+                throw new FormatException($"Bad type encountered {type}");
+            }
+            return result;
+        }
+
+        public override async Task WriteAsync(Writer writer,
+            PropertyBase property, SerializerContext context, CancellationToken ct) {
+            if (property == null) {
+                await writer.WriteNilAsync(ct).ConfigureAwait(false);
+                return;
+            }
+
+            await writer.WriteObjectHeaderAsync(2, ct).ConfigureAwait(false);
+            await writer.WriteAsync(property.Type, ct).ConfigureAwait(false);
+
+            if (property.Type == (uint)SocketOption.IpMulticastJoin ||
+                property.Type == (uint)SocketOption.IpMulticastLeave) {
+                await context.Get<MulticastOption>().WriteAsync(writer,
+                    ((Property<MulticastOption>)property).Value, context, 
+                        ct).ConfigureAwait(false);
+            }
+            else if (property.Type == (uint)PropertyType.FileInfo) {
+                await context.Get<FileInfo>().WriteAsync(writer,
+                    ((Property<FileInfo>)property).Value, context,
+                        ct).ConfigureAwait(false);
+            }
+            else if (property.Type == (uint)PropertyType.AddressInfo) {
+                await context.Get<AddressInfo>().WriteAsync(writer,
+                    ((Property<AddressInfo>)property).Value, context,
+                        ct).ConfigureAwait(false);
+            }
+            else if (property.Type == (uint)PropertyType.InterfaceInfo) {
+                await context.Get<InterfaceInfo>().WriteAsync(writer,
+                    ((Property<InterfaceInfo>)property).Value, context,
+                        ct).ConfigureAwait(false);
+            }
+            else if (property.Type > (uint)DnsRecordType.Simple) {
+                await writer.WriteAsync(((Property<byte[]>)property).Value,
+                    ct).ConfigureAwait(false);
+            }
+            else if (property.Type < (uint)SocketOption.__prx_so_max) {
+                await writer.WriteAsync(((Property<ulong>)property).Value,
+                    ct).ConfigureAwait(false);
+            }
+            else {
+                throw new FormatException( $"Bad type encountered {property.Type}");
             }
         }
     }

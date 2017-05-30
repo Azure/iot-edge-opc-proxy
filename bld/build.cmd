@@ -23,6 +23,7 @@ set build-configs=
 set build-platform=Win32
 if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set build-platform=x64
 set build-os=Windows
+set build-use-remote-branch=
 set build-skip-dotnet=
 set build-pack-only=
 set build-clean=
@@ -38,10 +39,15 @@ set CMAKE_mem_check=OFF
 
 set build-root="%repo-root%"\build
 set build-nuget-output=%build-root%
+set build-context="%repo-root%"
+set build-branch=local
 
 :args-loop 
 if "%1" equ "" goto :args-done
+if "%1" equ  "-x" goto :arg-trace
+if "%1" equ "--xtrace" goto :arg-trace
 if "%1" equ "--os" goto :arg-build-os
+if "%1" equ "--remote" goto :arg-build-remote
 if "%1" equ "--clean" goto :arg-build-clean
 if "%1" equ  "-c" goto :arg-build-clean
 if "%1" equ "--config" goto :arg-build-config
@@ -63,6 +69,9 @@ if "%1" equ "--use-libwebsockets" goto :arg-use-libwebsockets
 if "%1" equ "--use-openssl" goto :arg-use-openssl
 if "%1" equ "--with-memcheck" goto :arg-with-memcheck
 call :usage && exit /b 1
+:arg-trace 
+echo on
+goto :args-continue
 :arg-build-os 
 shift
 if "%1" equ "" call :usage && exit /b 1
@@ -70,6 +79,9 @@ set build-os=%1
 goto :args-continue
 :arg-build-clean 
 set build-clean=1
+goto :args-continue
+:arg-build-remote 
+set build-use-remote-branch=1
 goto :args-continue
 :arg-build-config 
 shift
@@ -262,6 +274,10 @@ if not !ERRORLEVEL! == 0 call :docker-build-os-not-found && exit /b 1
 call :docker-build-args %*
 :docker-build-get-git-tag 
 rem set tracking branch and remote
+set build-remote=
+if "%build-use-remote-branch%" == "" goto :docker-build-and-run-all 
+set build-branch=
+set build-context=.
 for /f "tokens=2* delims=/" %%r in ('git symbolic-ref HEAD') do set build-branch=%%s
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
 for /f "delims=" %%r in ('git config "branch.%build-branch%.remote"') do set build-remote=%%r
@@ -270,9 +286,8 @@ for /f "tokens=2* delims=/" %%r in ('git config "branch.%build-branch%.merge"') 
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
 for /f "delims=" %%r in ('git remote get-url %build-remote%') do set build-remote=%%r
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
-set build-commit-env=-e COMMIT_ID=%build-branch% -e PROXY_REPO=%build-remote%
-set build-remote=
-set build-branch=
+if "%build-remote%" == "" set build-remote=https://github.com/Azure/iot-gateway-proxy
+if "%build-branch%" == "" set build-branch=master
 :docker-build-and-run-all 
 pushd %current-path%\docker
 for /f %%i in ('dir /b /s Dockerfile.%build-os%*') do (
@@ -284,18 +299,32 @@ popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :build-done
 :docker-build-and-run 
-for /f "tokens=1* delims=." %%i in ("%~nx1") do set docker-build-os=%%j
-if exist %build-root%\%docker-build-os%.done goto :eof
-echo     ... azure-iot-proxy:build-%docker-build-os% %build-docker-args% %build-commit-env%
-docker build -f Dockerfile.%docker-build-os% -t azure-iot-proxy:build-%docker-build-os% .
-docker run -ti %build-commit-env% azure-iot-proxy:build-%docker-build-os% %build-docker-args%
-if !ERRORLEVEL! == 0 echo %docker-build-os% >> %build-root%\%docker-build-os%.done
 set docker-build-os=
+for /f "tokens=1* delims=." %%i in ("%~nx1") do set docker-build-os=%%j
+echo     ... Building azure-iot-proxy:%docker-build-os%-env
+docker build -f Dockerfile.%docker-build-os% -t azure-iot-proxy:%docker-build-os%-env .
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+echo     ... Building azure-iot-proxy:%docker-build-os%-%build-branch% %build-docker-args%
+rem create proxy docker file
+    echo FROM azure-iot-proxy:%docker-build-os%-env > tmp.Dockerfile
+if "%build-use-remote-branch%" == "" (
+    echo COPY / /repo >> tmp.Dockerfile
+    echo RUN ./repo/bld/docker/docker-build.sh %build-docker-args% >> tmp.Dockerfile
+) else (
+    echo ENV PROXY_REPO=%build-remote% >> tmp.Dockerfile
+    echo ENV COMMIT_ID=%build-branch% >> tmp.Dockerfile
+    echo COPY docker-build.sh / >> tmp.Dockerfile
+    echo RUN ./docker-build.sh %build-docker-args% >> tmp.Dockerfile
+)
+if not "%build-clean%" == "" docker rmi -f azure-iot-proxy:%docker-build-os%-%build-branch%
+docker build -f tmp.Dockerfile -t azure-iot-proxy:%docker-build-os%-%build-branch% %build-context%
+if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+if exist tmp.Dockerfile del /f tmp.Dockerfile
 goto :eof
 :docker-build-args 
 if "%1" equ "" goto :eof
 if "%1" equ "--os" shift && shift && goto :docker-build-args
+if "%1" equ "--remote" shift && goto :docker-build-args
 set build-docker-args=%build-docker-args% %1
 shift
 goto :docker-build-args
@@ -332,7 +361,9 @@ goto :eof
 :usage 
 echo build.cmd [options]
 echo options:
+echo -x --xtrace                 print a trace of each command.
 echo    --os ^<value^>             [Windows] OS to build on (needs Docker if Linux Flavor).
+echo    --remote                 Build current branch on remote rather than use local build context.
 echo -c --clean                  Build clean (Removes previous build output).
 echo -C --config ^<value^>         [Debug] build configuration (e.g. Debug, Release).
 echo -T --toolset ^<value^>        An optional toolset to use, e.g. v140 or clang.
