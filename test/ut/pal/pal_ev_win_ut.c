@@ -310,6 +310,7 @@ TEST_FUNCTION(pal_win_event_port_register__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
+    memset(&event_data_valid, 0, sizeof(event_data_valid));
     result = pal_event_port_register(
         k_port_valid, k_socket_valid, pal_event_handler_cb_mock, k_context_valid, &event_handle_valid);
 

@@ -201,11 +201,13 @@ enum __SHUT
 
 // time.h
 struct timespec
-#if !defined(_MSC_VER) || defined(_CRT_NO_TIME_T)
+#if !defined(_CRT_NO_TIME_T) || !defined(__DEFINED_struct_timespec)
 {
     int64_t tv_sec;
     long tv_nsec;
 }
+#define _CRT_NO_TIME_T
+#define __DEFINED_struct_timespec
 #endif
 ;
 

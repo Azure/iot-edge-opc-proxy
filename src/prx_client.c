@@ -13,7 +13,6 @@ int ____i = 0;
 
 #if 0
 
-#include "azure_c_shared_utility/agenttime.h"
 #include "azure_c_shared_utility/refcount.h"
 
 //

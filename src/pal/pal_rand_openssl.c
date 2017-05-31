@@ -26,6 +26,7 @@ static void log_ssl_error(
         err = ERR_get_error();
         if (err == 0)
             return;
+        buf[0] = 0;
         buf[sizeof(buf) - 1] = 0;
         ERR_error_string_n(err, buf, sizeof(buf) - 1);
         log_error(NULL, "%s\n", buf);

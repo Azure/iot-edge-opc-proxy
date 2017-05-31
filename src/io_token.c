@@ -8,6 +8,7 @@
 #include "pal_time.h"
 #include "pal_cred.h"
 
+#include "azure_c_shared_utility/agenttime.h"
 #include "azure_c_shared_utility/refcount.h"
 #include "azure_c_shared_utility/urlencode.h"
 #include "azure_c_shared_utility/buffer_.h"

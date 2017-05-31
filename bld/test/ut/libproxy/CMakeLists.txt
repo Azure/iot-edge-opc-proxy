@@ -35,6 +35,7 @@ set(_PROXY_UNITS_UNDER_TEST
     prx_client
     prx_server
     prx_buffer
+    prx_browse
     prx_log
     prx_ns
     prx_sched

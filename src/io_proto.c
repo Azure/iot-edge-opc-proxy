@@ -459,20 +459,17 @@ static int32_t io_decode_data_message(
 )
 {
     int32_t result;
-    size_t read = message->buffer_length;
-    if (message->buffer && read == 0)
-        return er_arg;
 
     __io_decode_type_begin(ctx, message, 3);
     __io_decode_object(ctx, prx_socket_address, message, source_address);
-    result = io_decode_bin_default(ctx, "buffer", (void**)&message->buffer, &read);
+    result = io_decode_bin_default(ctx, "buffer", 
+        (void**)&message->buffer, &message->buffer_length);
     if (result != er_ok)
         return result;
-    message->buffer_length = read;
-    result = io_decode_bin_default(ctx, "control_buffer", (void**)&message->control_buffer, &read);
+    result = io_decode_bin_default(ctx, "control_buffer", 
+        (void**)&message->control_buffer, &message->control_buffer_length);
     if (result != er_ok)
         return result;
-    message->control_buffer_length = read;
     __io_decode_type_end(ctx);
     return result;
 }

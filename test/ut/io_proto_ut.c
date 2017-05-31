@@ -1018,6 +1018,9 @@ TEST_FUNCTION(io_decode_data__success)
     io_data_message_t message_valid;
     int32_t result;
 
+    message_valid.buffer = (uint8_t*)UT_MEM;
+    message_valid.buffer_length = 0;
+
     // arrange
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &message_valid, source_address);
@@ -1037,28 +1040,6 @@ TEST_FUNCTION(io_decode_data__success)
     // assert 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-}
-
-// 
-// Test io_decode_data passing invalid io_data_message_t* argument
-// 
-TEST_FUNCTION(io_decode_data__arg_invalid_message_2)
-{
-    static io_codec_ctx_t k_ctx_valid;
-    io_data_message_t message_valid;
-    int32_t result;
-
-    message_valid.buffer = (uint8_t*)UT_MEM;
-    message_valid.buffer_length = 0;
-
-    // arrange
-
-    // act 
-    result = io_decode_data_message(&k_ctx_valid, &message_valid);
-
-    // assert 
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 // 
@@ -1090,8 +1071,6 @@ TEST_FUNCTION(io_decode_data__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    message_valid.buffer = NULL;
-    message_valid.buffer_length = 0;
     result = io_decode_data_message(&k_ctx_valid, &message_valid);
 
     // assert

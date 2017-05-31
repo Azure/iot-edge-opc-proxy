@@ -100,6 +100,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_browse_ut.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="C:\git\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\prx_browse_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\..\inc\util_ut.h">

@@ -3568,6 +3568,464 @@ TEST_FUNCTION(string_from_uuid__arg_len_invalid_2)
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_0)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "test._super._tcp._something.domain.com");
+    
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test", service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_super._tcp._something", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "domain.com", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_1)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_super._tcp._something");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_NULL(service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_super._tcp._something", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "local", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_2)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "test.._super._tcp._something.local.");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test.", service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_super._tcp._something", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "local", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_3)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "test.test.._super._tcp._something.");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test.test.", service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_super._tcp._something", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "local", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_4)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "test.test.something.");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_NULL(service_name_valid);
+    ASSERT_IS_NULL(service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "test.test.something", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_5)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_NULL(service_name_valid);
+    ASSERT_IS_NULL(service_type_valid);
+    ASSERT_IS_NULL(domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_6)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_test.test._something.local");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_IS_NULL(service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_test", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "test._something.local", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name happy path 
+// 
+TEST_FUNCTION(string_parse_service_full_name__success_7)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "[ some string. . . without 124:240x34:35 ]     ._super._tcp._something");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "[ some string. . . without 124:240x34:35 ]     ", service_name_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "_super._tcp._something", service_type_valid);
+    ASSERT_ARE_EQUAL(char_ptr, "local", domain_valid);
+}
+
+// 
+// Test string_parse_service_full_name passing as full_name argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_service_full_name__arg_full_name_invalid)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(NULL, &service_name_valid, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_parse_service_full_name passing as service_name argument an invalid char** value 
+// 
+TEST_FUNCTION(string_parse_service_full_name__arg_service_name_invalid)
+{
+    char* service_type_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_test.test._something.local");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, NULL, &service_type_valid, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_parse_service_full_name passing as service_type argument an invalid char** value 
+// 
+TEST_FUNCTION(string_parse_service_full_name__arg_service_type_invalid)
+{
+    char* service_name_valid;
+    char* domain_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_test.test._something.local");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, NULL, &domain_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_parse_service_full_name passing as domain argument an invalid char** value 
+// 
+TEST_FUNCTION(string_parse_service_full_name__arg_domain_invalid)
+{
+    char* service_name_valid;
+    char* service_type_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_test.test._something.local");
+
+    // arrange 
+
+    // act 
+    result = string_parse_service_full_name(UT_MEM, &service_name_valid, &service_type_valid, NULL);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_copy_service_full_name happy path 
+// 
+TEST_FUNCTION(string_copy_service_full_name__success_0)
+{
+    static const char* k_service_name_valid = "test with spaces.testwithout [on 123.]";
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const char* k_domain_valid = "domain.com";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, k_service_type_valid, k_domain_valid, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test with spaces.testwithout [on 123.]._xyp._tcp.domain.com", full_name_valid);
+}
+
+// 
+// Test string_copy_service_full_name happy path 
+// 
+TEST_FUNCTION(string_copy_service_full_name__success_1)
+{
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const char* k_domain_valid = "domain.com";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(NULL, k_service_type_valid, k_domain_valid, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "_xyp._tcp.domain.com", full_name_valid);
+}
+
+// 
+// Test string_copy_service_full_name happy path 
+// 
+TEST_FUNCTION(string_copy_service_full_name__success_2)
+{
+    static const char* k_service_name_valid = "test.test";
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, k_service_type_valid, NULL, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test.test._xyp._tcp.local", full_name_valid);
+}
+
+// 
+// Test string_copy_service_full_name happy path 
+// 
+TEST_FUNCTION(string_copy_service_full_name__success_3)
+{
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(NULL, k_service_type_valid, NULL, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "_xyp._tcp.local", full_name_valid);
+}
+
+// 
+// Test string_copy_service_full_name happy path 
+// 
+TEST_FUNCTION(string_copy_service_full_name__success_4)
+{
+    static const char* k_service_name_valid = "test..";
+    static const char* k_service_type_valid = "_xyp._tcp.";
+    static const char* k_domain_valid = "domain.com.";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, k_service_type_valid, k_domain_valid, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+    ASSERT_ARE_EQUAL(char_ptr, "test..._xyp._tcp.domain.com", full_name_valid);
+}
+
+// 
+// Test string_copy_service_full_name passing as service_type argument an invalid const char* value 
+// 
+TEST_FUNCTION(string_copy_service_full_name__arg_service_type_invalid)
+{
+    static const char* k_service_name_valid = "test with spaces.testwithout [on 123.]";
+    static const char* k_domain_valid = "domain.com";
+    static const size_t k_full_size_valid = 256;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, NULL, k_domain_valid, full_name_valid, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
+}
+
+// 
+// Test string_copy_service_full_name passing as full_name argument an invalid char* value 
+// 
+TEST_FUNCTION(string_copy_service_full_name__arg_full_name_invalid)
+{
+    static const char* k_service_name_valid = "test with spaces.testwithout [on 123.]";
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const char* k_domain_valid = "domain.com";
+    static const size_t k_full_size_valid = 256;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, k_service_type_valid, k_domain_valid, NULL, k_full_size_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_copy_service_full_name passing as full_size argument an invalid size_t value 
+// 
+TEST_FUNCTION(string_copy_service_full_name__arg_full_size_invalid)
+{
+    static const char* k_service_name_valid = "test with spaces.testwithout [on 123.]";
+    static const char* k_service_type_valid = "_xyp._tcp";
+    static const char* k_domain_valid = "domain.com";
+    static const size_t k_full_size_invalid = 1;
+    char* full_name_valid = UT_MEM;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_copy_service_full_name(k_service_name_valid, k_service_type_valid, k_domain_valid, full_name_valid, k_full_size_invalid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
+}
+
 //
 // 5. Teardown tests and test suite
 //
