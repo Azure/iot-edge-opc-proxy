@@ -65,5 +65,5 @@ endif()
 if(WIN32)
   # Place here the install rule for win32
 elseif(LINUX)
-	install (TARGETS libzlog LIBRARY DESTINATION lib )
+    install (TARGETS libzlog LIBRARY DESTINATION lib )
 endif()

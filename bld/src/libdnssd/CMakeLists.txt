@@ -36,7 +36,7 @@ endif()
     
 if(WIN32)
     target_compile_definitions(dnssd
-		PRIVATE _WINDOWS=1
+        PRIVATE _WINDOWS=1
         PRIVATE _WINSOCK_DEPRECATED_NO_WARNINGS=1
         PRIVATE MDNS_DEBUGMSGS=0
         PRIVATE WIN32_LEAN_AND_MEAN=1

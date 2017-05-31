@@ -685,7 +685,7 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    otherwise runs proxy host process as    \n");
     printf("                                    console process.                        \n");
 #endif
-    printf(" -v, --version	                    Prints the version information for this \n");
+    printf(" -v, --version                        Prints the version information for this \n");
     printf("                                    binary and exits.                       \n");
     return er_arg;
 }

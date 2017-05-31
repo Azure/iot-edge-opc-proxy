@@ -293,7 +293,7 @@ pushd %current-path%\docker
 for /f %%i in ('dir /b /s Dockerfile.%build-os%*') do (
     call :docker-build-and-run %%i
     if not !ERRORLEVEL! == 0 popd 
-	if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
+    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
 if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
@@ -377,6 +377,6 @@ echo    --skip-dotnet            Skips building dotnet API and packages.
 echo    --pack-only              Only creates packages. (Cannot be combined with --clean)
 echo -n --nuget-folder ^<value^>   [/build] Folder to use when outputting nuget packages.
 echo -p --platform ^<value^>       [Win32] build platform (e.g. Win32, x64, ...).
-echo    --vs ^<value^>       	    [15] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
+echo    --vs ^<value^>               [15] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
 goto :eof
 

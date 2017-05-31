@@ -12,7 +12,7 @@ cc= lr()\
 TEST_FUNCTION(C2(name, __success)) lr()\
 { lr()\
     FOR_EACH_2(valid_decl, __VA_ARGS__) \
-	r result; lr()\
+    r result; lr()\
 lr()\
     cc= arrange  lr()\
     cc= ... lr()\
@@ -34,7 +34,7 @@ cc= lr()\
 TEST_FUNCTION(C2(name, __neg)) lr()\
 { lr()\
     FOR_EACH_2(valid_decl, __VA_ARGS__) \
-	r result; lr()\
+    r result; lr()\
 lr()\
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init()); lr()\
 lr()\
@@ -42,9 +42,9 @@ lr()\
     UMOCK_C_NEGATIVE_TESTS_ARRANGE(); lr()\
     cc= ... lr()\
 lr()\
-	cc= act lr()\
+    cc= act lr()\
     UMOCK_C_NEGATIVE_TESTS_ACT(); lr()\
-	result = name##(FOR_EACH_2_COUNTED(valid_arg, __VA_ARGS__)); lr()\
+    result = name##(FOR_EACH_2_COUNTED(valid_arg, __VA_ARGS__)); lr()\
 lr()\
     cc= assert lr()\
     UMOCK_C_NEGATIVE_TESTS_ASSERT(r, result, er_ok); lr()\
@@ -58,7 +58,7 @@ cc= lr()\
 TEST_FUNCTION(C4(name, __arg_, argname, _invalid)) lr()\
 { lr()\
     cc= ... lr()\
-	int32_t result; lr()\
+    int32_t result; lr()\
 lr()\
     cc= arrange  lr()\
     cc= ... lr()\

@@ -203,7 +203,7 @@ enum __SHUT
 struct timespec
 #if !defined(_MSC_VER) || defined(_CRT_NO_TIME_T)
 {
-    int64_t tv_sec;	
+    int64_t tv_sec;
     long tv_nsec;
 }
 #endif

@@ -69,14 +69,14 @@ endif()
 
 if(${use_lws} OR ${use_openssl})
     set(use_openssl 1)
-	set(source_c_files ${source_c_files}
-		${_SHARED_ROOT}/src/tlsio_openssl.c
-		${_SHARED_ROOT}/src/x509_openssl.c
-	)
+    set(source_c_files ${source_c_files}
+        ${_SHARED_ROOT}/src/tlsio_openssl.c
+        ${_SHARED_ROOT}/src/x509_openssl.c
+    )
 elseif(${use_wolfssl})
-	set(source_c_files ${source_c_files}
-		${_SHARED_ROOT}/src/tlsio_wolfssl.c
-	)
+    set(source_c_files ${source_c_files}
+        ${_SHARED_ROOT}/src/tlsio_wolfssl.c
+    )
 endif()
 
 compileAsC99()
@@ -108,7 +108,7 @@ if(${OPENSSL_FOUND})
 else()
     message(FATAL_ERROR, "No OpenSSL found, please install!")
 endif()
-	target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
+    target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
 elseif(${use_wolfssl})
     target_include_directories(libiotsdk PRIVATE $ENV(WOLFSSL_INCLUDE_DIR))
 endif()

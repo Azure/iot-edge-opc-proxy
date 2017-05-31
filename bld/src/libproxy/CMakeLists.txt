@@ -242,7 +242,7 @@ endif()
     target_include_directories(libproxy PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy
-		PRIVATE _POSIX_C_SOURCE=200112L
+        PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
@@ -270,7 +270,7 @@ if(${use_lws})
     target_link_libraries(libproxy PRIVATE websockets_shared)
 endif()
 if(${use_openssl})
-	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
+    target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy PRIVATE ${OPENSSL_LIBRARIES})
 endif()
     target_compile_definitions(libproxy PRIVATE ${_PAL_DEP_DEFS})
@@ -309,7 +309,7 @@ endif()
     target_include_directories(libproxy-static PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy-static
-		PRIVATE _POSIX_C_SOURCE=200112L
+        PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
@@ -334,7 +334,7 @@ if(${use_lws})
     target_link_libraries(libproxy-static PRIVATE websockets_shared)
 endif()
 if(${use_openssl})
-	target_compile_definitions(libproxy-static PRIVATE USE_OPENSSL=1)
+    target_compile_definitions(libproxy-static PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy-static PRIVATE ${OPENSSL_LIBRARIES})
 endif()
     target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
@@ -345,7 +345,7 @@ endif()
 #
 find_package(Git)
 if(GIT_EXECUTABLE)
-	execute_process(
+    execute_process(
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
         OUTPUT_VARIABLE GIT_VERSION
@@ -357,5 +357,5 @@ endif()
 if(WIN32)
   # Place here the install rule for win32
 elseif(LINUX)
-	install (TARGETS libproxy LIBRARY DESTINATION lib )
+    install (TARGETS libproxy LIBRARY DESTINATION lib )
 endif()
