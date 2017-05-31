@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <Description>An Azure Relay based sample stream provider for Azure IoT Gateway device proxy.</Description>
+    <Description>An Azure Relay based sample stream provider for Azure IoT Edge OPC device proxy.</Description>
     <AssemblyTitle>Azure Relay based stream provider sample for Azure Device Proxy</AssemblyTitle>
     <VersionPrefix>0.2.0</VersionPrefix>
     <Version>0.2.0</Version>
@@ -13,11 +13,11 @@
     <AssemblyName>Microsoft.Azure.Devices.Proxy.Relay</AssemblyName>
     <PackageId>Microsoft.Azure.Devices.Proxy.Relay</PackageId>
     <PackageTags>Azure;IoT;.NET;Relay;Proxy</PackageTags>
-    <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>https://github.com/Azure/iot-edge-opc-proxy/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Azure/iot-edge-opc-proxy</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-edge-opc-proxy/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <RepositoryUrl>https://github.com/Azure/azure-iot-proxy</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Azure/iot-edge-opc-proxy</RepositoryUrl>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>

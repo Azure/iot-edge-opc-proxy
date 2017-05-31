@@ -189,7 +189,6 @@
     <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\..\..\iot-gateway-proxy2\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\deps\getopt\src\getopt.h" />
     <ClInclude Include="..\..\..\inc\os_win.h" />
     <ClInclude Include="..\..\..\inc\pal.h" />

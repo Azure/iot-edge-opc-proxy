@@ -286,7 +286,7 @@ for /f "tokens=2* delims=/" %%r in ('git config "branch.%build-branch%.merge"') 
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
 for /f "delims=" %%r in ('git remote get-url %build-remote%') do set build-remote=%%r
 if not !ERRORLEVEL! == 0 goto :docker-build-and-run-all
-if "%build-remote%" == "" set build-remote=https://github.com/Azure/iot-gateway-proxy
+if "%build-remote%" == "" set build-remote=https://github.com/Azure/iot-edge-opc-proxy
 if "%build-branch%" == "" set build-branch=master
 :docker-build-and-run-all 
 pushd %current-path%\docker

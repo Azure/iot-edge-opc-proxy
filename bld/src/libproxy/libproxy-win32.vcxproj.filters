@@ -107,8 +107,5 @@
     <ClInclude Include="..\..\..\inc\pal_sd.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\iot-gateway-proxy2\inc\pal_ev.h">
-      <Filter>inc</Filter>
-    </ClInclude>
   </ItemGroup>
 </Project>

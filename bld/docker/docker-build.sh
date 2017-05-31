@@ -11,7 +11,7 @@ if [ -n "${PROXY_REPO+1}" ]; then
         echo "$PROXY_REPO cloned..."
     else
         echo "Failed to clone $PROXY_REPO. Clone default repo."
-        git clone https://github.com/Azure/iot-gateway-proxy /repo
+        git clone https://github.com/Azure/iot-edge-opc-proxy /repo
     fi
 fi
     cd repo

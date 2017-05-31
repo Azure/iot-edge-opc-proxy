@@ -60,15 +60,15 @@ More options are available to configure transport and logging.  To send raw log 
 
 # Support and Contributions
 
-If you are having issues compiling or using the code in this project please feel free to log an issue in the [issues section](https://github.com/Azure/iot-gateway-proxy/issues) of this project.
+If you are having issues compiling or using the code in this project please feel free to log an issue in the [issues section](https://github.com/Azure/iot-edge-opc-proxy/issues) of this project.
 
 For other issues, such as Connectivity issues or problems with the portal, or issues using the Azure IoT Hub service the Microsoft Customer Support team will try and help out on a best effort basis.
 To engage Microsoft support, you can create a support ticket directly from the [Azure portal](https://ms.portal.azure.com/#blade/Microsoft_Azure_Support/HelpAndSupportBlade).
 
-Contributions are welcome. If you would like to contribute features or fixes, please open a Pull Request.  Bonus points for contributing an integration test and/or unit test with your code. For ideas on what to work on, check out all items marked with "Help wanted" in the [issues section](https://github.com/Azure/iot-gateway-proxy/issues).
+Contributions are welcome. If you would like to contribute features or fixes, please open a Pull Request.  Bonus points for contributing an integration test and/or unit test with your code. For ideas on what to work on, check out all items marked with "Help wanted" in the [issues section](https://github.com/Azure/iot-edge-opc-proxy/issues).
 
 # License
 
-The Azure IoT OPC Proxy module is licensed under the [MIT License](https://github.com/Azure/iot-gateway-proxy/blob/master/LICENSE). You can find license information for all third party dependencies [here](https://github.com/Azure/iot-gateway-proxy/blob/master/thirdpartynotice.txt). Depending on your build configuration, or your choice of platform, not all of the third party dependencies need to be utilized.
+The Azure IoT OPC Proxy module is licensed under the [MIT License](https://github.com/Azure/iot-edge-opc-proxy/blob/master/LICENSE). You can find license information for all third party dependencies [here](https://github.com/Azure/iot-edge-opc-proxy/blob/master/thirdpartynotice.txt). Depending on your build configuration, or your choice of platform, not all of the third party dependencies need to be utilized.
 
 Visit http://azure.com/iotdev to learn more about developing applications for Azure IoT.
