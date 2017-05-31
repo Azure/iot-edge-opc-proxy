@@ -105,7 +105,6 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             str.Append("Family:   "); str.AppendLine(Family.ToString());
             str.Append("Address:  "); str.AppendLine(Address.ToString());
             str.Append("Flags:    "); str.AppendLine(Flags.ToString());
-        //  str.AppendLine("Options:\n"); str.AppendLine(Options.ToString());
             return str.ToString();
         }
 
@@ -115,8 +114,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <returns></returns>
         public override int GetHashCode() {
             return ((((
-                Address.GetHashCode() * 31) ^
-               //      Options.GetHashCode() ^
+               Address.GetHashCode() * 31) ^
                Flags.GetHashCode() * 31) ^
                Family.GetHashCode() * 31) ^
                Protocol.GetHashCode() * 31) ^

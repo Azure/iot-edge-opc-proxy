@@ -209,7 +209,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            int result = 34;
+            int result = 0;
             foreach (var item in items) {
                 result = (result * 31) ^ (int)item.Value?.GetHashCode();
             }

@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             var buffer = new MemoryStream();
             await request.EncodeAsync(buffer, _codec, ct);
             await SendAsync(new Message(null, null, null,
-                new DataMessage { Payload = buffer.ToArray() }), ct).ConfigureAwait(false);
+                new DataMessage(buffer.ToArray())), ct).ConfigureAwait(false);
         }
 
         /// <summary>

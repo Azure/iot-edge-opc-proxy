@@ -366,10 +366,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         }
                     }
                     if (!Links.Any()) {
-                        if (!Links.Any()) {
-                            throw new SocketException("Remote side closed",
-                                null, SocketError.Closed);
-                        }
+                        throw new SocketException("Remote side closed",
+                            null, SocketError.Closed);
                     }
 
                 }

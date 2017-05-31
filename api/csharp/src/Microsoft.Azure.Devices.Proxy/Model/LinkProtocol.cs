@@ -715,6 +715,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             // no op
         }
 
+        public DataMessage(byte[] payload, SocketAddress endpoint = null) {
+            Payload = payload;
+            Source = endpoint;
+            Control = new byte[0];
+        }
+
         /// <summary>
         /// Convinience constructor
         /// </summary>
@@ -724,6 +730,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             Payload = new byte[buffer.Count];
             Buffer.BlockCopy(buffer.Array, buffer.Offset, Payload, 0, buffer.Count);
             Source = endpoint;
+            Control = new byte[0];
         }
 
         /// <summary>
@@ -738,11 +745,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [DataMember(Name = "buffer", Order = 2)]
         public byte[] Payload { get; set; }
 
-        //     /// <summary>
-        //     /// Control buffer
-        //     /// </summary>
-        //     [DataMember(Name = "control_buffer", Order = 3)]
-        //     public byte[] Control { get; set; }
+        /// <summary>
+        /// Control buffer
+        /// </summary>
+        [DataMember(Name = "control_buffer", Order = 3)]
+        public byte[] Control { get; set; }
 
         /// <summary>
         /// Comparison
@@ -755,7 +762,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             }
             return
                 this.Payload.SequenceEqual(that.Payload) &&
-                // this.Control.SequenceEqual(that.Control) &&
+                this.Control.SequenceEqual(that.Control) &&
                 this.Source.Equals(that.Source);
         }
 

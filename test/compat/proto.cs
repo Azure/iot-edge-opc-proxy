@@ -591,6 +591,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args = new DataMessage();
             args.Source = source;
             args.Payload = new byte[145];
+            args.Control = new byte[0];
             new Random().NextBytes(args.Payload);
 
             Message datagramIn = new Message(null, null, null, args);
@@ -612,7 +613,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args = new DataMessage();
             args.Source = new NullSocketAddress();
             args.Payload = new byte[600];
+            args.Control = new byte[50];
             new Random().NextBytes(args.Payload);
+            new Random().NextBytes(args.Control);
 
             Message datagramIn = new Message(null, null, null, args);
             MemoryStream stream = new MemoryStream();
@@ -637,6 +640,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args2 = new DataMessage();
             args2.Source = new NullSocketAddress();
             args2.Payload = new byte[600];
+            args2.Control = new byte[0];
             new Random().NextBytes(args2.Payload);
 
             Message datagramIn1 = new Message(null, null, null, args1);
@@ -664,15 +668,19 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args1 = new DataMessage();
             args1.Source = new NullSocketAddress();
             args1.Payload = new byte[145];
+            args1.Control = new byte[0];
             new Random().NextBytes(args1.Payload);
             DataMessage args2 = new DataMessage();
             args2.Source = new NullSocketAddress();
             args2.Payload = new byte[600];
+            args2.Control = new byte[0];
             new Random().NextBytes(args2.Payload);
             DataMessage args3 = new DataMessage();
             args3.Source = new NullSocketAddress();
             args3.Payload = new byte[400];
+            args3.Control = new byte[30];
             new Random().NextBytes(args3.Payload);
+            new Random().NextBytes(args3.Control);
 
             Message datagramIn1 = new Message(null, null, null, args1);
             Message datagramIn2 = new Message(null, null, null, args2);
@@ -1031,6 +1039,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args = new DataMessage();
             args.Source = source;
             args.Payload = new byte[145];
+            args.Control = new byte[0];
             new Random().NextBytes(args.Payload);
 
             Message datagramIn = new Message(null, null, null, args);
@@ -1052,7 +1061,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             DataMessage args = new DataMessage();
             args.Source = new NullSocketAddress();
             args.Payload = new byte[600];
+            args.Control = new byte[50];
             new Random().NextBytes(args.Payload);
+            new Random().NextBytes(args.Control);
 
             Message datagramIn = new Message(null, null, null, args);
             MemoryStream stream = new MemoryStream();
