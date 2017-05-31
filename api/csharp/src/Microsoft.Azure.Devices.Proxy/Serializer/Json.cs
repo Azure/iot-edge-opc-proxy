@@ -248,7 +248,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                         Value = jsonObject.GetValue("property").ToObject<InterfaceInfo>(serializer)
                     };
                 }
-                else if (type > (uint)DnsRecordType.Simple) {
+                else if (type >= (uint)DnsRecordType.Simple &&
+                         type < (uint)DnsRecordType.__prx_record_max) {
                     return jsonObject.ToObject<Property<byte[]>>();
                 }
                 else if (type < (uint)SocketOption.__prx_so_max) {
@@ -266,6 +267,5 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 get { return false; }
             }
         }
-
     }
 }

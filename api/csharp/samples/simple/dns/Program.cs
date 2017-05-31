@@ -14,9 +14,12 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
     class Program {
 
         enum Op {
-            None, Browse, Resolve, Dir, Fs
+            None, Browse, Resolve, Dir, Fs, All
         }
 
+        /// <summary>
+        /// Main program entry point
+        /// </summary>
         static void Main(string[] args) {
             Op op = Op.None;
             bool cache = false;
@@ -27,9 +30,19 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             try {
                 for (int i = 0; i < args.Length; i++) {
                         switch (args[i]) {
+                        case "-a":
+                        case "--all":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
+                            op = Op.All;
+                            break;
                         case "-s":
                         case "--services":
                             i++;
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
                             op = Op.Browse;
                             if (i < args.Length) {
                                 record = DnsServiceRecord.Parse(args[i]);
@@ -45,6 +58,9 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                         case "-r":
                         case "--resolve":
                             i++;
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
                             op = Op.Resolve;
                             if (i < args.Length) {
                                 address = ProxySocketAddress.Parse(args[i]);
@@ -53,17 +69,28 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                         case "-d":
                         case "--dir":
                             i++;
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
                             op = Op.Dir;
                             if (i < args.Length) {
                                 address = ProxySocketAddress.Parse(args[i]);
                             }
                             break;
                         case "--fs":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
                             op = Op.Fs;
                             break;
                         case "--use-cache":
                             cache = true;
                             break;
+                        case "-R":
+                        case "--relay":
+                            Socket.Provider = Provider.RelayProvider.CreateAsync().Result;
+                            break;
+                        case "-?":
                         case "-h":
                         case "--help":
                             throw new ArgumentException("Help");
@@ -76,23 +103,43 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                 Console.WriteLine(e.Message);
                 Console.WriteLine(
                     @"
--s --services   Without further argument browses all domains.  Otherwise
-                browses for service types or service names in a domain.
-                If service name is provided, resolves to host:port and txt.
--t --timeout    Timeout in ms to use for each browse step.
--r --resolve    Resolve host to address (getaddrbyhost) or address to host 
-                (gethostbyaddr)
--d --dir        Browse a folder.
-   --fs         Browse entire file system.
-   --use-cache  Return data from cache.
--h --help       Help.
+Browser - Proxy .net browser sample.  
+usage:       Browser [options] operation [args]
+
+Options:
+     -t
+    --timeout 
+             Timeout in ms to use for each browse request.
+    --use-cache  
+             Return data from cache only (meaning depends on operation).
+    --relay
+     -R      Use relay provider instead of default provider.
+
+    --help
+     -?
+     -h      Prints out this help.
+
+Operations (Mutually exclusive):
+     -s 
+    --services   
+             Without further argument browses all domains. Otherwise
+             browses for service types or service names in a domain.
+             If service name is provided, resolves to host:port and txt.
+     -a
+    --all    Browse all services in all domains on all proxies and 
+             resolve each one. (default!)
+
+     -r 
+    --resolve    
+             Resolve host to address (getaddrbyhost) or address to host 
+             (gethostbyaddr) on all proxies.
+
+     -d 
+    --dir   Browse a folder on any proxy.
+    --fs    Browse entire file system on all proxies recursively.
 "
                     );
                 return;
-            }
-
-            if (cache) {
-                Console.WriteLine("Cache not supported");
             }
 
             if (op == Op.Browse) {
@@ -121,7 +168,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             else if (op == Op.Fs) {
                 BrowseFilesRecursiveAsync(null, null, period, cache).Wait();
             }
-            else {
+            else if (op == Op.All || op == Op.None) {
                 Console.WriteLine("Browse and resolve all services");
                 var entries = ResolveServiceNamesAsync(period).Result;
                 Console.WriteLine($"{entries.Count} entries resolved!!!");
@@ -131,8 +178,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Browse folders
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<List<Model.FileEntry>> BrowseFilesAsync(SocketAddress proxy, string folder,
             int period, bool cache) {
             Console.WriteLine($"Listing {folder??"<root>"} ...");
@@ -164,8 +209,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// When all service types were browsed in all domains for period milliseconds, 
         /// browse all service records 
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task BrowseFilesRecursiveAsync(SocketAddress proxy, string folder,
             int period, bool cache) {
             var files = await BrowseFilesAsync(proxy, folder, period, cache);
@@ -179,8 +222,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Browse domains
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<List<string>> BrowseDomainsAsync(int period) {
             Console.WriteLine($"Browsing for domains for {period} ms...");
             var cts = new CancellationTokenSource(period);
@@ -207,10 +248,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Browse service names or types
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="domain"></param>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<IEnumerable<DnsServiceRecord>> BrowseServicesAsync(string type, string domain, 
             int period, bool fromCache) {
             if (type != null) {
@@ -242,10 +279,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Browse service names or types
         /// </summary>
-        /// <param name="type"></param>
-        /// <param name="domain"></param>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<IEnumerable<DnsServiceEntry>> ResolveServiceAsync(DnsServiceRecord record, 
             int period, bool fromCache) {
             Console.WriteLine($"Resolving {record} for {period} ms...");
@@ -268,9 +301,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Resolve address
         /// </summary>
-        /// <param name="addr"></param>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<IEnumerable<DnsHostEntry>> ResolveAddressAsync(ProxySocketAddress addr, 
             int period, bool cache) {
             Console.WriteLine($"Resolving {addr} for {period} ms...");
@@ -294,8 +324,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// When all domains were browsed for period milliseconds, 
         /// browse all service types in all found domains
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<HashSet<DnsServiceRecord>> BrowseServiceTypesAsync(int period) {
             var records = new HashSet<DnsServiceRecord>();
             var results = await Task.WhenAll(BrowseDomainsAsync(period).Result.Select(
@@ -312,8 +340,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// When all service types were browsed in all domains for period milliseconds, 
         /// browse all service records 
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<HashSet<DnsServiceRecord>> BrowseServiceNamesAsync(int period) {
             var records = new HashSet<DnsServiceRecord>();
             var results = await Task.WhenAll(BrowseServiceTypesAsync(period).Result.Select(
@@ -330,8 +356,6 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// When all service types were browsed in all domains for period milliseconds, 
         /// browse all service records 
         /// </summary>
-        /// <param name="period"></param>
-        /// <returns></returns>
         static async Task<HashSet<DnsServiceEntry>> ResolveServiceNamesAsync(int period) {
             var entries = new HashSet<DnsServiceEntry>();
             var results = await Task.WhenAll(BrowseServiceNamesAsync(period).Result.Select(

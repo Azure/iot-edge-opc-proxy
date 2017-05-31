@@ -9,7 +9,7 @@
 #include "io_transport.h"
 
 //
-// Handles remote io
+// Handles link protocol, i.e. remote sockets
 //
 typedef struct prx_server prx_server_t;
 

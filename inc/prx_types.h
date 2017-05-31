@@ -33,8 +33,8 @@ typedef enum prx_address_family
     prx_address_family_inet = 2,
     prx_address_family_inet6 = 23,
 
-    // Non standard first come first serve family for proxy
-    prx_address_family_proxy = 28165
+                 // Non standard first come first serve family for proxy
+    prx_address_family_proxy = 28165   
 }
 prx_address_family_t;
 

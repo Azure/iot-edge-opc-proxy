@@ -20,7 +20,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     }
 
     /// <summary>
-    /// Socket option value
+    /// Property base class - wrapper for serveral property types, 
+    /// including socket option values and dns records. Describes
+    /// properties of a remote item (e.g. socket, file, etc.)
     /// </summary>
     [DataContract]
     public class PropertyBase : IEquatable<PropertyBase> {
@@ -71,7 +73,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     }
 
     /// <summary>
-    /// Property type
+    /// Generic Property object.
     /// </summary>
     [DataContract]
     public class Property<T> : PropertyBase, IEquatable<Property<T>> {

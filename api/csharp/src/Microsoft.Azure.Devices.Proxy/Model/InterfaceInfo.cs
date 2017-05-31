@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     }
 
     /// <summary>
-    /// Platform independent network interface address info
+    /// Platform independent network interface info
     /// </summary>
     [DataContract]
     public class InterfaceInfo : IEquatable<InterfaceInfo> {

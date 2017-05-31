@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System.Runtime.Serialization;
 
     //
-    // Dns Record types
+    // Dns Record types - only txt is used returned as property right now.
     //
     public enum DnsRecordType {
         Simple = 100,
@@ -34,13 +34,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     public class BrowseResponse : Serializable<BrowseResponse>, IEquatable<BrowseResponse> {
 
         /// <summary>
-        /// Request id
+        /// Original request handle 
         /// </summary>
         [DataMember(Name = "handle", Order = 1)]
         public Reference Handle { get; set; }
 
         //
-        // Type of request - service, address resolver, folders
+        // Response flags denoting the type of response or event occurred
         //
         public static readonly int Eos = 0x1;        // End of stream reached
         public static readonly int Removed = 0x2;             // Item removed
@@ -54,13 +54,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public int Flags { get; set; }
 
         /// <summary>
-        /// Error
+        /// Error - Results in exception if not Ok.
         /// </summary>
         [DataMember(Name = "error_code", Order = 3)]
         public int Error { get; set; }
 
         /// <summary>
-        /// Item returned
+        /// Browsed item or null if response is empty.
         /// </summary>
         [DataMember(Name = "item", Order = 4)]
         public SocketAddress Item { get; set; }

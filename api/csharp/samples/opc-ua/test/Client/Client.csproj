@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <VersionPrefix>0.2.4</VersionPrefix>
     <TargetFrameworks>netcoreapp1.0;netcoreapp1.1;net46</TargetFrameworks>
     <AssemblyName>Client</AssemblyName>
     <OutputType>Exe</OutputType>
@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Core" Version="0.2.3" />
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.SDK" Version="0.2.3" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Core" Version="0.2.4" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.SDK" Version="0.2.4" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">

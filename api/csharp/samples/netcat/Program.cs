@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             Console.WriteLine(
                 @"
 PNetCat - Proxy .net Netcat.  
-usage:       PNetCat [options] host port [port... | -porthi]
+usage:       PNetCat [options] host port [port...|-porthi]
 
      -d      Do not attempt to read from stdin.
 
@@ -41,9 +41,7 @@ usage:       PNetCat [options] host port [port... | -porthi]
     --wait
      -w timeout
              If a connection and stdin are idle for more than timeout seconds,
-             then the connection is silently closed.  The -w flag has no
-             effect on the -l option, i.e. nc will listen forever for a con-
-             nection, with or without the -w flag.  The default is no timeout.
+             then the connection is silently closed. The default is no timeout.
 
     --relay
      -R      Use relay provider instead of default provider.
@@ -53,7 +51,6 @@ usage:       PNetCat [options] host port [port... | -porthi]
         /// <summary>
         /// Main entry point
         /// </summary>
-        /// <param name="args"></param>
         static void Main(string[] args) {
 
             var prog = new Program();
@@ -215,13 +212,6 @@ usage:       PNetCat [options] host port [port... | -porthi]
         /// <summary>
         /// Cats from std in to network stream and back out to std out.
         /// </summary>
-        /// <param name="host"></param>
-        /// <param name="port"></param>
-        /// <param name="timeout"></param>
-        /// <param name="close"></param>
-        /// <param name="noStdIn"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
         public async Task RunAsync(CancellationToken ct) {
 
             Validate();

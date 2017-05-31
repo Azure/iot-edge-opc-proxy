@@ -397,7 +397,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     await context.Get<InterfaceInfo>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false));
             }
-            else if (type > (uint)DnsRecordType.Simple) {
+            else if (type >= (uint)DnsRecordType.Simple &&
+                     type < (uint)DnsRecordType.__prx_record_max) {
                 result = new Property<byte[]>(type,
                     await reader.ReadBinAsync(ct).ConfigureAwait(false));
             }
@@ -442,7 +443,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     ((Property<InterfaceInfo>)property).Value, context,
                         ct).ConfigureAwait(false);
             }
-            else if (property.Type > (uint)DnsRecordType.Simple) {
+            else if (property.Type >= (uint)DnsRecordType.Simple &&
+                     property.Type < (uint)DnsRecordType.__prx_record_max) {
                 await writer.WriteAsync(((Property<byte[]>)property).Value,
                     ct).ConfigureAwait(false);
             }

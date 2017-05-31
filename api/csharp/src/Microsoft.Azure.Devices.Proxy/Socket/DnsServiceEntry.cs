@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class TxtRecord : IEquatable<TxtRecord> {
 
         /// <summary>
-        /// Value of the record
+        /// Value of the record as binary buffer.
         /// </summary>
         public byte[] Value { get; internal set; }
 
@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Return object as string
+        /// Return object as string - assumption is that it is a utf-8 txt record.
         /// </summary>
         /// <returns></returns>
         public override string ToString() => Encoding.UTF8.GetString(Value);

@@ -38,13 +38,11 @@ DECLARE_TEST_SETUP()
 // 
 TEST_FUNCTION(pal_stub_wsclient_create__neg)
 {
-    static wchar_t* k_wide_char_valid = (wchar_t*)0x2354;
     static const char* k_protocol_name_valid = "rpotadf";
     static const char* k_host_valid = "lkjafsd";
     static const uint16_t k_port_valid = 10;
     static const char* k_path_valid = "/9845/sadkf";
     static void* k_callback_context_valid = (void*)0x2354;
-    static HINTERNET k_session_handle_valid = (HINTERNET)0x234;
     pal_wsclient_t* wsclient_valid;
     int32_t result;
 

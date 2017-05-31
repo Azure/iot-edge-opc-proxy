@@ -54,10 +54,6 @@ namespace NetCoreConsoleClient
 
         public static async Task ConsoleSampleClient(string endpointURL)
         {
-            Utils.SetTraceMask(0x3ff);
-            Utils.SetTraceOutput(Utils.TraceOutput.StdOutAndFile);
-            Utils.SetTraceLog("./opc.client.log", false);
-
             Console.WriteLine("1 - Create an Application Configuration.");
             var config = new ApplicationConfiguration
             {
@@ -137,7 +133,7 @@ namespace NetCoreConsoleClient
             Console.WriteLine("    Selected endpoint uses: {0}",
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
-#if !PERF
+#if PERF
         for (int i = 1; ; i++)
         {
 #endif
@@ -177,7 +173,7 @@ namespace NetCoreConsoleClient
             Console.WriteLine(" DisplayName, BrowseName, NodeClass");
             BrowseChildren("", references, session);
             Console.WriteLine($" ....        took {w.ElapsedMilliseconds} ms...");
-#if !PERF
+#if PERF
             session.Close();
         }
 #else

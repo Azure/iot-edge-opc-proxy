@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Text;
 
     /// <summary>
-    /// Dns resolver - resolve host names or addresses
+    /// Dns host name resolver interface - resolve host names or addresses
     /// </summary>
     public interface IDnsHostEntryResolver : 
         IAsyncEnumerator<DnsHostEntry>, IDisposable { }

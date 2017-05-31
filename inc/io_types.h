@@ -29,7 +29,7 @@ decl_public_2(int32_t, io_decode_prx_addrinfo,
 //
 decl_public_2(int32_t, io_encode_prx_ifaddrinfo,
     io_codec_ctx_t*, ctx,
-    const prx_ifaddrinfo_t*, prx_ifai
+    const prx_ifaddrinfo_t*, prx_ifa
 );
 
 //
@@ -37,7 +37,7 @@ decl_public_2(int32_t, io_encode_prx_ifaddrinfo,
 //
 decl_public_2(int32_t, io_decode_prx_ifaddrinfo,
     io_codec_ctx_t*, ctx,
-    prx_ifaddrinfo_t*, prx_ifai
+    prx_ifaddrinfo_t*, prx_ifa
 );
 
 //

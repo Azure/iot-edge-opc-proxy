@@ -13,22 +13,22 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         IAsyncEnumerator<FileEntry>, IDisposable { }
 
     /// <summary>
-    /// Container class for file information
+    /// A browsed file entry in a directory.
     /// </summary>
     public class FileEntry : IEquatable<FileEntry> {
 
         /// <summary>
-        /// Contains host name
+        /// Full file name (includes path)
         /// </summary>
         public string FileName { get; internal set; }
 
         /// <summary>
-        /// Addresses for this host
+        /// File info for this file entry.  Includes file type.
         /// </summary>
         public FileInfo Info { get; internal set; }
 
         /// <summary>
-        /// Proxy on which this record is valid.
+        /// Proxy on which this file entry is valid.
         /// </summary>
         public SocketAddress Interface { get; internal set; }
 
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// Return object as string
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => FileName;
+        public override string ToString() => $"{FileName} ({Info})";
 
         /// <summary>
         /// Comparison

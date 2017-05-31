@@ -25,6 +25,7 @@
     <GenerateAssemblyVersionAttribute>true</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>true</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>true</GenerateAssemblyInformationalVersionAttribute>
+    <GenerateBindingRedirects>true</GenerateBindingRedirects>
   </PropertyGroup>
 
   <ItemGroup>
@@ -36,13 +37,13 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <PackageReference Include="WindowsAzure.ServiceBus" Version="4.0.0" />
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="4.1.1" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <PackageReference Include="WindowsAzure.ServiceBus" Version="4.0.0" />
+    <PackageReference Include="WindowsAzure.ServiceBus" Version="4.1.1" />
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
@@ -71,6 +72,7 @@
     <PackageReference Include="system.xml.xpath.xmldocument" Version="4.3.0" />
     <PackageReference Include="System.Xml.XmlDocument" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Json" Version="4.0.1.0" />
   </ItemGroup>
 
 </Project>

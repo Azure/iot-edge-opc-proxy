@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Enumerating service records
+        /// Enumerator for service records
         /// </summary>
         class ServiceRecordBrowser : BrowseSocketAsyncEnumerator<DnsServiceRecord>, 
             IDnsServiceRecordBrowser {
@@ -90,7 +90,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Enumerating service entries
+        /// Enumerator for service entries (hostname:port)
         /// </summary>
         class ServiceRecordResolver : BrowseSocketAsyncEnumerator<DnsServiceEntry>,
             IDnsServiceRecordResolver {
@@ -112,7 +112,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Enumerating resolved hosts
+        /// Enumerator for resolved hosts/addresses
         /// </summary>
         class HostEntryResolver : BrowseSocketAsyncEnumerator<DnsHostEntry>,
             IDnsHostEntryResolver {
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Enumerating resolved hosts
+        /// Directory enumerator
         /// </summary>
         class DirectoryBrowser : BrowseSocketAsyncEnumerator<FileEntry>,
             IDirectoryBrowser {
@@ -145,14 +145,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Create service browser
+        /// Create service record resolving enumerator
         /// </summary>
-        /// <param name="proxy"></param>
-        /// <param name="record"></param>
+        /// <param name="proxy">The proxy endpoint(s) to use</param>
+        /// <param name="record">The service record to resolve</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<IDnsServiceRecordResolver> CreateServiceRecordResolverAsync(SocketAddress proxy,
-            DnsServiceRecord record, bool cacheOnly, CancellationToken ct) {
+        public static async Task<IDnsServiceRecordResolver> CreateServiceRecordResolverAsync(
+            SocketAddress proxy, DnsServiceRecord record, bool cacheOnly, CancellationToken ct) {
             if (string.IsNullOrEmpty(record.Name) || string.IsNullOrEmpty(record.Type) ||
                 record.Removed) {
                 throw new ArgumentException("Invalid service, no name, not type or been removed",
@@ -165,15 +165,18 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Create service browser
+        /// Create service browser - returns service records, which identifiy either 
+        /// - domains (if both domain and type are null)
+        /// - service types (if only domain are given)
+        /// - Service names - with type and domain (if both type and domain are provded)
         /// </summary>
         /// <param name="proxy">Proxy endpoint(s) to use for resolve</param>
         /// <param name="type">service type to browse or null</param>
         /// <param name="domain">domain to browse or null</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<IDnsServiceRecordBrowser> CreateServiceRecordBrowserAsync(SocketAddress proxy,
-            string type, string domain, bool cacheOnly, CancellationToken ct) {
+        public static async Task<IDnsServiceRecordBrowser> CreateServiceRecordBrowserAsync(
+            SocketAddress proxy, string type, string domain, bool cacheOnly, CancellationToken ct) {
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Service);
             await socket.ConnectAsync(proxy, ct);
             await socket.BrowseBeginAsync(new DnsServiceRecord {
@@ -184,15 +187,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Create host resolver
+        /// Create host resolving enumerator (enumerates all addresses for a particular host address).
+        /// Performs gethostbyaddr and gethostbyname type functionality (i.e. getaddrinfo).
         /// </summary>
         /// <param name="proxy">Proxy endpoint(s) to use for resolve</param>
         /// <param name="host">Address to resolve</param>
         /// <param name="cacheOnly">Only deliver from cache</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<IDnsHostEntryResolver> CreateHostEntryResolverAsync(SocketAddress proxy,
-            SocketAddress host, bool cacheOnly, CancellationToken ct) {
+        public static async Task<IDnsHostEntryResolver> CreateHostEntryResolverAsync(
+            SocketAddress proxy, SocketAddress host, bool cacheOnly, CancellationToken ct) {
             var address = host.AsProxySocketAddress();
             if (address == null) {
                 throw new ArgumentException(nameof(host));
@@ -204,14 +208,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         }
 
         /// <summary>
-        /// Create directory browser
+        /// Create directory browser to browse remote directories.  Catch BrowseException
+        /// and check code to understand e.g. permission issues, etc. 
         /// </summary>
         /// <param name="folder">Folder name</param>
         /// <param name="cacheOnly">Only deliver from cache</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<IDirectoryBrowser> CreateDirectoryBrowserAsync(SocketAddress proxy,
-            string folder, bool cacheOnly, CancellationToken ct) {
+        public static async Task<IDirectoryBrowser> CreateDirectoryBrowserAsync(
+            SocketAddress proxy, string folder, bool cacheOnly, CancellationToken ct) {
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Dirpath);
             await socket.ConnectAsync(proxy, ct);
             await socket.BrowseBeginAsync(new ProxySocketAddress(folder ?? ""), ct);

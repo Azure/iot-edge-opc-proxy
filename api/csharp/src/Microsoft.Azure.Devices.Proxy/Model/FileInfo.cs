@@ -66,6 +66,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public long LastModifiedAsUnixTime { get; set; }
 
         /// <summary>
+        /// Return object as string
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() =>
+            $"{((FileType)Type).ToString()} Size: {Size}";
+
+        /// <summary>
         /// Comparison
         /// </summary>
         /// <param name="that"></param>

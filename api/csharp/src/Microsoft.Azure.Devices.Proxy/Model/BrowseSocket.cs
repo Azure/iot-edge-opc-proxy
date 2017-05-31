@@ -12,14 +12,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Virtual socket connected to a set of proxies that provide browse service
+    /// Virtual socket connected to a set of proxies that provide browse services.
     /// support.
     /// </summary>
     internal class BrowseSocket : ProxySocket {
         private static readonly ushort _browsePort = 1; // Keep in sync with native
 
         /// <summary>
-        /// Private constructor
+        /// Internal constructor to create browse socket.
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="codec">Codec to use on wire</param>
