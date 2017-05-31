@@ -38,6 +38,29 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public abstract ProxySocketAddress AsProxySocketAddress();
+
+        /// <summary>
+        /// Parse a string into a socket address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out SocketAddress parsed) {
+            /**/ if (string.IsNullOrEmpty(address)) {
+                parsed = new NullSocketAddress();
+            }
+            else if (InetSocketAddress.TryParse(address, out InetSocketAddress inet)) {
+                parsed = inet;
+            }
+            else if (ProxySocketAddress.TryParse(address, out ProxySocketAddress proxy)) {
+                parsed = proxy;
+            }
+            else {
+                parsed = new NullSocketAddress();
+                return false;
+            }
+            return true;
+        }
     }
 
 
@@ -177,6 +200,25 @@ namespace Microsoft.Azure.Devices.Proxy {
                 this.Equals(that as SocketAddress) &&
                 this.Port.Equals(that.Port);
         }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out InetSocketAddress parsed) {
+            if (Inet4SocketAddress.TryParse(address, out Inet4SocketAddress inet4)) {
+                parsed = inet4;
+            }
+            else if (Inet6SocketAddress.TryParse(address, out Inet6SocketAddress inet6)) {
+                parsed = inet6;
+            }
+            else {
+                parsed = null;
+            }
+            return parsed != null;
+        }
     }
 
     /// <summary>
@@ -225,9 +267,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Stringify address
         /// </summary>
         /// <returns></returns>
-        public string AsString() {
-            return $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}";
-        }
+        public string AsString() => 
+            $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}";
 
         /// <summary>
         /// Comparison
@@ -258,6 +299,38 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override string ToString() {
             return AsString() + $":{Port}";
+        }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out Inet4SocketAddress parsed) {
+            var labels = address.Split(':');
+            if (labels.Length >= 1) {
+                var bytes = labels[0].Split('.');
+                if (bytes.Length == 4) {
+                    var addressBuffer = new byte[4];
+                    if (byte.TryParse(bytes[0], out addressBuffer[0]) &&
+                        byte.TryParse(bytes[1], out addressBuffer[1]) &&
+                        byte.TryParse(bytes[2], out addressBuffer[2]) &&
+                        byte.TryParse(bytes[3], out addressBuffer[3])) {
+
+                        // Now parse port if we have one, otherwise set to 0.
+                        ushort port = 0;
+                        if (labels.Length == 1 ||
+                           (labels.Length == 2 && 
+                            ushort.TryParse(labels[1], out port))) {
+                            parsed = new Inet4SocketAddress(addressBuffer, port);
+                            return true;
+                        }
+                    }
+                }
+            }
+            parsed = null;
+            return false;
         }
 
         public override ProxySocketAddress AsProxySocketAddress() =>
@@ -348,6 +421,25 @@ namespace Microsoft.Azure.Devices.Proxy {
                 str.Append(BitConverter.ToUInt16(Address, i).ToString("X"));
             }
             return str.ToString();
+        }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out Inet6SocketAddress parsed) {
+            if (Reference.TryParse(address, out Reference reference)) {
+                parsed = reference.ToSocketAddress() as Inet6SocketAddress;
+            }
+            else {
+
+                // TODO
+
+                parsed = null;
+            }
+            return parsed != null; ;
         }
 
         /// <summary>
@@ -454,8 +546,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Sets property values
+        /// Constructor
         /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        /// <param name="flags"></param>
+        /// <param name="interfaceIndex"></param>
         public ProxySocketAddress(string host, ushort port = 0,
             ushort flags = 0, int interfaceIndex = -1) : this() {
             if (host == null) {
@@ -468,8 +564,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Sets property values
+        /// Constructor that checks port is in valid ushort range and throws if not.
         /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
         public ProxySocketAddress(string host, int port) : this(host, (ushort)port) {
             if (port < 0 || port > ushort.MaxValue) {
                 throw new ArgumentNullException(nameof(port));
@@ -479,6 +577,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Creates an address from a proxy socket address string representation
         /// </summary>
+        /// <param name="address"></param>
+        /// <returns></returns>
         public static ProxySocketAddress Parse(string address) {
             string host;
             ushort port;
@@ -492,6 +592,22 @@ namespace Microsoft.Azure.Devices.Proxy {
                 port = ushort.Parse(address.Substring(index + 1));
             }
             return new ProxySocketAddress(host, port, 0);
+        }
+
+        /// <summary>
+        /// Parse a string into a proxy address - does not throw.
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out ProxySocketAddress parsed) {
+            try {
+                parsed = Parse(address);
+            }
+            catch {
+                parsed = null;
+            }
+            return parsed != null;
         }
 
         /// <summary>

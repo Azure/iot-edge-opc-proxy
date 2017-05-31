@@ -20,7 +20,16 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             Console.WriteLine(
                 @"
 PNetCat - Proxy .net Netcat.  
-usage:       PNetCat [options] host port [port...|-porthi]
+usage:       
+             PNetCat [options] host (port1 [...portN] | portlo-porthi)
+
+             Tries to connect to a port on the named host and sends data from
+             stdin to the port and and receives back to stdout.  If more than
+             one port is provided all ports are tried, until one connects 
+             successfully. Alternatively to specifying each port individually 
+             a range of ports can be provided as final argument.
+
+options:
 
      -d      Do not attempt to read from stdin.
 
@@ -35,8 +44,7 @@ usage:       PNetCat [options] host port [port...|-porthi]
      -x proxy_address
     --source
      -s source_address
-             Specifies the proxy address which is used to send the pack-
-             ets.  
+             Specifies the proxy address which is used to send the packets.  
 
     --wait
      -w timeout
@@ -104,13 +112,13 @@ usage:       PNetCat [options] host port [port...|-porthi]
                             case 'x':
                             case 's':
                                 index++;
-                                //  if (index >= args.Length || 
-                                // !SocketAddress.TryParse(args[index], out tmp)) {
-                                //      throw new ArgumentException();
-                                //  }
-                                // TODO
-                                throw new ArgumentException($"{opt} not supported.");
-                                // break;
+                                SocketAddress proxy;
+                                if (index >= args.Length || 
+                                    !SocketAddress.TryParse(args[index], out proxy)) {
+                                    throw new ArgumentException($"Bad value for {opt}.");
+                                }
+                                prog.Proxy = proxy;
+                                break;
                             case 'w':
                                 index++;
                                 if (index >= args.Length || 
@@ -196,6 +204,11 @@ usage:       PNetCat [options] host port [port...|-porthi]
         /// Use relay provider
         /// </summary>
         internal bool UseRelay { get; set; }
+
+        /// <summary>
+        /// Proxy to connect through
+        /// </summary>
+        internal SocketAddress Proxy { get; set; }
 
         /// <summary>
         /// Validate all properties
