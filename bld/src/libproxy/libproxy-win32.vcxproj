@@ -175,7 +175,7 @@
     <ClCompile Include="..\..\..\deps\getopt\src\getopt.c" />
     <ClCompile Include="..\..\..\src\pal\pal_cred_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_err_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_ev_win.c" />
+    <ClCompile Include="..\..\..\src\pal\pal_ev_poll.c" />
     <ClCompile Include="..\..\..\src\pal\pal_file_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_main_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_mt_win.c" />

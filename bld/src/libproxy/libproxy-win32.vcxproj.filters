@@ -57,7 +57,7 @@
     <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\pal\pal_ev_win.c">
+    <ClCompile Include="..\..\..\src\pal\pal_ev_poll.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
