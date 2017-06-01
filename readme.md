@@ -6,16 +6,15 @@ This project has adopted the Microsoft Open Source Code of Conduct. For more inf
 
 # Azure IoT Edge Reverse OPC Proxy
 
-Using the Azure IoT Edge Reverse Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  An example for where this can be used is for tunneling OPC-UA binary protocol (secure channel) from a cloud application to a machine on the factory network, or tunneling SSH to an IoT device behind a firewall.  It implements the [service-assisted communication pattern](https://blogs.msdn.microsoft.com/clemensv/2014/02/09/service-assisted-communication-for-connected-devices).
+Using the Azure IoT Edge Reverse Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  An example for where this can be used is for tunneling OPC-UA binary protocol (secure channel) from a cloud application to a machine on the factory network, or tunneling SSH to an IoT device behind a firewall and thus follows a [service-assisted communication pattern](https://blogs.msdn.microsoft.com/clemensv/2014/02/09/service-assisted-communication-for-connected-devices).
 
 The proxy only requires port 443 (outgoing) open to the Internet.  
 
 # Getting started
 
-> Before you run the proxy or any of the included samples, you must obtain a service manage ```connection string``` for your IoT Hub. You can use the ```iothubowner``` connection string (going forward referred to as <*iothubownerconnectionstring>) which can easily be found on the [Azure portal](https://portal.azure.com) in the "Shared Access Policies" section of the [IoT hub settings blade](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#change-the-settings-of-the-iot-hub). For more information checkout out the documentation [here](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md).
+> Before you run the proxy or any of the included samples, you must obtain a service manage *connection string* for your IoT Hub. You can use the *iothubowner* connection string (going forward referred to as **<*iothubownerconnectionstring>**) which can easily be found on the [Azure portal](https://portal.azure.com) in the "Shared Access Policies" section of the [IoT hub settings blade](https://docs.microsoft.com/en-us/azure/iot-hub/iot-hub-create-through-portal#change-the-settings-of-the-iot-hub). For more information checkout out the documentation [here](https://github.com/Azure/azure-iot-device-ecosystem/blob/master/setup_iothub.md).
 
 The proxy gateway can be built and run directly from github using [docker](https://www.docker.com/get-docker):
-
 ```
 docker build -t proxyd https://github.com/Azure/iot-edge-opc-proxy.git
 docker run -it proxyd -c "<*iothubownerconnectionstring>"
@@ -23,32 +22,28 @@ docker run -it proxyd -c "<*iothubownerconnectionstring>"
 
 If you want to build the proxy on your developer machine, follow the build instructions [here](/bld/readme.md).
 
-Now you can run the included client samples.
+# Client Samples
 
-# Samples
-
-> For simplicity, all samples read the <*iothubownerconnectionstring> from the  ```_HUB_CS ``` environment variable.  If you do not set this variable on your machine the included samples will not work!  However, ensure you safeguard the connection string properly.    
+> For simplicity, all samples read the <*iothubownerconnectionstring> from the  ```_HUB_CS ``` environment variable.  If you do not set this variable on your machine the included samples will not work!  However, make sure you safeguard the connection string properly on your development machine and do not develop against a production IoT Hub.    
 
 ## C# samples
 
 The following samples are included to demonstrate the use of the .net API:
 
-- An [OPC UA client](/api/csharp/samples/opc-ua/readme.md) that shows how the [OPC-Foundation reference stack](https://github.com/OPCFoundation/UA-.NETStandardLibrary) can be used to relay OPC UA from the cloud to machines in the gateway network. 
+- An [OPC UA client](/api/csharp/samples/opc-ua/readme.md) that shows how the [OPC-Foundation reference stack](https://github.com/OPCFoundation/UA-.NETStandardLibrary) can be used to relay OPC UA from the cloud to machines in a local gateway network. 
 
 - PNetCat - A [Netcat like proxy client](/api/csharp/samples/netcat/readme.md) that you can use to interact
-with an arbitrary host and port in the proxy network and for example tunnel SSH using the ssh proxy command.
+with an arbitrary host and port in the proxy network and for example tunnel SSH using the ssh proxy option.
 
-- A [Simple TCP/IP services client](/api/csharp/samples/simple/tcp/readme.md) that demonstrates different API calls.
+- A [Simple TCP/IP services client](/api/csharp/samples/simple/tcp/readme.md) that demonstrates different socket API calls.
 
 - A [Browser client](/api/csharp/samples/simple/dns/readme.md) that uses the remote browsing capabilities of the proxy.  Use it to enumerate services and resolve host names across all proxies.
 
-- A simple [Reverse HTTP Web Proxy](/api/csharp/samples/http/readme.md) that shows how you can access a web server in the proxy network through a reverse Web proxy Server implemented using ASP.Net Core and Kestrel.  This sample can be used with the [ASP.Net Websocket sample provider](/api/csharp/samples/provider/webapp/readme.md).
-
-- A simple [VNC client sample](/api/csharp/samples/vnc/readme.md) that shows the use of the [Service Bus Relay sample provider](/api/csharp/samples/provider/relay/readme.md).
+- A simple [Reverse HTTP Web Proxy](/api/csharp/samples/http/readme.md) that shows how you can access a web server in the proxy network through a reverse Web proxy Server implemented using ASP.Net Core and Kestrel. 
 
 # Proxy CLI 
 
-You can further configure the proxy's operation through the command line interface.
+You can configure the proxy's functionality through its command line interface.
 
 An IoT Hub connection string can be set via the ```-c```, ```-C``` or ```-s``` command line arguments or through the ```_HUB_CS ``` environment variable (which allows you to run the proxy without any command line arguments).   
 
