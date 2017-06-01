@@ -74,7 +74,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     ConnectionString = _connection.ConnectionString != null ?
                         _connection.ConnectionString.ToString() : "",
                     IsPolled = _connection.IsPolled,
-                    StreamId = _streamId
+                    StreamId = _streamId,
+                    MaxReceiveBuffer = 0x800  // TODO: Need to select based on hub / Streaming
                 };
             }
             catch (OperationCanceledException) {
@@ -143,7 +144,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
 
             var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
                 new Message(_socket.Id, RemoteId, new SetOptRequest(
-                    new SocketOptionValue(option, value))), ct).ConfigureAwait(false);
+                    new Property<ulong>((uint)option, value))), ct).ConfigureAwait(false);
             ProxySocket.ThrowIfFailed(response);
         }
 
@@ -159,7 +160,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 new Message(_socket.Id, RemoteId, new GetOptRequest(
                     option)), ct).ConfigureAwait(false);
             ProxySocket.ThrowIfFailed(response);
-            return ((GetOptResponse)response.Content).OptionValue.Value;
+            var optionValue = ((GetOptResponse)response.Content).OptionValue as Property<ulong>;
+            if (optionValue == null) {
+                throw new ProxyException("Bad option value returned");
+            }
+            return optionValue.Value;
         }
 
         /// <summary>
@@ -177,7 +182,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                     // Only throw if all tasks failed.
                     throw new SocketException("Exception during close", ae.GetSocketError());
                 }
-                ProxyEventSource.Log.HandledExceptionAsInformation(this, ae);
+                ProxyEventSource.Log.HandledExceptionAsInformation(this, ae.Flatten());
             }
             catch (Exception e) {
                 ProxyEventSource.Log.HandledExceptionAsInformation(this, e);

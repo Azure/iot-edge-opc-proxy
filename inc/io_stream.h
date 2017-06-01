@@ -22,7 +22,7 @@ typedef size_t (*io_stream_available_t)(
 //
 // Read encoded data 
 //
-typedef int32_t (*io_stream_read_t)(
+typedef int32_t (*io_stream_reader_t)(
     void* ctx,
     void* buf, 
     size_t len,
@@ -39,7 +39,7 @@ typedef int32_t(*io_stream_reset_t)(
 //
 // Write encoded data
 //
-typedef int32_t (*io_stream_write_t)(
+typedef int32_t (*io_stream_writer_t)(
     void* ctx, 
     const void *buf,
     size_t len
@@ -59,10 +59,10 @@ struct io_stream
 {
     void* context;
     io_stream_available_t readable;
-    io_stream_read_t read;
+    io_stream_reader_t reader;
     io_stream_reset_t reset;
     io_stream_available_t writeable;
-    io_stream_write_t write;
+    io_stream_writer_t writer;
     io_stream_close_t close;
 };
 
@@ -104,9 +104,9 @@ decl_inline_4(int32_t, io_stream_read,
 )
 {
     chk_arg_fault_return(stream);
-    if (!stream->read)
+    if (!stream->reader)
         return er_not_supported;  // Cannot read from stream
-    return stream->read(stream->context, buf, len, read);
+    return stream->reader(stream->context, buf, len, read);
 }
 
 //
@@ -133,9 +133,9 @@ decl_inline_3(int32_t, io_stream_write,
 )
 {
     chk_arg_fault_return(stream);
-    if (!stream->write)
+    if (!stream->writer)
         return er_not_supported;  // Cannot write to stream
-    return stream->write(stream->context, buf, len);
+    return stream->writer(stream->context, buf, len);
 }
 
 //

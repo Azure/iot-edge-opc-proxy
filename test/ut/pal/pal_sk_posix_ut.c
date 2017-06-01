@@ -11,8 +11,10 @@
 #include "prx_types.h"
 
 // socket
-MOCKABLE_FUNCTION(, fd_t, socket, 
+MOCKABLE_FUNCTION(, fd_t, socket,
     int, family, int, type, int, protocol);
+MOCKABLE_FUNCTION(, int, socketpair,
+    int, domain, int, type, int, protocol, int*, sv); 
 MOCKABLE_FUNCTION(, int, getsockname, 
     fd_t, s, struct sockaddr*, name, socklen_t*, namelen);
 MOCKABLE_FUNCTION(, int, connect,
@@ -3521,7 +3523,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__success)
     struct addrinfo ai_info_valid[3], *ai_info_ptr_valid = &ai_info_valid[0];
     struct sockaddr_in6 sock_addr_valid;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     sock_addr_valid.sin6_family = AF_INET6;
@@ -3573,7 +3575,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_host_name_invalid)
     struct addrinfo ai_info_valid, *ai_info_ptr_valid = &ai_info_valid;
     struct sockaddr_in sock_addr_valid;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     sock_addr_valid.sin_family = AF_INET;
@@ -3614,7 +3616,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_service_null)
     struct addrinfo ai_info_valid[2], *ai_info_ptr_valid = &ai_info_valid[0];
     struct sockaddr_in6 sock_addr_valid;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     sock_addr_valid.sin6_family = AF_INET6;
@@ -3659,7 +3661,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_family_invalid)
     static const prx_address_family_t k_family_invalid = prx_address_family_proxy;
     static const uint32_t k_flags_valid = 0;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     // arrange 
@@ -3683,7 +3685,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_flags_invalid)
     static const prx_address_family_t k_family_valid = prx_address_family_unspec;
     static const uint32_t k_flags_invalid = (uint32_t)-1;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     // arrange 
@@ -3706,7 +3708,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_info_null)
     static const char* k_canon_name_valid = "";
     static const prx_address_family_t k_family_valid = prx_address_family_unspec;
     static const uint32_t k_flags_valid = 0;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     // arrange 
@@ -3720,7 +3722,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__arg_info_null)
 }
 
 // 
-// Test pal_getaddrinfo passing as info_count argument an invalid prx_size_t* value 
+// Test pal_getaddrinfo passing as info_count argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_posix_getaddrinfo__arg_info_count_invalid)
 {
@@ -3755,7 +3757,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__neg_1)
     struct addrinfo ai_info_valid, *ai_info_ptr_valid = &ai_info_valid;
     struct sockaddr_in sock_addr_valid;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     sock_addr_valid.sin_family = AF_UNIX;
@@ -3799,7 +3801,7 @@ TEST_FUNCTION(pal_posix_getaddrinfo__neg_2)
     struct addrinfo ai_info_valid[3], *ai_info_ptr_valid = &ai_info_valid[0];
     struct sockaddr_in6 sock_addr_valid;
     prx_addrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     sock_addr_valid.sin6_family = AF_INET6;
@@ -3922,8 +3924,8 @@ TEST_FUNCTION(pal_posix_freeaddrinfo__arg_info_null)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__success_1)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     static const char* k_host_valid = "some_host";
     static const char* k_service_valid = "some_service";
     char* host_valid = UT_MEM;
@@ -3958,8 +3960,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__success_1)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__success_2)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     static const char* k_host_valid = "some_other";
     static const char* k_service_valid = "twofitty";
     char* host_valid = UT_MEM;
@@ -3994,8 +3996,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__success_2)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_address_invalid)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     char* host_valid = UT_MEM;
     char* service_valid = UT_MEM + k_host_length_valid;
     const int32_t k_flags_valid = prx_ni_flag_namereqd;
@@ -4020,8 +4022,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_address_invalid)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_address_null)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     char* host_valid = UT_MEM;
     char* service_valid = UT_MEM + k_host_length_valid;
     const int32_t k_flags_valid = prx_ni_flag_namereqd;
@@ -4043,8 +4045,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_address_null)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_host_null)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     char* service_valid = UT_MEM;
     const int32_t k_flags_valid = 0;
     prx_socket_address_t address_valid;
@@ -4064,11 +4066,11 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_host_null)
 }
 
 // 
-// Test pal_getnameinfo passing as host_length argument an invalid prx_size_t value 
+// Test pal_getnameinfo passing as host_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_host_length_invalid)
 {
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_service_length_valid = 32;
     char* host_valid = UT_MEM;
     char* service_valid = UT_MEM;
     const int32_t k_flags_valid = 0;
@@ -4093,8 +4095,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_host_length_invalid)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_service_null)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     char* host_valid = UT_MEM;
     const int32_t k_flags_valid = prx_ni_flag_namereqd;
     prx_socket_address_t address_valid;
@@ -4114,11 +4116,11 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_service_null)
 }
 
 // 
-// Test pal_getnameinfo passing as service_length argument an invalid prx_size_t value 
+// Test pal_getnameinfo passing as service_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_service_length_invalid)
 {
-    static const prx_size_t k_host_length_valid = 256;
+    static const size_t k_host_length_valid = 256;
     char* host_valid = UT_MEM;
     char* service_valid = UT_MEM + k_host_length_valid;
     const int32_t k_flags_valid = 0;
@@ -4143,8 +4145,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_service_length_invalid)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__arg_flags_invalid)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     char* host_valid = UT_MEM;
     char* service_valid = UT_MEM + k_host_length_valid;
     prx_socket_address_t address_valid;
@@ -4168,8 +4170,8 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_flags_invalid)
 // 
 TEST_FUNCTION(pal_posix_getnameinfo__neg)
 {
-    static const prx_size_t k_host_length_valid = 256;
-    static const prx_size_t k_service_length_valid = 32;
+    static const size_t k_host_length_valid = 256;
+    static const size_t k_service_length_valid = 32;
     static const char* k_host_valid = "some_host";
     static const char* k_service_valid = "some_service";
     char* host_valid = UT_MEM;
@@ -4992,12 +4994,12 @@ TEST_FUNCTION(pal_posix_recv__success)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_received_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     uint8_t* recv_buffer = (uint8_t*)(UT_MEM + k_length_valid);
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     for (int i = (int)k_received_valid, j = 0; i < 0; i--)
@@ -5025,10 +5027,10 @@ TEST_FUNCTION(pal_posix_recv__success)
 TEST_FUNCTION(pal_posix_recv__arg_fd_invalid)
 {
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t received_valid = (prx_size_t)-1;
+    size_t received_valid = (size_t)-1;
     int32_t result;
 
     // arrange 
@@ -5054,10 +5056,10 @@ TEST_FUNCTION(pal_posix_recv__arg_fd_invalid)
 TEST_FUNCTION(pal_posix_recv__arg_flags_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     // arrange 
@@ -5077,10 +5079,10 @@ TEST_FUNCTION(pal_posix_recv__arg_flags_invalid)
 TEST_FUNCTION(pal_posix_recv__arg_buffer_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     // arrange 
@@ -5095,13 +5097,13 @@ TEST_FUNCTION(pal_posix_recv__arg_buffer_null)
 }
 
 // 
-// Test pal_recv passing as received argument an invalid prx_size_t* value 
+// Test pal_recv passing as received argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_posix_recv__arg_received_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     int32_t result;
@@ -5124,15 +5126,15 @@ TEST_FUNCTION(pal_posix_recvfrom__success_1)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_received_valid = 128;
     struct sockaddr_in6 sock_address_valid;
     const socklen_t k_sock_address_length_valid = sizeof(sock_address_valid);
     prx_socket_address_t socket_address_valid;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     uint8_t* recv_buffer = (uint8_t*)(UT_MEM + k_length_valid);
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     for (int i = (int)k_received_valid, j = 0; i < 0; i--)
@@ -5167,15 +5169,15 @@ TEST_FUNCTION(pal_posix_recvfrom__succes_2)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_received_valid = 16;
     struct sockaddr_in sock_address_valid;
     const socklen_t k_sock_address_length_valid = sizeof(sock_address_valid);
     prx_socket_address_t socket_address_valid;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     uint8_t* recv_buffer = (uint8_t*)(UT_MEM + k_length_valid);
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     for (int i = (int)k_received_valid, j = 0; i < 0; i--)
@@ -5211,11 +5213,11 @@ TEST_FUNCTION(pal_posix_recvfrom__arg_fd_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     prx_socket_address_t socket_address_valid;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
 
@@ -5243,12 +5245,12 @@ TEST_FUNCTION(pal_posix_recvfrom__arg_socket_address_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_received_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     uint8_t* recv_buffer = (uint8_t*)(UT_MEM + k_length_valid);
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     for (int i = (int)k_received_valid, j = 0; i < 0; i--)
@@ -5276,11 +5278,11 @@ TEST_FUNCTION(pal_posix_recvfrom__arg_socket_address_null)
 TEST_FUNCTION(pal_posix_recvfrom__arg_flags_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     prx_socket_address_t socket_address_valid;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     // arrange 
@@ -5301,10 +5303,10 @@ TEST_FUNCTION(pal_posix_recvfrom__arg_buffer_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     prx_socket_address_t socket_address_valid;
-    prx_size_t received_valid;
+    size_t received_valid;
     int32_t result;
 
     // arrange 
@@ -5319,14 +5321,14 @@ TEST_FUNCTION(pal_posix_recvfrom__arg_buffer_null)
 }
 
 // 
-// Test pal_recvfrom passing as received argument an invalid prx_size_t* value 
+// Test pal_recvfrom passing as received argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_posix_recvfrom__arg_received_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     prx_socket_address_t socket_address_valid;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     int32_t result;
@@ -5349,11 +5351,11 @@ TEST_FUNCTION(pal_posix_send__success)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     int32_t result;
 
     for (int i = (int)k_length_valid, j = 0; i < 0; i--)
@@ -5380,11 +5382,11 @@ TEST_FUNCTION(pal_posix_send__success)
 TEST_FUNCTION(pal_posix_send__arg_fd_invalid)
 {
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     int32_t result;
 
     for (int i = (int)k_length_valid, j = 0; i < 0; i--)
@@ -5413,10 +5415,10 @@ TEST_FUNCTION(pal_posix_send__arg_fd_invalid)
 TEST_FUNCTION(pal_posix_send__arg_flags_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     int32_t result;
 
     for (int i = (int)k_length_valid, j = 0; i < 0; i--)
@@ -5439,9 +5441,9 @@ TEST_FUNCTION(pal_posix_send__arg_buffer_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
-    prx_size_t sent_valid;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
+    size_t sent_valid;
     int32_t result;
 
     // arrange 
@@ -5455,14 +5457,14 @@ TEST_FUNCTION(pal_posix_send__arg_buffer_null)
 }
 
 // 
-// Test pal_send passing as sent argument an invalid prx_size_t* value 
+// Test pal_send passing as sent argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_posix_send__arg_sent_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     int32_t result;
 
@@ -5486,11 +5488,11 @@ TEST_FUNCTION(pal_posix_sendto__success_1)
 {
     static const intptr_t k_fd_valid = (intptr_t)2344;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5522,11 +5524,11 @@ TEST_FUNCTION(pal_posix_sendto__success_2)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5558,11 +5560,11 @@ TEST_FUNCTION(pal_posix_sendto__arg_address_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     int32_t result;
 
     for (int i = (int)k_length_valid, j = 0; i < 0; i--)
@@ -5590,10 +5592,10 @@ TEST_FUNCTION(pal_posix_sendto__arg_address_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const int32_t k_flags_valid = prx_msg_flag_dontroute;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5619,11 +5621,11 @@ TEST_FUNCTION(pal_posix_sendto__arg_address_invalid)
 TEST_FUNCTION(pal_posix_sendto__arg_fd_invalid)
 {
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     static const socksize_t k_sent_valid = 128;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5656,10 +5658,10 @@ TEST_FUNCTION(pal_posix_sendto__arg_fd_invalid)
 TEST_FUNCTION(pal_posix_sendto__arg_flags_invalid)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
-    prx_size_t sent_valid;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5685,9 +5687,9 @@ TEST_FUNCTION(pal_posix_sendto__arg_buffer_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
-    prx_size_t sent_valid;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
+    size_t sent_valid;
     prx_socket_address_t address_valid;
     int32_t result;
 
@@ -5705,14 +5707,14 @@ TEST_FUNCTION(pal_posix_sendto__arg_buffer_null)
 }
 
 // 
-// Test pal_sendto passing as sent argument an invalid prx_size_t* value 
+// Test pal_sendto passing as sent argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_posix_sendto__arg_sent_null)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const int32_t k_flags_valid = 0;
-    static const prx_size_t k_offset_valid = 0;
-    static const prx_size_t k_length_valid = 256;
+    static const size_t k_offset_valid = 0;
+    static const size_t k_length_valid = 256;
     uint8_t* buffer_valid = (uint8_t*)UT_MEM;
     prx_socket_address_t address_valid;
     int32_t result;
@@ -5767,7 +5769,7 @@ TEST_FUNCTION(pal_posix_getsockopt__success_2)
 {
     static const intptr_t k_fd_valid = (intptr_t)62345;
     static const prx_socket_option_t k_option_valid = prx_so_available;
-    static const prx_size_t k_value_valid = 0x100000;
+    static const size_t k_value_valid = 0x100000;
     uint64_t value_valid;
     int32_t result;
 

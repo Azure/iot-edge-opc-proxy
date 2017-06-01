@@ -42,6 +42,9 @@
         ${_SHARED_ROOT}/src/vector.c
         ${_SHARED_ROOT}/src/xio.c
         ${_SHARED_ROOT}/src/xlogging.c
+        ${_UMQTT_ROOT}/src/mqtt_client.c
+        ${_UMQTT_ROOT}/src/mqtt_codec.c
+        ${_UMQTT_ROOT}/src/mqtt_message.c
     )
 if(WIN32)
     set(source_c_files ${source_c_files}
@@ -66,14 +69,14 @@ endif()
 
 if(${use_lws} OR ${use_openssl})
     set(use_openssl 1)
-	set(source_c_files ${source_c_files}
-		${_SHARED_ROOT}/src/tlsio_openssl.c
-		${_SHARED_ROOT}/src/x509_openssl.c
-	)
+    set(source_c_files ${source_c_files}
+        ${_SHARED_ROOT}/src/tlsio_openssl.c
+        ${_SHARED_ROOT}/src/x509_openssl.c
+    )
 elseif(${use_wolfssl})
-	set(source_c_files ${source_c_files}
-		${_SHARED_ROOT}/src/tlsio_wolfssl.c
-	)
+    set(source_c_files ${source_c_files}
+        ${_SHARED_ROOT}/src/tlsio_wolfssl.c
+    )
 endif()
 
 compileAsC99()
@@ -85,12 +88,16 @@ compileAsC99()
     set_property(TARGET libiotsdk PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32)
-    target_include_directories(libiotsdk PUBLIC ${_IOTSDK_INC})
+    target_include_directories(libiotsdk 
+        PUBLIC ${_IOTSDK_INC}
+        PUBLIC ${_UMQTT_INC}
+    )
 else()
     target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
     target_include_directories(libiotsdk 
         PUBLIC ${_IOTSDK_INC}
+        PUBLIC ${_UMQTT_INC}
         PRIVATE ${CURL_INCLUDE_DIRS}
     )
 endif()
@@ -101,7 +108,7 @@ if(${OPENSSL_FOUND})
 else()
     message(FATAL_ERROR, "No OpenSSL found, please install!")
 endif()
-	target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
+    target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
 elseif(${use_wolfssl})
     target_include_directories(libiotsdk PRIVATE $ENV(WOLFSSL_INCLUDE_DIR))
 endif()

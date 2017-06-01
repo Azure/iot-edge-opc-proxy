@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Address family
         /// </summary>
         [DataMember(Name = "family", Order = 1)]
-        public AddressFamily Family { get; set; }
+        public abstract AddressFamily Family { get; }
 
         /// <summary>
         /// Comparison
@@ -36,6 +36,31 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             return this.Family.Equals(that.Family);
         }
+
+        public abstract ProxySocketAddress AsProxySocketAddress();
+
+        /// <summary>
+        /// Parse a string into a socket address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out SocketAddress parsed) {
+            /**/ if (string.IsNullOrEmpty(address)) {
+                parsed = new NullSocketAddress();
+            }
+            else if (InetSocketAddress.TryParse(address, out InetSocketAddress inet)) {
+                parsed = inet;
+            }
+            else if (ProxySocketAddress.TryParse(address, out ProxySocketAddress proxy)) {
+                parsed = proxy;
+            }
+            else {
+                parsed = new NullSocketAddress();
+                return false;
+            }
+            return true;
+        }
     }
 
 
@@ -45,36 +70,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public class NullSocketAddress : SocketAddress, IEquatable<NullSocketAddress> {
 
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public NullSocketAddress() {
-            base.Family = AddressFamily.Unspecified;
-        }
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.Unspecified;
 
         /// <summary>
         /// Comparison
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public bool Equals(NullSocketAddress that) {
-            if (that == null) {
-                return false;
-            }
-            return
-                this.Family.Equals(AddressFamily.Unspecified) &&
-                that.Family.Equals(AddressFamily.Unspecified);
-        }
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool Equals(object that) {
-            return Equals(that as NullSocketAddress);
-        }
-
+        public bool Equals(NullSocketAddress that) =>
+            base.Equals(that);
+        
         /// <summary>
         /// Stringify address
         /// </summary>
@@ -90,6 +96,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override int GetHashCode() {
             return (int)AddressFamily.Unspecified;
         }
+
+        public override ProxySocketAddress AsProxySocketAddress() =>
+            new ProxySocketAddress();
     }
 
     /// <summary>
@@ -98,11 +107,19 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public class UnixSocketAddress : SocketAddress, IEquatable<UnixSocketAddress> {
 
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.Unix;
+
+        /// <summary>
+        /// Path to the unix pipe
+        /// </summary>
+        [DataMember(Name = "path", Order = 2)]
+        public string Path { get; set; } = "";
+
         /// <summary>
         /// Default constructor
         /// </summary>
         public UnixSocketAddress() {
-            base.Family = AddressFamily.Unix;
         }
 
         /// <summary>
@@ -111,12 +128,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         public UnixSocketAddress(string path) : this() {
             Path = path;
         }
-
-        /// <summary>
-        /// Path to the unix pipe
-        /// </summary>
-        [DataMember(Name = "path", Order = 2)]
-        public string Path { get; set; } = "";
 
         /// <summary>
         /// Comparison
@@ -149,6 +160,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             return Path;
         }
 
+        public override ProxySocketAddress AsProxySocketAddress() =>
+            new ProxySocketAddress(Path);
+
         /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
@@ -164,16 +178,13 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public abstract class InetSocketAddress : SocketAddress, IEquatable<InetSocketAddress> {
 
-        /// <summary>
-        /// Flow
-        /// </summary>
-        [DataMember(Name = "flow", Order = 2)]
-        public uint Flow { get; set; }
+        [DataMember(Name = "family", Order = 1)]
+        public abstract override AddressFamily Family { get; }
 
         /// <summary>
         /// Port in host byte order
         /// </summary>
-        [DataMember(Name = "port", Order = 3)]
+        [DataMember(Name = "port", Order = 2)]
         public ushort Port { get; set; }
 
         /// <summary>
@@ -187,8 +198,26 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             return
                 this.Equals(that as SocketAddress) &&
-                this.Flow.Equals(that.Flow) &&
                 this.Port.Equals(that.Port);
+        }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out InetSocketAddress parsed) {
+            if (Inet4SocketAddress.TryParse(address, out Inet4SocketAddress inet4)) {
+                parsed = inet4;
+            }
+            else if (Inet6SocketAddress.TryParse(address, out Inet6SocketAddress inet6)) {
+                parsed = inet6;
+            }
+            else {
+                parsed = null;
+            }
+            return parsed != null;
         }
     }
 
@@ -198,40 +227,48 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public class Inet4SocketAddress : InetSocketAddress, IEquatable<Inet4SocketAddress> {
 
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public Inet4SocketAddress() {
-            base.Family = AddressFamily.InterNetwork;
-        }
-
-        /// <summary>
-        /// Sets property values
-        /// </summary>
-        public Inet4SocketAddress(uint address, ushort port, uint flow) :
-            this(BitConverter.GetBytes(address), port, flow) {
-        }
-
-        /// <summary>
-        /// Sets property values
-        /// </summary>
-        public Inet4SocketAddress(byte[] address, ushort port, uint flow) : this() {
-            Address = address;
-            Port = port;
-            Flow = flow;
-        }
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.InterNetwork;
 
         /// <summary>
         /// Returns the 32 bit address as a buffer
         /// </summary>
-        [DataMember(Name = "addr", Order = 4)]
+        [DataMember(Name = "addr", Order = 3)]
         public byte[] Address { get; set; }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public Inet4SocketAddress() {
+        }
+
+        /// <summary>
+        /// Sets property values
+        /// </summary>
+        public Inet4SocketAddress(uint address, ushort port) :
+            this(BitConverter.GetBytes(address), port) {
+        }
+
+        /// <summary>
+        /// Sets property values
+        /// </summary>
+        public Inet4SocketAddress(byte[] address, ushort port) : this() {
+            Address = address;
+            Port = port;
+        }
 
         /// <summary>
         /// Returns address as 32 bit int
         /// </summary>
         /// <returns></returns>
-        public uint ToUInt32() => BitConverter.ToUInt32(Address, 0);
+        public uint AsUInt32() => BitConverter.ToUInt32(Address, 0);
+
+        /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public string AsString() => 
+            $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}";
 
         /// <summary>
         /// Comparison
@@ -244,7 +281,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             return
                 this.Equals(that as InetSocketAddress) &&
-                this.ToUInt32().Equals(that.ToUInt32());
+                this.AsUInt32().Equals(that.AsUInt32());
         }
 
         /// <summary>
@@ -261,8 +298,43 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}:{Port}";
+            return AsString() + $":{Port}";
         }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out Inet4SocketAddress parsed) {
+            var labels = address.Split(':');
+            if (labels.Length >= 1) {
+                var bytes = labels[0].Split('.');
+                if (bytes.Length == 4) {
+                    var addressBuffer = new byte[4];
+                    if (byte.TryParse(bytes[0], out addressBuffer[0]) &&
+                        byte.TryParse(bytes[1], out addressBuffer[1]) &&
+                        byte.TryParse(bytes[2], out addressBuffer[2]) &&
+                        byte.TryParse(bytes[3], out addressBuffer[3])) {
+
+                        // Now parse port if we have one, otherwise set to 0.
+                        ushort port = 0;
+                        if (labels.Length == 1 ||
+                           (labels.Length == 2 && 
+                            ushort.TryParse(labels[1], out port))) {
+                            parsed = new Inet4SocketAddress(addressBuffer, port);
+                            return true;
+                        }
+                    }
+                }
+            }
+            parsed = null;
+            return false;
+        }
+
+        public override ProxySocketAddress AsProxySocketAddress() =>
+            new ProxySocketAddress(AsString(), Port);
 
         /// <summary>
         /// Returns hash for efficient lookup in list
@@ -270,9 +342,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override int GetHashCode() {
             return
-                (int)ToUInt32() ^
-                Port.GetHashCode() ^
-                Flow.GetHashCode();
+                (int)AsUInt32() ^
+                Port.GetHashCode();
         }
     }
 
@@ -281,6 +352,27 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// </summary>
     [DataContract]
     public class Inet6SocketAddress : InetSocketAddress, IEquatable<Inet6SocketAddress> {
+
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.InterNetworkV6;
+
+        /// <summary>
+        /// Flow
+        /// </summary>
+        [DataMember(Name = "flow", Order = 3)]
+        public uint Flow { get; set; }
+
+        /// <summary>
+        /// Serialization only
+        /// </summary>
+        [DataMember(Name = "addr", Order = 4)]
+        public byte[] Address { get; set; }
+
+        /// <summary>
+        /// Scope id
+        /// </summary>
+        [DataMember(Name = "scope_id", Order = 5)]
+        public uint ScopeId { get; set; }
 
         /// <summary>
         /// Default constructor
@@ -304,29 +396,50 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="address"></param>
         public Inet6SocketAddress(byte[] address) {
-            base.Family = AddressFamily.InterNetworkV6;
             Address = address;
         }
-
-        /// <summary>
-        /// Serialization only
-        /// </summary>
-        [DataMember(Name = "addr", Order = 4)]
-        public byte[] Address { get; set; }
-
-
-        /// <summary>
-        /// Scope id
-        /// </summary>
-        [DataMember(Name = "scope_id", Order = 5)]
-        public uint ScopeId { get; set; }
 
         /// <summary>
         /// Converts this socket address to a address
         /// </summary>
         /// <returns></returns>
-        public Reference ToReference() {
+        public Reference AsReference() {
             return new Reference(Address);
+        }
+
+        /// <summary>
+        /// Returns the address as string
+        /// </summary>
+        /// <returns></returns>
+        public string AsString() {
+            var str = new StringBuilder();
+            for (int i = 0; i < Address.Length; i += 2) {
+                if (i != 0) {
+                    str.Append(":");
+                }
+                // Omit any fancy ipv6 formatting, it is not needed...
+                str.Append(BitConverter.ToUInt16(Address, i).ToString("X"));
+            }
+            return str.ToString();
+        }
+
+        /// <summary>
+        /// Parse a string into a inet 4 address
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out Inet6SocketAddress parsed) {
+            if (Reference.TryParse(address, out Reference reference)) {
+                parsed = reference.ToSocketAddress() as Inet6SocketAddress;
+            }
+            else {
+
+                // TODO
+
+                parsed = null;
+            }
+            return parsed != null; ;
         }
 
         /// <summary>
@@ -360,20 +473,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override string ToString() {
             if (Port == 0 && ScopeId == 0 && Flow == 0) {
                 // This is actually a proxy reference id
-                return ToReference().ToString();
+                return AsReference().ToString();
             }
             else {
                 var str = new StringBuilder();
                 if (Port != 0) {
                     str.Append("[");
                 }
-                for (int i = 0; i < Address.Length; i += 2) {
-                    if (i != 0) {
-                        str.Append(":");
-                    }
-                    // Omit any fancy ipv6 formatting, it is not needed...
-                    str.Append(BitConverter.ToUInt16(Address, i).ToString("X"));
-                }
+                str.Append(AsString());
                 if (ScopeId != 0) {
                     str.Append("/");
                     str.Append(ScopeId);
@@ -386,6 +493,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
+        public override ProxySocketAddress AsProxySocketAddress() =>
+            new ProxySocketAddress(AsString(), Port);
+
         /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
@@ -394,10 +504,10 @@ namespace Microsoft.Azure.Devices.Proxy {
             int result = 0;
             foreach (byte b in Address)
                 result = (result * 31) ^ b;
-            return
-                result ^
-                Port.GetHashCode() ^
-                Flow.GetHashCode() ^
+            return (((
+                result * 31) ^
+                Port.GetHashCode() * 31) ^
+                Flow.GetHashCode() * 31) ^
                 ScopeId.GetHashCode();
         }
     }
@@ -408,57 +518,97 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public class ProxySocketAddress : InetSocketAddress, IEquatable<ProxySocketAddress> {
 
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.Proxy;
+
+        /// <summary>
+        /// Interface Index field
+        /// </summary>
+        [DataMember(Name = "itf_index", Order = 3)]
+        public int InterfaceIndex { get; set; } = -1;
+
+        /// <summary>
+        /// Interface Index field
+        /// </summary>
+        [DataMember(Name = "flags", Order = 4)]
+        public ushort Flags { get; set; }
+
+        /// <summary>
+        /// Host name to use
+        /// </summary>
+        [DataMember(Name = "host", Order = 5)]
+        public string Host { get; set; } = "";
+
         /// <summary>
         /// Default constructor
         /// </summary>
         public ProxySocketAddress() {
-            base.Family = AddressFamily.Proxy;
         }
 
         /// <summary>
-        /// Create proxy socket address
+        /// Constructor
         /// </summary>
         /// <param name="host"></param>
         /// <param name="port"></param>
-        public ProxySocketAddress(string host, int port) : this() {
+        /// <param name="flags"></param>
+        /// <param name="interfaceIndex"></param>
+        public ProxySocketAddress(string host, ushort port = 0,
+            ushort flags = 0, int interfaceIndex = -1) : this() {
             if (host == null) {
                 throw new ArgumentNullException(nameof(host));
             }
-            if (port <= 0 || port > ushort.MaxValue) {
-                throw new ArgumentNullException(nameof(port));
-            }
+            Port = port;
+            Flags = flags;
             Host = host;
-            Port = (ushort)port;
-            Flow = 0;
+            InterfaceIndex = interfaceIndex;
         }
 
         /// <summary>
-        /// Sets property values
+        /// Constructor that checks port is in valid ushort range and throws if not.
         /// </summary>
-        public ProxySocketAddress(string host, ushort port, uint flow) : this() {
-            Port = port;
-            Flow = flow;
-            Host = host;
+        /// <param name="host"></param>
+        /// <param name="port"></param>
+        public ProxySocketAddress(string host, int port) : this(host, (ushort)port) {
+            if (port < 0 || port > ushort.MaxValue) {
+                throw new ArgumentNullException(nameof(port));
+            }
         }
 
         /// <summary>
         /// Creates an address from a proxy socket address string representation
         /// </summary>
-        public ProxySocketAddress(string address) : this() {
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public static ProxySocketAddress Parse(string address) {
+            string host;
+            ushort port;
             int index = address.IndexOf(':');
             if (index <= 0) {
-                throw new ArgumentException($"{address} is not a proxy address!");
+                host = address;
+                port = 0;
             }
-            Host = address.Substring(0, index);
-            Port = ushort.Parse(address.Substring(index + 1));
-            Flow = 0;
+            else {
+                host = address.Substring(0, index);
+                port = ushort.Parse(address.Substring(index + 1));
+            }
+            return new ProxySocketAddress(host, port, 0);
         }
 
         /// <summary>
-        /// Host name to use
+        /// Parse a string into a proxy address - does not throw.
         /// </summary>
-        [DataMember(Name = "host", Order = 4)]
-        public string Host { get; set; } = "";
+        /// <param name="address"></param>
+        /// <param name="parsed"></param>
+        /// <returns></returns>
+        public static bool TryParse(string address, out ProxySocketAddress parsed) {
+            try {
+                parsed = Parse(address);
+            }
+            catch {
+                parsed = null;
+            }
+            return parsed != null;
+        }
 
         /// <summary>
         /// Comparison
@@ -483,6 +633,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             return Equals(that as ProxySocketAddress);
         }
 
+        public override ProxySocketAddress AsProxySocketAddress() => this;
+
         /// <summary>
         /// Stringify address
         /// </summary>
@@ -496,25 +648,29 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns></returns>
         public override int GetHashCode() {
-            return
-                Host.GetHashCode() ^
-                Port.GetHashCode() ^
-                Flow.GetHashCode();
+            return (((
+                Host.GetHashCode() * 31) ^
+                Port.GetHashCode() * 31) ^
+                InterfaceIndex.GetHashCode() * 31) ^
+                Flags.GetHashCode();
         }
     }
 
+
     /// <summary>
-    /// A list of proxy addresses
+    /// A list of socket addresses
     /// </summary>
     [DataContract]
     public class SocketAddressCollection : SocketAddress, IEquatable<SocketAddressCollection> {
 
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.Collection;
+
         /// <summary>
-        /// Default constructor
+        /// Storage of socket addresses
         /// </summary>
-        public SocketAddressCollection() {
-            base.Family = AddressFamily.Collection;
-        }
+        [DataMember(Name = "includes", Order = 2)]
+        HashSet<SocketAddress> Inner { get; set; }
 
         /// <summary>
         /// Create an address from a list
@@ -536,12 +692,6 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
             }
         }
-
-        /// <summary>
-        /// Storage of socket addresses
-        /// </summary>
-        [DataMember(Name = "includes", Order = 2)]
-        HashSet<SocketAddress> Inner { get; set; }
 
         /// <summary>
         /// Return flattened list of addresses
@@ -596,6 +746,14 @@ namespace Microsoft.Azure.Devices.Proxy {
             return bld.ToString();
         }
 
+
+        /// <summary>
+        /// Returns the first address if any as proxy address
+        /// </summary>
+        /// <returns></returns>
+        public override ProxySocketAddress AsProxySocketAddress() =>
+            Addresses().First().AsProxySocketAddress();
+
         /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
@@ -603,6 +761,89 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override int GetHashCode() {
             return
                 Inner.GetHashCode();
+        }
+    }
+
+    /// <summary>
+    /// A socket address bound to a proxy
+    /// </summary>
+    [DataContract]
+    public class BoundSocketAddress : SocketAddress, IEquatable<BoundSocketAddress> {
+
+        [DataMember(Name = "family", Order = 1)]
+        public override AddressFamily Family => AddressFamily.Bound;
+
+        /// <summary>
+        /// Bound addresses
+        /// </summary>
+        [DataMember(Name = "local", Order = 2)]
+        public SocketAddress LocalAddress { get; set; }
+
+        /// <summary>
+        /// Host name to use
+        /// </summary>
+        [DataMember(Name = "remote", Order = 3)]
+        public SocketAddress RemoteAddress { get; set; }
+
+        /// <summary>
+        /// Default constructor
+        /// </summary>
+        public BoundSocketAddress() {
+        }
+
+        /// <summary>
+        /// Bind constructor
+        /// </summary>
+        public BoundSocketAddress(SocketAddress localAddress, SocketAddress remoteAddress) {
+            LocalAddress = localAddress;
+            RemoteAddress = remoteAddress;
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public bool Equals(BoundSocketAddress that) {
+            if (that == null) {
+                return false;
+            }
+            return
+                this.LocalAddress.Equals(that.LocalAddress) &&
+                this.RemoteAddress.Equals(that.RemoteAddress);
+        }
+
+        /// <summary>
+        /// Comparison
+        /// </summary>
+        /// <param name="that"></param>
+        /// <returns></returns>
+        public override bool Equals(object that) {
+            return Equals(that as BoundSocketAddress);
+        }
+
+        /// <summary>
+        /// Returns the remote address as a proxy address
+        /// </summary>
+        /// <returns></returns>
+        public override ProxySocketAddress AsProxySocketAddress() =>
+           RemoteAddress.AsProxySocketAddress();
+
+        /// <summary>
+        /// Stringify address
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() {
+            return RemoteAddress.ToString();
+        }
+
+        /// <summary>
+        /// Returns hash for efficient lookup in list
+        /// </summary>
+        /// <returns></returns>
+        public override int GetHashCode() {
+            return (RemoteAddress.GetHashCode() * 31) ^ 
+                LocalAddress.GetHashCode();
         }
     }
 }

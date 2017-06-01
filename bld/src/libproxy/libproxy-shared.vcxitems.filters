@@ -74,9 +74,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_dbg.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_handle.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_log.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -129,9 +126,6 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_module.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_ns.h">
@@ -218,6 +212,18 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_log.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_browse.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\io_browse.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_sd.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_module.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c">
@@ -250,9 +256,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_url.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_handle.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_mem.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -272,9 +275,6 @@
       <Filter>src\json</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\pal.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_module.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_ns.c">
@@ -323,6 +323,15 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_log.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_browse.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_browse.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_module.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

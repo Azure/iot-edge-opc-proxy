@@ -56,7 +56,7 @@ decl_internal_2(int32_t, io_ref_from_string,
 // Convert reference from socket address
 //
 decl_internal_2(int32_t, io_ref_from_prx_socket_address,
-    prx_socket_address_t*, sa,
+    const prx_socket_address_t*, sa,
     io_ref_t*, ref
 );
 
@@ -64,7 +64,7 @@ decl_internal_2(int32_t, io_ref_from_prx_socket_address,
 // Convert reference to socket address
 //
 decl_internal_2(int32_t, io_ref_to_prx_socket_address,
-    io_ref_t*, ref,
+    const io_ref_t*, ref,
     prx_socket_address_t*, sa
 );
 
@@ -72,7 +72,7 @@ decl_internal_2(int32_t, io_ref_to_prx_socket_address,
 // Copy reference to string buffer
 //
 decl_internal_3(int32_t, io_ref_to_string,
-    io_ref_t*, ref,
+    const io_ref_t*, ref,
     char*, buffer,
     size_t, buf_len
 );
@@ -81,14 +81,14 @@ decl_internal_3(int32_t, io_ref_to_string,
 // Convert reference to reference string
 //
 decl_internal_1(STRING_HANDLE, io_ref_to_STRING,
-    io_ref_t*, ref
+    const io_ref_t*, ref
 );
 
 //
 // Append to string handle
 //
 decl_internal_2(int32_t, io_ref_append_to_STRING,
-    io_ref_t*, ref,
+    const io_ref_t*, ref,
     STRING_HANDLE, string
 );
 
@@ -96,7 +96,7 @@ decl_internal_2(int32_t, io_ref_append_to_STRING,
 // Copyies one reference to another
 //
 decl_internal_2(void, io_ref_copy,
-    io_ref_t*, src,
+    const io_ref_t*, src,
     io_ref_t*, dst
 );
 
@@ -112,15 +112,15 @@ decl_internal_2(void, io_ref_swap,
 // Returns whether 2 references are equal
 //
 decl_internal_2(bool, io_ref_equals,
-    io_ref_t*, ref1,
-    io_ref_t*, ref2
+    const io_ref_t*, ref1,
+    const io_ref_t*, ref2
 );
 
 //
 // Hash reference
 //
 decl_internal_1(uint32_t, io_ref_hash,
-    io_ref_t*, ref
+    const io_ref_t*, ref
 );
 
 //
@@ -128,7 +128,7 @@ decl_internal_1(uint32_t, io_ref_hash,
 //
 decl_internal_2(int32_t, io_encode_ref,
     io_codec_ctx_t*, ctx,
-    io_ref_t*, ref
+    const io_ref_t*, ref
 );
 
 //

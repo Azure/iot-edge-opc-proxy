@@ -22,9 +22,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_file_win_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_ev_poll_ut.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_net_win_ut.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -40,7 +37,13 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_sk_win_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_cred_win_ut.c.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_cred_win_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_sd_mdns_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal\pal_ev_win_ut.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

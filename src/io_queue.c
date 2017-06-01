@@ -15,7 +15,7 @@
 struct io_queue
 {
     lock_t queue_lock;
-    prx_buffer_factory_t* factory;      // Factory used to create buffer
+    prx_buffer_factory_t* factory;     // Factory used to create buffer
     DLIST_ENTRY ready;   // queue_buffers that are ready for processing
     DLIST_ENTRY inprogress;       // queue_buffers that are in progress
     DLIST_ENTRY done;           // queue_buffers that are in done state
@@ -29,6 +29,94 @@ struct io_queue
 #define dbg_assert_buf(b) \
     dbg_assert_ptr(b);
 #endif
+
+//
+// Copy to queue_buffer
+//
+static int32_t io_queue_buffer_stream_writer(
+    io_queue_buffer_t* queue_buffer,
+    const void* buf,
+    size_t len
+)
+{
+    size_t write;
+
+    dbg_assert_buf(queue_buffer);
+    if (len == 0)
+        return er_ok;
+    chk_arg_fault_return(buf);
+
+    write = min(queue_buffer->length - queue_buffer->write_offset, len);
+    if (write > 0)
+    {
+        memcpy(io_queue_buffer_to_ptr(queue_buffer) + 
+            queue_buffer->write_offset, buf, write);
+        queue_buffer->write_offset += write;
+        dbg_assert_buf(queue_buffer);
+    }
+    return er_ok;
+}
+
+//
+// Copy from the queue_buffer
+//
+static int32_t io_queue_buffer_stream_reader(
+    io_queue_buffer_t* queue_buffer,
+    void* buf,
+    size_t len,
+    size_t *read
+)
+{
+    size_t available;
+
+    dbg_assert_buf(queue_buffer);
+    if (len == 0)
+        return er_ok;
+
+    available = queue_buffer->length - queue_buffer->read_offset;
+    *read = min(available, len);
+    if (*read > 0)
+    {
+        memcpy(buf, io_queue_buffer_to_ptr(queue_buffer) + 
+            queue_buffer->read_offset, *read);
+        queue_buffer->read_offset += *read;
+        dbg_assert_buf(queue_buffer);
+    }
+    return er_ok;
+}
+
+//
+// Available in queue buffer to read
+//
+static size_t io_queue_buffer_stream_readable(
+    io_queue_buffer_t *queue_buffer
+)
+{
+    dbg_assert_ptr(queue_buffer);
+    return queue_buffer->length - queue_buffer->read_offset;
+}
+
+//
+// Available in queue buffer to write
+//
+static size_t io_queue_buffer_stream_writeable(
+    io_queue_buffer_t *queue_buffer
+)
+{
+    dbg_assert_ptr(queue_buffer);
+    return queue_buffer->length - queue_buffer->write_offset;
+}
+
+//
+// Reset queue buffer stream
+//
+static int32_t io_queue_buffer_stream_reset(
+    io_queue_buffer_t *queue_buffer
+)
+{
+    queue_buffer->write_offset = queue_buffer->read_offset = 0;
+    return er_ok;
+}
 
 //
 // Calls callback with abort
@@ -165,7 +253,10 @@ static void io_queue_state_abort_no_lock(
 )
 {
     for (PDLIST_ENTRY p = list->Flink; p != list; p = p->Flink)
-        io_queue_buffer_abort_callback(containingRecord(p, io_queue_buffer_t, qlink));
+    {
+        io_queue_buffer_abort_callback(
+            containingRecord(p, io_queue_buffer_t, qlink));
+    }
 }
 
 //
@@ -197,9 +288,22 @@ int32_t io_queue_create_buffer(
         queue_buffer->code = er_ok;
         queue_buffer->length = length;
 
+        queue_buffer->itf.context =
+            queue_buffer;
+        queue_buffer->itf.reader = (io_stream_reader_t)
+            io_queue_buffer_stream_reader;
+        queue_buffer->itf.readable = (io_stream_available_t)
+            io_queue_buffer_stream_readable;
+        queue_buffer->itf.writer = (io_stream_writer_t)
+            io_queue_buffer_stream_writer;
+        queue_buffer->itf.writeable = (io_stream_available_t)
+            io_queue_buffer_stream_writeable;
+        queue_buffer->itf.reset = (io_stream_reset_t)
+            io_queue_buffer_stream_reset;
+
         if (payload && length > 0)
         {
-            result = io_queue_buffer_write(queue_buffer, payload, length);
+            result = io_queue_buffer_stream_writer(queue_buffer, payload, length);
             if (result != er_ok)
                 break;
         }
@@ -261,54 +365,13 @@ void io_queue_buffer_release(
 }
 
 //
-// Copy to queue_buffer
+// Return stream
 //
-int32_t io_queue_buffer_write(
-    io_queue_buffer_t* queue_buffer,
-    const void* buf,
-    size_t len
+io_stream_t* io_queue_buffer_as_stream(
+    io_queue_buffer_t* queue_buffer
 )
 {
-    size_t write;
-
-    chk_arg_fault_return(queue_buffer);
-    dbg_assert_buf(queue_buffer);
-    if (len == 0)
-        return er_ok;
-    chk_arg_fault_return(buf);
-
-    write = min(queue_buffer->length - queue_buffer->write_offset, len);
-
-    memcpy(io_queue_buffer_to_ptr(queue_buffer) + queue_buffer->write_offset, buf, write);
-    queue_buffer->write_offset += write;
-    dbg_assert_buf(queue_buffer);
-    return er_ok;
-}
-
-//
-// Copy from the queue_buffer
-//
-int32_t io_queue_buffer_read(
-    io_queue_buffer_t* queue_buffer,
-    void* buf,
-    size_t len,
-    size_t *read
-)
-{
-    size_t available;
-
-    chk_arg_fault_return(queue_buffer);
-    dbg_assert_buf(queue_buffer);
-    if (len == 0)
-        return er_ok;
-
-    available = queue_buffer->length - queue_buffer->read_offset;
-    *read = min(available, len);
-
-    memcpy(buf, io_queue_buffer_to_ptr(queue_buffer) + queue_buffer->read_offset, *read);
-    queue_buffer->read_offset += *read;
-    dbg_assert_buf(queue_buffer);
-    return er_ok;
+    return &queue_buffer->itf;
 }
 
 //

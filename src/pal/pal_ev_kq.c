@@ -37,6 +37,7 @@ pal_kqueue_port_t;
 typedef struct pal_kqueue_event
 {
     fd_t sock_fd;
+    bool close_fd;
     pal_kqueue_port_t* port;
     pal_event_port_handler_t cb;
     void* context;
@@ -50,7 +51,7 @@ static void pal_kqueue_event_free(
     pal_kqueue_event_t* ev_data
 )
 {
-    if (ev_data->sock_fd != _invalid_fd)
+    if (ev_data->close_fd && ev_data->sock_fd != _invalid_fd)
     {
         close(ev_data->sock_fd);
     }
@@ -279,7 +280,8 @@ int32_t pal_event_clear(
 // Closes the event
 //
 void pal_event_close(
-    uintptr_t event_handle
+    uintptr_t event_handle,
+    bool close_fd
 )
 {
     struct kevent events[2];
@@ -290,6 +292,7 @@ void pal_event_close(
         return;
 
     ev_data = (pal_kqueue_event_t*)event_handle;
+    ev_data->close_fd = close_fd;
     pal_port = ev_data->port;
 
     lock_enter(pal_port->lock);

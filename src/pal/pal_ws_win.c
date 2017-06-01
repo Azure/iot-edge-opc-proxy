@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-
 #include "util_mem.h"
 #include "pal_ws.h"
 #include "pal_mt.h"

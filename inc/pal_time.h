@@ -7,8 +7,6 @@
 #include "os.h"  // for ticks_t
 #include "common.h"
 
-#include "azure_c_shared_utility/agenttime.h"
-
 //
 // Initialize global tick counter
 //

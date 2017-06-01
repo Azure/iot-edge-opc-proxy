@@ -9,6 +9,22 @@
       <UniqueIdentifier>{5f67f6c7-a500-4741-8a05-b1f478d58f06}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="src\shared">
+      <UniqueIdentifier>{6f0e3056-b63d-4832-9758-12435f2e062d}</UniqueIdentifier>
+      <Extensions>shared</Extensions>
+    </Filter>
+    <Filter Include="inc\shared">
+      <UniqueIdentifier>{aefc37a6-f2cc-4094-8af2-5d7d8f06ace3}</UniqueIdentifier>
+      <Extensions>shared</Extensions>
+    </Filter>
+    <Filter Include="inc\umqtt">
+      <UniqueIdentifier>{94f96112-31ab-432a-a9d2-5f334d51a2ca}</UniqueIdentifier>
+      <Extensions>umqtt</Extensions>
+    </Filter>
+    <Filter Include="src\umqtt">
+      <UniqueIdentifier>{d523e737-ff49-4fd5-95f8-1c9716c33b0a}</UniqueIdentifier>
+      <Extensions>umqtt</Extensions>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\adapters\agenttime.c">
@@ -53,6 +69,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\httpheaders.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\http_proxy_io.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\singlylinkedlist.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -86,6 +105,15 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\usha.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\utf8_checker.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_client.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_frame_encoder.c">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\vector.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -95,16 +123,13 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\xlogging.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\http_proxy_io.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_client.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\utf8_checker.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_codec.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_client.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\uws_frame_encoder.c">
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_message.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -119,6 +144,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\condition.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\connection_string_parser.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\consolelogger.h">
@@ -137,6 +165,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gballoc.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_rand.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_stdio.h">
@@ -161,6 +192,9 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\httpheaders.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\http_proxy_io.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\singlylinkedlist.h">
@@ -205,6 +239,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\strings.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\strings_types.h">
+      <Filter>inc</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\string_tokenizer.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -226,6 +263,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tlsio_wolfssl.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tls_config.h">
+      <Filter>inc</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\umock_c_prod.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -235,7 +275,19 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\urlencode.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\utf8_checker.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_client.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_frame_encoder.h">
+      <Filter>inc</Filter>
+    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector_types_internal.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\wsio.h">
@@ -253,31 +305,16 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\xlogging.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\connection_string_parser.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqttconst.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\gb_rand.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_client.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\http_proxy_io.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_codec.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\strings_types.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\tls_config.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\utf8_checker.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_client.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\uws_frame_encoder.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector_types_internal.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_message.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

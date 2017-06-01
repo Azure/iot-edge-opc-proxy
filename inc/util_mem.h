@@ -79,10 +79,14 @@
 #endif
 
 #define mem_zalloc(size)        calloc(1, size) 
-#define mem_zalloc_type(type)   (type*)calloc(1, sizeof(type)) 
-#define mem_free_type(type, p)  free(p)
 
-#define REFCOUNT_TYPE_FREE(type, p) free(p)
+#define mem_zalloc_type(type) \
+    (type*)calloc(1, sizeof(type))
+
+#define mem_free_type(type, p)  \
+    do { memset(p, 0, sizeof(type)); free(p); } while(0)
+
+#define REFCOUNT_TYPE_FREE      mem_free_type
 
 #else // !MSC_VER
 
@@ -120,14 +124,38 @@
 #endif
 
 #define mem_zalloc(size)        calloc(1, size) 
-#define mem_zalloc_type(type)   (type*)calloc(1, sizeof(type)) 
-#define mem_free_type(type, p)  free(p)
 
-#define REFCOUNT_TYPE_FREE(type, p) free(p)
+#define mem_zalloc_type(type) \
+    (type*)calloc(1, sizeof(type))
+
+#define mem_free_type(type, p)  \
+    do { memset(p, 0, sizeof(type)); free(p); } while(0)
+
+#define REFCOUNT_TYPE_FREE      mem_free_type
 
 #endif // !MSC_VER
 #endif // LEAK_DETECT || MEM_CHECK
 #endif // !UNIT_TEST
+
+#ifdef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
+// Ensure no intrinsic memcmp is used to aid afl
+inline int fuzzing_memcmp(
+    char* ptr1,
+    char* ptr2,
+    int len
+) __attribute__((always_inline));
+
+inline int fuzzing_memcmp(
+    char* ptr1,
+    char* ptr2,
+    int len
+)
+{
+    while (len--) if (*(ptr1++) ^ *(ptr2++)) return 1;
+    return 0;
+}
+#define memcmp fuzzing_memcmp
+#endif // FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
 
 #include "util_dbg.h"
 #include "api.h"
@@ -197,8 +225,16 @@
 // Free a type
 //
 #if !defined(mem_free_type)
+#if defined(DEBUG) && !defined(UNIT_TEST)
+#define mem_free_type(type, p) \
+    do { \
+        memset(p, 0, sizeof(type)); \
+        h_free((type*)p, __FILE__, sizeof(__FILE__) - 1, __LINE__); \
+    } while(0)
+#else
 #define mem_free_type(type, p) \
     h_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+#endif
 #endif
 
 //
@@ -231,6 +267,11 @@
 #if !defined(REFCOUNT_TYPE_FREE)
 #define REFCOUNT_TYPE_FREE(type, p) \
     c_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+#endif
+
+#if !defined(mem_cmp)
+#define mem_cmp \
+    memcmp
 #endif
 
 //

@@ -64,8 +64,10 @@ TEST_FUNCTION(pal_win_os_to_prx_error__success)
     UMOCK_C_RANGE_TESTS_ASSERT(int32_t, result, er_unknown, 
         er_ok,        er_not_found,   er_arg,        er_out_of_memory,  er_not_found, 
         er_fault,     er_aborted,     er_aborted,    er_arg,            er_waiting,
-        er_not_found, er_timeout,     er_aborted,    er_aborted,        er_aborted,
-        er_reset,     er_refused,
+        er_not_found, er_not_found,   er_nomore,     er_busy,           er_closed,    
+        er_closed,    er_not_found,   er_permission,
+        er_timeout,   er_aborted,     er_aborted,    er_aborted,        er_reset,
+        er_refused,   er_closed,      er_closed,     
         er_unknown);
 }
 
@@ -86,7 +88,7 @@ TEST_FUNCTION(pal_win_os_from_prx_error__success)
     result = pal_os_from_prx_error(input);
 
     // assert 
-    UMOCK_C_RANGE_TESTS_ASSERT(int, result, -1, 3, 6, 4, 2, 10, 8, 1);  // see os_mock.h
+    UMOCK_C_RANGE_TESTS_ASSERT(int, result, -1, 3, 6, 4, 2, 18, 13, 14, 10, 8, 1);  // see os_mock.h
 }
 
 // 

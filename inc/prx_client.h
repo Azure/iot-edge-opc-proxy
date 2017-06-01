@@ -25,7 +25,7 @@ decl_public_2(int32_t, prx_client_pton,
 decl_public_3(int32_t, prx_client_ntop,
     prx_socket_address_t*, address,
     char*, addr_string,
-    prx_size_t, addr_string_size
+    size_t, addr_string_size
 );
 
 //
@@ -35,7 +35,7 @@ decl_public_4(int32_t, prx_client_getifaddrinfo,
     const char*, if_name,
     uint32_t, flags,
     prx_ifaddrinfo_t**, info,
-    prx_size_t*, info_count
+    size_t*, info_count
 );
 
 //
@@ -51,7 +51,7 @@ decl_public_1(int32_t, prx_client_freeifaddrinfo,
 decl_public_4(int32_t, prx_client_getifnameinfo,
     prx_socket_address_t*, if_address,
     char*, if_name,
-    prx_size_t, if_name_length,
+    size_t, if_name_length,
     uint64_t*, if_index
 );
 
@@ -64,7 +64,7 @@ decl_public_6(int32_t, prx_client_getaddrinfo,
     prx_address_family_t, family,
     uint32_t, flags,
     prx_addrinfo_t**, info,
-    prx_size_t*, info_count
+    size_t*, info_count
 );
 
 //
@@ -80,9 +80,9 @@ decl_public_1(int32_t, prx_client_freeaddrinfo,
 decl_public_6(int32_t, prx_client_getnameinfo,
     prx_socket_address_t*, address,
     char*, host,
-    prx_size_t, host_length,
+    size_t, host_length,
     char*, service,
-    prx_size_t, service_length,
+    size_t, service_length,
     int32_t, flags
 );
 
@@ -154,9 +154,9 @@ decl_public_7(int32_t, prx_client_recv,
     uintptr_t, key,
     int32_t, flags,
     uint8_t*, buffer,
-    prx_size_t, offset,
-    prx_size_t, length,
-    prx_size_t*, received
+    size_t, offset,
+    size_t, length,
+    size_t*, received
 );
 
 //
@@ -167,10 +167,10 @@ decl_public_8(int32_t, prx_client_recvfrom,
     uintptr_t, key,
     int32_t, flags,
     uint8_t*, buffer,
-    prx_size_t, offset,
-    prx_size_t, length,
+    size_t, offset,
+    size_t, length,
     prx_socket_address_t*, socket_address,
-    prx_size_t*, received
+    size_t*, received
 );
 
 //
@@ -181,9 +181,9 @@ decl_public_7(int32_t, prx_client_send,
     uintptr_t, key,
     int32_t, flags,
     uint8_t*, buffer,
-    prx_size_t, offset,
-    prx_size_t, length,
-    prx_size_t*, sent
+    size_t, offset,
+    size_t, length,
+    size_t*, sent
 );
 
 //
@@ -194,10 +194,10 @@ decl_public_8(int32_t, prx_client_sendto,
     uintptr_t, key,
     int32_t, flags,
     uint8_t*, buffer,
-    prx_size_t, offset,
-    prx_size_t, length,
+    size_t, offset,
+    size_t, length,
     prx_socket_address_t*, address,
-    prx_size_t*, sent
+    size_t*, sent
 );
 
 //
@@ -222,7 +222,7 @@ decl_public_3(int32_t, prx_client_setsockopt,
 // Wait for an activity on any of the passed in sockets
 //
 decl_public_3(int32_t, prx_client_poll,
-    prx_size_t, num,
+    size_t, num,
     prx_fd_t*, sockets,
     int32_t*, timeout_ms
 );

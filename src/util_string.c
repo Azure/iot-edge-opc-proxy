@@ -1008,5 +1008,162 @@ STRING_HANDLE STRING_construct_random(
     return NULL;
 }
 
+//
+// Make a valid service name from its components
+//
+int32_t string_copy_service_full_name(
+    const char* service_name,
+    const char* service_type,
+    const char* domain,
+    char* full_name,
+    size_t full_size
+)
+{
+    bool trailing_dot;
 
+    chk_arg_fault_return(full_name);
+    if (service_name && domain && !service_type)
+        return er_arg;
+    if (full_size <= 1)
+        return er_arg;
+    if ((service_name || service_type) && !domain)
+        domain = "local";
+
+    trailing_dot = false; // Did we see a trailing dot?
+    if (service_name && *service_name)
+    {
+        // Service name is assumed to be free form, so it
+        // might end with a . and contain spaces, etc. 
+        while (*service_name)
+        {
+            if (!--full_size) return er_fault;
+            *full_name++ = *service_name++;
+        }
+
+        if (!--full_size) return er_fault;
+        *full_name++ = '.';
+        trailing_dot = true;
+    }
+    if (service_type && *service_type)
+    {
+        while (*service_type)
+        {
+            if (!--full_size) return er_fault;
+            trailing_dot = *service_type == '.';
+            *full_name++ = *service_type++;
+        }
+        if (!trailing_dot)
+        {
+            if (!--full_size) return er_fault;
+            *full_name++ = '.';
+            trailing_dot = true;
+        }
+    }
+    if (domain && *domain)
+    {
+        while (*domain)
+        {
+            if (!--full_size) return er_fault;
+            trailing_dot = *domain == '.';
+            *full_name++ = *domain++;
+        }
+        // No need to add a trailing dot
+    }
+    if (trailing_dot)
+        full_name--;
+    *full_name = 0;
+    return er_ok;
+}
+
+//
+// Break a service name into its components
+//
+int32_t string_parse_service_full_name(
+    char* full_name,
+    char** service_name,
+    char** service_type,
+    char** domain
+)
+{
+    chk_arg_fault_return(full_name);
+    chk_arg_fault_return(service_name);
+    chk_arg_fault_return(service_type);
+    chk_arg_fault_return(domain);
+
+    *service_name = NULL;
+    *service_type = NULL;
+    *domain = NULL;
+
+    // Remove trailing .
+    string_trim_back(full_name, ".");
+    if (!*full_name)
+        return er_ok;
+
+    // Check if this is just a service type - no name
+    if (*full_name == '_')
+        *service_type = full_name;
+    else
+    {
+        *service_name = full_name;
+        // Find the first "." which is followed by "_"
+        while (*++full_name)
+        {
+            if (full_name[0] == '.')
+            {
+                if (full_name[1] &&
+                    full_name[1] == '_')
+                {
+                    // Found service type - break
+                    *full_name++ = 0;
+                    *service_type = full_name;
+                    break;
+                }
+
+                if (!*domain)  // Save away possible domain
+                    *domain = full_name;
+            }
+        }
+
+        // No service type found - assume this is a domain.
+        if (!*service_type)
+        {
+       //
+       // The following would parse host.domain, but this 
+       // is not a valid service full name, which must 
+       // always have a service type.  
+       // 
+       //     full_name = *domain;
+       //     if (full_name)
+       //     {
+       //         // *domain points to first label
+       //         *full_name++ = 0;
+       //         *domain = full_name;
+       //         return er_ok;
+       //     }
+       //
+            *domain = *service_name;
+            *service_name = NULL;
+            return er_ok;
+        }
+    }
+    //
+    // full_name now points to service type - find the 
+    // first "." that is not followed by "_" and use 
+    // the string that follows as domain. If we cannot 
+    // find one, assume domain is "local"
+    //
+    while (*++full_name)
+    {
+        if (full_name[0] == '.' &&
+            full_name[1] &&
+            full_name[1] != '_')
+        {
+            *full_name++ = 0;
+            *domain = full_name;
+            return er_ok;
+        }
+    }
+    *domain = "local";
+    return er_ok;
+}
 

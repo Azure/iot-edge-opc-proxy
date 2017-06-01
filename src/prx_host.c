@@ -623,60 +623,70 @@ static int32_t prx_host_init_from_command_line(
         return result;
     }
 
-    printf(" Proxy command line options:                                               \n");
-    printf(" -c, --connection-string <string> A connection string to use. This can be  \n");
-    printf("                    either a policy connection string for -i or -u, or a   \n");
-    printf("                    device connection string, used to connect to Iot Hub.  \n");
+    printf(" Command line options:                                                      \n");
+    printf(" -c, --connection-string string     A connection string to use. This can be \n");
+    printf("                                    either a policy connection string for -i\n");
+    printf("                                    or -u, or a device connection string,   \n");
+    printf("                                    used to connect to Iot Hub.             \n");
     if (pal_caps() & pal_cap_cred)
     {
-    printf(" -s, --import <string> While device connection strings are automatically   \n");
-    printf("                    persisted into the user's secret store on your device, \n");
-    printf("                    policy keys are not. Use this option to import and     \n");
-    printf("                    persist any shared access keys.                        \n");
+    printf(" -s, --import string                While device connection strings are     \n");
+    printf("                                    automatically persisted into the user's \n");
+    printf("                                    secret store on your device, policy keys\n");
+    printf("                                    are not. Use this option to import and  \n");
+    printf("                                    persist any shared access keys.         \n");
     }
     if (pal_caps() & pal_cap_file)
     {
-    printf(" -C, --connection-string-file <file-name>  same as -c but read from file.  \n");
-    printf("                    If -c or C are not provided, connection string is read \n");
-    printf("                    from $_HUB_CS environment variable.                    \n");
+    printf(" -C, --connection-string-file file  same as -c but read from file. If -c or \n");
+    printf("                                    -C options are not provided, connection \n");
+    printf("                                    string is read from $_HUB_CS environment\n");
+    printf("                                    variable.                               \n");
     }
     if (pal_caps() & pal_cap_wsclient)
     {
-    printf(" -w, --only-websocket  Always use websockets for outbound connections. If  \n");
-    printf("                    not set, Azure connection will failover if opening a   \n");
-    printf("                    raw socket connection fails.                           \n");
+    printf(" -w, --only-websocket               Always use websockets for outbound      \n");
+    printf("                                    connections. Without -w Azure connection\n");
+    printf("                                    will failover if opening a raw tcp/ip   \n");
+    printf("                                    connection to Azure fails.              \n");
+    printf(" -p, --proxy host:port              Local web proxy to use for all outbound \n");
+    printf("     --proxy-user string            traffic, with user name and password if \n");
+    printf("     --proxy-pwd string             needed.                                 \n");
     }
-    printf("     --proxy-user <user-name>                                              \n");
-    printf("     --proxy-pwd <password>                                                \n");
-    printf(" -p, --proxy <host:port>  Local web proxy to use for all outbound traffic, \n");
-    printf("                    with user name and password if required.               \n");
+    printf(" -T, --log-telemetry                Send raw log output to IoT Hub on the   \n");
+    printf("                                    proxy telemetry endpoint.               \n");
 #if !defined(NO_ZLOG)                                                              
-    printf(" -l, --log-file <file-name>  A file to log to using standard formatting.   \n");
-    printf(" -L, --log-config-file <file-name>  For more advanced settings, the log    \n");
-    printf("                    configuration file to use. Defaults to ./log.config.   \n");
+    printf(" -l, --log-file file                File to log to using simple formatting. \n");
+    printf(" -L, --log-config-file file         For more advanced settings, the zlog    \n");
+    printf("                                    configuration file to use. Defaults to  \n");
+    printf("                                    ./log.config.                           \n");
 #endif                                                                             
-    printf(" -T, --log-telemetry  Send log output to telemetry event hub endpoint.     \n");
-    printf(" -t, --token-ttl <time-to-live-in-seconds>  for all sas tokens provided to \n");
-    printf("                    Azure, if you prefer a value different from default.   \n");
-    printf(" -i, --install      Installs a proxy server in the IoT Hub device registry \n");
-    printf("                    and creates a local database entry, then exits.        \n");
-    printf(" -u, --uninstall    Uninstalls proxy server on Iot Hub and removes the     \n");
-    printf("                    entry from the local database file, then exits.        \n");
-    printf("                    -i and -u requires -c or -C, or $_HUB_CS with policy   \n");
-    printf("                    connection string and access to shared access key.     \n");
-    printf(" -n, --name <string>  Name of proxy to install or uninstall. If -n is not  \n");
-    printf("                    specified, hostname is used.                           \n");
+    printf(" -i, --install                      Installs a proxy server in the IoT Hub  \n");
+    printf("                                    device registry, then exits.            \n");
+    printf(" -u, --uninstall                    Uninstalls proxy server on Iot Hub then \n");
+    printf("                                    exits.                                  \n");
+    printf("                                    -i and -u requires -c or -C, or $_HUB_CS\n");
+    printf("                                    with 'manage' policy connection string  \n");
+    printf("                                    and access to the shared access key.    \n");
+    printf(" -n, --name <string>                Name of proxy to install or uninstall.  \n");
+    printf("                                    If -n is not provided, hostname is used.\n");
     if (pal_caps() & pal_cap_file)
     {
-    printf(" -D, --db-file <file-name>  Local name registry database file to use.      \n");
-    printf("                    This is where newly registered instances are persisted.\n");
-    printf("                    If not provided keeps name service database in memory. \n");
+    printf(" -D, --db-file <file-name>          Local storage for proxy connection info.\n");
+    printf("                                    This is where newly registered instances\n");
+    printf("                                    are persisted. If not specified,        \n");
+    printf("                                    connection string is kept in memory.    \n");
     }
+    printf(" -t, --token-ttl int                Time to live in seconds for all shared  \n");
+    printf("                                    access tokens provided to IoT Hub if you\n");
+    printf("                                    prefer a value different from default.  \n");
 #if defined(EXPERIMENTAL)                                                         
-    printf(" -d, --hidden       Runs the proxy as a service/daemon, otherwise runs     \n");
-    printf("                    proxy host process as console process.                 \n");
+    printf(" -d, --hidden                       Runs the proxy as a service/daemon,     \n");
+    printf("                                    otherwise runs proxy host process as    \n");
+    printf("                                    console process.                        \n");
 #endif
-    printf(" -v, --version	    Prints the version information for this binary.        \n");
+    printf(" -v, --version                        Prints the version information for this \n");
+    printf("                                    binary and exits.                       \n");
     return er_arg;
 }
 

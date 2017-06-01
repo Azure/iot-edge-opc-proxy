@@ -46,6 +46,9 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\vector.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\xio.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\src\xlogging.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_client.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_codec.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\src\mqtt_message.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\agenttime.h" />
@@ -105,5 +108,9 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\x509_schannel.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\xio.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\xlogging.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqttconst.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_client.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_codec.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umqtt\inc\azure_umqtt_c\mqtt_message.h" />
   </ItemGroup>
 </Project>

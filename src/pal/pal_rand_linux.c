@@ -30,19 +30,22 @@ int32_t pal_rand_fill(
 )
 {
     int32_t result;
-	int returned;
+    int returned;
 #if !defined(SYS_getrandom)
-	int fd = open("/dev/urandom", O_RDONLY);
-	if (fd < 0)
-	{
-		result = errno;
-		return pal_os_to_prx_error(result);
-	}
+    int fd = open("/dev/urandom", O_RDONLY);
+    if (fd < 0)
+    {
+        result = errno;
+        return pal_os_to_prx_error(result);
+    }
 #endif
-	result = er_ok;
+    result = er_ok;
     while (len > 0)
     {
-#if !defined(SYS_getrandom)
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+        memset(buf, 0xab, len);
+        returned = len;
+#elif !defined(SYS_getrandom)
         returned = read(fd, buf, len);
 #else
         returned = (int)syscall(SYS_getrandom, buf, len, 0);
@@ -54,7 +57,7 @@ int32_t pal_rand_fill(
                 returned != EINTR)
             {
                 result = pal_os_to_prx_error(returned);
-				break;
+                break;
             }
             continue;
         }
@@ -62,7 +65,7 @@ int32_t pal_rand_fill(
         buf = ((char*)buf) + returned;
     }
 #if !defined(SYS_getrandom)
-	close(fd);
+    close(fd);
 #endif
     return result;
 }

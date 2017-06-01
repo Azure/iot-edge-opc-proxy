@@ -3,6 +3,8 @@
 
 
 add_subdirectory(libtest)
-add_subdirectory(compat)
+add_subdirectory(libproto)
+add_subdirectory(fuzz)
+add_subdirectory(it)
 add_subdirectory(ut)
 

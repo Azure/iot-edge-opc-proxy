@@ -51,6 +51,12 @@
     <ClCompile Include="..\..\..\src\pal\pal_cred_win.c">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_ev_win.c">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\inc\os_win.h">
@@ -95,5 +101,9 @@
     <ClInclude Include="..\..\..\inc\pal_cred.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_sd.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_ev.h" />
   </ItemGroup>
 </Project>

@@ -42,12 +42,33 @@ typedef IP_ADAPTER_ADDRESSES ifinfo_t;
 typedef IP_ADAPTER_UNICAST_ADDRESS ifaddr_t;
 typedef long long ticks_t;
 
+
 #define SHUT_RD SD_RECEIVE
 #define SHUT_WR SD_SEND
 #define SHUT_RDWR SD_BOTH
 
+struct sockaddr_un 
+{
+    ADDRESS_FAMILY sun_family; 
+    CHAR sun_path[108]; 
+};
+
+// Implemented in pal_sk_win
+int socketpair(int, int, int, fd_t sv[2]);
+
+__inline int _fd_nonblock(fd_t fd, int r)
+{
+    u_long on = 1;
+    (void)r;
+    return ioctlsocket(fd, FIONBIO, &on);
+}
+
 #if !defined(EAI_NODATA)
 #define EAI_NODATA WSANO_DATA
+#endif
+
+#if !defined(EAI_ADDRFAMILY)
+#define EAI_ADDRFAMILY WSANO_DATA
 #endif
 
 #endif // _os_win_h_

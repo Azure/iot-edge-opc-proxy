@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>Managed Service API for IoT Device Proxy</Description>
     <AssemblyTitle>Microsoft Azure Devices Proxy API</AssemblyTitle>
-    <VersionPrefix>0.1.4</VersionPrefix>
+    <VersionPrefix>0.2.0</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;net45;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>
@@ -12,11 +12,11 @@
     <AssemblyName>Microsoft.Azure.Devices.Proxy</AssemblyName>
     <PackageId>Microsoft.Azure.Devices.Proxy</PackageId>
     <PackageTags>Azure;IoT;.NET;Relay;websocket;Proxy</PackageTags>
-    <PackageReleaseNotes>https://github.com/Azure/iot-gateway-proxy/releases</PackageReleaseNotes>
-    <PackageProjectUrl>https://github.com/Azure/iot-gateway-proxy</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-gateway-proxy/master/LICENSE</PackageLicenseUrl>
+    <PackageReleaseNotes>https://github.com/Azure/iot-edge-opc-proxy/releases</PackageReleaseNotes>
+    <PackageProjectUrl>https://github.com/Azure/iot-edge-opc-proxy</PackageProjectUrl>
+    <PackageLicenseUrl>https://raw.githubusercontent.com/Azure/iot-edge-opc-proxy/master/LICENSE</PackageLicenseUrl>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <RepositoryUrl>https://github.com/Azure/iot-gateway-proxy</RepositoryUrl>
+    <RepositoryUrl>https://github.com/Azure/iot-edge-opc-proxy</RepositoryUrl>
     <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
@@ -27,7 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
@@ -67,7 +67,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.Net.Requests" Version="4.0.11" />
+    <PackageReference Include="System.Net.Requests" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Json" Version="4.3.0" />

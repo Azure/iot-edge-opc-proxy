@@ -28,8 +28,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             : this(message, e, SocketError.Fatal) {
         }
 
-        public SocketException(string message, 
-            SocketError errorCode = SocketError.Fatal)
+        public SocketException(string message, SocketError errorCode = SocketError.Fatal)
             : this(message, null, errorCode) {
         }
 
@@ -42,7 +41,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public SocketException(AggregateException e)
-            : this(e.GetCombinedExceptionMessage(), e.Flatten()) {
+            : this(e.GetCombinedExceptionMessage(), e) {
+        }
+
+        public SocketException(string message, AggregateException e, SocketError errorCode = SocketError.Fatal)
+            : this(message, (Exception)e?.Flatten(), errorCode) {
         }
     }
 }

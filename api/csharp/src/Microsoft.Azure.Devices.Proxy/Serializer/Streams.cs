@@ -24,7 +24,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             _owner = owner;
 
             Add(new MessageSerializer());
+            Add(new PropertySerializer());
             Add(new SocketAddressSerializer());
+            Add(new MulticastOptionSerializer());
         }
 
         /// <summary>

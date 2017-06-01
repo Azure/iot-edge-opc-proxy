@@ -10,7 +10,8 @@ skip_dotnet=0
 use_zlog=OFF
 with_memcheck=OFF
 toolset=
-MAKE_PARALLEL_JOBS=1
+compile_options=" "
+MAKE_PARALLEL_JOBS=0
 
 build_root="${repo_root}"/build
 build_clean=0
@@ -27,6 +28,7 @@ usage ()
     echo " -c --clean                     Build clean (Removes previous build output)."
     echo " -C --config <value>            [Debug] Build configuration (e.g. Debug, Release)."
     echo " -T --toolset <value>           An optional toolset to use."
+    echo "    --cl <value>                Specify additional compile options to be passed to the compiler"
     echo " -o --build-root <value>        [/build] Directory in which to place all files during build."
     echo "    --use-zlog                  Use zlog as logging framework instead of xlogging."
     echo "    --with-memcheck             Compile in memory checks."
@@ -50,11 +52,10 @@ process_args ()
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
     TEMP=`getopt -o xo:C:T:cn:j: \
-          -l xtrace,build-root:,config:,clean,toolset:,use-zlog,use-openssl,use-libwebsockets,with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
+          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-openssl,use-libwebsockets,with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
          -- "$@"`
 
-    if [ $? != 0 ]
-    then
+    if [ $? != 0 ]; then
         echo "Failed to parse options"
         usage
         exit 1
@@ -63,8 +64,7 @@ process_args ()
     # Note the quotes around `$TEMP': they are essential!
     eval set -- "$TEMP"
 
-    while true
-    do
+    while true; do
     case "$1" in
         -x | --xtrace)
             set -x
@@ -77,6 +77,9 @@ process_args ()
             shift 2 ;;
         -T | --toolset)
             toolset="-T $2"
+            shift 2 ;;
+        --cl)
+            compile_options="$2 $compile_options"
             shift 2 ;;
         -c | --clean)
             build_clean=1
@@ -131,19 +134,39 @@ native_build()
             cd "${build_root}/cmake/${c}" > /dev/null
 
             cmake $toolset -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
+                  -Dcompile_options_C:STRING="$compile_options" -Dcompile_options_CXX:STRING="$compile_options" \
                   -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog "$repo_root" \
                               -DLWS_IPV6:BOOL=ON || \
                 return 1
-            # Start as much parallel jobs as requested by the user.
-            # Until the load average equals the number of cores.
-            # Be verbose if something goes wrong
-            make -j$MAKE_PARALLEL_JOBS --load-average=`nproc` || make VERBOSE=1 || \
+            
+            CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || nproc)
+            if [ $MAKE_PARALLEL_JOBS == 0 ]; then
+                MAKE_PARALLEL_JOBS=$CORES
+                #
+                # Make sure there is enough virtual memory on the device to handle more than one job  
+                # Acquire total memory and total swap space setting them to zero in the event the command fails
+                #
+                MEMAR=( $(sed -n -e 's/^MemTotal:[^0-9]*\([0-9][0-9]*\).*/\1/p' -e 's/^SwapTotal:[^0-9]*\([0-9][0-9]*\).*/\1/p' /proc/meminfo) )
+                [ -z "${MEMAR[0]##*[!0-9]*}" ] && MEMAR[0]=0
+                [ -z "${MEMAR[1]##*[!0-9]*}" ] && MEMAR[1]=0
+
+                let VSPACE=${MEMAR[0]}+${MEMAR[1]}
+                if [ "$VSPACE" -lt "1500000" ] ; then
+                    MAKE_PARALLEL_JOBS=1
+                fi
+            fi
+            
+            #
+            # Start as many parallel jobs as requested by the user or auto calculated, until the load 
+            # average equals the number of cores.  Be verbose if something goes wrong.
+            #
+            make -j$MAKE_PARALLEL_JOBS --load-average=$CORES || make VERBOSE=1 || \
                 return 1
             if [ $run_unittests == OFF ]; then
                 echo "Skipping unittests..."
             else
                 #use doctored (-DPURIFY no-asm) openssl
-                LD_LIBRARY_PATH=/usr/local/ssl/lib ctest -C "$c" --output-on-failure || \
+                LD_LIBRARY_PATH=/usr/local/ssl/lib ctest -j $MAKE_PARALLEL_JOBS -C "$c" --output-on-failure || \
                     return 1
             fi
         done

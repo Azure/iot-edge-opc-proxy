@@ -16,16 +16,24 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         /// <param name="provider"></param>
         internal UDPSocket(SocketInfo info, IProvider provider) :
             base(info, provider) {
-            if (info.Type != SocketType.Dgram)
+            if (info.Type != SocketType.Dgram) {
                 throw new ArgumentException("Udp only supports datagrams");
+            }
         }
 
-        public override Task ConnectAsync(SocketAddress address, CancellationToken ct) {
-            throw new NotSupportedException("Cannot call connect on udp socket");
-        }
-
-        public override Task ListenAsync(int backlog, CancellationToken ct) {
-            throw new NotSupportedException("Cannot call listen on udp socket");
+        /// <summary>
+        /// Bind udp socket
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public override async Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
+            await base.BindAsync(endpoint, ct);
+            bool connected = await LinkAllAsync(_bindList, endpoint, ct);
+            if (!connected) {
+                throw new SocketException(
+                    "Could not link browse socket on proxy", SocketError.NoHost);
+            }
         }
     }
 }

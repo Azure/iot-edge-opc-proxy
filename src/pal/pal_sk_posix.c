@@ -54,8 +54,8 @@ struct pal_socket
     void* context;
 
     prx_addrinfo_t* prx_ai;  // For async connect save the ai result
-    prx_size_t prx_ai_count;       // Size of the resolved addresses
-    prx_size_t prx_ai_cur;             // Current address to connect
+    size_t prx_ai_count;       // Size of the resolved addresses
+    size_t prx_ai_cur;             // Current address to connect
     log_t log;
 };
 
@@ -70,7 +70,7 @@ void pal_socket_clear(
     {
         log_trace(sock->log, "Clearing socket (fd:%d)", sock->sock_fd);
         // Event handle closes file descripter
-        pal_event_close(sock->event_handle);
+        pal_event_close(sock->event_handle, true);
         sock->event_handle = 0;
     }
     else if (sock->sock_fd != _invalid_fd)
@@ -87,15 +87,19 @@ static void pal_socket_complete_close(
     pal_socket_t* sock
 )
 {
-    if (sock->state == pal_socket_state_closing)
-    {
-        sock->state = pal_socket_state_closed;
-        sock->sock_fd = _invalid_fd;
+    size_t size;
+    void* context;
+    if (sock->state != pal_socket_state_closing)
+        return;
 
-        sock->itf.cb(sock->itf.context, pal_socket_event_closed, NULL,
-            NULL, NULL, NULL, er_ok, &sock->context);
-        sock->context = NULL;
-    }
+    context = sock->context;
+    sock->context = NULL;
+    sock->state = pal_socket_state_closed;
+    sock->sock_fd = _invalid_fd;
+
+    size = sizeof(pal_socket_t*);
+    sock->itf.cb(sock->itf.context, pal_socket_event_closed,
+        (uint8_t**)&sock, &size, NULL, NULL, er_ok, &context);
 }
 
 //
@@ -106,6 +110,7 @@ static void pal_socket_open_complete(
     int32_t result
 )
 {
+    size_t size;
     dbg_assert_ptr(sock);
 
     if (result == er_ok)
@@ -114,10 +119,9 @@ static void pal_socket_open_complete(
         sock->state = pal_socket_state_closed;
 
     // Complete open
-    sock->itf.cb(sock->itf.context, pal_socket_event_opened, NULL,
-        NULL, NULL, NULL, result, &sock->context);
-    log_info(sock->log, "Socket open (fd:%d)", sock->sock_fd);
-
+    size = sizeof(pal_socket_t*);
+    sock->itf.cb(sock->itf.context, pal_socket_event_opened,
+        (uint8_t**)&sock, &size, NULL, NULL, result, &sock->context);
     sock->context = NULL;
 
     if (!sock->prx_ai)
@@ -791,7 +795,7 @@ static int32_t pal_socket_bind(
             sock->itf.props.sock_type == prx_socket_type_raw)
             break;
 
-        dbg_assert(0 != (sock->itf.props.flags & socket_flag_passive),
+        dbg_assert(0 != (sock->itf.props.flags & prx_socket_flag_passive),
             "should be passive");
 
         // Start listen immediately
@@ -855,7 +859,7 @@ static int32_t pal_socket_try_open(
         if ((sock->itf.props.sock_type == prx_socket_type_seqpacket ||
              sock->itf.props.sock_type == prx_socket_type_rdm ||
              sock->itf.props.sock_type == prx_socket_type_stream) &&
-            !(sock->itf.props.flags & socket_flag_passive))
+            !(sock->itf.props.flags & prx_socket_flag_passive))
         {
             // If stream socket client connect
             result = pal_socket_connect(sock);
@@ -967,7 +971,7 @@ static int32_t pal_socket_open_by_name(
 
         log_info(sock->log, "Resolving %s:%s...",
             server ? server : "<null>", port);
-        if (sock->itf.props.flags & socket_flag_passive)
+        if (sock->itf.props.flags & prx_socket_flag_passive)
             flags |= prx_ai_passive;
         result = pal_getaddrinfo(
             server, port, sock->itf.props.family, flags, &sock->prx_ai, &sock->prx_ai_count);
@@ -1017,8 +1021,7 @@ int32_t pal_socket_open(
     pal_socket_t *sock
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
 
     dbg_assert(!sock->prx_ai_cur && !sock->prx_ai_count && !sock->prx_ai,
         "Should not have an address list");
@@ -1041,8 +1044,9 @@ int32_t pal_socket_create(
 )
 {
     pal_socket_t* sock;
-    if (!client_itf || !created)
-        return er_fault;
+    chk_arg_fault_return(client_itf);
+    chk_arg_fault_return(client_itf->cb);
+    chk_arg_fault_return(created);
 
     sock = mem_zalloc_type(pal_socket_t);
     if (!sock)
@@ -1054,14 +1058,15 @@ int32_t pal_socket_create(
     memcpy(&sock->itf, client_itf, sizeof(pal_socket_client_itf_t));
 
     // Set function pointers based on type of socket
-    if (sock->itf.props.sock_type == prx_socket_type_dgram ||
-        sock->itf.props.sock_type == prx_socket_type_raw)
+    if (sock->itf.props.family != prx_address_family_unix &&
+        (sock->itf.props.sock_type == prx_socket_type_dgram ||
+         sock->itf.props.sock_type == prx_socket_type_raw))
     {
         // Non connection oriented sockets recvfrom and sendto..
         sock->write_cb = pal_socket_on_sendto;
         sock->read_cb = pal_socket_on_recvfrom;
     }
-    else if (sock->itf.props.flags & socket_flag_passive)
+    else if (sock->itf.props.flags & prx_socket_flag_passive)
     {
         // Listen socket, can only recv new sockets
         sock->write_cb = pal_socket_dummy_cb;
@@ -1078,6 +1083,112 @@ int32_t pal_socket_create(
     return er_ok;
 }
 
+//
+// Create an opened / connected pair of local sockets 
+//
+int32_t pal_socket_pair(
+    pal_socket_client_itf_t* itf1,
+    pal_socket_t** created1,
+    pal_socket_client_itf_t* itf2,
+    pal_socket_t** created2
+)
+{
+    int32_t result;
+    int os_socktype, os_prototype;
+    int fds[2];
+    pal_socket_t* sock1 = NULL, *sock2 = NULL;
+
+    chk_arg_fault_return(itf1);
+    chk_arg_fault_return(itf1->cb);
+    chk_arg_fault_return(created1);
+    chk_arg_fault_return(itf2);
+    chk_arg_fault_return(itf2->cb);
+    chk_arg_fault_return(created2);
+
+    if (itf1->props.sock_type != itf2->props.sock_type ||
+        itf1->props.proto_type != itf2->props.proto_type)
+        return er_arg;
+    do
+    {
+        // Create socket pair and register both with event port
+        result = pal_os_from_prx_socket_type(itf1->props.sock_type,
+            &os_socktype);
+        if (result != er_ok)
+            break;
+        result = pal_os_from_prx_protocol_type(itf1->props.proto_type, 
+            &os_prototype);
+        if (result != er_ok)
+            break;
+        if (0 != socketpair(AF_UNIX, os_socktype, os_prototype, fds))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            break;
+        }
+
+         // Make sure that sockets are created as pipe sockets - adjust address family
+        itf1->props.family = itf2->props.family = prx_address_family_unix;
+
+        result = pal_socket_create(itf1, &sock1);
+        if (result != er_ok)
+            break;
+        sock1->sock_fd = fds[0];
+        fds[0] = _invalid_fd;
+        result = pal_socket_create(itf2, &sock2);
+        if (result != er_ok)
+            break;
+        sock2->sock_fd = fds[1];
+        fds[1] = _invalid_fd;
+
+        // Make sockets nonblocking and register with event port
+        result = pal_event_port_register(event_port, sock1->sock_fd,
+            pal_socket_event_callback, sock1, &sock1->event_handle);
+        if (result != er_ok)
+            break;
+        result = pal_event_port_register(event_port, sock2->sock_fd,
+            pal_socket_event_callback, sock2, &sock2->event_handle);
+        if (result != er_ok)
+            break;
+
+        // Wait for close, error, or writeable
+        result = pal_event_select(sock1->event_handle, pal_event_type_close);
+        if (result != er_ok)
+            break;
+        result = pal_event_select(sock2->event_handle, pal_event_type_close);
+        if (result != er_ok)
+            break;
+
+        *created1 = sock1;
+        *created2 = sock2;
+        break;
+    } 
+    while (0);
+
+    // To avoid leaking resources complete open with error notifying callback
+    if (sock1)
+        pal_socket_open_complete(sock1, result);
+    if (sock2)
+        pal_socket_open_complete(sock2, result);
+
+    if (result != er_ok)
+    {
+        if (fds[0] != _invalid_fd)
+            close(fds[0]);
+        if (fds[1] != _invalid_fd)
+            close(fds[1]);
+        if (sock1)
+        {
+            pal_socket_clear(sock1);
+            pal_socket_free(sock1);
+        }
+        if (sock2)
+        {
+            pal_socket_clear(sock2);
+            pal_socket_free(sock2);
+        }
+    }
+    return result;
+}
+
 // 
 // Stop streaming, unregister socket from event port
 //
@@ -1091,7 +1202,7 @@ void pal_socket_close(
     sock->state = pal_socket_state_closing;
     // Close the event handle
     if (sock->event_handle != 0)
-        pal_event_close(sock->event_handle);
+        pal_event_close(sock->event_handle, true);
     else
         pal_socket_complete_close(sock);
 }
@@ -1104,8 +1215,8 @@ int32_t pal_socket_get_properties(
     prx_socket_properties_t* props
 )
 {
-    if (!sock || !props)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(props);
     memcpy(props, &sock->itf.props, sizeof(prx_socket_properties_t));
     return er_ok;
 }
@@ -1118,8 +1229,8 @@ int32_t pal_socket_getpeername(
     prx_socket_address_t* socket_address
 )
 {
-    if (!sock || !socket_address)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(socket_address);
     memcpy(socket_address, &sock->peer, sizeof(prx_socket_address_t));
     return er_ok;
 }
@@ -1135,8 +1246,9 @@ int32_t pal_socket_getsockname(
     int32_t result;
     uint8_t sa_in[MAX_SOCKET_ADDRESS_BYTES];
     socklen_t sa_len = sizeof(sa_in);
-    if (!socket_address)
-        return er_fault;
+
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(socket_address);
 
     result = getsockname(sock->sock_fd, (struct sockaddr*)sa_in, &sa_len);
     if (result != 0)
@@ -1157,14 +1269,11 @@ int32_t pal_socket_can_send(
     bool ready
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
     if (ready)
-        return pal_event_select(sock->event_handle, 
-            pal_event_type_write);
+        return pal_event_select(sock->event_handle, pal_event_type_write);
     else
-        return pal_event_clear(sock->event_handle, 
-            pal_event_type_write);
+        return pal_event_clear(sock->event_handle, pal_event_type_write);
 }
 
 //
@@ -1175,14 +1284,11 @@ int32_t pal_socket_can_recv(
     bool ready
 )
 {
-    if (!sock)
-        return er_fault;
+    chk_arg_fault_return(sock);
     if (ready)
-        return pal_event_select(sock->event_handle,
-            pal_event_type_read);
+        return pal_event_select(sock->event_handle, pal_event_type_read);
     else
-        return pal_event_clear(sock->event_handle, 
-            pal_event_type_read);
+        return pal_event_clear(sock->event_handle, pal_event_type_read);
 }
 
 //
@@ -1201,8 +1307,8 @@ int32_t pal_socket_getsockopt(
     int32_t opt_val;
     int avail;
 
-    if (!value)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(value);
 
     if (socket_option == prx_so_shutdown)
         return er_not_supported;
@@ -1212,7 +1318,7 @@ int32_t pal_socket_getsockopt(
         error = ioctl(sock->sock_fd, FIONREAD, &avail);
         if (error == -1)
             return pal_os_last_net_error_as_prx_error();
-        *value = (prx_size_t)avail;
+        *value = (size_t)avail;
         return er_ok;
     }
 
@@ -1257,6 +1363,8 @@ int32_t pal_socket_setsockopt(
     int error;
     int32_t opt_lvl, opt_name;
     int32_t opt_val;
+
+    chk_arg_fault_return(sock);
 
     /**/ if (socket_option == prx_so_available)
         return er_not_supported;
@@ -1310,24 +1418,24 @@ int32_t pal_socket_leave_multicast_group(
     struct ipv6_mreq opt6;
     struct ip_mreqn opt;
 
-    if (!option)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(option);
 
     switch (option->family)
     {
     case prx_address_family_inet:
-        opt.imr_multiaddr.s_addr = option->address.in4.un.addr;
+        opt.imr_multiaddr.s_addr = option->addr.in4.un.addr;
 
         opt.imr_address.s_addr = INADDR_ANY;
-        opt.imr_ifindex = option->interface_index;
+        opt.imr_ifindex = option->itf_index;
 
         error = setsockopt(
             sock->sock_fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char*)&opt, sizeof(opt));
         break;
     case prx_address_family_inet6:
-        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8,
-            sizeof(option->address.in6.un.u8));
-        opt6.ipv6mr_interface = option->interface_index;
+        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8,
+            sizeof(option->addr.in6.un.u8));
+        opt6.ipv6mr_interface = option->itf_index;
         error = setsockopt(
             sock->sock_fd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&opt6, sizeof(opt6));
         break;
@@ -1349,24 +1457,24 @@ int32_t pal_socket_join_multicast_group(
     struct ipv6_mreq opt6;
     struct ip_mreqn opt;
 
-    if (!option)
-        return er_fault;
+    chk_arg_fault_return(sock);
+    chk_arg_fault_return(option);
 
     switch (option->family)
     {
     case prx_address_family_inet:
-        opt.imr_multiaddr.s_addr = option->address.in4.un.addr;
+        opt.imr_multiaddr.s_addr = option->addr.in4.un.addr;
 
         opt.imr_address.s_addr = INADDR_ANY;
-        opt.imr_ifindex = option->interface_index;
+        opt.imr_ifindex = option->itf_index;
 
         error = setsockopt(
             sock->sock_fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&opt, sizeof(opt));
         break;
     case prx_address_family_inet6:
-        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8,
-            sizeof(option->address.in6.un.u8));
-        opt6.ipv6mr_interface = option->interface_index;
+        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8,
+            sizeof(option->addr.in6.un.u8));
+        opt6.ipv6mr_interface = option->itf_index;
 #if !defined(IPV6_ADD_MEMBERSHIP) && defined(IPV6_JOIN_GROUP)
 #define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
 #endif
@@ -1388,7 +1496,6 @@ void pal_socket_free(
 {
     if (!sock)
         return;
-
     dbg_assert(sock->sock_fd == _invalid_fd, "socket still open");
     mem_free_type(pal_socket_t, sock);
 }
@@ -1407,11 +1514,12 @@ const IO_INTERFACE_DESCRIPTION* platform_get_default_tlsio(void)
 // Initialize socket layer
 //
 int32_t pal_socket_init(
-    void
+    uint32_t* caps
 )
 {
     int32_t result;
-
+    
+    chk_arg_fault_return(caps);
 
     result = pal_event_port_create(&event_port);
     if (result != er_ok)
@@ -1421,6 +1529,8 @@ int32_t pal_socket_init(
     else
     {
         (void)tlsio_openssl_init();
+
+        (*caps) |= (pal_cap_sockets | pal_cap_ev);
     }
     return result;
 }

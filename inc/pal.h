@@ -14,13 +14,17 @@ typedef enum pal_capabilities
 {
     pal_not_init = 0x0,
 
-    pal_cap_file = 0x1,
-    pal_cap_sockets = 0x2,
-    pal_cap_ev = 0x4,
-    pal_cap_wsclient = 0x8,
-    pal_cap_cred = 0x10,
+    pal_cap_file = 0x1,          // Pal has file r/w support
+    pal_cap_net = 0x2,     // Pal has network support (must)
+    pal_cap_sockets = 0x4,  // Pal has socket support (must)
 
-    pal_cap_all = 0x1f
+    pal_cap_wsclient = 0x8,      // Pal has websocket client
+    pal_cap_cred = 0x10, // Pal has credential store support
+    pal_cap_ev = 0x20,         // Pal supports async sockets
+    pal_cap_dnssd = 040,    // Pal supports service browsing
+    pal_cap_dirs = 0x80,        // Pal supports dir browsing
+
+    pal_cap_all = 0xff
 }
 pal_capabilities_t;
 

@@ -30,9 +30,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public async override Task<ProxyAsyncResult> ReceiveAsync(
             ArraySegment<byte> buffer, CancellationToken ct) {
             var data = await ReceiveAsync(ct).ConfigureAwait(false);
+            int copy = Math.Min(data.Payload.Length, buffer.Count);
+            Buffer.BlockCopy(data.Payload, 0, buffer.Array, buffer.Offset, copy);
             return new ProxyAsyncResult {
                 Address = data.Source,
-                Count = data.Payload.Length
+                Count = copy
             };
         }
 

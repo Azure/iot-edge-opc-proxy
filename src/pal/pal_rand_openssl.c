@@ -26,13 +26,15 @@ static void log_ssl_error(
         err = ERR_get_error();
         if (err == 0)
             return;
-        ERR_error_string_n(err, buf, sizeof(buf));
+        buf[0] = 0;
+        buf[sizeof(buf) - 1] = 0;
+        ERR_error_string_n(err, buf, sizeof(buf) - 1);
         log_error(NULL, "%s\n", buf);
     }
 }
 
 //
-// Acquire crypto provider
+// Init openssl rand
 //
 int32_t pal_rand_init(
     void
@@ -50,20 +52,29 @@ int32_t pal_rand_fill(
     size_t len
 )
 {
+    if (!buf && len > 0)
+        return er_fault;
+    if (!len)
+        return er_ok;
+
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    memset(buf, 0x05, len);
+#else
     if (!RAND_bytes((unsigned char*)buf, (int)len))
     {
         log_ssl_error();
         return er_fatal;
     }
+#endif
     return er_ok;
 }
 
 //
-// Release crypto provider
+// Deinit openssl rand
 //
 void pal_rand_deinit(
     void
 )
 {
-    // Assume otherwise deinited inited
+    // Assume otherwise deinited
 }

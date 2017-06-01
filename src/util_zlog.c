@@ -9,15 +9,15 @@ static int32_t init_called = 0;
 
 #define ZLOG_DEFAULT_CONFIG \
     "[global]\n" \
-	"strict init = true\n" \
-	"buffer min = 1024\n" \
-	"file perms = 644\n" \
-	"buffer max = 0\n" \
-	"rotate lock file = zlog.lock\n" \
-	"default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
-	"[rules]\n" \
-	"*.notice $default\n" \
-	"*.info >stdout\n"
+    "strict init = true\n" \
+    "buffer min = 1024\n" \
+    "file perms = 644\n" \
+    "buffer max = 0\n" \
+    "rotate lock file = zlog.lock\n" \
+    "default format = \"[Pid=%p:Tid=%t %d(%T).%ms] %c %V %m [%U:%L]%n\"\n" \
+    "[rules]\n" \
+    "*.notice $default\n" \
+    "*.info >stdout\n"
 
 //
 // Initialize zlog library
@@ -36,7 +36,7 @@ int32_t zlog_initialize(
         return er_ok;
     if (0 != dzlog_init(NULL, "root"))
         return er_fatal;
-	zlog_reload_from_string(ZLOG_DEFAULT_CONFIG);
+    zlog_reload_from_string(ZLOG_DEFAULT_CONFIG);
     return er_ok;
 }
 

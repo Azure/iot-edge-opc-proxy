@@ -14,44 +14,41 @@ set(libpal_ut_include
 )
 
 #
-# Misc pal components to test
+# pal components to test
 #
-set(_MISC_PAL_UNITS_UNDER_TEST
+set(_PAL_UNITS_UNDER_TEST
+    pal_cred_gnome
     pal_cred_stub
-    pal_sk_posix
-    pal_err_posix
-    pal_ev_kq
-    pal_file_posix
-    pal_mt_posix
-    pal_net_posix
-    pal_proc_posix
-    pal_ws_lws
-)
-
-#
-# Win pal components to test
-#
-set(_WIN_PAL_UNITS_UNDER_TEST
     pal_cred_win
-    pal_sk_win
+    pal_err_posix
     pal_err_win
-    pal_ev_poll
-    pal_file_win
-    pal_mt_win
-    pal_net_win
-    pal_proc_win
-    pal_rand_win
-    pal_ws_win
-)
-
-#
-# Linux pal components to test
-#
-set(_LINUX_PAL_UNITS_UNDER_TEST
     pal_ev_epoll
+    pal_ev_kq
+    pal_ev_poll
+    pal_ev_win
+    pal_file_posix
+    pal_file_win
+    pal_mt_posix
+    pal_mt_win
     pal_net_linux
+    pal_net_posix
+    pal_net_win
     pal_proc_linux
+    pal_proc_posix
+    pal_proc_win
     pal_rand_linux
+    pal_rand_openssl
+    pal_rand_win
+    pal_sd_avahi
+    pal_sd_mdns
+    pal_sd_stub
+    pal_sk_posix
+    pal_sk_win
+    pal_time_posix
+    pal_time_win
+    pal_ws_lws
+    pal_ws_stub
+    pal_ws_win
 )
 
 compileAsC99()
@@ -59,7 +56,7 @@ compileAsC99()
 #
 # Builds a unit tests for each component 
 #
-foreach(unit ${_MISC_PAL_UNITS_UNDER_TEST} ${_WIN_PAL_UNITS_UNDER_TEST} ${_LINUX_PAL_UNITS_UNDER_TEST}) 
+foreach(unit ${_PAL_UNITS_UNDER_TEST}) 
     set(${unit}_ut_test_includes ${libpal_ut_include})
     set(${unit}_ut_test_files ${_PROJECT_TEST}/ut/pal/${unit}_ut.c)
     build_ut(${unit}_ut "proxy_tests")

@@ -34,6 +34,7 @@ typedef struct pal_epoll_event
 {
     uint32_t events;
     fd_t sock_fd;
+    bool close_fd;
     pal_epoll_port_t* port;
     pal_event_port_handler_t cb;
     void* context;
@@ -47,7 +48,7 @@ static void pal_epoll_event_free(
     pal_epoll_event_t* ev_data
 )
 {
-    if (ev_data->sock_fd != _invalid_fd)
+    if (ev_data->close_fd && ev_data->sock_fd != _invalid_fd)
     {
         close(ev_data->sock_fd);
     }
@@ -304,7 +305,8 @@ int32_t pal_event_clear(
 // Closes the event
 //
 void pal_event_close(
-    uintptr_t event_handle
+    uintptr_t event_handle,
+    bool close_fd
 )
 {
     struct epoll_event evt;
@@ -319,6 +321,7 @@ void pal_event_close(
 
     lock_enter(pal_port->lock);
 
+    ev_data->close_fd = close_fd;
     ev_data->events = 0;
     evt.events = 0;
     evt.data.ptr = NULL;

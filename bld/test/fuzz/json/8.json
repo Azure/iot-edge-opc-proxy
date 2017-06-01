@@ -1,0 +1,21 @@
+{
+    "version": 6,
+    "source_id": {
+      "id": "5c017616-c8cc-52f1-fb57-ed7e7daf816a"
+    },
+    "proxy_id": {
+      "id": "6c8c83a6-fce9-027c-f176-a0596db7d37d"
+    },
+    "target_id": {
+      "id": "a150ad6c-44db-4373-8c8c-01f840f2b119"
+    },
+    "error_code": -980,
+    "is_response": true,
+    "type": 21,
+    "content": {
+      "time_open": 0,
+      "bytes_received": 0,
+      "bytes_sent": 0,
+      "error_code": 0
+    }
+  }

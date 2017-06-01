@@ -37,6 +37,12 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             else if (typeof(SocketAddress).IsAssignableFrom(objectType)) {
                 contract.Converter = new SocketAddressConverter();
             }
+            else if (typeof(PropertyBase).IsAssignableFrom(objectType)) {
+                contract.Converter = new PropertyConverter();
+            }
+            else if (typeof(MulticastOption).IsAssignableFrom(objectType)) {
+                contract.Converter = new MulticastOptionConverter();
+            }
             else if (typeof(Message).IsAssignableFrom(objectType)) {
                 contract.Converter = new MessageConverter();
             }
@@ -44,6 +50,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 contract.Converter = new VoidConverter();
             }
             else if (typeof(IMessageContent).IsAssignableFrom(objectType)) {
+                // Must come last for void messages to be properly serialized
                 contract.Converter = new MessageContentConverter();
             }
             return contract;
@@ -172,6 +179,87 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 }
             }
             public override void WriteJson(JsonWriter writer, object value, 
+                JsonSerializer serializer) {
+                throw new NotImplementedException();
+            }
+            public override bool CanWrite {
+                get { return false; }
+            }
+        }
+
+        class MulticastOptionConverter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                return false;
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
+                JObject jsonObject = JObject.Load(reader);
+                AddressFamily family = (AddressFamily)jsonObject.Value<int>("family");
+                switch (family) {
+                    case AddressFamily.InterNetwork:
+                        return jsonObject.ToObject<Inet4MulticastOption>();
+                    case AddressFamily.InterNetworkV6:
+                        return jsonObject.ToObject<Inet6MulticastOption>();
+                    default:
+                        throw new SerializationException($"Bad address family {family}");
+                }
+            }
+            public override void WriteJson(JsonWriter writer, object value,
+                JsonSerializer serializer) {
+                throw new NotImplementedException();
+            }
+            public override bool CanWrite {
+                get { return false; }
+            }
+        }
+
+        class PropertyConverter : JsonConverter {
+            public override bool CanConvert(Type objectType) {
+                return false;
+            }
+
+            public override object ReadJson(JsonReader reader, Type objectType,
+                object existingValue, JsonSerializer serializer) {
+                JObject jsonObject = JObject.Load(reader);
+                uint type = jsonObject.Value<uint>("type");
+                if (type == (uint)SocketOption.IpMulticastJoin ||
+                    type == (uint)SocketOption.IpMulticastLeave) {
+                    return new Property<MulticastOption> {
+                        Type = type,
+                        Value = jsonObject.GetValue("property").ToObject<MulticastOption>(serializer)
+                    };
+                }
+                else if (type == (uint)PropertyType.FileInfo) {
+                    return new Property<FileInfo> {
+                        Type = type,
+                        Value = jsonObject.GetValue("property").ToObject<FileInfo>(serializer)
+                    };
+                }
+                else if (type == (uint)PropertyType.AddressInfo) {
+                    return new Property<AddressInfo> {
+                        Type = type,
+                        Value = jsonObject.GetValue("property").ToObject<AddressInfo>(serializer)
+                    };
+                }
+                else if (type == (uint)PropertyType.InterfaceInfo) {
+                    return new Property<InterfaceInfo> {
+                        Type = type,
+                        Value = jsonObject.GetValue("property").ToObject<InterfaceInfo>(serializer)
+                    };
+                }
+                else if (type >= (uint)DnsRecordType.Simple &&
+                         type < (uint)DnsRecordType.__prx_record_max) {
+                    return jsonObject.ToObject<Property<byte[]>>();
+                }
+                else if (type < (uint)SocketOption.__prx_so_max) {
+                    return jsonObject.ToObject<Property<ulong>>();
+                }
+                else {
+                    throw new FormatException($"Bad type encountered {type}");
+                }
+            }
+            public override void WriteJson(JsonWriter writer, object value,
                 JsonSerializer serializer) {
                 throw new NotImplementedException();
             }

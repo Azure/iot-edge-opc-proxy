@@ -35,3 +35,6 @@
 	path = deps/hashtable
 	url = https://github.com/marcschier/c-hashtable.git
 	branch = c99
+[submodule "deps/dnssd"]
+	path = deps/dnssd
+	url = https://github.com/marcschier/dnssd.git

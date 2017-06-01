@@ -31,8 +31,12 @@ int32_t pal_rand_fill(
     size_t len
 )
 {
+#if defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    memset(buf, 0x05, len);
+#else
     if (!CryptGenRandom(h_prov, (DWORD)len, (BYTE*)buf))
         return pal_os_last_error_as_prx_error();
+#endif
     return er_ok;
 }
 

@@ -12,13 +12,12 @@
 // Reads from fixed buffer
 //
 static int32_t io_fixed_buffer_stream_reader(
-    void *context,
+    io_fixed_buffer_stream_t* mem,
     void *data,
     size_t count,
     size_t* read
 )
 {
-    io_fixed_buffer_stream_t* mem = (io_fixed_buffer_stream_t*)context;
     dbg_assert_ptr(read);
     dbg_assert_ptr(data);
     dbg_assert_ptr(mem);
@@ -36,12 +35,11 @@ static int32_t io_fixed_buffer_stream_reader(
 // Writes to fixed buffer
 //
 static int32_t io_fixed_buffer_stream_writer(
-    void *context,
+    io_fixed_buffer_stream_t* mem,
     const void *data,
     size_t count
 )
 {
-    io_fixed_buffer_stream_t* mem = (io_fixed_buffer_stream_t*)context;
     dbg_assert_ptr(data);
     dbg_assert_ptr(mem);
     if (count > mem->out_len)
@@ -59,36 +57,35 @@ static int32_t io_fixed_buffer_stream_writer(
 // Available in memory to read
 //
 static size_t io_fixed_buffer_stream_readable(
-    void *context
+    io_fixed_buffer_stream_t* mem
 )
 {
-    dbg_assert_ptr(context);
-    return ((io_fixed_buffer_stream_t*)context)->in_len;
+    dbg_assert_ptr(mem);
+    return mem->in_len;
 }
 
 //
 // Available in memory to write
 //
 static size_t io_fixed_buffer_stream_writeable(
-    void *context
+    io_fixed_buffer_stream_t* mem
 )
 {
-    dbg_assert_ptr(context);
-    return ((io_fixed_buffer_stream_t*)context)->out_len;
+    dbg_assert_ptr(mem);
+    return mem->out_len;
 }
 
 //
 // Writes to dynamic buffer
 //
 static int32_t io_dynamic_buffer_stream_writer(
-    void *context,
+    io_dynamic_buffer_stream_t* mem,
     const void *data,
     size_t count
 )
 {
     int32_t result;
     size_t size;
-    io_dynamic_buffer_stream_t* mem = (io_dynamic_buffer_stream_t*)context;
     dbg_assert_ptr(data);
     dbg_assert_ptr(mem);
     dbg_assert_ptr(mem->pool);
@@ -115,12 +112,11 @@ static int32_t io_dynamic_buffer_stream_writer(
 // Writes to malloc'ed memory
 //
 static int32_t io_dynamic_memory_stream_writer(
-    void *context,
+    io_dynamic_buffer_stream_t* mem,
     const void *data,
     size_t count
 )
 {
-    io_dynamic_buffer_stream_t* mem = (io_dynamic_buffer_stream_t*)context;
     void* tmp;
 
     dbg_assert_ptr(data);
@@ -129,7 +125,6 @@ static int32_t io_dynamic_memory_stream_writer(
 
     if (!count)
         return er_ok;
-
     while (mem->out_len + count > mem->increment)
     {
         // Grow
@@ -150,10 +145,10 @@ static int32_t io_dynamic_memory_stream_writer(
 // Available in memory to write
 //
 static size_t io_dynamic_buffer_stream_writeable(
-    void *context
+    io_dynamic_buffer_stream_t* mem
 )
 {
-    (void)context;
+    (void)mem;
     return (size_t )-1;
 }
 
@@ -161,13 +156,12 @@ static size_t io_dynamic_buffer_stream_writeable(
 // Reads from file
 //
 static int32_t io_file_stream_reader(
-    void *context,
+    io_file_stream_t* fs,
     void *data,
     size_t count,
     size_t* read
 )
 {
-    io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(read);
     dbg_assert_ptr(data);
     dbg_assert_ptr(fs);
@@ -183,12 +177,11 @@ static int32_t io_file_stream_reader(
 // Writes to file
 //
 static int32_t io_file_stream_writer(
-    void *context,
+    io_file_stream_t* fs,
     const void *data,
     size_t count
 )
 {
-    io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(data);
     dbg_assert_ptr(fs);
     dbg_assert_ptr(fs->out_fd);
@@ -202,10 +195,9 @@ static int32_t io_file_stream_writer(
 // Available in file to read
 //
 static size_t io_file_stream_readable(
-    void *context
+    io_file_stream_t* fs
 )
 {
-    io_file_stream_t* fs = (io_file_stream_t*)context;
     long pos, avail;
     dbg_assert_ptr(fs);
     dbg_assert_ptr(fs->in_fd);
@@ -222,10 +214,10 @@ static size_t io_file_stream_readable(
 // Available in file to write
 //
 static size_t io_file_stream_writeable(
-    void *context
+    io_file_stream_t* fs
 )
 {
-    (void)context;
+    (void)fs;
     return (size_t)-1;
 }
 
@@ -233,10 +225,9 @@ static size_t io_file_stream_writeable(
 // Reset stream
 //
 static int32_t io_file_stream_reset(
-    void *context
+    io_file_stream_t* fs
 )
 {
-    io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(fs);
 
     if (fs->in_fd)
@@ -255,10 +246,9 @@ static int32_t io_file_stream_reset(
 // Close stream
 //
 static void io_file_stream_close(
-    void *context
+    io_file_stream_t* fs
 )
 {
-    io_file_stream_t* fs = (io_file_stream_t*)context;
     dbg_assert_ptr(fs);
     if (fs->out_fd)
         fclose((FILE*)fs->out_fd);
@@ -284,13 +274,13 @@ io_stream_t* io_fixed_buffer_stream_init(
 
     mem->itf.context = 
         mem;
-    mem->itf.read = 
+    mem->itf.reader = (io_stream_reader_t)
         io_fixed_buffer_stream_reader;
-    mem->itf.write = 
+    mem->itf.writer = (io_stream_writer_t)
         io_fixed_buffer_stream_writer;
-    mem->itf.readable =
+    mem->itf.readable = (io_stream_available_t)
         io_fixed_buffer_stream_readable;
-    mem->itf.writeable =
+    mem->itf.writeable = (io_stream_available_t)
         io_fixed_buffer_stream_writeable;
     mem->itf.reset =
         NULL;
@@ -322,11 +312,11 @@ io_stream_t* io_dynamic_buffer_stream_init(
         mem;
     mem->itf.readable =
         NULL;
-    mem->itf.read =
+    mem->itf.reader =
         NULL;
-    mem->itf.write =
-        pool ? io_dynamic_buffer_stream_writer : io_dynamic_memory_stream_writer;
-    mem->itf.writeable =
+    mem->itf.writer = (io_stream_writer_t)(
+        pool ? io_dynamic_buffer_stream_writer : io_dynamic_memory_stream_writer);
+    mem->itf.writeable = (io_stream_available_t)
         io_dynamic_buffer_stream_writeable;
     mem->itf.reset =
         NULL;
@@ -349,11 +339,11 @@ io_stream_t* io_file_stream_init(
 
     fs->itf.context =
         fs;
-    fs->itf.reset =
+    fs->itf.reset = (io_stream_reset_t)
         io_file_stream_reset;
-    fs->itf.close =
+    fs->itf.close = (io_stream_close_t)
         io_file_stream_close;
-    fs->itf.read =
+    fs->itf.reader =
         NULL;
     fs->itf.readable =
         NULL;
@@ -361,7 +351,7 @@ io_stream_t* io_file_stream_init(
         NULL;
     fs->out_fd = 
         NULL;
-    fs->itf.write =
+    fs->itf.writer =
         NULL;
     fs->itf.writeable =
         NULL;
@@ -374,9 +364,9 @@ io_stream_t* io_file_stream_init(
             io_file_stream_close(fs);
             return NULL;
         }
-        fs->itf.read =
+        fs->itf.reader = (io_stream_reader_t)
             io_file_stream_reader;
-        fs->itf.readable =
+        fs->itf.readable = (io_stream_available_t)
             io_file_stream_readable;
     }
 
@@ -388,9 +378,9 @@ io_stream_t* io_file_stream_init(
             io_file_stream_close(fs);
             return NULL;
         }
-        fs->itf.write =
+        fs->itf.writer = (io_stream_writer_t)
             io_file_stream_writer;
-        fs->itf.writeable =
+        fs->itf.writeable = (io_stream_available_t)
             io_file_stream_writeable;
     }
 

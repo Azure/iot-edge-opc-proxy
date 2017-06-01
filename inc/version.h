@@ -9,11 +9,11 @@
 #endif
 
 #if !defined(MODULE_MIN_VER)
-#define MODULE_MIN_VER 1
+#define MODULE_MIN_VER 2
 #endif
 
 #if !defined(MODULE_REL_VER)
-#define MODULE_REL_VER 4
+#define MODULE_REL_VER 0
 #endif
 
 #if !defined(SCM_VERSION)

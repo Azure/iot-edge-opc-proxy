@@ -15,6 +15,8 @@
     <ProjectCapability Include="SourceItemsFromImports" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_browse_ut.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_browse_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_config_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_err_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_host_ut.c" />
@@ -37,7 +39,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_ringbuf_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_stream_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_handle_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_log_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_mem_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_misc_ut.c" />

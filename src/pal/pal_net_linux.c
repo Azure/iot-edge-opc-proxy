@@ -134,11 +134,11 @@ int32_t pal_getifaddrinfo(
     const char* if_name,
     uint32_t flags,
     prx_ifaddrinfo_t** prx_ifa,
-    prx_size_t* prx_ifa_count
+    size_t* prx_ifa_count
 )
 {
     int32_t result;
-    prx_size_t alloc_count = 0;
+    size_t alloc_count = 0;
     struct ifaddrs *ifaddr = NULL, *ifa;
 
     (void)flags;
@@ -260,7 +260,7 @@ int32_t pal_freeifaddrinfo(
 int32_t pal_getifnameinfo(
     prx_socket_address_t* if_address,
     char* if_name,
-    prx_size_t if_name_length,
+    size_t if_name_length,
     uint64_t *if_index
 )
 {
@@ -276,7 +276,7 @@ int32_t pal_getifnameinfo(
 //
 int32_t pal_gethostname(
     char* name,
-    prx_size_t namelen
+    size_t namelen
 )
 {
     int32_t result;
@@ -309,18 +309,18 @@ int32_t pal_leave_multicast_group(
     switch (option->family)
     {
     case prx_address_family_inet:
-        opt.imr_multiaddr.s_addr = option->address.in4.un.addr;
+        opt.imr_multiaddr.s_addr = option->addr.in4.un.addr;
 
         opt.imr_address.s_addr = INADDR_ANY;
-        opt.imr_ifindex = option->interface_index;
+        opt.imr_ifindex = option->itf_index;
 
         result = setsockopt(
             (fd_t)fd, IPPROTO_IP, IP_DROP_MEMBERSHIP, (char*)&opt, sizeof(opt));
         break;
     case prx_address_family_inet6:
-        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8,
-            sizeof(option->address.in6.un.u8));
-        opt6.ipv6mr_interface = option->interface_index;
+        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8,
+            sizeof(option->addr.in6.un.u8));
+        opt6.ipv6mr_interface = option->itf_index;
         result = setsockopt(
             (fd_t)fd, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, (char*)&opt6, sizeof(opt6));
         break;
@@ -348,18 +348,18 @@ int32_t pal_join_multicast_group(
     switch (option->family)
     {
     case prx_address_family_inet:
-        opt.imr_multiaddr.s_addr = option->address.in4.un.addr;
+        opt.imr_multiaddr.s_addr = option->addr.in4.un.addr;
 
         opt.imr_address.s_addr = INADDR_ANY;
-        opt.imr_ifindex = option->interface_index;
+        opt.imr_ifindex = option->itf_index;
 
         result = setsockopt(
             (fd_t)fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&opt, sizeof(opt));
         break;
     case prx_address_family_inet6:
-        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->address.in6.un.u8, 
-            sizeof(option->address.in6.un.u8));
-        opt6.ipv6mr_interface = option->interface_index;
+        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8, 
+            sizeof(option->addr.in6.un.u8));
+        opt6.ipv6mr_interface = option->itf_index;
 #if !defined(IPV6_ADD_MEMBERSHIP) && defined(IPV6_JOIN_GROUP)
 #define IPV6_ADD_MEMBERSHIP IPV6_JOIN_GROUP
 #endif
@@ -412,7 +412,7 @@ int32_t pal_set_nonblocking(
 //
 int32_t pal_get_available(
     prx_fd_t fd,
-    prx_size_t* available
+    size_t* available
 )
 {
     int32_t result;
@@ -422,7 +422,26 @@ int32_t pal_get_available(
     result = ioctl((fd_t)fd, FIONREAD, &val);
     if (result == -1)
         return pal_os_last_net_error_as_prx_error();
-    *available = (prx_size_t)val;
+    *available = (size_t)val;
     return er_ok;
 }
 
+//
+// Called before using networking layer
+//
+int32_t pal_net_init(
+    void
+)
+{
+    return er_ok;
+}
+
+//
+// Free networking layer
+//
+void pal_net_deinit(
+    void
+)
+{
+    // No op
+}

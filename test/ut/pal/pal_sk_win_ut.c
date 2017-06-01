@@ -28,6 +28,10 @@ MOCKABLE_FUNCTION(WSAAPI, int, bind,
     SOCKET, s, const struct sockaddr*, name, socklen_t, namelen);
 MOCKABLE_FUNCTION(WSAAPI, int, listen,
     SOCKET, s, int, backlog);
+MOCKABLE_FUNCTION(WSAAPI, int, accept,
+    SOCKET, s, const struct sockaddr*, addr, socklen_t*, addrlen);
+MOCKABLE_FUNCTION(WSAAPI, int, connect,
+    SOCKET, s, const struct sockaddr*, name, socklen_t, namelen);
 MOCKABLE_FUNCTION(WSAAPI, int, getsockname,
     SOCKET, s, struct sockaddr*, name, socklen_t*, namelen);
 MOCKABLE_FUNCTION(WSAAPI, int, getpeername,
@@ -59,6 +63,8 @@ MOCKABLE_FUNCTION(WSAAPI, void, GetAcceptExSockAddrs, PVOID, lpOutputBuffer, DWO
     DWORD, dwLocalAddressLength, DWORD, dwRemoteAddressLength, struct sockaddr**,LocalSockaddr,
     int*, LocalSockaddrLength, struct sockaddr**, RemoteSockaddr, int*, RemoteSockaddrLength);
 MOCKABLE_FUNCTION(WSAAPI, int, WSAGetLastError);
+MOCKABLE_FUNCTION(WSAAPI, void, WSASetLastError,
+    int, iError);
 MOCKABLE_FUNCTION(WSAAPI, int, WSACleanup);
 // Winbase.h
 MOCKABLE_FUNCTION(WINAPI, HMODULE, LoadLibraryA,
@@ -72,10 +78,42 @@ MOCKABLE_FUNCTION(WINAPI, BOOL, FreeLibrary,
     HMODULE, hLibModule);
 MOCKABLE_FUNCTION(WINAPI, BOOL, BindIoCompletionCallback,
     HANDLE, FileHandle, LPOVERLAPPED_COMPLETION_ROUTINE, Function, ULONG, Flags);
+MOCKABLE_FUNCTION(WINAPI, HANDLE, CreateFileA,
+    LPCSTR, lpFileName, DWORD, dwDesiredAccess, DWORD, dwShareMode, LPSECURITY_ATTRIBUTES, lpSecurityAttributes, 
+    DWORD, dwCreationDisposition, DWORD, dwFlagsAndAttributes, HANDLE, hTemplateFile);
+MOCKABLE_FUNCTION(WINAPI, BOOL, CloseHandle,
+    HANDLE, hHandle);
 MOCKABLE_FUNCTION(WINAPI, DWORD, GetLastError);
+// synchapi.h
+MOCKABLE_FUNCTION(WINAPI, BOOL, WaitForSingleObject,
+    HANDLE, hHandle, DWORD, dwMilliseconds);
+MOCKABLE_FUNCTION(WINAPI, HANDLE, CreateEventA,
+    LPSECURITY_ATTRIBUTES, lpEventAttributes, BOOL, bManualReset, BOOL, bInitialState, LPCSTR, lpName);
+// fileapi.h
+MOCKABLE_FUNCTION(WINAPI, BOOL, ReadFile,
+    HANDLE, hFile, LPVOID, lpBuffer, DWORD, nNumberOfBytesToRead, LPDWORD, lpNumberOfBytesRead,
+    LPOVERLAPPED, lpOverlapped);
+MOCKABLE_FUNCTION(WINAPI, BOOL, WriteFile,
+    HANDLE, hFile, LPCVOID, lpBuffer, DWORD, nNumberOfBytesToWrite, LPDWORD, lpNumberOfBytesWritten,
+    LPOVERLAPPED, lpOverlapped);
 // ioapiset.h
 MOCKABLE_FUNCTION(WINAPI, BOOL, CancelIoEx, 
     HANDLE, hFile, LPOVERLAPPED, lpOverlapped);
+// namedpipeapi.h
+MOCKABLE_FUNCTION(WINAPI, BOOL, CreatePipe,
+    PHANDLE, hReadPipe, PHANDLE, hWritePipe, LPSECURITY_ATTRIBUTES, lpPipeAttributes, DWORD, nSize);
+MOCKABLE_FUNCTION(WINAPI, BOOL, ConnectNamedPipe,
+    HANDLE, hNamedPipe, LPOVERLAPPED, lpOverlapped);
+MOCKABLE_FUNCTION(WINAPI, BOOL, DisconnectNamedPipe,
+    HANDLE, hNamedPipe);
+MOCKABLE_FUNCTION(WINAPI, BOOL, SetNamedPipeHandleState,
+    HANDLE, hNamedPipe, LPDWORD, lpMode, LPDWORD, lpMaxCollectionCount, LPDWORD, lpCollectDataTimeout);
+MOCKABLE_FUNCTION(WINAPI, BOOL, PeekNamedPipe,
+    HANDLE, hNamedPipe, LPVOID, lpBuffer, DWORD, nBufferSize, LPDWORD, lpBytesRead,
+    LPDWORD, lpTotalBytesAvail, LPDWORD, lpBytesLeftThisMessage);
+MOCKABLE_FUNCTION(WINAPI, HANDLE, CreateNamedPipeA,
+    LPCSTR, lpName,DWORD, dwOpenMode, DWORD, dwPipeMode, DWORD, nMaxInstances, DWORD, nOutBufferSize,
+    DWORD, nInBufferSize, DWORD, nDefaultTimeOut, LPSECURITY_ATTRIBUTES, lpSecurityAttributes);
 // Custom
 MOCKABLE_FUNCTION(WINAPI, BOOL, HasOverlappedIoCompleted,
     LPOVERLAPPED, lpOverlapped);
@@ -98,8 +136,10 @@ REGISTER_UMOCK_ALIAS_TYPE(DWORD, unsigned int);
 REGISTER_UMOCK_ALIAS_TYPE(LPDWORD, void*);
 REGISTER_UMOCK_ALIAS_TYPE(WORD, unsigned short);
 REGISTER_UMOCK_ALIAS_TYPE(HANDLE, void*);
+REGISTER_UMOCK_ALIAS_TYPE(PHANDLE, void*);
 REGISTER_UMOCK_ALIAS_TYPE(socklen_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(LPWSAOVERLAPPED, void*);
+REGISTER_UMOCK_ALIAS_TYPE(LPOVERLAPPED, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LPWSAOVERLAPPED_COMPLETION_ROUTINE, void*);
 REGISTER_UMOCK_ALIAS_TYPE(PIP_ADAPTER_ADDRESSES, void*);
 REGISTER_UMOCK_ALIAS_TYPE(SOCKET, void*);
@@ -1350,7 +1390,7 @@ TEST_FUNCTION(pal_win_getifaddrinfo__success_1)
     struct sockaddr* sock_addr_valid = (struct sockaddr*)&sock_addr_in6_valid;
     const unsigned long k_addresses_size_valid = _countof(address_valid);
     prx_ifaddrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     UT_MEM_ALLOCED = malloc(20000);
@@ -1436,7 +1476,7 @@ TEST_FUNCTION(pal_win_getifaddrinfo__success_2)
     struct sockaddr* sock_addr_valid = (struct sockaddr*)&sock_addr_in6_valid;
     const unsigned long k_addresses_size_valid = _countof(address_valid);
     prx_ifaddrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     UT_MEM_ALLOCED = malloc(40000);
@@ -1507,7 +1547,7 @@ TEST_FUNCTION(pal_win_getifaddrinfo__success_2)
 TEST_FUNCTION(pal_win_getifaddrinfo__arg_info_null)
 {
     static const char* k_if_name_valid = "ggs";
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     // arrange 
@@ -1521,7 +1561,7 @@ TEST_FUNCTION(pal_win_getifaddrinfo__arg_info_null)
 }
 
 // 
-// Test pal_getifaddrinfo passing as info_count argument an invalid prx_size_t* value 
+// Test pal_getifaddrinfo passing as info_count argument an invalid size_t* value 
 // 
 TEST_FUNCTION(pal_win_getifaddrinfo__arg_info_count_null)
 {
@@ -1551,7 +1591,7 @@ TEST_FUNCTION(pal_win_getifaddrinfo__neg)
     struct sockaddr* sock_addr_valid = (struct sockaddr*)&sock_addr_in6_valid;
     const unsigned long k_addresses_size_valid = _countof(address_valid);
     prx_ifaddrinfo_t* info_valid;
-    prx_size_t info_count_valid;
+    size_t info_count_valid;
     int32_t result;
 
     UT_MEM_ALLOCED = malloc(40000); // 13 prx_ifaddr structs a 2.3 k
@@ -1667,7 +1707,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__success)
 {
     static prx_socket_address_t* k_if_address_valid = (prx_socket_address_t*)0x23423;
     char* if_name_valid = UT_MEM;
-    prx_size_t if_name_length_valid = 256;
+    size_t if_name_length_valid = 256;
     uint64_t if_index_valid;
     int32_t result;
 
@@ -1688,7 +1728,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__success)
 TEST_FUNCTION(pal_win_getifnameinfo__arg_if_address_null)
 {
     char* if_name_valid = UT_MEM;
-    prx_size_t if_name_length_valid = 256;
+    size_t if_name_length_valid = 256;
     uint64_t if_index_valid;
     int32_t result;
 
@@ -1709,7 +1749,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__arg_if_address_null)
 TEST_FUNCTION(pal_win_getifnameinfo__arg_if_name_null)
 {
     static prx_socket_address_t* k_if_address_valid = (prx_socket_address_t*)0x23423;
-    prx_size_t if_name_length_valid = 256;
+    size_t if_name_length_valid = 256;
     uint64_t if_index_valid;
     int32_t result;
 
@@ -1725,7 +1765,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__arg_if_name_null)
 }
 
 // 
-// Test pal_getifnameinfo passing as if_name_length argument an invalid prx_size_t value 
+// Test pal_getifnameinfo passing as if_name_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(pal_win_getifnameinfo__arg_if_name_length_0)
 {
@@ -1752,7 +1792,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__arg_if_index_null)
 {
     static prx_socket_address_t* k_if_address_valid = (prx_socket_address_t*)0x23423;
     char* if_name_valid = UT_MEM;
-    prx_size_t if_name_length_valid = 256;
+    size_t if_name_length_valid = 256;
     int32_t result;
 
     // arrange 
@@ -1792,7 +1832,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__neg)
 {
     static prx_socket_address_t* k_if_address_valid = (prx_socket_address_t*)0x23423;
     char* if_name_valid = UT_MEM;
-    prx_size_t if_name_length_valid = 256;
+    size_t if_name_length_valid = 256;
     uint64_t if_index_valid;
     int32_t result;
 
@@ -1815,7 +1855,7 @@ TEST_FUNCTION(pal_win_getifnameinfo__neg)
 TEST_FUNCTION(pal_win_gethostname__success_1)
 {
     static const char* k_host_name_valid = "my_host1";
-    static const prx_size_t k_name_length_valid = 256;
+    static const size_t k_name_length_valid = 256;
     char* name_valid = UT_MEM;
     int32_t result;
 
@@ -1838,7 +1878,7 @@ TEST_FUNCTION(pal_win_gethostname__success_1)
 TEST_FUNCTION(pal_win_gethostname__success_2)
 {
     static const char* k_computer_name_valid = "my_computer1";
-    static const prx_size_t k_name_length_valid = 256;
+    static const size_t k_name_length_valid = 256;
     char* name_valid = UT_MEM;
     int32_t result;
 
@@ -1872,7 +1912,7 @@ TEST_FUNCTION(pal_win_gethostname__success_2)
 // 
 TEST_FUNCTION(pal_win_gethostname__arg_name_null)
 {
-    static const prx_size_t k_name_length_valid = 256;
+    static const size_t k_name_length_valid = 256;
     int32_t result;
 
     // arrange 
@@ -1886,7 +1926,7 @@ TEST_FUNCTION(pal_win_gethostname__arg_name_null)
 }
 
 // 
-// Test pal_gethostname passing as name_length argument an invalid prx_size_t value 
+// Test pal_gethostname passing as name_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(pal_win_gethostname__arg_name_length_zero)
 {
@@ -1904,12 +1944,12 @@ TEST_FUNCTION(pal_win_gethostname__arg_name_length_zero)
 }
 
 // 
-// Test pal_gethostname passing as name_length argument an invalid prx_size_t value 
+// Test pal_gethostname passing as name_length argument an invalid size_t value 
 // 
 TEST_FUNCTION(pal_win_gethostname__arg_name_length_too_small)
 {
     static const char* k_computer_name_valid = "my_computer1";
-    static const prx_size_t k_name_length_invalid = 3;
+    static const size_t k_name_length_invalid = 3;
     char* name_valid = UT_MEM;
     int32_t result;
 
@@ -1942,7 +1982,7 @@ TEST_FUNCTION(pal_win_gethostname__arg_name_length_too_small)
 // 
 TEST_FUNCTION(pal_win_gethostname__neg)
 {
-    static const prx_size_t k_name_length_valid = 256;
+    static const size_t k_name_length_valid = 256;
     char* name_valid = UT_MEM;
     int32_t result;
 
@@ -2493,7 +2533,7 @@ TEST_FUNCTION(pal_win_get_available__success)
 {
     static const prx_SOCKET k_fd_valid = (prx_SOCKET)2725;
     static unsigned long k_avail_valid = 10000;
-    prx_size_t avail_valid;
+    size_t avail_valid;
     int32_t result;
 
     // arrange 
@@ -2515,7 +2555,7 @@ TEST_FUNCTION(pal_win_get_available__success)
 // 
 TEST_FUNCTION(pal_win_get_available__arg_fd_invalid)
 {
-    prx_size_t avail_valid;
+    size_t avail_valid;
     int32_t result;
 
     // arrange 
@@ -2540,7 +2580,7 @@ TEST_FUNCTION(pal_win_get_available__arg_fd_invalid)
 }
 
 // 
-// Test pal_get_available passing as avail argument a null prx_size_t value 
+// Test pal_get_available passing as avail argument a null size_t value 
 // 
 TEST_FUNCTION(pal_win_get_available__avail_invalid)
 {

@@ -322,6 +322,27 @@ decl_internal_4(int32_t, string_key_value_parser,
 );
 
 //
+// Parse a service name into its components inline
+//
+decl_internal_4(int32_t, string_parse_service_full_name,
+    char*, full_name,
+    char**, service_name,
+    char**, service_type,
+    char**, domain
+);
+
+//
+// Make a valid service name from its components
+//
+decl_internal_5(int32_t, string_copy_service_full_name,
+    const char*, service_name,
+    const char*, service_type,
+    const char*, domain,
+    char*, full_name,
+    size_t, full_size
+);
+
+//
 // Decode base64 into bytes 
 //
 decl_internal_3(int32_t, string_base64_to_byte_array,

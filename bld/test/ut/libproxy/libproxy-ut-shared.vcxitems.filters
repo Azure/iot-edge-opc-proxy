@@ -31,9 +31,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\pal_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_handle_ut.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\util_misc_ut.c">
       <Filter>src</Filter>
     </ClCompile>
@@ -98,6 +95,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_log_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_browse_ut.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="C:\git\iot-gateway-proxy\bld\test\ut\libproxy\..\..\..\..\test\ut\prx_browse_ut.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

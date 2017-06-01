@@ -10,12 +10,15 @@ function(add_lib_subdirectory folder)
 endfunction()
 
 if(${use_zlog})
-add_lib_subdirectory(libzlog)
+    add_lib_subdirectory(libzlog)
+endif()
+if(WIN32)
+    add_subdirectory(libdnssd)
+    set_target_properties(dnssd PROPERTIES FOLDER "lib")
 endif()
 
 add_lib_subdirectory(libiotsdk)
 add_lib_subdirectory(libproxy)
-add_lib_subdirectory(libumqtt)
 
 add_subdirectory(proxyd)
 

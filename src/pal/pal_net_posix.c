@@ -28,10 +28,6 @@ int32_t pal_os_to_prx_gai_error(
     case EAI_BADFLAGS:      
         return er_bad_flags;
     case EAI_FAMILY:
-#ifdef EAI_ADDRFAMILY
-        // EAI_ADDRFAMILY is defined in netdb.h if __USE_GNU is defined
-    case EAI_ADDRFAMILY:
-#endif
         return er_address_family;
     case EAI_NONAME:     
         return er_host_unknown;
@@ -40,6 +36,8 @@ int32_t pal_os_to_prx_gai_error(
             return er_host_unknown;
         else if (error == EAI_FAIL)
             return er_fatal;
+        else if (error == EAI_ADDRFAMILY)
+            return er_address_family;
         dbg_assert(0, "Unknown getaddrinfo os error");
     }
     return er_unknown;
@@ -169,6 +167,7 @@ int32_t pal_os_from_prx_socket_address(
 {
     struct sockaddr_in6* sa_in6;
     struct sockaddr_in* sa_in4;
+    struct sockaddr_un* sa_un;
 
     chk_arg_fault_return(sa);
     chk_arg_fault_return(sa_len);
@@ -179,7 +178,7 @@ int32_t pal_os_from_prx_socket_address(
     case prx_address_family_inet:
         if (*sa_len < sizeof(struct sockaddr_in))
         {
-            log_error(NULL, "Not enough buffer for ipv4 address!");
+            log_error(NULL, "Not enough buffer for ipv4 address struct!");
             return er_fault;
         }
         *sa_len = sizeof(struct sockaddr_in);
@@ -192,7 +191,7 @@ int32_t pal_os_from_prx_socket_address(
     case prx_address_family_inet6:
         if (*sa_len < sizeof(struct sockaddr_in6))
         {
-            log_error(NULL, "Not enough buffer for ipv6 address!");
+            log_error(NULL, "Not enough buffer for ipv6 address struct!");
             return er_fault;
         }
         *sa_len = sizeof(struct sockaddr_in6);
@@ -204,6 +203,28 @@ int32_t pal_os_from_prx_socket_address(
         sa_in6->sin6_scope_id = prx_address->un.ip.un.in6.scope_id;
         memcpy(sa_in6->sin6_addr.s6_addr, prx_address->un.ip.un.in6.un.u8,
             sizeof(prx_address->un.ip.un.in6.un.u8));
+        return er_ok;
+    case prx_address_family_unix:
+        sa_un = (struct sockaddr_un*)sa;
+        if (*sa_len == sizeof(sa->sa_family) && !prx_address->un.ux.path[0])
+        {
+            sa_un->sun_family = AF_UNIX;
+            return er_ok;
+        }
+        if (*sa_len < sizeof(struct sockaddr_un))
+        {
+            log_error(NULL, "Not enough buffer for unix address struct!");
+            return er_fault;
+        }
+        *sa_len = sizeof(struct sockaddr_un);
+        memset(sa_un, 0, *sa_len);
+        sa_un->sun_family = AF_UNIX;
+        if (strlen(prx_address->un.ux.path) >= sizeof(sa_un->sun_path))
+        {
+            log_error(NULL, "Not enough buffer to copy unix path!");
+            return er_arg;
+        }
+        strcpy(sa_un->sun_path, prx_address->un.ux.path);
         return er_ok;
     default:
         log_error(NULL, "Address family %d not yet supported. !", prx_address->un.family);
@@ -224,11 +245,12 @@ int32_t pal_os_to_prx_socket_address(
     int result;
     struct sockaddr_in6* sa_in6;
     struct sockaddr_in* sa_in4;
+    struct sockaddr_un* sa_un;
 
     chk_arg_fault_return(sa);
     chk_arg_fault_return(prx_address);
 
-    if (sa_len < sizeof(struct sockaddr))
+    if (sa_len < sizeof(sa->sa_family))
         return er_fault;
 
     result = pal_os_to_prx_address_family(sa->sa_family, &prx_address->un.family);
@@ -240,7 +262,7 @@ int32_t pal_os_to_prx_socket_address(
     case prx_address_family_inet:
         if (sa_len < sizeof(struct sockaddr_in))
         {
-            log_error(NULL, "Not enough buffer for ipv4 address!");
+            log_error(NULL, "Ipv4 address is too small!");
             return er_fault;
         }
         sa_in4 = (struct sockaddr_in*)sa;
@@ -251,7 +273,7 @@ int32_t pal_os_to_prx_socket_address(
     case prx_address_family_inet6:
         if (sa_len < sizeof(struct sockaddr_in6))
         {
-            log_error(NULL, "Not enough buffer for ipv6 address!");
+            log_error(NULL, "Ipv6 address is too small!");
             return er_fault;
         }
         sa_in6 = (struct sockaddr_in6*)sa;
@@ -260,6 +282,26 @@ int32_t pal_os_to_prx_socket_address(
         prx_address->un.ip.un.in6.scope_id = sa_in6->sin6_scope_id;
         prx_address->un.ip.port = swap_16(sa_in6->sin6_port);
         prx_address->un.ip.flow = sa_in6->sin6_flowinfo;
+        return er_ok;
+    case prx_address_family_unix:
+        if (sa_len == sizeof(sa->sa_family))
+        {
+            // Special case for socket pair addresses
+            prx_address->un.ux.path[0] = 0;
+            return er_ok;
+        }
+        if (sa_len < sizeof(struct sockaddr_un))
+        {
+            log_error(NULL, "Unix address is too small");
+            return er_fault;
+        }
+        sa_un = (struct sockaddr_un*)sa;
+        if (strlen(sa_un->sun_path) >= sizeof(prx_address->un.ux.path))
+        {
+            log_error(NULL, "Unix address is too long");
+            return er_arg;
+        }
+        strcpy(prx_address->un.ux.path, sa_un->sun_path);
         return er_ok;
     default:
         log_error(NULL, "Address family %d not yet supported. !", prx_address->un.family);
@@ -928,13 +970,13 @@ int32_t pal_getaddrinfo(
     prx_address_family_t family,
     uint32_t flags,
     prx_addrinfo_t** prx_ai,
-    prx_size_t* prx_ai_count
+    size_t* prx_ai_count
 )
 {
     struct addrinfo hint, *info, *ai = NULL;
     int32_t result;
     int attempt = 0;
-    prx_size_t alloc_count = 0;
+    size_t alloc_count = 0;
 
     chk_arg_fault_return(prx_ai_count);
     chk_arg_fault_return(prx_ai);
@@ -942,7 +984,9 @@ int32_t pal_getaddrinfo(
     *prx_ai_count = 0;
     *prx_ai = NULL;
 
-    log_info(NULL, "getaddrinfo for \"%s\", \"%s\" family: %d",address,service,family);
+    log_info(NULL, "Resolving %s:%s (family: %d)...", address, service, 
+        family);
+
     // Get all address families and the canonical name
     memset(&hint, 0, sizeof(hint));
 
@@ -961,14 +1005,8 @@ int32_t pal_getaddrinfo(
         if (result == 0)
             break;
 
-        // Workaround for issue #32
-        // The connect message wants always AF_INET even if the requested
-        // address is an IPv6 address
-        if (
-#ifdef EAI_ADDRFAMILY
-            (result == EAI_ADDRFAMILY) ||
-#endif
-            (family == EAI_FAMILY))
+        // Workaround for issue #32 when host wants AF_INET6 
+        if (result == EAI_ADDRFAMILY || result == EAI_FAMILY)
         {
             if (hint.ai_family == AF_INET)
             {
@@ -976,6 +1014,7 @@ int32_t pal_getaddrinfo(
                 continue; // try again with IPv6, if IPv4 has failed
             }
         }
+
         // Intermittent dns outages can result in E_AGAIN, try 3 times
 #define GAI_MAX_ATTEMPTS 3
         if (result != EAI_AGAIN || attempt++ >= GAI_MAX_ATTEMPTS)
@@ -1013,6 +1052,9 @@ int32_t pal_getaddrinfo(
             result = pal_os_to_prx_addrinfo(ai, prx_ai_cur);
             if (result == er_ok)
             {
+               // prx_socket_address_log_info(NULL, "... Resolved to %s...", 
+               //     prx_ai_cur->address);
+
                 prx_ai_cur->reserved = 1;
                 (*prx_ai_count)++;
             }
@@ -1073,9 +1115,9 @@ int32_t pal_freeaddrinfo(
 int32_t pal_getnameinfo(
     prx_socket_address_t* address,
     char* host,
-    prx_size_t host_length,
+    size_t host_length,
     char* service,
-    prx_size_t service_length,
+    size_t service_length,
     int32_t flags
 )
 {
@@ -1141,7 +1183,7 @@ int32_t pal_pton(
 int32_t pal_ntop(
     prx_socket_address_t* address,
     char* addr_string,
-    prx_size_t addr_string_size
+    size_t addr_string_size
 )
 {
     char svc[NI_MAXSERV];

@@ -7,13 +7,14 @@
 set(_PROXY_COMPONENTS
     prx_err
     prx_host
-    prx_module
     prx_config
     prx_client
     prx_server
     prx_sched
     prx_log
+    prx_module
     prx_buffer
+    prx_browse
     prx_ns
     io_codec
     io_cs
@@ -24,10 +25,10 @@ set(_PROXY_COMPONENTS
     io_token
     io_transport
     io_types
+    io_browse
     io_url
     io_ws
     pal
-    util_handle
     util_mem
     util_misc
     util_ringbuf
@@ -58,9 +59,18 @@ if(WIN32)
     if (NOT ${use_lws})
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_win)
     endif()
+    if(${use_dnssd})
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_mdns pal_ev_poll)
+        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} dnssd)
+        set(_PAL_DEP_INC ${_PAL_DEP_INC} PUBLIC ${_DNSSD_ROOT}/src)
+        message(STATUS "  linking with dnssd")
+    else()
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_stub)
+    endif()
 else()
     include(CheckIncludeFile)
-    
+    include(FindPkgConfig)
+ 
     set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
         pal_err_posix
         pal_file_posix
@@ -73,27 +83,46 @@ else()
     check_include_file("linux/random.h" HAVE_LINUX_RANDOM_H)
     if(HAVE_LINUX_RANDOM_H)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_linux)
-    else()
+        message(STATUS "  linking with urandom rand")
+   else()
         set(use_openssl 1)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_rand_openssl)
+        message(STATUS "  linking with openssl rand")
     endif()
 
-    include(FindPkgConfig)
     pkg_check_modules(LIBSECRET libsecret-1)
     if(LIBSECRET_FOUND)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_gnome)
         set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBSECRET_LIBRARIES})
         set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBSECRET_INCLUDE_DIRS})
         set(_PAL_DEP_DEFS ${_PAL_DEP_DEFS} __HAVE_LIBSECRET=1)
+        message(STATUS "  linking with libsecret-1")
     else()
-    pkg_check_modules(LIBGNOMEKEYRING gnome-keyring-1)
-    if(LIBGNOMEKEYRING_FOUND)
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_gnome)
-        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBGNOMEKEYRING_LIBRARIES})
-        set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBGNOMEKEYRING_INCLUDE_DIRS})
-    else()
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_stub)
+        pkg_check_modules(LIBGNOMEKEYRING gnome-keyring-1)
+        if(LIBGNOMEKEYRING_FOUND)
+            set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_gnome)
+            set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBGNOMEKEYRING_LIBRARIES})
+            set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBGNOMEKEYRING_INCLUDE_DIRS})
+            message(STATUS "  linking with gnome-keyring")
+        else()
+            set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_stub)
+            message(AUTHOR_WARNING "no secret store - install libsecret-1!")
+        endif()
     endif()
+
+    if(${use_dnssd})
+        pkg_check_modules(LIBAVAHI avahi-client)
+        if(LIBAVAHI_FOUND)
+            set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBAVAHI_LIBRARIES})
+            set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBAVAHI_INCLUDEDIR})
+            set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_avahi)
+            message(STATUS "  linking with avahi-client")
+        else()
+            set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_stub)
+            message(AUTHOR_WARNING "no mdns/dnssd - install avahi-client!")
+        endif()
+    else()
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_stub)
     endif()
     if(LINUX)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
@@ -109,15 +138,17 @@ else()
             pal_proc_posix
         )
     endif()
+    if (NOT ${use_lws})
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_stub)
+    endif()
 endif()
     if (${use_lws})
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_lws)
+        message(STATUS "  linking with lws")    
     endif()
-
 
 if (${use_lws})
     set(use_openssl 1)
-    
     if(WIN32)
         string(REPLACE "/W4" "/W0" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
         string(REPLACE "/W4" "/W0" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
@@ -128,7 +159,7 @@ if (${use_lws})
         set(CMAKE_STATIC_LINKER_FLAGS_PREV ${CMAKE_MODULE_STATIC_FLAGS})
 
         set(CMAKE_EXE_LINKER_FLAGS 
-            "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
+               "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
         set(CMAKE_SHARED_LINKER_FLAGS 
             "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
@@ -157,6 +188,7 @@ endif()
 
 if(${use_openssl})
     include(FindOpenSSL)
+    message(STATUS "linking with openssl")    
 endif()
 
 compileAsC99()
@@ -182,7 +214,6 @@ endforeach()
 
     add_library(libproxy SHARED 
         $<TARGET_OBJECTS:libiotsdk> 
-        $<TARGET_OBJECTS:libumqtt> 
         ${source_c_files}
     )
 
@@ -211,7 +242,7 @@ endif()
     target_include_directories(libproxy PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy
-		PRIVATE _POSIX_C_SOURCE=200112L
+        PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
@@ -233,13 +264,13 @@ else()
         PRIVATE ${CURL_LIBRARIES}
         PRIVATE pthread m
     )
-    target_link_libraries(libproxy PRIVATE ${_PAL_DEP_LIBS})
 endif()
+    target_link_libraries(libproxy PRIVATE ${_PAL_DEP_LIBS})
 if(${use_lws})
     target_link_libraries(libproxy PRIVATE websockets_shared)
 endif()
 if(${use_openssl})
-	target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
+    target_compile_definitions(libproxy PRIVATE USE_OPENSSL=1)
     target_link_libraries(libproxy PRIVATE ${OPENSSL_LIBRARIES})
 endif()
     target_compile_definitions(libproxy PRIVATE ${_PAL_DEP_DEFS})
@@ -247,7 +278,10 @@ endif()
 #
 # proxy static library target
 #
-    add_library(libproxy-static STATIC ${source_c_files})
+    add_library(libproxy-static STATIC 
+        $<TARGET_OBJECTS:libiotsdk> 
+        ${source_c_files}
+    )
     set_target_properties(libproxy-static PROPERTIES PREFIX "")
     set_target_properties(libproxy-static PROPERTIES FOLDER "lib")
 
@@ -262,6 +296,7 @@ endif()
 if(WIN32)
     target_include_directories(libproxy-static PRIVATE ${_GETOPT_INC})
 endif()
+    target_compile_definitions(libproxy-static PRIVATE NO_ZLOG=1)
 if (${use_lws})
     target_include_directories(libproxy-static
         PRIVATE ${_LIBWEBSOCKETS_ROOT}/lib
@@ -274,7 +309,7 @@ endif()
     target_include_directories(libproxy-static PRIVATE ${_PAL_DEP_INC})
 
     target_compile_definitions(libproxy-static
-		PRIVATE _POSIX_C_SOURCE=200112L
+        PRIVATE _POSIX_C_SOURCE=200112L
         PRIVATE API_EXPORT=1
         PUBLIC HAVE_IN6_U=1
     )
@@ -290,38 +325,37 @@ if(WIN32)
         PUBLIC schannel
     )
 else()
-    target_link_libraries(libproxy-static
-        PUBLIC ${CURL_LIBRARIES}
-        PUBLIC pthread m
+    target_link_libraries(libproxy-static 
+        PRIVATE ${CURL_LIBRARIES}
+        PRIVATE pthread m
     )
 endif()
-if(${use_zlog})
-    target_link_libraries(libproxy-static PUBLIC libzlog)
-endif()
-if (${use_lws})
-    target_link_libraries(libproxy-static PUBLIC websockets_shared)
+if(${use_lws})
+    target_link_libraries(libproxy-static PRIVATE websockets_shared)
 endif()
 if(${use_openssl})
-	target_compile_definitions(libproxy-static PRIVATE USE_OPENSSL=1)
-    target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
+    target_compile_definitions(libproxy-static PRIVATE USE_OPENSSL=1)
+    target_link_libraries(libproxy-static PRIVATE ${OPENSSL_LIBRARIES})
 endif()
     target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
 
+#
 # Try to define the version from the closest parent git tag and 
 # the current Git hash.
+#
 find_package(Git)
 if(GIT_EXECUTABLE)
-	execute_process(
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
-    OUTPUT_VARIABLE GIT_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE
+    execute_process(
+        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+        COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
+        OUTPUT_VARIABLE GIT_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-  target_compile_definitions(libproxy PRIVATE SCM_VERSION="${GIT_VERSION}")
+    target_compile_definitions(libproxy PRIVATE SCM_VERSION="${GIT_VERSION}")
 endif()
 
 if(WIN32)
   # Place here the install rule for win32
 elseif(LINUX)
-	install (TARGETS libproxy LIBRARY DESTINATION lib )
+    install (TARGETS libproxy LIBRARY DESTINATION lib )
 endif()

@@ -258,9 +258,6 @@ static void xio_socket_on_end_receive(
             prx_err_string(result));
     }
 
-    buffer->code = result;
-    buffer->length = *length;
-
     if (result == er_retry)
     {
         // Short cut, just release
@@ -270,7 +267,8 @@ static void xio_socket_on_end_receive(
     {
         // Mark done and deliver on scheduler thread
         buffer->code = result;
-        buffer->length = *length;
+        buffer->length = buffer->write_offset = *length;
+        buffer->read_offset = 0;
         io_queue_buffer_set_done(buffer);
         __do_next(sk, xio_socket_deliver_inbound_results);
     }
@@ -342,7 +340,7 @@ static void xio_socket_on_end_send(
         return;
     }
 
-    dbg_assert(buffer->length == *length || result != er_ok, "Not all sent");
+    dbg_assert(buffer->write_offset == *length || result != er_ok, "Not all sent");
 
     if (buffer->cb_ptr && !sk->closed)
     {
@@ -383,13 +381,11 @@ static void xio_socket_event_handler(
     switch (ev)
     {
     case pal_socket_event_opened:
-        dbg_assert(!buffer && !size && !flags, "no buffer expected.");
         sk->last_error = error;
         __do_next(sk, xio_socket_deliver_open_result);
         break;
     case pal_socket_event_begin_recv:
         dbg_assert(error == er_ok, "no error expected.");
-        dbg_assert(!flags, "no flags expected.");
         xio_socket_on_begin_receive(sk, buffer, size);
         break;
     case pal_socket_event_end_recv:
@@ -400,11 +396,9 @@ static void xio_socket_event_handler(
         xio_socket_on_begin_send(sk, buffer, size, flags);
         break;
     case pal_socket_event_end_send:
-        dbg_assert(!flags, "no flags expected.");
         xio_socket_on_end_send(sk, buffer, size, error);
         break;
     case pal_socket_event_closed:
-        dbg_assert(!buffer && !size && !flags, "no buffer expected.");
         sk->last_error = error;
         __do_next(sk, xio_socket_deliver_close_result);
         break;
