@@ -15,6 +15,7 @@
 /**/TestResults/**
 /**/*.vsp*
 /**/*.psess
+/**/launchSettings.json
 /.vscode/**
 /build/**
 *.user

@@ -29,74 +29,74 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             // Parse command line
             try {
                 for (int i = 0; i < args.Length; i++) {
-                        switch (args[i]) {
-                        case "-a":
-                        case "--all":
-                            if (op != Op.None) {
-                                throw new ArgumentException("Operations are mutual exclusive");
-                            }
-                            op = Op.All;
-                            break;
-                        case "-s":
-                        case "--services":
-                            i++;
-                            if (op != Op.None) {
-                                throw new ArgumentException("Operations are mutual exclusive");
-                            }
-                            op = Op.Browse;
-                            if (i < args.Length) {
-                                record = DnsServiceRecord.Parse(args[i]);
-                            }
-                            break;
-                        case "-t":
-                        case "--timeout":
-                            i++;
-                            if (i >= args.Length || !int.TryParse(args[i], out period)) {
-                                throw new ArgumentException($"Bad -t arg");
-                            }
-                            break;
-                        case "-r":
-                        case "--resolve":
-                            i++;
-                            if (op != Op.None) {
-                                throw new ArgumentException("Operations are mutual exclusive");
-                            }
-                            op = Op.Resolve;
-                            if (i < args.Length) {
-                                address = ProxySocketAddress.Parse(args[i]);
-                            }
-                            break;
-                        case "-d":
-                        case "--dir":
-                            i++;
-                            if (op != Op.None) {
-                                throw new ArgumentException("Operations are mutual exclusive");
-                            }
-                            op = Op.Dir;
-                            if (i < args.Length) {
-                                address = ProxySocketAddress.Parse(args[i]);
-                            }
-                            break;
-                        case "--fs":
-                            if (op != Op.None) {
-                                throw new ArgumentException("Operations are mutual exclusive");
-                            }
-                            op = Op.Fs;
-                            break;
-                        case "--use-cache":
-                            cache = true;
-                            break;
-                        case "-R":
-                        case "--relay":
-                            Socket.Provider = Provider.RelayProvider.CreateAsync().Result;
-                            break;
-                        case "-?":
-                        case "-h":
-                        case "--help":
-                            throw new ArgumentException("Help");
-                        default:
-                            throw new ArgumentException($"Unknown {args[i]}");
+                    switch (args[i]) {
+                    case "-a":
+                    case "--all":
+                        if (op != Op.None) {
+                            throw new ArgumentException("Operations are mutual exclusive");
                         }
+                        op = Op.All;
+                        break;
+                    case "-s":
+                    case "--services":
+                        i++;
+                        if (op != Op.None) {
+                            throw new ArgumentException("Operations are mutual exclusive");
+                        }
+                        op = Op.Browse;
+                        if (i < args.Length) {
+                            record = DnsServiceRecord.Parse(args[i]);
+                        }
+                        break;
+                    case "-t":
+                    case "--timeout":
+                        i++;
+                        if (i >= args.Length || !int.TryParse(args[i], out period)) {
+                            throw new ArgumentException($"Bad -t arg");
+                        }
+                        break;
+                    case "-r":
+                    case "--resolve":
+                        i++;
+                        if (op != Op.None) {
+                            throw new ArgumentException("Operations are mutual exclusive");
+                        }
+                        op = Op.Resolve;
+                        if (i < args.Length) {
+                            address = ProxySocketAddress.Parse(args[i]);
+                        }
+                        break;
+                    case "-d":
+                    case "--dir":
+                        i++;
+                        if (op != Op.None) {
+                            throw new ArgumentException("Operations are mutual exclusive");
+                        }
+                        op = Op.Dir;
+                        if (i < args.Length) {
+                            address = ProxySocketAddress.Parse(args[i]);
+                        }
+                        break;
+                    case "--fs":
+                        if (op != Op.None) {
+                            throw new ArgumentException("Operations are mutual exclusive");
+                        }
+                        op = Op.Fs;
+                        break;
+                    case "--use-cache":
+                        cache = true;
+                        break;
+                    case "-R":
+                    case "--relay":
+                        Socket.Provider = Provider.RelayProvider.CreateAsync().Result;
+                        break;
+                    case "-?":
+                    case "-h":
+                    case "--help":
+                        throw new ArgumentException("Help");
+                    default:
+                        throw new ArgumentException($"Unknown {args[i]}");
+                    }
                 }
             }
             catch(Exception e) {

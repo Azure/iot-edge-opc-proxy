@@ -26,7 +26,7 @@
 //
 struct prx_server
 {
-    io_ref_t id;                                             // Server id
+    io_ref_t id;              // Server id == Proxy id == Module entry id
     io_connection_t* listener;     // connection used by server to listen
     io_transport_t* transport;                 // Transport instance used
     prx_browse_server_t* browser;              // Internal browser server
@@ -281,11 +281,11 @@ static void prx_server_socket_deliver_results(
 
             // Copy correlation id information and addresses before sending
             message->correlation_id = poll_message->correlation_id;
-
-            io_ref_copy(&poll_message->target_id, &message->target_id);
-            io_ref_copy(&poll_message->source_id, &message->source_id);
-            io_ref_copy(&poll_message->proxy_id, &message->proxy_id);
         }
+
+        io_ref_copy(&server_sock->server->id, &message->proxy_id);
+        io_ref_copy(&server_sock->stream_id, &message->target_id);
+        io_ref_copy(&server_sock->id, &message->source_id);
 
         result = io_connection_send(server_sock->stream, message);
         if (result != er_ok)
@@ -2043,7 +2043,10 @@ int32_t prx_server_create(
     {
         server->log = log_get("server");
         server->transport = transport;
-        io_ref_new(&server->id);
+
+        result = prx_ns_entry_get_addr(entry, &server->id);
+        if (result != er_ok)
+            break;
 
         server->sockets = create_hashtable(10, 
             (unsigned int(*) (void*)) io_ref_hash, 

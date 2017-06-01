@@ -8,6 +8,8 @@
 // 1. Required mocks
 //
 #include "os.h"
+// realpath is inline in stdlib.h on older distributions
+#define realpath __realpath
 #include "prx_types.h"
 
 MOCKABLE_FUNCTION(, char*, getcwd, char*, buf, size_t, size);

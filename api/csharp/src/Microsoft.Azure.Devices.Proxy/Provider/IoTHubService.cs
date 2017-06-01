@@ -53,8 +53,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
             // TODO: Revisit:  At this point we could either a) look up a host from the registry
             // then use it to create a dedicated stream with connection string or b) create an 
-            // adhoc dr stream record in the registry.  However, due to overall IoTHub performance  
-            // characteristic there is at this point no performance benefit from doing so.
+            // adhoc dr stream record in the registry. 
 
             return Task.FromResult(conn);
         }
