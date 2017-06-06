@@ -62,6 +62,7 @@ if(CMAKE_CROSSCOMPILING)
     target_link_libraries(proxyd ${P11_KIT_LIBRARY})
     target_link_libraries(proxyd ${TASN1_LIBRARY})
     target_link_libraries(proxyd ${FFI_LIBRARY})
+    target_link_libraries(proxyd ${DBUS_LIBRARY})
   endif()
 endif()
 
