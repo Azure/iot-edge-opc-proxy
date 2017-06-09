@@ -25,7 +25,5 @@ install:
 build:
 build_script:
   - bld\build.cmd -c %build_args%
-cache:
-  - C:\OpenSSL-Win32
 matrix:
     fast_finish: true
