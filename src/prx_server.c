@@ -184,9 +184,11 @@ static void prx_server_free(
 
     dbg_assert(hashtable_count(server->sockets) == 0,
         "socketlist should now be empty");
-
     if (server->sockets)
         hashtable_destroy(server->sockets, 0);
+
+    if (server->sockets_lock)
+        lock_free(server->sockets_lock);
 
     if (server->restricted_ports)
         mem_free(server->restricted_ports);
