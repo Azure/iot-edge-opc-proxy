@@ -426,8 +426,7 @@ int32_t pal_event_port_create(
             break;
 
         // Add control sockets
-        if (-1 == socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, 
-            pal_port->control_fd))
+        if (-1 == socketpair(AF_UNIX, SOCK_STREAM, 0, pal_port->control_fd))
         {
             result = pal_os_last_error_as_prx_error();
             log_error(pal_port->log, "Failed to make control sockets (%s)",
@@ -473,17 +472,11 @@ void pal_event_port_close(
         return;
 
     pal_port->running = false;
-    if (pal_port->control_fd[0] != _invalid_fd)
-    {
-        closesocket(pal_port->control_fd[0]);
-        pal_port->control_fd[0] = _invalid_fd;
-    }
 
+    if (pal_port->control_fd[0] != _invalid_fd)
+        closesocket(pal_port->control_fd[0]);
     if (pal_port->control_fd[1] != _invalid_fd)
-    {
         closesocket(pal_port->control_fd[1]);
-        pal_port->control_fd[1] = _invalid_fd;
-    }
 
     if (pal_port->thread)
         ThreadAPI_Join(pal_port->thread, &result);

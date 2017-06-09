@@ -28,7 +28,6 @@ struct pal_sdclient
 {
     AvahiClient* client;     // Avahi browser client - connected to daemon
     AvahiThreadedPoll* polling;                       // Main polling loop
-    bool running;
     log_t log;
 };
 
@@ -1089,7 +1088,6 @@ int32_t pal_sdclient_create(
             break;
         }
 
-        client->running = true;
         *created = client;
         return er_ok;
     } while (0);
@@ -1108,17 +1106,8 @@ void pal_sdclient_release(
     if (!client)
         return;
 
-    // stop poll thread
-    if (client->polling && client->running)
-    {
-        if (0 != avahi_threaded_poll_stop(client->polling))
-            log_error(client->log, "Failed to stop avahi polling");
-        else
-            client->running = false;
-    }
-
-    dbg_assert(!client->running, "Client still running.");
-
+    if (client->polling)
+        (void)avahi_threaded_poll_stop(client->polling);
     if (client->client)
         avahi_client_free(client->client);
     if (client->polling)
