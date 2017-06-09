@@ -74,9 +74,6 @@ static int32_t io_sas_token_create(
     {
         // Create signature
         result = er_out_of_memory;
-        hash_string = STRING_new();
-        if (!hash_string)
-            break;
         if (0 != STRING_concat(hash_string, scope) ||
             0 != STRING_concat(hash_string, "\n") ||
             0 != STRING_concat_int(hash_string, (int)expiry, 10))
@@ -113,6 +110,7 @@ static int32_t io_sas_token_create(
         result = er_ok;
         break;
     } while (0);
+
     STRING_delete(hash_string);
 
     if (token)

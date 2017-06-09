@@ -18,6 +18,13 @@ MOCKABLE_FUNCTION(, int, kevent,
 MOCKABLE_FUNCTION(, void, EV_SET, 
     struct kevent*, evt, int, ident, uint32_t, filter, uint32_t, flags, 
     uint32_t, fflags, void*, data, void*, udata);
+// sys/socket.h
+MOCKABLE_FUNCTION(, int, socketpair,
+    int, domain, int, type, int, protocol, int*, sv);
+MOCKABLE_FUNCTION(, sockssize_t, recv,
+    fd_t, s, sockbuf_t*, buf, socksize_t, len, int, flags);
+MOCKABLE_FUNCTION(, sockssize_t, send,
+    fd_t, s, const sockbuf_t*, buf, socksize_t, len, int, flags);
 // unistd.h
 MOCKABLE_FUNCTION(, int, close,
     int, fd);
@@ -41,6 +48,12 @@ MOCKABLE_FUNCTION(, int32_t, pal_event_handler_cb_mock,
 BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(pal_event_type, int);
+REGISTER_UMOCK_ALIAS_TYPE(fd_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(sockssize_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(socksize_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(sockbuf_t*, void*);
+REGISTER_UMOCK_ALIAS_TYPE(const sockbuf_t*, const void*);
+REGISTER_UMOCK_ALIAS_TYPE(THREAD_HANDLE, void*);
 REGISTER_UMOCK_ALIAS_TYPE(uintptr_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(THREADAPI_RESULT, int);
 REGISTER_UMOCK_ALIAS_TYPE(THREAD_HANDLE, void*);

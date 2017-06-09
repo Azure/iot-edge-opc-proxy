@@ -9,6 +9,9 @@
 #include "io_queue.h"
 
 #include "prx_browse.h"
+#include "prx_config.h"
+
+#include "pal.h"
 #include "pal_mt.h"
 #include "pal_sd.h"
 #include "pal_file.h"
@@ -27,6 +30,7 @@ struct prx_browse_server
     DLIST_ENTRY sessions;                       // List of active sessions
     lock_t sessions_lock;
                    // Client handles to browsable objects in the pal, etc.
+    bool allow_fs_browse;           // Whether to allow file system browse
     pal_sdclient_t* sdclient;                     // Service browse client
     bool destroy;                             // Set to free browse server
     log_t log;
@@ -114,13 +118,17 @@ static void prx_browse_session_free(
     if (hashtable_count(session->requests) > 0)
     {
         itr = hashtable_iterator(session->requests);
-        do
+        if (itr)
         {
-            next = (prx_browse_stream_t*)hashtable_iterator_value(itr);
-            log_info(session->log, "Freeing open stream %p", next);
-            prx_browse_stream_free(next);
+            do
+            {
+                next = (prx_browse_stream_t*)hashtable_iterator_value(itr);
+                log_info(session->log, "Freeing open stream %p", next);
+                prx_browse_stream_free(next);
+            }
+            while (0 != hashtable_iterator_remove(itr));
+            crt_free(itr);
         }
-        while (0 != hashtable_iterator_remove(itr));
     }
 
     if (!session->destroy) // Set only when pal closed socket
@@ -233,6 +241,16 @@ static void prx_browse_session_send_response(
         // Mark read and ask for socket to pick up
         io_queue_buffer_set_ready(buffer);
 
+        if (browse_response->error_code != er_ok)
+        {
+            log_trace(session->log, "Browse response sent (with error code %s)", 
+                prx_err_string(browse_response->error_code));
+        }
+        else
+        {
+            log_debug(session->log, "Browse response sent...");
+        }
+
         __do_next(session, prx_browse_session_send_buffers);
         return;
     } 
@@ -338,22 +356,37 @@ static int32_t prx_browse_session_close_request(
 }
 
 //
-// Create or update address resolver session
+// Handle unknown request
 //
-static int32_t prx_browse_session_handle_resolve_request(
-    prx_browse_session_t* browser,
+static void prx_browse_session_handle_unknown_request(
+    prx_browse_session_t* session,
     io_browse_request_t* browse_request
 )
 {
-    int32_t result;
-    dbg_assert_ptr(browser);
+    dbg_assert_ptr(session);
     dbg_assert_ptr(browse_request);
     dbg_assert_is_task(browser->scheduler);
 
-    // TODO
-    result = er_not_impl;
+    log_trace(session->log, "Unsupported request received (%d)", browse_request->type);
+    prx_browse_session_send_error_response(session, &browse_request->handle,
+        er_not_supported);
+}
 
-    return result;
+//
+// Create or update address resolver session
+//
+static void prx_browse_session_handle_resolve_request(
+    prx_browse_session_t* session,
+    io_browse_request_t* browse_request
+)
+{
+    // int32_t result;
+    dbg_assert_ptr(session);
+    dbg_assert_ptr(browse_request);
+    dbg_assert_is_task(browser->scheduler);
+
+    // TODO --- For now fail...
+    prx_browse_session_handle_unknown_request(session, browse_request);
 }
 
 //
@@ -409,9 +442,9 @@ int32_t prx_browse_session_handle_dirpath_response(
 }
 
 //
-// Create or update directory path browsing session
+// Create or update int32_tdirectory path browsing session
 //
-static int32_t prx_browse_session_handle_dirpath_request(
+static void prx_browse_session_handle_dirpath_request(
     prx_browse_session_t* session,
     io_browse_request_t* browse_request
 )
@@ -424,6 +457,13 @@ static int32_t prx_browse_session_handle_dirpath_request(
     dbg_assert_is_task(session->scheduler);
     do
     {
+        if (!session->server->allow_fs_browse)
+        {
+            // file system browsing is not supported, close reqeust
+            prx_browse_session_handle_unknown_request(session, browse_request);
+            return;
+        }
+
         // Parse and validate host string
         if (browse_request->item.un.family != prx_address_family_proxy)
         {
@@ -446,18 +486,15 @@ static int32_t prx_browse_session_handle_dirpath_request(
         {
             // Send end of stream
             prx_browse_session_handle_dirpath_response(stream, er_nomore, NULL, NULL);
-            break;
         }
-        return er_ok;
+        return;
     } 
     while (0);
 
     log_error(session->log, "Failed reading folder (%s)", prx_err_string(result));
-
-    // TODO: Too drastic?  Ref counted?
+    prx_browse_session_send_error_response(session, &browse_request->handle, result);
     if (stream)
         prx_browse_session_close_request(session, &stream->handle);
-    return result;
 }
 
 //
@@ -545,7 +582,7 @@ static int32_t prx_browse_session_handle_service_response(
 //
 // Create or update service browsing session
 //
-static int32_t prx_browse_session_handle_service_request(
+static void prx_browse_session_handle_service_request(
     prx_browse_session_t* session,
     io_browse_request_t* browse_request
 )
@@ -561,6 +598,13 @@ static int32_t prx_browse_session_handle_service_request(
     dbg_assert_is_task(session->scheduler);
     do
     {
+        if (!session->server->sdclient)
+        {
+            // sd client is not supported, close reqeust
+            prx_browse_session_handle_unknown_request(session, browse_request);
+            return;
+        }
+
         // Parse and validate host string
         if (browse_request->item.un.family != prx_address_family_proxy)
         {
@@ -608,16 +652,14 @@ static int32_t prx_browse_session_handle_service_request(
         // Make sure to send an all for now for this stream after timeout has passed
         __do_later_s(session->scheduler, prx_browse_stream_timeout,
             stream, STREAM_TIMEOUT);
-        return er_ok;
+        return;
     } 
     while (0);
 
-    log_error(session->log, "Failed creating stream (%s)", prx_err_string(result));
-
-    // TODO: Too drastic?  Ref counted?
+    log_error(session->log, "Failed creating browse stream (%s)", prx_err_string(result));
+    prx_browse_session_send_error_response(session, &browse_request->handle, result);
     if (stream)
         prx_browse_session_close_request(session, &stream->handle);
-    return result;
 }
 
 //
@@ -628,7 +670,6 @@ static void prx_browse_session_process_request(
     io_browse_request_t* browse_request
 )
 {
-    int32_t result;
     dbg_assert_ptr(browser);
     dbg_assert_ptr(browse_request);
     dbg_assert_is_task(browser->scheduler);
@@ -636,26 +677,20 @@ static void prx_browse_session_process_request(
     switch (browse_request->type)
     {
     case io_browse_request_cancel:
-        result = prx_browse_session_close_request(browser, &browse_request->handle);
+        prx_browse_session_close_request(browser, &browse_request->handle);
         break;
     case io_browse_request_resolve:
-        result = prx_browse_session_handle_resolve_request(browser, browse_request);
+        prx_browse_session_handle_resolve_request(browser, browse_request);
         break;
     case io_browse_request_service:
-        result = prx_browse_session_handle_service_request(browser, browse_request);
+        prx_browse_session_handle_service_request(browser, browse_request);
         break;
     case io_browse_request_dirpath:
-        result = prx_browse_session_handle_dirpath_request(browser, browse_request);
+        prx_browse_session_handle_dirpath_request(browser, browse_request);
         break;
     default:
-        result = er_not_supported;
+        prx_browse_session_handle_unknown_request(browser, browse_request);
         break;
-    }
-    if (result != er_ok)
-    {
-        prx_browse_session_send_error_response(browser, &browse_request->handle, 
-            result);
-        // TODO: Hang up?
     }
 }
 
@@ -1152,12 +1187,19 @@ int32_t prx_browse_server_create(
         if (result != er_ok)
             break;
 
-        //  if (pal_caps() & pal_caps_sd)
+        if (pal_caps() & pal_cap_dnssd)
         {
             result = pal_sdclient_create(&server->sdclient);
             if (result != er_ok)
                 break;
         }
+
+        if (pal_caps() & pal_cap_file)
+        {
+            if (__prx_config_get_int(prx_config_key_browse_fs, 0))
+                server->allow_fs_browse = true;
+        }
+
         *created = server;
         return er_ok;
     } 

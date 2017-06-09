@@ -7,6 +7,7 @@
 #include "prx_log.h"
 #include "prx_buffer.h"
 #include "prx_browse.h"
+#include "prx_config.h"
 
 #include "pal.h"
 #include "pal_sk.h"
@@ -30,6 +31,8 @@ struct prx_server
     io_connection_t* listener;     // connection used by server to listen
     io_transport_t* transport;                 // Transport instance used
     prx_browse_server_t* browser;              // Internal browser server
+    int32_t* restricted_ports;    // Tuple range list of restricted ports
+    size_t restricted_port_count;       // Number of tuples in restricted
     struct hashtable* sockets;                  // List of active sockets
     lock_t sockets_lock;
     prx_scheduler_t* scheduler; // All server tasks are on this scheduler
@@ -95,10 +98,11 @@ typedef struct prx_server_socket
 }
 prx_server_socket_t;
 
-
 DEFINE_HASHTABLE_INSERT(prx_server_add, io_ref_t, prx_server_socket_t);
 DEFINE_HASHTABLE_SEARCH(prx_server_get, io_ref_t, prx_server_socket_t);
 DEFINE_HASHTABLE_REMOVE(prx_server_remove, io_ref_t, prx_server_socket_t);
+
+#define DEFAULT_RESTRICTED_PORTS ""
 
 //
 // Websocket server transport (stream)
@@ -154,13 +158,6 @@ static void prx_server_socket_free(
     if (server_sock->recv_lock)
         lock_free(server_sock->recv_lock);
 
-   // if (server_sock->server)
-   // {
-   //     lock_enter(server_sock->server->sockets_lock);
-   //     prx_server_remove(server_sock->server->sockets, &server_sock->id);
-   //     lock_exit(server_sock->server->sockets_lock);
-   // }
-
     if (server_sock->scheduler)
         prx_scheduler_release(server_sock->scheduler, server_sock);
 
@@ -191,11 +188,34 @@ static void prx_server_free(
     if (server->sockets)
         hashtable_destroy(server->sockets, 0);
 
-    if (server->sockets_lock)
-        lock_free(server->sockets_lock);
+    if (server->restricted_ports)
+        mem_free(server->restricted_ports);
 
     log_trace(server->log, "Freeing server.");
     mem_free_type(prx_server_t, server);
+}
+
+//
+// Check whether port is restricted
+//
+static int32_t prx_server_check_restricted_port(
+    prx_server_t* server,
+    uint16_t port
+)
+{
+    size_t index = 0;
+    dbg_assert_ptr(server);
+    // Go through tuples and check whether port is in range...
+    while (index < server->restricted_port_count * 2)
+    {
+        if ((int32_t)port >= server->restricted_ports[index++] &&
+            (int32_t)port <= server->restricted_ports[index++])
+        {
+            log_trace(server->log, "Blocking access to port %d", (int32_t)port);
+            return er_refused;
+        }
+    }
+    return er_ok;
 }
 
 //
@@ -1737,6 +1757,16 @@ static void prx_server_handle_linkrequest(
     dbg_assert_is_task(server->scheduler);
     do
     {
+        // Check if we need to block link requests for connection to restricted ports
+        if (!(message->content.link_request.props.flags & prx_socket_flag_internal) &&
+            !(message->content.link_request.props.flags & prx_socket_flag_passive))
+        {
+            result = prx_server_check_restricted_port(
+                server, message->content.link_request.props.address.un.ip.port);
+            if (result != er_ok)
+                break;
+        }
+
         // Create empty socket object
         result = prx_server_socket_create(server, &message->source_id, &server_sock);
         if (result != er_ok)
@@ -1745,6 +1775,7 @@ static void prx_server_handle_linkrequest(
                 prx_err_string(result));
             break;
         }
+
         // Create socket handle
         memcpy(&server_sock->client_itf.props, &message->content.link_request.props,
             sizeof(server_sock->client_itf.props));
@@ -1874,8 +1905,12 @@ static void prx_server_handle_pingrequest(
             break;
         }
 
-        result = string_from_int(
-            message->content.ping_request.address.un.ip.port, 10, port, sizeof(port));
+        result = prx_server_check_restricted_port(
+            server, message->content.ping_request.address.un.ip.port);
+        if (result != er_ok)
+            break;
+        result = string_from_int(message->content.ping_request.address.un.ip.port, 10, 
+            port, sizeof(port));
         if (result != er_ok)
             break;
 
@@ -2045,6 +2080,12 @@ int32_t prx_server_create(
         server->transport = transport;
 
         result = prx_ns_entry_get_addr(entry, &server->id);
+        if (result != er_ok)
+            break;
+
+        result = string_parse_range_list(__prx_config_get(
+            prx_config_key_restricted_ports, DEFAULT_RESTRICTED_PORTS),
+            &server->restricted_ports, &server->restricted_port_count);
         if (result != er_ok)
             break;
 

@@ -332,6 +332,15 @@ decl_internal_4(int32_t, string_parse_service_full_name,
 );
 
 //
+// Parse a range list in the form of 5;6;4-9;10
+//
+decl_internal_3(int32_t, string_parse_range_list,
+    const char*, range_string,
+    int32_t**, range_tuples,
+    size_t*, range_tuple_count
+);
+
+//
 // Make a valid service name from its components
 //
 decl_internal_5(int32_t, string_copy_service_full_name,

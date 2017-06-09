@@ -1070,104 +1070,110 @@ static int32_t prx_ns_iot_hub_rest_call(
     dbg_assert_ptr(uri);
     dbg_assert_ptr(status_code);
 
-    do
+    for (int retry = 0; retry < 10; retry++)
     {
-        result = io_cs_create_token_provider(spec, &provider);
-        if (result != er_ok)
-            break;
-
-        result = io_token_provider_new_token(provider, &token, &ttl);
-        if (result != er_ok)
-            break;
-
-        result = er_out_of_memory;
-        path = STRING_construct(io_cs_get_host_name(spec));
-        if (!path || 0 != STRING_concat(path, uri))
-            break;
-
-        if (!req_headers)
+        do
         {
-            request_headers = req_headers = HTTPHeaders_Alloc();
-            if (!request_headers)
+            result = io_cs_create_token_provider(spec, &provider);
+            if (result != er_ok)
                 break;
-        }
 
-        if (!resp_headers)
-        {
-            response_headers = resp_headers = HTTPHeaders_Alloc();
-            if (!response_headers)
+            result = io_token_provider_new_token(provider, &token, &ttl);
+            if (result != er_ok)
                 break;
-        }
 
-        request_id = STRING_construct_uuid();
-        if (!request_id)
-            break;
-
-        if (0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "Authorization", STRING_c_str(token)) ||
-            0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "Request-Id", STRING_c_str(request_id)) ||
-            0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "User-Agent", MODULE_NAME "/" MODULE_VERSION) ||
-            0 != HTTPHeaders_AddHeaderNameValuePair(
-                req_headers, "Content-Type", "application/json; charset=utf-8"))
-            break;
-
-        if (if_match)
-        {
-            STRING_delete(path);
-            path = STRING_construct("\"");
-            if (!path)
+            result = er_out_of_memory;
+            path = STRING_construct(io_cs_get_host_name(spec));
+            if (!path || 0 != STRING_concat(path, uri))
                 break;
-            if (0 != STRING_concat(path, if_match) ||
-                0 != STRING_concat(path, "\"") ||
+
+            if (!req_headers)
+            {
+                request_headers = req_headers = HTTPHeaders_Alloc();
+                if (!request_headers)
+                    break;
+            }
+
+            if (!resp_headers)
+            {
+                response_headers = resp_headers = HTTPHeaders_Alloc();
+                if (!response_headers)
+                    break;
+            }
+
+            request_id = STRING_construct_uuid();
+            if (!request_id)
+                break;
+
+            if (0 != HTTPHeaders_AddHeaderNameValuePair(
+                    req_headers, "Authorization", STRING_c_str(token)) ||
                 0 != HTTPHeaders_AddHeaderNameValuePair(
-                    req_headers, "If-Match", STRING_c_str(path)))
+                    req_headers, "Request-Id", STRING_c_str(request_id)) ||
+                0 != HTTPHeaders_AddHeaderNameValuePair(
+                    req_headers, "User-Agent", MODULE_NAME "/" MODULE_VERSION) ||
+                0 != HTTPHeaders_AddHeaderNameValuePair(
+                    req_headers, "Content-Type", "application/json; charset=utf-8"))
                 break;
-        }
 
-        STRING_delete(path);
-        path = STRING_construct(uri);
-        if (!path || 0 != STRING_concat(path, "?api-version=" API_VERSION))
-            break;
+            if (if_match)
+            {
+                STRING_delete(path);
+                path = STRING_construct("\"");
+                if (!path)
+                    break;
+                if (0 != STRING_concat(path, if_match) ||
+                    0 != STRING_concat(path, "\"") ||
+                    0 != HTTPHeaders_AddHeaderNameValuePair(
+                        req_headers, "If-Match", STRING_c_str(path)))
+                    break;
+            }
 
-        // Now make request
-        http_handle = HTTPAPIEX_Create(io_cs_get_host_name(spec));
-        if (!http_handle)
-            break;
-        prx_ns_iot_hub_rest_call_configure_proxy(http_handle);
+            STRING_delete(path);
+            path = STRING_construct(uri);
+            if (!path || 0 != STRING_concat(path, "?api-version=" API_VERSION))
+                break;
 
-        http_result = HTTPAPIEX_ExecuteRequest(http_handle, type,
-            STRING_c_str(path), req_headers,
-            request, (unsigned int*)status_code, resp_headers, response);
-        if (http_result != HTTPAPIEX_OK)
-        {
-            result = er_connecting;
-            break;
-        }
+            // Now make request
+            http_handle = HTTPAPIEX_Create(io_cs_get_host_name(spec));
+            if (!http_handle)
+                break;
+            prx_ns_iot_hub_rest_call_configure_proxy(http_handle);
 
-        if (*status_code == 429)
-            result = er_retry;
-        else
+            http_result = HTTPAPIEX_ExecuteRequest(http_handle, type,
+                STRING_c_str(path), req_headers,
+                request, (unsigned int*)status_code, resp_headers, response);
+            if (http_result != HTTPAPIEX_OK)
+            {
+                result = er_connecting;
+                break;
+            }
             result = er_ok;
+            break;
+        } 
+        while (0);
 
-    } while (result == er_retry);
+        if (token)
+            STRING_delete(token);
+        if (path)
+            STRING_delete(path);
+        if (request_id)
+            STRING_delete(request_id);
+        if (request_headers)
+            HTTPHeaders_Free(request_headers);
+        if (response_headers)
+            HTTPHeaders_Free(response_headers);
+        if (provider)
+            io_token_provider_release(provider);
+        if (http_handle)
+            HTTPAPIEX_Destroy(http_handle);
 
-    if (token)
-        STRING_delete(token);
-    if (path)
-        STRING_delete(path);
-    if (request_id)
-        STRING_delete(request_id);
-    if (request_headers)
-        HTTPHeaders_Free(request_headers);
-    if (response_headers)
-        HTTPHeaders_Free(response_headers);
-    if (provider)
-        io_token_provider_release(provider);
-    if (http_handle)
-        HTTPAPIEX_Destroy(http_handle);
-
+        if (result != er_ok || *status_code != 429)
+            break; // Done...
+        
+        // Auto retry 429...
+        log_info(NULL, "Retrying REST request (attempt: %d) ....", retry + 1);
+    }
+    
     return result;
 }
 

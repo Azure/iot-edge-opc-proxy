@@ -83,7 +83,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__success)
     STRICT_EXPECTED_CALL(lock_create(IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_created(&k_lock_valid, sizeof(k_lock_valid))
         .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, IGNORED_PTR_ARG))
+    STRICT_EXPECTED_CALL(socketpair(AF_UNIX, SOCK_STREAM, 0, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer(4, pipe_valid, sizeof(pipe_valid))
         .SetReturn(0)
         .SetFailReturn(-1);

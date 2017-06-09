@@ -221,17 +221,17 @@ function(build_ut cur_test folder)
                     target_link_libraries(${cur_test}_exe ${f})
                 elseif(PARSING_VALGRIND_SUPPRESSION_FILE)
                     set(VALGRIND_SUPPRESSIONS_FILE_EXTRA_PARAMETER "--suppressions=${f}")
-                endif() 
+                endif()
             endforeach()
-    
+
             add_test(NAME ${cur_test} COMMAND $<TARGET_FILE:${cur_test}_exe>)
 
             find_program(VALGRIND_FOUND NAMES valgrind)
             if(${VALGRIND_FOUND} STREQUAL VALGRIND_FOUND-NOTFOUND)
             else()
                 add_test(
-                    NAME ${cur_test}_valgrind COMMAND valgrind                 
-                        --num-callers=50 --error-exitcode=1 
+                    NAME ${cur_test}_valgrind COMMAND valgrind
+                        --num-callers=50 --error-exitcode=1
                         --trace-children=yes --leak-check=full --track-origins=yes 
                         ${VALGRIND_SUPPRESSIONS_FILE_EXTRA_PARAMETER} 
                         $<TARGET_FILE:${cur_test}_exe>)
