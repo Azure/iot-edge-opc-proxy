@@ -365,7 +365,7 @@ echo -x --xtrace                 print a trace of each command.
 echo    --os ^<value^>             [Windows] OS to build on (needs Docker if Linux Flavor).
 echo    --remote                 Build current branch on remote rather than use local build context.
 echo -c --clean                  Build clean (Removes previous build output).
-echo -C --config ^<value^>         [Debug] build configuration (e.g. Debug, Release).
+echo -C --config ^<value^>         [%build-configs%] build configuration (e.g. Debug, Release).
 echo -T --toolset ^<value^>        An optional toolset to use, e.g. v140 or clang.
 echo -o --build-root ^<value^>     [/build] Directory in which to place all files during build.
 echo    --use-zlog               Use zlog as logging framework instead of xlogging.
@@ -376,7 +376,7 @@ echo    --skip-unittests         Skips building and executing unit tests.
 echo    --skip-dotnet            Skips building dotnet API and packages.
 echo    --pack-only              Only creates packages. (Cannot be combined with --clean)
 echo -n --nuget-folder ^<value^>   [/build] Folder to use when outputting nuget packages.
-echo -p --platform ^<value^>       [Win32] build platform (e.g. Win32, x64, ...).
-echo    --vs ^<value^>               [15] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
+echo -p --platform ^<value^>       [%build-platform%] build platform (e.g. Win32, x64, ...).
+echo    --vs ^<value^>               [%build-vs-ver%] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
 goto :eof
 
