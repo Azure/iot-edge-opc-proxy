@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsEqual(Error, that.Error) &&
                 IsEqual(Flags, that.Flags) &&
                 IsEqual(Item, that.Item) &&
-                IsEqual(Properties, that.Properties);
+                Properties.SetEquals(that.Properties);
         }
 
         protected override void SetHashCode() {

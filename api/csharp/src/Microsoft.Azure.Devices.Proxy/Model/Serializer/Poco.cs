@@ -49,11 +49,17 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns>hash code</returns>
         public override int GetHashCode() {
-            if (_hash != null) {
-                return (int)_hash;
+            if (_hash == null) {
+                lock (this) {
+                    if (_hash == null) {
+                        SetHashCode();
+                        if (_hash == null) {
+                            _hash = _offsetBasis;
+                        }
+                    }
+                }
             }
-            SetHashCode();
-            return _hash ?? base.GetHashCode();
+            return (int)_hash;
         }
 
         /// <summary>
@@ -61,18 +67,25 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="hash"></param>
         protected void MixToHash(int hash) {
-            if (_hash == null) {
-                _hash = _offsetBasis;
-            }
-            _hash = ((int)_hash ^ hash) * _prime;
+            _hash = (_hash ?? _offsetBasis ^ hash) * _prime;
         }
 
         /// <summary>
         /// Helper to mix an array of items into the hash value
         /// </summary>
         /// <param name="hash"></param>
-        protected void MixToHash<A>(IEnumerable<A> enumeration) {
+        protected void MixToHash<T>(IEnumerable<T> enumeration) {
             foreach (var item in enumeration) {
+                MixToHash(item);
+            }
+        }
+
+        /// <summary>
+        /// Helper to mix an array of items into the hash value
+        /// </summary>
+        /// <param name="hash"></param>
+        protected void MixToHash(object[] arr) {
+            foreach (var item in arr) {
                 MixToHash(item);
             }
         }
@@ -81,7 +94,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Helper to mix an items hash code
         /// </summary>
         /// <param name="hash"></param>
-        protected void MixToHash<A>(A item) {
+        protected void MixToHash(object item) {
             MixToHash(item.GetHashCode());
         }
 
@@ -93,30 +106,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Safe compare
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="ziss"></param>
-        /// <param name="zat"></param>
-        /// <returns></returns>
-        protected static bool IsEqual<T> (T ziss, T zat) {
-            if (ziss == null) {
-                if (zat == null) {
-                    return true;
-                }
-                return false;
-            }
-            else if (zat == null) {
-                return false;
-            }
-            if (ziss.GetHashCode() == zat.GetHashCode()) {
-                return ziss.Equals(zat);
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Safe compare
+        /// Safe compare two pocos
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="ziss"></param>
@@ -124,16 +114,60 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         protected static bool IsEqual(Poco ziss, Poco zat) {
             if (ziss == null) {
-                if (zat == null) {
+                return (zat == null);
+            }
+            else if (zat != null) {
+                if (ziss.GetHashCode() == zat.GetHashCode() &&
+                    ziss.IsEqual(zat)) {
                     return true;
                 }
-                return false;
             }
-            else if (zat == null) {
-                return false;
+            return false;
+        }
+
+        /// <summary>
+        /// Safe compare anything else
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ziss"></param>
+        /// <param name="zat"></param>
+        /// <returns></returns>
+        protected static bool IsEqual (object ziss, object zat) {
+            if (ziss == null) {
+                return (zat == null);
             }
-            if (ziss.GetHashCode() == zat.GetHashCode()) {
-                return ziss.IsEqual(zat);
+            else if (zat != null) {
+                if (ziss.GetHashCode() == zat.GetHashCode() &&
+                    ziss.Equals(zat)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Safe compare two enumerables
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ziss"></param>
+        /// <param name="zat"></param>
+        /// <returns></returns>
+        protected static bool IsEqual<T>(IEnumerable<T> ziss, IEnumerable<T> zat) {
+            if (ziss == null) {
+                return (zat == null);
+            }
+            else if (zat != null) {
+                using (var zatEnumerator = zat.GetEnumerator()) {
+                    foreach (var item in ziss) {
+                        if (!zatEnumerator.MoveNext() ||
+                            !IsEqual(item, zatEnumerator.Current)) {
+                            return false;
+                        }
+                    }
+                    if( !zatEnumerator.MoveNext()) {
+                        return true;
+                    }
+                }
             }
             return false;
         }
@@ -145,17 +179,19 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ziss"></param>
         /// <param name="zat"></param>
         /// <returns></returns>
-        protected static bool IsEqual<T>(IEnumerable<T> ziss, IEnumerable<T> zat) {
+        protected static bool IsEqual(object[] ziss, object[] zat) {
             if (ziss == null) {
-                if (zat == null) {
-                    return true;
+                return (zat == null);
+            }
+            else if (zat != null && ziss.Length == zat.Length) {
+                for(int i = 0; i < zat.Length; i++) {
+                    if (!IsEqual(ziss[i], zat[i])) {
+                        return false;
+                    }
                 }
-                return false;
+                return true;
             }
-            else if (zat == null) {
-                return false;
-            }
-            return ziss.SequenceEqual(zat);
+            return false;
         }
 
         /// <summary>

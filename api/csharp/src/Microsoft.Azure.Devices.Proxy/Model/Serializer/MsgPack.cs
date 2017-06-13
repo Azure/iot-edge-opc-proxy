@@ -32,56 +32,84 @@ namespace Microsoft.Azure.Devices.Proxy {
                 reader, context, ct).ConfigureAwait(false);
 
             message.Error = await reader.ReadInt32Async(ct).ConfigureAwait(false);
-
             message.IsResponse = await reader.ReadBoolAsync(ct).ConfigureAwait(false);
-
             message.TypeId = await reader.ReadUInt32Async(ct).ConfigureAwait(false);
 
-            message.Content = null;
-
             if (message.IsResponse) {
-                /**/ if (message.TypeId == MessageContent.Data)
+                /**/ if (message.TypeId == MessageContent.Data) {
                     message.Content = await context.Get<DataMessage>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Ping)
+                }
+                else if (message.TypeId == MessageContent.Ping) {
                     message.Content = await context.Get<PingResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Link)
+                }
+                else if (message.TypeId == MessageContent.Link) {
                     message.Content = await context.Get<LinkResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.GetOpt)
+                }
+                else if (message.TypeId == MessageContent.GetOpt) {
                     message.Content = await context.Get<GetOptResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Close)
+                }
+                else if (message.TypeId == MessageContent.Close) {
                     message.Content = await context.Get<CloseResponse>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else
+                }
+                else {
                     await reader.ReadAsync(ct).ConfigureAwait(false);
+                    /**/ if (message.TypeId == MessageContent.Open) {
+                        message.Content = new OpenResponse();
+                    }
+                    else if (message.TypeId == MessageContent.SetOpt) {
+                        message.Content = new SetOptResponse();
+                    }
+                    else if (message.TypeId == MessageContent.Poll) {
+                        message.Content = new PollResponse();
+                    }
+                    else {
+                        message.Content = null;
+                    }
+                }
             }
             else {
-                /**/ if (message.TypeId == MessageContent.Data)
+                /**/ if (message.TypeId == MessageContent.Data) {
                     message.Content = await context.Get<DataMessage>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Poll)
+                }
+                else if (message.TypeId == MessageContent.Poll) {
                     message.Content = await context.Get<PollRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Ping)
+                }
+                else if (message.TypeId == MessageContent.Ping) {
                     message.Content = await context.Get<PingRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Link)
+                }
+                else if (message.TypeId == MessageContent.Link) {
                     message.Content = await context.Get<LinkRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.SetOpt)
+                }
+                else if (message.TypeId == MessageContent.SetOpt) {
                     message.Content = await context.Get<SetOptRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.GetOpt)
+                }
+                else if (message.TypeId == MessageContent.GetOpt) {
                     message.Content = await context.Get<GetOptRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else if (message.TypeId == MessageContent.Open)
+                }
+                else if (message.TypeId == MessageContent.Open) {
                     message.Content = await context.Get<OpenRequest>().ReadAsync(
                         reader, context, ct).ConfigureAwait(false);
-                else
+                }
+                else {
                     await reader.ReadAsync(ct).ConfigureAwait(false);
+                    /**/ if (message.TypeId == MessageContent.Close) {
+                        message.Content = new CloseRequest();
+                    }
+                    else {
+                        message.Content = null;
+                    }
+                }
             }
             return message;
         }
