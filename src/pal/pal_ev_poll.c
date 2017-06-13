@@ -426,8 +426,7 @@ int32_t pal_event_port_create(
             break;
 
         // Add control sockets
-        if (-1 == socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, 
-            pal_port->control_fd))
+        if (-1 == socketpair(AF_UNIX, SOCK_STREAM, 0, pal_port->control_fd))
         {
             result = pal_os_last_error_as_prx_error();
             log_error(pal_port->log, "Failed to make control sockets (%s)",
@@ -459,7 +458,6 @@ int32_t pal_event_port_create(
     pal_event_port_close((uintptr_t)pal_port);
     return result;
 }
-
 //
 // Free the event port and vector
 //
@@ -472,35 +470,26 @@ void pal_event_port_close(
     if (!pal_port)
         return;
 
-    pal_port->running = false;
-    if (pal_port->control_fd[0] != _invalid_fd)
-    {
-        closesocket(pal_port->control_fd[0]);
-        pal_port->control_fd[0] = _invalid_fd;
-    }
-
-    if (pal_port->control_fd[1] != _invalid_fd)
-    {
-        closesocket(pal_port->control_fd[1]);
-        pal_port->control_fd[1] = _invalid_fd;
-    }
-
     if (pal_port->thread)
+    {
+        pal_port->running = false;
+        if (pal_port->control_fd[0] != _invalid_fd)
+            pal_poll_signal(pal_port);
         ThreadAPI_Join(pal_port->thread, &result);
-        
-    if (pal_port->lock)
-        lock_enter(pal_port->lock);
+    }
+
+    if (pal_port->control_fd[0] != _invalid_fd)
+        closesocket(pal_port->control_fd[0]);
+    if (pal_port->control_fd[1] != _invalid_fd)
+        closesocket(pal_port->control_fd[1]);
     if (pal_port->poll_buffer)
         mem_free(pal_port->poll_buffer);
 
     dbg_assert(DList_IsListEmpty(&pal_port->event_data_list), 
         "Leaking events registered when closing event port!");
-
     if (pal_port->lock)
-    {
-        lock_exit(pal_port->lock);
         lock_free(pal_port->lock);
-    }
+
     mem_free_type(pal_poll_port_t, pal_port);
 }
 

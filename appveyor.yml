@@ -1,31 +1,26 @@
+version: 0.2.0.{build}
 environment:
   matrix:
     - proxy: no_zlog 
-      build_args: --skip-unittests --skip-dotnet 
+      build_args: -p Win32 --skip-unittests --skip-dotnet 
     - proxy: no_zlog_x64
       build_args: -p x64 --skip-unittests --skip-dotnet 
     - proxy: with_openssl
-      build_args: --skip-unittests --skip-dotnet --use-openssl
-    - proxy: with_openssl_x64
-      build_args: -p x64 --skip-unittests --skip-dotnet --use-openssl
+      build_args: -p Win32 --skip-unittests --skip-dotnet --use-openssl
     - proxy: with_libwebsockets
-      build_args: --skip-unittests --skip-dotnet --use-libwebsockets
-    - proxy: with_libwebsockets_x64
-      build_args: -p x64 --skip-unittests --skip-dotnet --use-libwebsockets
+      build_args: -p Win32 --skip-unittests --skip-dotnet --use-libwebsockets
     - proxy: default
-      build_args: --use-zlog
+      build_args: -p Win32 --use-zlog
     - proxy: default_x64
       build_args: -p x64 --use-zlog
-image: Visual Studio 2015
+image: Visual Studio 2017
 install:
   - git submodule update --init
   - ps: Start-FileDownload 'https://libwebsockets.org:444/Win32OpenSSL-1_0_2h.exe'
   - cmd /c Win32OpenSSL-1_0_2h.exe /silent /verysilent /sp- /suppressmsgboxes
-  - ps: Start-FileDownload 'https://go.microsoft.com/fwlink/?linkid=843448' -FileName dotnet_1_1_1_install.exe
-  - cmd /c dotnet_1_1_1_install.exe /install /quiet /norestart
 build:
 build_script:
-  - bld\build.cmd --vs 14 -c %build_args%
+  - bld\build.cmd -c %build_args%
 cache:
   - C:\OpenSSL-Win32
 matrix:

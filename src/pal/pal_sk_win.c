@@ -2358,7 +2358,7 @@ int socketpair(
     // We only expect the once used for control sockets here...
     dbg_assert(domain == AF_UNIX, "Unexpected domain");
     dbg_assert(type == SOCK_STREAM, "Unexpected stream");
-    dbg_assert(protocol == IPPROTO_TCP, "Unexpected proto");
+    dbg_assert(protocol == 0, "Unexpected proto");
     (void)domain;
     (void)type;
     (void)protocol;

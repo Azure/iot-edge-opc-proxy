@@ -63,81 +63,44 @@ if(NOT "${compile_options_CXX}" STREQUAL "OFF")
     set(CMAKE_CXX_FLAGS "${compile_options_CXX} ${CMAKE_CXX_FLAGS}")
 endif()
 
-macro(compileAsC99)
-if (CMAKE_VERSION VERSION_LESS "3.1")
-    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
-        set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
-    endif()
-else()
-    set (CMAKE_C_STANDARD 99)
-    set (CMAKE_CXX_STANDARD 11)
-endif()
-endmacro(compileAsC99)
-
-#
-# Macro to direct msvc target to be linked with static crt
-#
-if(MSVC)
-    if(not ${link_dynamic_msvcrt})
-        foreach(flag_var
-                CMAKE_CXX_FLAGS 
-                CMAKE_C_FLAGS
-                CMAKE_CXX_FLAGS_DEBUG 
-                CMAKE_C_FLAGS_DEBUG
-                CMAKE_CXX_FLAGS_RELEASE 
-                CMAKE_C_FLAGS_RELEASE
-                CMAKE_CXX_FLAGS_MINSIZEREL 
-                CMAKE_C_FLAGS_MINSIZEREL
-                CMAKE_CXX_FLAGS_RELWITHDEBINFO 
-                CMAKE_C_FLAGS_RELWITHDEBINFO
-            )
-            if(${flag_var} MATCHES "/MD")
-                string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            endif(${flag_var} MATCHES "/MD")
-        endforeach(flag_var)
-        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}" 
-            CACHE STRING "MSVC C Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" 
-            CACHE STRING "MSVC CXX Debug MT flags " FORCE)
-        set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" 
-            CACHE STRING "MSVC C Release MT flags " FORCE)
-        set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" 
-            CACHE STRING "MSVC CXX Release MT flags " FORCE)
-        set (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}" 
-            CACHE STRING "MSVC C Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}" 
-            CACHE STRING "MSVC C Release MT flags " FORCE)
-        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}" 
-            CACHE STRING "MSVC CXX Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" 
-            CACHE STRING "MSVC CXX Release MT flags " FORCE)
-    endif()
-endif()
-
 if(WIN32)
-    option(use_lws "set use_lws to ON to use libwebsockets (default is OFF)" OFF)
-    option(use_openssl "set use_openssl to ON to use openssl instead of schannel (default is OFF)" OFF)
+    option(use_lws 
+        "set use_lws to ON to use libwebsockets (default is OFF)" OFF)
+    option(use_openssl 
+        "set use_openssl to ON to use openssl instead of schannel (default is OFF)" OFF)
 else()
-    option(use_lws "set use_lws to OFF to not use libwebsockets (default is ON)" ON)
-    option(use_openssl "set use_openssl to OFF to use a different library (default is ON)" ON)
+    option(use_lws 
+        "set use_lws to OFF to not use libwebsockets (default is ON)" ON)
+    option(use_openssl 
+        "set use_openssl to OFF to use a different library (default is ON)" ON)
 endif()
-    option(use_dnssd "set use_dnssd to OFF to prevent the use of dnssd and mdns (default is ON)" ON)
-    option(use_zlog "set use_zlog to ON to use zlog as logging library (default is OFF)" OFF)
+
+    option(use_dnssd 
+        "set use_dnssd to OFF to prevent the use of dnssd and mdns (default is ON)" ON)
+    option(prefer_dnssd_embedded_api 
+        "set prefer_dnssd_embedded_api to ON to try and not use the sd daemon (default is OFF)" OFF)
+    
+    option(use_zlog
+        "set use_zlog to ON to use zlog as logging library (default is OFF)" OFF)
     if(NOT ${use_zlog})
         add_definitions(-DNO_ZLOG)
     endif()
 
-    option(mem_check "set mem_check to ON (default is OFF)" OFF)
+    option(mem_check 
+        "set mem_check to ON (default is OFF)" OFF)
     if(${mem_check})
         add_definitions(-DMEM_CHECK)
     endif()
-    option(leak_detection "set leak_detection to ON (default is OFF)" OFF)
+    option(leak_detection 
+        "set leak_detection to ON (default is OFF)" OFF)
     if(${leak_detection})
         add_definitions(-DLEAK_DETECT)
     endif()
 if(WIN32)
     if(MSVC)
+        option(link_dynamic_msvcrt 
+            "set link_dynamic_msvcrt to ON to link to msvcrt dll (default is OFF)" OFF)
+
         add_definitions(-D_CRT_SECURE_NO_WARNINGS)
         if(${leak_detection} OR ${mem_check})
             add_definitions(-D_CRTDBG_MAP_ALLOC)
@@ -169,6 +132,21 @@ else()
 endif()
 
 #
+# Macro to compile as c99
+#
+macro(compileAsC99)
+if (CMAKE_VERSION VERSION_LESS "3.1")
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        set (CMAKE_C_FLAGS "--std=c99 ${CMAKE_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+    endif()
+else()
+    set (CMAKE_C_STANDARD 99)
+    set (CMAKE_CXX_STANDARD 11)
+endif()
+endmacro(compileAsC99)
+
+#
 # Add files to be installed on system
 #
 function(add_files_to_install files)
@@ -184,7 +162,7 @@ option(run_unittests "set run_unittests to ON to run unittests (default is OFF)"
 # Build a test
 #
 function(build_ut cur_test folder)
-    if (${run_unittests} AND NOT CMAKE_CROSSCOMPILING)
+    if (run_unittests AND NOT CMAKE_CROSSCOMPILING)
         add_executable(${cur_test}_exe ${${cur_test}_test_files} 
             ${${cur_test}_c_files} ${_IOTSDK_SRC}/xlogging.c ${_IOTSDK_SRC}/consolelogger.c
         )
@@ -221,17 +199,17 @@ function(build_ut cur_test folder)
                     target_link_libraries(${cur_test}_exe ${f})
                 elseif(PARSING_VALGRIND_SUPPRESSION_FILE)
                     set(VALGRIND_SUPPRESSIONS_FILE_EXTRA_PARAMETER "--suppressions=${f}")
-                endif() 
+                endif()
             endforeach()
-    
+
             add_test(NAME ${cur_test} COMMAND $<TARGET_FILE:${cur_test}_exe>)
 
             find_program(VALGRIND_FOUND NAMES valgrind)
             if(${VALGRIND_FOUND} STREQUAL VALGRIND_FOUND-NOTFOUND)
             else()
                 add_test(
-                    NAME ${cur_test}_valgrind COMMAND valgrind                 
-                        --num-callers=50 --error-exitcode=1 
+                    NAME ${cur_test}_valgrind COMMAND valgrind
+                        --num-callers=50 --error-exitcode=1
                         --trace-children=yes --leak-check=full --track-origins=yes 
                         ${VALGRIND_SUPPRESSIONS_FILE_EXTRA_PARAMETER} 
                         $<TARGET_FILE:${cur_test}_exe>)

@@ -984,28 +984,28 @@ STRING_HANDLE STRING_construct_random(
 {
     int32_t result;
     char* buffer;
-    size_t buf_len;
+size_t buf_len;
 
-    if (!len)
-        return NULL;
+if (!len)
+return NULL;
 
-    buf_len = (len + 1) / 2;
-    buffer = (char*)crt_alloc(len + 2 + buf_len);
-    if (buffer)
+buf_len = (len + 1) / 2;
+buffer = (char*)crt_alloc(len + 2 + buf_len);
+if (buffer)
+{
+    result = pal_rand_fill(
+        (unsigned char*)&buffer[len + 2], buf_len);
+    if (result == er_ok)
     {
-        result = pal_rand_fill(
-            (unsigned char*)&buffer[len + 2], buf_len);
-        if (result == er_ok)
-        {
-            // Format the buffer as base16 and terminate 
-            string_from_buf((unsigned char*)&buffer[len + 2],
-                buffer, (len + 1), false);
-            buffer[len] = 0;
-            return STRING_new_with_memory(buffer);
-        }
-        crt_free(buffer);
+        // Format the buffer as base16 and terminate 
+        string_from_buf((unsigned char*)&buffer[len + 2],
+            buffer, (len + 1), false);
+        buffer[len] = 0;
+        return STRING_new_with_memory(buffer);
     }
-    return NULL;
+    crt_free(buffer);
+}
+return NULL;
 }
 
 //
@@ -1072,6 +1072,89 @@ int32_t string_copy_service_full_name(
     if (trailing_dot)
         full_name--;
     *full_name = 0;
+    return er_ok;
+}
+
+
+//
+// Parse a range list in the form of 5;6;4-9;10
+//
+int32_t string_parse_range_list(
+    const char* range_string,
+    int32_t** tuples,
+    size_t* len
+)
+{
+    const char* ptr, *in;
+    int32_t* range_list = NULL;
+    int32_t low, high;
+    size_t index;
+
+    chk_arg_fault_return(range_string);
+    if ((len && !tuples) || (tuples && !len))
+        return er_fault;
+    //
+    // First round validate and count, then allocate and assign
+    // This is not efficient, but makes the code shorter. This
+    // is only called twice, so it should be fine.
+    //
+    while(true) 
+    {
+        // Validate range list and count items for alloc
+        index = 0;
+        in = ptr = range_string;
+        while (true)
+        {
+            low = high = strtol(in, (char**)&ptr, 10);
+            if (*ptr == '-')
+            {
+                in = ptr + 1;
+                high = strtol(in, (char**)&ptr, 10);
+                if (ptr == in)
+                    return er_invalid_format;
+            }
+            if (range_list)
+            {
+                // Enforce order for reverse ranges (e.g. 9-3)
+                *range_list++ = high > low ? low : high;
+                *range_list++ = high > low ? high : low;
+            }
+            if (ptr != in)
+                index++; // Found a valid item
+            if (!*ptr)
+                break;  // reached end
+            else if (*ptr == ' ')
+            { 
+                // Skip trailing while space
+                while (*ptr == ' ') 
+                    ptr++;
+                // But inside its not allowed...
+                if (!*ptr)
+                    break;
+                return er_invalid_format;
+            }
+            else if (*ptr != ';' || ptr == in)
+                return er_invalid_format;
+            in = ptr + 1; // Skip ;
+        }
+
+        // if called to validate or if we filled the list we are done
+        if ((!tuples && !len) || range_list)
+            break;
+
+        if (index == 0)
+        {
+            *tuples = NULL;
+            *len = 0;
+            return er_ok;
+        }
+        // Allocate range list tuples
+        range_list = (int32_t*)mem_alloc(2 * index * sizeof(int32_t));
+        if (!range_list)
+            return er_out_of_memory;
+        *tuples = range_list;
+        *len = index;
+    }
     return er_ok;
 }
 

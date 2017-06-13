@@ -83,7 +83,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__success)
     STRICT_EXPECTED_CALL(lock_create(IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_created(&k_lock_valid, sizeof(k_lock_valid))
         .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(socketpair(AF_UNIX, SOCK_STREAM, IPPROTO_TCP, IGNORED_PTR_ARG))
+    STRICT_EXPECTED_CALL(socketpair(AF_UNIX, SOCK_STREAM, 0, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer(4, pipe_valid, sizeof(pipe_valid))
         .SetReturn(0)
         .SetFailReturn(-1);
@@ -185,15 +185,16 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_1)
     port_valid.poll_buffer = (struct pollfd*)UT_MEM;
 
     // arrange 
-    STRICT_EXPECTED_CALL(closesocket(k_valid_fd))
-        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
+        .IgnoreArgument(2)
+        .SetReturn(1);
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_res(&k_thread_result_valid, sizeof(k_thread_result_valid))
         .SetReturn(THREADAPI_OK);
-    STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(closesocket(k_valid_fd))
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(h_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
-    STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
     STRICT_EXPECTED_CALL(lock_free((lock_t)0x1));
     STRICT_EXPECTED_CALL(h_free((void*)&port_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
@@ -226,8 +227,6 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_2)
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_res(&k_thread_result_valid, sizeof(k_thread_result_valid))
         .SetReturn(THREADAPI_OK);
-    STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
-    STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
     STRICT_EXPECTED_CALL(lock_free((lock_t)0x1));
     STRICT_EXPECTED_CALL(h_free((void*)&port_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);

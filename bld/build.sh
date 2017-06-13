@@ -9,6 +9,8 @@ run_unittests=ON
 skip_dotnet=0
 use_zlog=OFF
 with_memcheck=OFF
+use_dnssd=ON
+prefer_dnssd_embedded_api=OFF
 toolset=
 compile_options=" "
 MAKE_PARALLEL_JOBS=0
@@ -26,18 +28,19 @@ usage ()
     echo "options"
     echo "    --os <value>                [] Os to build on (needs Docker installed)."
     echo " -c --clean                     Build clean (Removes previous build output)."
-    echo " -C --config <value>            [Debug] Build configuration (e.g. Debug, Release)."
+    echo " -C --config <value>            [Debug Release] Build configuration (e.g. Debug, Release)."
     echo " -T --toolset <value>           An optional toolset to use."
     echo "    --cl <value>                Specify additional compile options to be passed to the compiler"
     echo " -o --build-root <value>        [/build] Directory in which to place all files during build."
     echo "    --use-zlog                  Use zlog as logging framework instead of xlogging."
+    echo "    --use-dnssd <value>         [Yes] Sets the dnssd build option (Yes, No, Embedded)."
     echo "    --with-memcheck             Compile in memory checks."
     echo "    --skip-unittests            Skips building and executing unit tests."
     echo "    --skip-dotnet               Do not build dotnet core API and packages."
     echo "    --pack-only                 Only creates packages. (Cannot be combined with --clean)"
     echo " -n --nuget-folder <value>      [/build] Folder to use when outputting nuget packages."
     echo " -x --xtrace                    print a trace of each command."
-    echo " -j <value> | --jobs <value>    Number of parallel make jobs, see description of make -j."
+    echo " -j --jobs <value>              Number of parallel make jobs, see description of make -j."
     echo "                                Unit test need a lot of memory. So --skip-unittests should be set,"
     echo '                                if you want to use all cores with -j`nproc`'
     exit 1
@@ -52,7 +55,7 @@ process_args ()
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
     TEMP=`getopt -o xo:C:T:cn:j: \
-          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-openssl,use-libwebsockets,with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
+          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-dnssd:,use-openssl,use-libwebsockets,with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
          -- "$@"`
 
     if [ $? != 0 ]; then
@@ -90,6 +93,20 @@ process_args ()
         --use-zlog)
             use_zlog=ON
             shift ;;
+        --use-dnssd)
+              if [ "${2,,}" == "no" ]; then
+                use_dnssd=OFF
+            elif [ "${2,,}" == "embedded" ]; then
+                use_dnssd=ON
+                prefer_dnssd_embedded_api=ON
+            elif [ "${2,,}" == "yes" ]; then
+                use_dnssd=ON
+            else
+                echo "Bad argument for --use-dnssd: $2"
+                usage
+                exit 1
+            fi
+            shift 2 ;;
         --use-openssl)
             shift ;;
         --use-libwebsockets)
@@ -112,10 +129,11 @@ process_args ()
         -j | --jobs)
             MAKE_PARALLEL_JOBS=$2
             shift 2 ;;
-        --) shift
+        --) 
+            shift
             break ;; # Terminate the while loop at the last option
         *)
-        usage
+            usage
             shift ;
     esac
     done
@@ -135,8 +153,8 @@ native_build()
 
             cmake $toolset -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
                   -Dcompile_options_C:STRING="$compile_options" -Dcompile_options_CXX:STRING="$compile_options" \
-                  -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog "$repo_root" \
-                              -DLWS_IPV6:BOOL=ON || \
+                  -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog -Duse_dnssd:BOOL=$use_dnssd \
+                  -Dprefer_dnssd_embedded_api:BOOL=$prefer_dnssd_embedded_api -DLWS_IPV6:BOOL=ON "$repo_root" || \
                 return 1
             
             CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || nproc)

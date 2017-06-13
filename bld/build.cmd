@@ -20,7 +20,7 @@ rem ----------------------------------------------------------------------------
 
 rem // default build options
 set build-configs=
-set build-platform=Win32
+set build-platform=win32
 if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set build-platform=x64
 set build-os=Windows
 set build-use-remote-branch=
@@ -35,10 +35,12 @@ set CMAKE_run_unittests=ON
 set CMAKE_use_openssl=OFF
 set CMAKE_use_zlog=OFF
 set CMAKE_use_lws=OFF
+set CMAKE_use_dnssd=ON
+set CMAKE_prefer_dnssd_embedded_api=OFF
 set CMAKE_mem_check=OFF
 
 set build-root="%repo-root%"\build
-set build-nuget-output=%build-root%
+set build-nuget-output=
 set build-context="%repo-root%"
 set build-branch=local
 
@@ -67,6 +69,7 @@ if "%1" equ "--pack-only" goto :arg-pack-only
 if "%1" equ "--use-zlog" goto :arg-use-zlog
 if "%1" equ "--use-libwebsockets" goto :arg-use-libwebsockets
 if "%1" equ "--use-openssl" goto :arg-use-openssl
+if "%1" equ "--use-dnssd" goto :arg-use-dnssd
 if "%1" equ "--with-memcheck" goto :arg-with-memcheck
 call :usage && exit /b 1
 :arg-trace 
@@ -110,13 +113,11 @@ set build-nuget-output=%1
 goto :args-continue
 :arg-build-platform 
 shift
-if "%1" equ "" call :usage && exit /b 1
-set build-platform=%1
-if %build-platform% == x64 (
-    set CMAKE_DIR=x64
-) else if %build-platform% == arm (
-    set CMAKE_DIR=arm
-)
+if /I "%1" == "x64" set build-platform=x64 && goto :args-continue
+if /I "%1" == "arm" set build-platform=arm && goto :args-continue
+if /I "%1" == "x86" set build-platform=win32 && goto :args-continue
+if /I not "%1" == "win32" call :usage && exit /b 1
+set build-platform=win32
 goto :args-continue
 :arg-skip-unittests 
 set CMAKE_run_unittests=OFF
@@ -126,6 +127,12 @@ set build-skip-dotnet=1
 goto :args-continue
 :arg-pack-only 
 set build-pack-only=1
+goto :args-continue
+:arg-use-dnssd 
+shift
+if /I "%1" == "No" set CMAKE_use_dnssd=OFF && goto :args-continue
+if /I "%1" == "Embedded" set CMAKE_prefer_dnssd_embedded_api=ON && goto :args-continue
+if /I not "%1" == "Yes" call :usage && exit /b 1
 goto :args-continue
 :arg-use-libwebsockets 
 set CMAKE_use_lws=ON
@@ -149,6 +156,7 @@ goto :args-loop
 
 :args-done 
 if "%build-configs%" == "" set build-configs=Debug Release 
+if "%build-nuget-output%" == "" set build-nuget-output=%build-root%
 echo Building %build-configs%...
 if not "%build-clean%" == "" (
     if not "%build-pack-only%" == "" call :usage && exit /b 1
@@ -176,15 +184,15 @@ if "%CMAKE-version%" == "" exit /b 1
 pushd %build-root%\cmake\%build-platform%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == arm (
     echo ***Running CMAKE for ARM***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else (
     echo ***Running CMAKE for Win32***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver%"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver%"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
@@ -365,18 +373,19 @@ echo -x --xtrace                 print a trace of each command.
 echo    --os ^<value^>             [Windows] OS to build on (needs Docker if Linux Flavor).
 echo    --remote                 Build current branch on remote rather than use local build context.
 echo -c --clean                  Build clean (Removes previous build output).
-echo -C --config ^<value^>         [Debug] build configuration (e.g. Debug, Release).
+echo -C --config ^<value^>         [%build-configs%] build configuration (e.g. Debug, Release).
 echo -T --toolset ^<value^>        An optional toolset to use, e.g. v140 or clang.
 echo -o --build-root ^<value^>     [/build] Directory in which to place all files during build.
 echo    --use-zlog               Use zlog as logging framework instead of xlogging.
 echo    --use-openssl            Uses openssl instead of schannel.
 echo    --use-libwebsockets      Uses libwebsockets instead of winhttp on Windows.
+echo    --use-dnssd ^<value^>      [Yes] Sets the dnssd build option (Yes, No, Embedded).
 echo    --with-memcheck          Compile in memory checks.
 echo    --skip-unittests         Skips building and executing unit tests.
 echo    --skip-dotnet            Skips building dotnet API and packages.
 echo    --pack-only              Only creates packages. (Cannot be combined with --clean)
 echo -n --nuget-folder ^<value^>   [/build] Folder to use when outputting nuget packages.
-echo -p --platform ^<value^>       [Win32] build platform (e.g. Win32, x64, ...).
-echo    --vs ^<value^>               [15] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
+echo -p --platform ^<value^>       [%build-platform%] build platform (e.g. Win32, x64, ...).
+echo    --vs ^<value^>               [%build-vs-ver%] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
 goto :eof
 

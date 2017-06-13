@@ -4026,6 +4026,434 @@ TEST_FUNCTION(string_copy_service_full_name__arg_full_size_invalid)
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_0)
+{
+    static const char* k_range_list_in = "0-10;11-12;14";
+    static const int32_t k_expected[6] = { 0, 10, 11, 12, 14, 14 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_1)
+{
+    static const char* k_range_list_in = "0";
+    static const int32_t k_expected[2] = { 0, 0 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_2)
+{
+    static const char* k_range_list_in = "10000;10002;1;2;";
+    static const int32_t k_expected[8] = { 10000, 10000, 10002, 10002, 1, 1, 2, 2 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_3)
+{
+    static const char* k_range_list_in = "10000-10002;1-2;";
+    static const int32_t k_expected[4] = { 10000, 10002, 1, 2 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_4)
+{
+    static const char* k_range_list_in = "";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, 0, range_tuple_count_valid);
+    ASSERT_IS_NULL(range_tuples_valid);
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_5)
+{
+    static const char* k_range_list_in = "   ";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, 0, range_tuple_count_valid);
+    ASSERT_IS_NULL(range_tuples_valid);
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_6)
+{
+    static const char* k_range_list_in = "10000-10002;1-2;  ";
+    static const int32_t k_expected[4] = { 10000, 10002, 1, 2 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_7)
+{
+    static const char* k_range_list_in = "10000-10002;1-2   ";
+    static const int32_t k_expected[4] = { 10000, 10002, 1, 2 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_8)
+{
+    static const char* k_range_list_in = "10002-10000;2-1";
+    static const int32_t k_expected[4] = { 10000, 10002, 1, 2 };
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+    STRICT_EXPECTED_CALL(h_realloc(sizeof(k_expected), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(size_t, _countof(k_expected) / 2, range_tuple_count_valid);
+    ASSERT_IS_TRUE(0 == memcmp(k_expected, range_tuples_valid, sizeof(k_expected)));
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+
+// 
+// Test string_parse_range_list happy path 
+// 
+TEST_FUNCTION(string_parse_range_list__success_validate)
+{
+    static const char* k_range_list_in = "0-10;11-12;14";
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, NULL, NULL);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_ok, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_invalid_0)
+{
+    static const char* k_range_list_in = ";;;;";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_invalid_1)
+{
+    static const char* k_range_list_in = ";";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_invalid_2)
+{
+    static const char* k_range_list_in = "fooo";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_invalid_3)
+{
+    static const char* k_range_list_in = "1234;444-;234";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument an invalid char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_invalid_4)
+{
+    static const char* k_range_list_in = "1234 ;1-3;4";
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(k_range_list_in, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_string argument a NULL char* value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_string_null)
+{
+    int32_t* range_tuples_valid;
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(NULL, &range_tuples_valid, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_tuples argument an invalid char** value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_tuples_invalid)
+{
+    size_t range_tuple_count_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "1234");
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(UT_MEM, NULL, &range_tuple_count_valid);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+// 
+// Test string_parse_range_list passing as range_tuples_count argument an invalid char** value 
+// 
+TEST_FUNCTION(string_parse_range_list__arg_range_tuples_count_invalid)
+{
+    int32_t* range_tuples_valid;
+    int32_t result;
+
+    strcpy(UT_MEM, "_test.test._something.local");
+
+    // arrange 
+
+    // act 
+    result = string_parse_range_list(NULL, &range_tuples_valid, NULL);
+
+    // assert 
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
 //
 // 5. Teardown tests and test suite
 //

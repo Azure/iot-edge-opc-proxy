@@ -56,6 +56,9 @@ static void xio_wsclient_free(
     dbg_assert_ptr(ws);
     
     ws->destroy = true;
+    ws->on_io_close_complete = NULL;
+    ws->on_io_error = NULL;
+
     if (!ws->closed)
         return; // Called again when closed..
 
@@ -185,11 +188,13 @@ static void xio_wsclient_deliver_close_result(
     if (ws->on_io_error && ws->last_error != er_ok)
     {
         ws->on_io_error(ws->on_io_error_context);
+         ws->on_io_error = NULL;
     }
 
     if (ws->on_io_close_complete)
     {
         ws->on_io_close_complete(ws->on_io_close_complete_context);
+        ws->on_io_close_complete = NULL;
     }
 
     ws->closed = true;
@@ -501,6 +506,7 @@ static int32_t xio_wsclient_close(
     ws->on_io_close_complete = on_io_close_complete;
     ws->on_io_close_complete_context = on_io_close_complete_context;
     ws->last_error = er_ok;
+    
     return pal_wsclient_disconnect(ws->websocket);
 }
 
@@ -514,12 +520,23 @@ static void xio_wsclient_destroy(
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
     if (!ws)
         return;
+    if (!ws->scheduler)
+    {
+        xio_wsclient_free(ws);
+        return;
+    }
+
+    // Stop any queued actions to ensure controlled free
+    prx_scheduler_clear(ws->scheduler, NULL, ws);
 
     // Detach any callbacks from buffers
     io_queue_abort(ws->outbound);
 
-    // Signal any in progress disconnect to also destroy
+    // Kick off free
     __do_next(ws, xio_wsclient_free);
+
+    // Controlled deliver close 
+    __do_next(ws, xio_wsclient_deliver_close_result);
 }
 
 //

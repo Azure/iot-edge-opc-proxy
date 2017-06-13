@@ -226,7 +226,9 @@ static int32_t prx_host_init_from_command_line(
         { "hidden",                     no_argument,            NULL, 'd' },
         { "help",                       no_argument,            NULL, 'h' },
         { "version",                    no_argument,            NULL, 'v' },
-
+        { "log-to-iothub",              no_argument,            NULL, 'T' },
+        { "allow-fs-browsing",          no_argument,            NULL, 'F' },
+        { "blacklisted-ports",          required_argument,      NULL, 'r' },
         { "import",                     required_argument,      NULL, 's' },
         { "name",                       required_argument,      NULL, 'n' },
         { "connection-string",          required_argument,      NULL, 'c' },
@@ -251,7 +253,7 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwdhvTs:n:c:l:L:C:H:D:p:x:y:t:<:",
+            c = getopt_long(argc, argv, "iuwdhvTFr:s:n:c:l:L:C:H:D:p:x:y:t:<:",
                 long_options, &option_index);
             if (c == -1)
                 break;
@@ -291,7 +293,20 @@ static int32_t prx_host_init_from_command_line(
                 }
                 break;
             case 'T':
-                __prx_config_set(prx_config_key_log_telemetry, optarg);
+                __prx_config_set_int(prx_config_key_log_telemetry, 1);
+                break;
+            case 'f':
+                __prx_config_set_int(prx_config_key_browse_fs, 1);
+                break;
+            case 'r':
+                result = string_parse_range_list(optarg, NULL, NULL);
+                if (result != er_ok)
+                {
+                    printf("ERROR: Bad arg for --blacklisted-ports option (%.128s). \n\n",
+                        optarg ? optarg : "");
+                    break;
+                }
+                __prx_config_set(prx_config_key_restricted_ports, optarg);
                 break;
             case 'x':
                 __prx_config_set(prx_config_key_proxy_user, optarg);
@@ -642,7 +657,14 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    -C options are not provided, connection \n");
     printf("                                    string is read from $_HUB_CS environment\n");
     printf("                                    variable.                               \n");
+    printf(" -F, --allow-fs-browsing            Allow clients to browse the file system.\n");
     }
+    printf(" -r, --blacklisted-ports range      Use this setting to blacklist ports the \n");
+    printf("                                    proxy must never connect to. The value  \n");
+    printf("                                    is a semicolon delimited list of values \n");
+    printf("                                    that can contain ranges, for example -r \n");
+    printf("                                    0-4839;4842-65536 restricts connections \n");
+    printf("                                    to all ports except for 4840 and 4841.  \n");
     if (pal_caps() & pal_cap_wsclient)
     {
     printf(" -w, --only-websocket               Always use websockets for outbound      \n");
@@ -653,7 +675,7 @@ static int32_t prx_host_init_from_command_line(
     printf("     --proxy-user string            traffic, with user name and password if \n");
     printf("     --proxy-pwd string             needed.                                 \n");
     }
-    printf(" -T, --log-telemetry                Send raw log output to IoT Hub on the   \n");
+    printf(" -T, --log-to-iothub                Send raw log output to IoT Hub on the   \n");
     printf("                                    proxy telemetry endpoint.               \n");
 #if !defined(NO_ZLOG)                                                              
     printf(" -l, --log-file file                File to log to using simple formatting. \n");
@@ -685,7 +707,7 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    otherwise runs proxy host process as    \n");
     printf("                                    console process.                        \n");
 #endif
-    printf(" -v, --version                        Prints the version information for this \n");
+    printf(" -v, --version                      Prints the version information for this \n");
     printf("                                    binary and exits.                       \n");
     return er_arg;
 }

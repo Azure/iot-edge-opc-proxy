@@ -52,6 +52,10 @@ void xio_socket_free(
 {
     dbg_assert_ptr(sk);
     sk->destroy = true;
+    
+    sk->on_io_close_complete = NULL;
+    sk->on_io_error = NULL;
+
     if (!sk->closed)
         return; // Called again when closed..
 
@@ -184,11 +188,13 @@ static void xio_socket_deliver_close_result(
     if (sk->on_io_error && sk->last_error != er_ok)
     {
         sk->on_io_error(sk->on_io_error_context);
+        sk->on_io_error = NULL;
     }
 
     if (sk->on_io_close_complete)
     {
         sk->on_io_close_complete(sk->on_io_close_complete_context);
+        sk->on_io_close_complete = NULL;
     }
 
     sk->closed = true;
@@ -492,17 +498,22 @@ static int xio_socket_close(
     xio_socket_t* sk = (xio_socket_t*)handle;
     chk_arg_fault_return(handle);
 
+    dbg_assert(!sk->destroy, "Closing destroyed xio");
+
     sk->on_bytes_received = NULL;
     sk->on_io_open_complete = NULL;
     sk->on_io_error = NULL;
-
-    sk->on_io_close_complete = on_io_close_complete;
-    sk->on_io_close_complete_context = on_io_close_complete_context;
     sk->last_error = er_ok;
 
     if (sk->sock)
+    {
+        sk->on_io_close_complete = on_io_close_complete;
+        sk->on_io_close_complete_context = on_io_close_complete_context;
         pal_socket_close(sk->sock);
-    else if (on_io_close_complete)
+        return er_ok;
+    }
+    
+    if (on_io_close_complete)
         on_io_close_complete(on_io_close_complete_context);
     return er_ok;
 }
@@ -515,14 +526,26 @@ static void xio_socket_destroy(
 )
 {
     xio_socket_t* sk = (xio_socket_t*)handle;
-    if (!handle)
+    if (!sk)
         return;
+    if (!sk->scheduler)
+    {
+        xio_socket_free(sk);
+        return;
+    }
+ 
+    // Stop any queued actions to ensure controlled free
+    if (sk->scheduler)
+        prx_scheduler_clear(sk->scheduler, NULL, sk);
 
     // Detach any callbacks from buffers
     io_queue_abort(sk->outbound);
 
-    // Signal any in progress disconnect to also destroy
+    // Kick off free
     __do_next(sk, xio_socket_free);
+
+    // Controlled deliver close - which will also free
+    __do_next(sk, xio_socket_deliver_close_result);
 }
 
 //

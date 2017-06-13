@@ -41,6 +41,10 @@ static const char* prx_config_key_name(
         return "policy_import";
     case prx_config_key_log_telemetry:
         return "log_telemetry";
+    case prx_config_key_browse_fs:
+        return "browse_fs";
+    case prx_config_key_restricted_ports:
+        return "restricted_ports";
     case prx_config_key_max:
     default:
         return NULL;

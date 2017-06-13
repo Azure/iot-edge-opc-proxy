@@ -25,6 +25,8 @@ typedef enum prx_config_key
     prx_config_key_token_ttl,       // Default ttl for created tokens
     prx_config_key_policy_import,   // Whether to allow policy import
     prx_config_key_log_telemetry, // Whether to send log to event hub
+    prx_config_key_browse_fs, // Whether to allow browsing filesystem
+    prx_config_key_restricted_ports,      // Ports allowed to connect to
     prx_config_key_max
 }
 prx_config_key_t;
