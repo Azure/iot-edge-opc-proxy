@@ -20,7 +20,7 @@ rem ----------------------------------------------------------------------------
 
 rem // default build options
 set build-configs=
-set build-platform=Win32
+set build-platform=win32
 if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set build-platform=x64
 set build-os=Windows
 set build-use-remote-branch=
@@ -40,7 +40,7 @@ set CMAKE_prefer_dnssd_embedded_api=OFF
 set CMAKE_mem_check=OFF
 
 set build-root="%repo-root%"\build
-set build-nuget-output=%build-root%
+set build-nuget-output=
 set build-context="%repo-root%"
 set build-branch=local
 
@@ -113,13 +113,10 @@ set build-nuget-output=%1
 goto :args-continue
 :arg-build-platform 
 shift
-if "%1" equ "" call :usage && exit /b 1
-set build-platform=%1
-if %build-platform% == x64 (
-    set CMAKE_DIR=x64
-) else if %build-platform% == arm (
-    set CMAKE_DIR=arm
-)
+if /I "%1" == "x64" set build-platform=x64 && goto :args-continue
+if /I "%1" == "arm" set build-platform=arm && goto :args-continue
+if /I "%1" == "x86" set build-platform=win32 && goto :args-continue
+if /I not "%1" == "win32" call :usage && exit /b 1
 goto :args-continue
 :arg-skip-unittests 
 set CMAKE_run_unittests=OFF
@@ -158,6 +155,7 @@ goto :args-loop
 
 :args-done 
 if "%build-configs%" == "" set build-configs=Debug Release 
+if "%build-nuget-output%" == "" set build-nuget-output=%build-root%
 echo Building %build-configs%...
 if not "%build-clean%" == "" (
     if not "%build-pack-only%" == "" call :usage && exit /b 1
