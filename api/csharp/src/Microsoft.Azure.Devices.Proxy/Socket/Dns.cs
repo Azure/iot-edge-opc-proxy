@@ -8,7 +8,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Threading;
     using System.Collections.Generic;
-    using Model;
 
     /// <summary>
     /// Provides name resolution api
@@ -25,28 +24,28 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="cached">Only return items until cache is exhausted</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static Task<IDnsServiceRecordResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord service, 
+        public static Task<IDnsServiceResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord service, 
             bool cached, CancellationToken ct) =>
             BrowseClient.CreateServiceRecordResolverAsync(proxy, service, cached, ct);
 
         //
         // Resolve service record to a host name, port, plus txt records.
         //
-        public static Task<IDnsServiceRecordResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord record,
+        public static Task<IDnsServiceResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord record,
             CancellationToken ct) =>
             BrowseAsync(proxy, record, false, ct);
 
         //
         // Resolve service record to a host name, port, plus txt records.
         //
-        public static Task<IDnsServiceRecordResolver> BrowseAsync(DnsServiceRecord record,
+        public static Task<IDnsServiceResolver> BrowseAsync(DnsServiceRecord record,
             bool cached, CancellationToken ct) =>
             BrowseAsync(null, record, cached, ct);
 
         //
         // Resolve service record to a host name, port, plus txt records.
         //
-        public static Task<IDnsServiceRecordResolver> BrowseAsync(DnsServiceRecord record,
+        public static Task<IDnsServiceResolver> BrowseAsync(DnsServiceRecord record,
             CancellationToken ct) =>
             BrowseAsync(record, false, ct);
 
@@ -59,56 +58,56 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="cached">Only return items until cache is exhausted</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(SocketAddress proxy, string serviceType, string domain,
+        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy, string serviceType, string domain,
             bool cached, CancellationToken ct) =>
             BrowseClient.CreateServiceRecordBrowserAsync(proxy, serviceType, domain ?? "local", cached, ct);
 
         //
         // Browse in cache
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(SocketAddress proxy, string serviceType, string domain,
+        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy, string serviceType, string domain,
             CancellationToken ct) =>
             BrowseAsync(proxy, serviceType, domain, false, ct);
 
         //
         // Browse for service names with specific type in a domain
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(string serviceType, string domain,
+        public static Task<IDnsServiceBrowser> BrowseAsync(string serviceType, string domain,
             bool cached, CancellationToken ct) =>
             BrowseAsync(null, serviceType, domain, cached, ct);
 
         //
         // Browse for service names with specific type in a domain
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(string serviceType, string domain,
+        public static Task<IDnsServiceBrowser> BrowseAsync(string serviceType, string domain,
             CancellationToken ct) =>
             BrowseAsync(null, serviceType, domain, false, ct);
 
         //
         // Browse for service types in a domain on a proxy
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(SocketAddress proxy, string domain,
+        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy, string domain,
             CancellationToken ct) =>
             BrowseAsync(proxy, null, domain, ct);
 
         //
         // Browse for service types in a domain
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(string domain, 
+        public static Task<IDnsServiceBrowser> BrowseAsync(string domain, 
             CancellationToken ct) =>
             BrowseAsync(null, null, domain, ct);
         
         //
         // Browse all domains on a particular proxy
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(SocketAddress proxy, 
+        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy, 
             CancellationToken ct) =>
             BrowseClient.CreateServiceRecordBrowserAsync(proxy, null, null, true, ct);
 
         //
         // Browse all domains
         //
-        public static Task<IDnsServiceRecordBrowser> BrowseAsync(CancellationToken ct) =>
+        public static Task<IDnsServiceBrowser> BrowseAsync(CancellationToken ct) =>
             BrowseClient.CreateServiceRecordBrowserAsync(null, null, null, true, ct);
 
         #endregion

@@ -25,8 +25,7 @@
 	url = https://github.com/alex85k/wingetopt
 [submodule "deps/cmp"]
 	path = deps/cmp
-	url = https://github.com/marcschier/cmp.git
-	branch = develop
+	url = https://github.com/camgunz/cmp.git
 [submodule "deps/zlog"]
 	path = deps/zlog
 	url = https://github.com/marcschier/zlog.git

@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Diagnostics;
     using System.Diagnostics.Tracing;
     using System.Globalization;
-    using Microsoft.Azure.Devices.Proxy.Model;
+    using Microsoft.Azure.Devices.Proxy;
 
     /// <summary>
     /// EventSource for the new Dynamic EventSource type of Microsoft-Azure-Devices-Proxy traces.

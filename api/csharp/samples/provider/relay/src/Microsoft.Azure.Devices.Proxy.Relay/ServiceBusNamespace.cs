@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System.Threading.Tasks;
     using System.Collections.Generic;
     using System.Xml;
-    using Model;
     using Relay;
 #if NET45 || NET46
     using ServiceBus.Messaging;

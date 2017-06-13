@@ -6,7 +6,6 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Threading.Tasks;
-    using Model;
 
     public class TcpListener {
 

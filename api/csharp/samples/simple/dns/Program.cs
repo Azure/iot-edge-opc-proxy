@@ -173,18 +173,21 @@ Operations (Mutually exclusive):
                 var entries = ResolveServiceNamesAsync(period).Result;
                 Console.WriteLine($"{entries.Count} entries resolved!!!");
             }
+
+            Console.WriteLine("Press a key to exit...");
+            Console.ReadKey();
         }
 
         /// <summary>
         /// Browse folders
         /// </summary>
-        static async Task<List<Model.FileEntry>> BrowseFilesAsync(SocketAddress proxy, string folder,
+        static async Task<List<FileEntry>> BrowseFilesAsync(SocketAddress proxy, string folder,
             int period, bool cache) {
             Console.WriteLine($"Listing {folder??"<root>"} ...");
             var cts = new CancellationTokenSource(period);
-            var files = new List<Model.FileEntry>();
+            var files = new List<FileEntry>();
             try {
-                using (var browser = await Model.BrowseClient.CreateDirectoryBrowserAsync(
+                using (var browser = await BrowseClient.CreateDirectoryBrowserAsync(
                     proxy, folder, cache, CancellationToken.None)) { 
                     cts.Token.ThrowIfCancellationRequested();
                     while (true) {
@@ -195,7 +198,7 @@ Operations (Mutually exclusive):
                             Console.WriteLine($"{DateTime.Now}: File {browser.Current} on {browser.Current.Interface} ");
                             files.Add(browser.Current);
                         }
-                        catch(Model.BrowseException e) {
+                        catch(BrowseException e) {
                             Console.WriteLine($"Browse error {e.Message}");
                         }
                     }
@@ -213,7 +216,7 @@ Operations (Mutually exclusive):
             int period, bool cache) {
             var files = await BrowseFilesAsync(proxy, folder, period, cache);
             foreach (var result in files) {
-                if (result.Info.Type == (int)Model.FileType.Directory) {
+                if (result.Info.Type == (int)FileType.Directory) {
                     await BrowseFilesRecursiveAsync(result.Interface, result.FileName, period, cache);
                 }
             }
@@ -238,7 +241,6 @@ Operations (Mutually exclusive):
                         else
                             domains.Add(browser.Current.Domain);
                     }
-                    
                 }
             }
             catch (OperationCanceledException) { }

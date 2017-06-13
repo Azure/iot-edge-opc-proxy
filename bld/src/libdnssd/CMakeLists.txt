@@ -7,6 +7,7 @@
 #
 
 compileAsC99()
+setProductCFlags()
 
 #
 # Source

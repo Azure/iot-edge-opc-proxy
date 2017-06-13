@@ -11,18 +11,62 @@
 #include "util_misc.h"
 #include "util_string.h"
 
+#include "azure_c_shared_utility/doublylinkedlist.h"
+
 #if !defined(UNIT_TEST)
+#include <avahi-common/defs.h>
 #include <avahi-common/error.h>
 #include <avahi-common/domain.h>
 #include <avahi-common/thread-watch.h>
+#if !defined(_AVAHI_EMBEDDED)
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
+#else
+#include <avahi-core/core.h>
+#include <avahi-core/lookup.h>
+#define AvahiClient \
+    AvahiServer
+#define AvahiClientState \
+    AvahiServerState
+#define avahi_client_free \
+    avahi_server_free
+#define avahi_client_get_domain_name \
+    avahi_server_get_domain_name
+#define avahi_client_errno \
+    avahi_server_errno
+#define AvahiServiceResolver \
+    AvahiSServiceResolver
+#define avahi_service_resolver_new \
+    avahi_s_service_resolver_new
+#define avahi_service_resolver_free \
+    avahi_s_service_resolver_free
+#define AvahiServiceBrowser \
+    AvahiSServiceBrowser
+#define avahi_service_browser_new \
+    avahi_s_service_browser_new
+#define avahi_service_browser_free \
+    avahi_s_service_browser_free
+#define AvahiServiceTypeBrowser \
+    AvahiSServiceTypeBrowser
+#define avahi_service_type_browser_new \
+    avahi_s_service_type_browser_new
+#define avahi_service_type_browser_free \
+    avahi_s_service_type_browser_free
+#define AvahiDomainBrowser \
+    AvahiSDomainBrowser
+#define avahi_domain_browser_new \
+    avahi_s_domain_browser_new
+#define avahi_domain_browser_free \
+    avahi_s_domain_browser_free
+#endif // !_AVAHI_EMBEDDED
+#else
+#if defined (_AVAHI_EMBEDDED)
+#undef _AVAHI_EMBEDDED
+#endif
 #endif
 
-#include "azure_c_shared_utility/doublylinkedlist.h"
-
 //
-// Avahi client wrapper - wraps dbus access through typed api
+// Avahi client/server wrapper
 //
 struct pal_sdclient
 {
@@ -259,7 +303,13 @@ static void pal_sdclient_callback(
 
     switch (state) 
     {
+#if !defined(_AVAHI_EMBEDDED)
+    case AVAHI_CLIENT_CONNECTING:
+        log_trace(client->log, "Avahi connecting...");
+        break;
     case AVAHI_CLIENT_FAILURE:
+#endif
+    case AVAHI_SERVER_FAILURE:
         error = avahi_client_errno(avahi_client);
         log_error(client->log, "Avahi client failure %s!", avahi_strerror(error));
         if (client->client)
@@ -281,15 +331,14 @@ static void pal_sdclient_callback(
       //  }
 
         break;
-
-    case AVAHI_CLIENT_S_RUNNING:
-        log_trace(client->log, "Avahi connected!");
+    case AVAHI_SERVER_COLLISION:
+    case AVAHI_SERVER_REGISTERING:
         break;
-    case AVAHI_CLIENT_CONNECTING:
-        log_trace(client->log, "Avahi connecting...");
+    case AVAHI_SERVER_RUNNING:
+        log_trace(client->log, "Avahi connected, server running!");
         break;
     default:
-        dbg_assert(0, "Unexpected avahi client state %d", state);
+        dbg_assert(0, "Unexpected avahi client/server state %d", state);
         break;
     }
 }
@@ -301,50 +350,19 @@ static void pal_sdbrowser_remove_handle(
     pal_sdhandle_t* handle
 )
 {
-    int32_t result;
-
     dbg_assert_ptr(handle);
     dbg_assert_ptr(handle->browser);
 
     // Assumption is that this is under polling lock
-
     if (handle->resolver)
-    {
-        result = avahi_service_resolver_free(handle->resolver);
-        if (result != AVAHI_OK)
-        {
-            // Yet memory is freed, hence just print warning
-            log_info(handle->browser->log,
-                "Failed to release remote service resolver (%d)", result);
-        }
-    }
+        avahi_service_resolver_free(handle->resolver);
     if (handle->service_types)
-    {
-        result = avahi_service_type_browser_free(handle->service_types);
-        if (result != AVAHI_OK)
-        {
-            log_info(handle->browser->log,
-                "Failed to release remote type browser (%d)", result);
-        }
-    }
+        avahi_service_type_browser_free(handle->service_types);
     if (handle->domains)
-    {
-        result = avahi_domain_browser_free(handle->domains);
-        if (result != AVAHI_OK)
-        {
-            log_info(handle->browser->log,
-                "Failed to release remote domain browser (%d)", result);
-        }
-    }
+        avahi_domain_browser_free(handle->domains);
     if (handle->services)
-    {
-        result = avahi_service_browser_free(handle->services);
-        if (result != AVAHI_OK)
-        {
-            log_info(handle->browser->log,
-                "Failed to release remote service browser (%d)", result);
-        }
-    }
+        avahi_service_browser_free(handle->services);
+
     if (handle->service_name)
         mem_free(handle->service_name);
 
@@ -1054,6 +1072,9 @@ int32_t pal_sdclient_create(
     int32_t result;
     pal_sdclient_t* client;
     int error;
+#if defined(_AVAHI_EMBEDDED)
+    AvahiServerConfig config;
+#endif
 
     chk_arg_fault_return(created);
     client = (pal_sdclient_t*)mem_zalloc_type(pal_sdclient_t);
@@ -1071,8 +1092,33 @@ int32_t pal_sdclient_create(
             break;
         }
 
+#if defined(_AVAHI_EMBEDDED)
+        memset(&config, 0, sizeof(AvahiServerConfig));
+        avahi_server_config_init(&config);
+
+        // Unicast DNS server to use for wide area lookup
+        avahi_address_parse("192.168.50.1", AVAHI_PROTO_UNSPEC,
+            &config.wide_area_servers[0]);
+
+        // See avahi-daemon.conf for help
+        config.n_wide_area_servers = 1;
+        config.enable_wide_area = 1;
+        config.publish_hinfo = 1;
+        config.publish_addresses = 1;
+        config.publish_workstation = 1;
+        config.publish_domain = 1;
+        config.publish_a_on_ipv6 = 1;
+        config.publish_aaaa_on_ipv4 = 1;
+        config.enable_reflector = 1;
+        config.reflect_ipv = 1; 
+
+        client->client = avahi_server_new(avahi_threaded_poll_get(client->polling), 
+            &config, pal_sdclient_callback, client, &error);
+        avahi_server_config_free(&config);
+#else
         client->client = avahi_client_new(avahi_threaded_poll_get(client->polling),
             AVAHI_CLIENT_NO_FAIL, pal_sdclient_callback, client, &error);
+#endif
         if (!client->client)
         {
             log_error(client->log, "Failed to create client object (%s).",

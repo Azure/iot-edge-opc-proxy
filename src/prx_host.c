@@ -228,7 +228,7 @@ static int32_t prx_host_init_from_command_line(
         { "version",                    no_argument,            NULL, 'v' },
         { "log-to-iothub",              no_argument,            NULL, 'T' },
         { "allow-fs-browsing",          no_argument,            NULL, 'F' },
-        { "restricted-ports",           required_argument,      NULL, 'r' },
+        { "blacklisted-ports",          required_argument,      NULL, 'r' },
         { "import",                     required_argument,      NULL, 's' },
         { "name",                       required_argument,      NULL, 'n' },
         { "connection-string",          required_argument,      NULL, 'c' },
@@ -302,7 +302,7 @@ static int32_t prx_host_init_from_command_line(
                 result = string_parse_range_list(optarg, NULL, NULL);
                 if (result != er_ok)
                 {
-                    printf("ERROR: Bad arg for --restricted-ports option (%.128s). \n\n",
+                    printf("ERROR: Bad arg for --blacklisted-ports option (%.128s). \n\n",
                         optarg ? optarg : "");
                     break;
                 }
@@ -659,10 +659,12 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    variable.                               \n");
     printf(" -F, --allow-fs-browsing            Allow clients to browse the file system.\n");
     }
-    printf(" -r, --restricted-ports range       Use this setting to limit the ports the \n");
-    printf("                                    proxy will connect to. The value is a   \n");
-    printf("                                    semicolon delimited list of ports that  \n");
-    printf("                                    can contain ranges, e.g. -P 2;4;7-19;80 \n");
+    printf(" -r, --blacklisted-ports range      Use this setting to blacklist ports the \n");
+    printf("                                    proxy must never connect to. The value  \n");
+    printf("                                    is a semicolon delimited list of values \n");
+    printf("                                    that can contain ranges, for example -r \n");
+    printf("                                    0-4839;4842-65536 restricts connections \n");
+    printf("                                    to all ports except for 4840 and 4841.  \n");
     if (pal_caps() & pal_cap_wsclient)
     {
     printf(" -w, --only-websocket               Always use websockets for outbound      \n");

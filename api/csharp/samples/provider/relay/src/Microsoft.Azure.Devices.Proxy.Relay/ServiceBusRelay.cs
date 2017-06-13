@@ -10,7 +10,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System.Threading.Tasks;
     using System.Collections.Concurrent;
     using Relay;
-    using Model;
     using System.Linq;
 
     /// <summary>

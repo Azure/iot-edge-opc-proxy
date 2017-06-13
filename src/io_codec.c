@@ -856,7 +856,8 @@ static int32_t cmp_ctx_get_err(
     case 13  /* INVALID_TYPE_ERROR */              : return er_arg;
     case 14  /* LENGTH_READING_ERROR */            : return er_invalid_format;
     case 15  /* LENGTH_WRITING_ERROR */            : return er_writing;
-    case 16                                        : return er_fault;
+    case 16  /* SKIP_DEPTH_LIMIT_EXCEEDED_ERROR */ : return er_fault;
+    case 17                                        : return er_fault;
     case cmp_out_of_memory_error                   : return er_out_of_memory;
     }
     return er_unknown;
@@ -1386,6 +1387,7 @@ static int32_t mpack_init_ctx(
 
     cmp_ctx->buf = stream;
     cmp_ctx->read = cmp_stream_read;
+    cmp_ctx->skip = NULL; // Use read instead
     cmp_ctx->write = cmp_stream_write;
 
     ctx->context = cmp_ctx;

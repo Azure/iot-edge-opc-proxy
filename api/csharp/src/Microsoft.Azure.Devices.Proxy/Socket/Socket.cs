@@ -8,7 +8,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Collections.Generic;
     using System.Threading;
     using System.Threading.Tasks;
-    using Model;
     using Provider;
 
     /// <summary>

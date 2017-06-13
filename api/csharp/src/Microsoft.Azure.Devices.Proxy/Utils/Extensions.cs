@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Text;
     using System.Threading.Tasks;
 
-    public static class Extensions {
+    public static class UtilsExtensions {
         public static Task<Byte[]> ToBytes(this Stream stream) {
             byte[] bytes = new byte[stream.Length];
             int read, current = 0;

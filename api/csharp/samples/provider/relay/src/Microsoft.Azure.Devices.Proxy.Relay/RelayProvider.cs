@@ -5,7 +5,6 @@
 
 namespace Microsoft.Azure.Devices.Proxy.Provider {
     using Proxy;
-    using Model;
     using System.Threading.Tasks;
     using System;
 

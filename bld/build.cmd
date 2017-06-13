@@ -35,6 +35,8 @@ set CMAKE_run_unittests=ON
 set CMAKE_use_openssl=OFF
 set CMAKE_use_zlog=OFF
 set CMAKE_use_lws=OFF
+set CMAKE_use_dnssd=ON
+set CMAKE_prefer_dnssd_embedded_api=OFF
 set CMAKE_mem_check=OFF
 
 set build-root="%repo-root%"\build
@@ -67,6 +69,7 @@ if "%1" equ "--pack-only" goto :arg-pack-only
 if "%1" equ "--use-zlog" goto :arg-use-zlog
 if "%1" equ "--use-libwebsockets" goto :arg-use-libwebsockets
 if "%1" equ "--use-openssl" goto :arg-use-openssl
+if "%1" equ "--use-dnssd" goto :arg-use-dnssd
 if "%1" equ "--with-memcheck" goto :arg-with-memcheck
 call :usage && exit /b 1
 :arg-trace 
@@ -127,6 +130,17 @@ goto :args-continue
 :arg-pack-only 
 set build-pack-only=1
 goto :args-continue
+:arg-use-dnssd 
+shift
+if "%1" equ "" call :usage && exit /b 1
+if /I %1 == No (
+    set CMAKE_use_dnssd=OFF
+) else if /I %1 == Embedded (
+    set CMAKE_prefer_dnssd_embedded_api=ON
+) else if /I not %1 == Yes (
+    call :usage && exit /b 1
+)
+goto :args-continue
 :arg-use-libwebsockets 
 set CMAKE_use_lws=ON
 echo     ... with libwebsockets
@@ -176,15 +190,15 @@ if "%CMAKE-version%" == "" exit /b 1
 pushd %build-root%\cmake\%build-platform%
 if %build-platform% == x64 (
     echo ***Running CMAKE for Win64***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver% Win64"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else if %build-platform% == arm (
     echo ***Running CMAKE for ARM***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver% ARM"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 ) else (
     echo ***Running CMAKE for Win32***
-    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% %repo-root% -G "Visual Studio %build-vs-ver%"
+    call cmake %CMAKE_toolset% -Drun_unittests:BOOL=%CMAKE_run_unittests% -Dmem_check:BOOL=%CMAKE_mem_check% -Duse_lws:BOOL=%CMAKE_use_lws% -Duse_zlog:BOOL=%CMAKE_use_zlog% -Duse_openssl:BOOL=%CMAKE_use_openssl% -Duse_dnssd:BOOL=%CMAKE_use_dnssd% -Dprefer_dnssd_embedded_api:BOOL=%CMAKE_prefer_dnssd_embedded_api% %repo-root% -G "Visual Studio %build-vs-ver%"
     if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 )
 popd
@@ -371,6 +385,7 @@ echo -o --build-root ^<value^>     [/build] Directory in which to place all file
 echo    --use-zlog               Use zlog as logging framework instead of xlogging.
 echo    --use-openssl            Uses openssl instead of schannel.
 echo    --use-libwebsockets      Uses libwebsockets instead of winhttp on Windows.
+echo    --use-dnssd ^<value^>      [Yes] Sets the dnssd build option (Yes, No, Embedded).
 echo    --with-memcheck          Compile in memory checks.
 echo    --skip-unittests         Skips building and executing unit tests.
 echo    --skip-dotnet            Skips building dotnet API and packages.
