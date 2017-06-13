@@ -117,6 +117,7 @@ if /I "%1" == "x64" set build-platform=x64 && goto :args-continue
 if /I "%1" == "arm" set build-platform=arm && goto :args-continue
 if /I "%1" == "x86" set build-platform=win32 && goto :args-continue
 if /I not "%1" == "win32" call :usage && exit /b 1
+set build-platform=win32
 goto :args-continue
 :arg-skip-unittests 
 set CMAKE_run_unittests=OFF
