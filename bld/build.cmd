@@ -132,14 +132,9 @@ set build-pack-only=1
 goto :args-continue
 :arg-use-dnssd 
 shift
-if "%1" equ "" call :usage && exit /b 1
-if /I %1 == No (
-    set CMAKE_use_dnssd=OFF
-) else if /I %1 == Embedded (
-    set CMAKE_prefer_dnssd_embedded_api=ON
-) else if /I not %1 == Yes (
-    call :usage && exit /b 1
-)
+if /I "%1" == "No" set CMAKE_use_dnssd=OFF && goto :args-continue
+if /I "%1" == "Embedded" set CMAKE_prefer_dnssd_embedded_api=ON && goto :args-continue
+if /I not "%1" == "Yes" call :usage && exit /b 1
 goto :args-continue
 :arg-use-libwebsockets 
 set CMAKE_use_lws=ON
