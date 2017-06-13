@@ -147,48 +147,6 @@ endif()
 endmacro(compileAsC99)
 
 #
-# Macro to direct msvc target to be linked with static crt
-#
-macro(setProductCFlags)
-if(MSVC)
-    if(NOT ${link_dynamic_msvcrt})
-        foreach(flag_var
-                CMAKE_CXX_FLAGS 
-                CMAKE_C_FLAGS
-                CMAKE_CXX_FLAGS_DEBUG 
-                CMAKE_C_FLAGS_DEBUG
-                CMAKE_CXX_FLAGS_RELEASE 
-                CMAKE_C_FLAGS_RELEASE
-                CMAKE_CXX_FLAGS_MINSIZEREL 
-                CMAKE_C_FLAGS_MINSIZEREL
-                CMAKE_CXX_FLAGS_RELWITHDEBINFO 
-                CMAKE_C_FLAGS_RELWITHDEBINFO
-            )
-            if(${flag_var} MATCHES "/MD")
-                string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            endif(${flag_var} MATCHES "/MD")
-        endforeach(flag_var)
-        set (CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}" 
-            CACHE STRING "MSVC C Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}" 
-            CACHE STRING "MSVC CXX Debug MT flags " FORCE)
-        set (CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE}" 
-            CACHE STRING "MSVC C Release MT flags " FORCE)
-        set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" 
-            CACHE STRING "MSVC CXX Release MT flags " FORCE)
-        set (CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL}" 
-            CACHE STRING "MSVC C Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL}" 
-            CACHE STRING "MSVC C Release MT flags " FORCE)
-        set (CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO}" 
-            CACHE STRING "MSVC CXX Debug MT flags " FORCE)    
-        set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}" 
-            CACHE STRING "MSVC CXX Release MT flags " FORCE)
-    endif()
-endif()
-endmacro(setProductCFlags)
-
-#
 # Add files to be installed on system
 #
 function(add_files_to_install files)
@@ -204,7 +162,7 @@ option(run_unittests "set run_unittests to ON to run unittests (default is OFF)"
 # Build a test
 #
 function(build_ut cur_test folder)
-    if (${run_unittests} AND NOT CMAKE_CROSSCOMPILING)
+    if (run_unittests AND NOT CMAKE_CROSSCOMPILING)
         add_executable(${cur_test}_exe ${${cur_test}_test_files} 
             ${${cur_test}_c_files} ${_IOTSDK_SRC}/xlogging.c ${_IOTSDK_SRC}/consolelogger.c
         )

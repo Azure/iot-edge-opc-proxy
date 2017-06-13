@@ -95,6 +95,7 @@ else()
     if(CMAKE_CROSSCOMPILING)
         # As mentioned at https://cmake.org/Wiki/CMake_Cross_Compiling the
         # pkg-config tool can not be used by cmake while cross compiling.
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_cred_stub)
     else()
         pkg_check_modules(LIBSECRET libsecret-1)
         if(LIBSECRET_FOUND)
@@ -225,7 +226,6 @@ if(use_openssl)
     message(STATUS "linking with openssl")    
 endif()
 
-setProductCFlags()
 compileAsC99()
 
 #
@@ -313,6 +313,7 @@ endif()
 #
 # proxy static library target
 #
+    linkStaticCrt(0)
     add_library(libproxy-static STATIC 
         $<TARGET_OBJECTS:libiotsdk> 
         ${source_c_files}

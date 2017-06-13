@@ -35,7 +35,6 @@ if(WIN32)
 endif()
 
 compileAsC99()
-setProductCFlags()
 
 #
 # Zlog based logger shared Library target
