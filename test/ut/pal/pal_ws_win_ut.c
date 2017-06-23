@@ -256,13 +256,6 @@ TEST_FUNCTION(pal_win_wsclient_create__success_2)
     STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_host, NULL))
         .SetReturn(k_proxy_host);
 
-    STRICT_EXPECTED_CALL(h_realloc(22, NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
-        .SetReturn((void*)(UT_MEM + 128));
-    STRICT_EXPECTED_CALL(_prx_config())
-        .SetReturn((prx_config_t*)0x1);
-    STRICT_EXPECTED_CALL(prx_config_get_string((prx_config_t*)0x1, prx_config_key_proxy_port, NULL))
-        .SetReturn(k_proxy_port);
     STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_valid, -1, NULL, 0))
         .SetReturn(10);
     STRICT_EXPECTED_CALL(h_realloc(10 * sizeof(wchar_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))

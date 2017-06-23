@@ -29,8 +29,6 @@ static const char* prx_config_key_name(
     {
     case prx_config_key_proxy_host:
         return "proxy_host";
-    case prx_config_key_proxy_port:
-        return "proxy_port";
     case prx_config_key_proxy_user:
         return "proxy_user";
     case prx_config_key_proxy_pwd:

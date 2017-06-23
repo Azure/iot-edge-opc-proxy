@@ -1017,23 +1017,43 @@ static int32_t prx_ns_iot_hub_rest_status_code_to_prx_error(
 //
 // Set proxy information on handle if configured
 //
-static void prx_ns_iot_hub_rest_call_configure_proxy(
-    HTTPAPIEX_HANDLE http_handle
+static int32_t prx_ns_iot_hub_rest_call_configure_proxy(
+    HTTPAPIEX_HANDLE http_handle,
+    void** buffer_to_free
 )
 {
+    int32_t result;
     HTTP_PROXY_OPTIONS proxy_options;
-    const char* ptr;
+    char* ptr, *buffer = NULL;
+    int port = 0;
 
     dbg_assert_ptr(http_handle);
+    dbg_assert_ptr(buffer_to_free);
 
-    ptr = __prx_config_get(prx_config_key_proxy_host, NULL);
+    *buffer_to_free = NULL;
+    ptr = (char*)__prx_config_get(prx_config_key_proxy_host, NULL);
     if (!ptr)
-        return;
+        return er_ok;
+    result = string_clone(ptr, &buffer);
+    if (result != er_ok)
+        return result;
 
-    proxy_options.host_address = ptr;
+    // Remove port from buffer to just leave string
+    ptr = buffer;
+    while (*ptr && *ptr != ':')
+        ptr++;
+    if (*ptr)
+    {
+        *ptr++ = 0;
+        port = atoi(ptr);
+    }
+    if (!port)
+        port = 80;  // Try default port 80
+
+    proxy_options.host_address = buffer;
+    proxy_options.port = port;
     proxy_options.username = __prx_config_get(prx_config_key_proxy_user, NULL);
     proxy_options.password = __prx_config_get(prx_config_key_proxy_pwd, NULL);
-    proxy_options.port = __prx_config_get_int(prx_config_key_proxy_port, 0);
 
     if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
         &proxy_options))
@@ -1041,6 +1061,9 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
         log_trace(NULL, "Failed to configure proxy settings using httpapi option."
             "Proxy settings need to be configured using platform mechanisms.");
     }
+
+    *buffer_to_free = buffer;
+    return er_ok;
 }
 
 //
@@ -1060,10 +1083,11 @@ static int32_t prx_ns_iot_hub_rest_call(
 {
     int32_t result;
     HTTPAPIEX_RESULT http_result;
-    HTTPAPIEX_HANDLE http_handle = NULL;
-    HTTP_HEADERS_HANDLE request_headers = NULL, response_headers = NULL;
-    STRING_HANDLE token = NULL, path = NULL, request_id = NULL;
-    io_token_provider_t* provider = NULL;
+    HTTPAPIEX_HANDLE http_handle;
+    HTTP_HEADERS_HANDLE request_headers, response_headers;
+    STRING_HANDLE token, path, request_id;
+    io_token_provider_t* provider;
+    void* proxy_buffer;
     int64_t ttl;
 
     dbg_assert_ptr(spec);
@@ -1072,6 +1096,15 @@ static int32_t prx_ns_iot_hub_rest_call(
 
     for (int retry = 0; retry < 10; retry++)
     {
+        token = NULL;
+        path = NULL;
+        request_id = NULL;
+        request_headers = NULL;
+        response_headers = NULL;
+        provider = NULL;
+        http_handle = NULL;
+        proxy_buffer = NULL;
+
         do
         {
             result = io_cs_create_token_provider(spec, &provider);
@@ -1137,7 +1170,10 @@ static int32_t prx_ns_iot_hub_rest_call(
             http_handle = HTTPAPIEX_Create(io_cs_get_host_name(spec));
             if (!http_handle)
                 break;
-            prx_ns_iot_hub_rest_call_configure_proxy(http_handle);
+
+            result = prx_ns_iot_hub_rest_call_configure_proxy(http_handle, &proxy_buffer);
+            if (result != er_ok)
+                break;
 
             http_result = HTTPAPIEX_ExecuteRequest(http_handle, type,
                 STRING_c_str(path), req_headers,
@@ -1166,6 +1202,8 @@ static int32_t prx_ns_iot_hub_rest_call(
             io_token_provider_release(provider);
         if (http_handle)
             HTTPAPIEX_Destroy(http_handle);
+        if (proxy_buffer)
+            mem_free(proxy_buffer);
 
         if (result != er_ok || *status_code != 429)
             break; // Done...

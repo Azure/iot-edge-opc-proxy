@@ -18,7 +18,6 @@ typedef struct prx_config prx_config_t;
 typedef enum prx_config_key
 {
     prx_config_key_proxy_host,       // Host name of the proxy server
-    prx_config_key_proxy_port,                // Port of proxy server
     prx_config_key_proxy_user,                   // User name and ...
     prx_config_key_proxy_pwd,       // ... password to use to connect
     prx_config_key_connect_flag,      // Controls connection behavior

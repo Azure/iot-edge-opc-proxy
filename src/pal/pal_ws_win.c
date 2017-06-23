@@ -886,26 +886,9 @@ int32_t pal_wsclient_create(
         }
         else
         {
-            // Create <host>:<port> name for proxy to connect to
-            buf = (char*)mem_alloc(strlen(value) + 12);
-            if (!buf)
-                result = er_out_of_memory;
-            else
-            {
-                strcpy(buf, value);
-                value = __prx_config_get(prx_config_key_proxy_port, NULL);
-                if (value && atoi(value))
-                {
-                    strcat(buf, ":");
-                    strcat(buf, value);
-                }
-                // Proxy configuration passed from command line or configuration
-                result = pal_string_clone_as_wide_string(buf, &w_value);
-                mem_free(buf);
-            }
+            result = pal_string_clone_as_wide_string(value, &w_value);
             if (result != er_ok)
                 break;
-
             wsclient->h_session = WinHttpOpen(NULL,
                 WINHTTP_ACCESS_TYPE_NAMED_PROXY, w_value, L"<local>", WINHTTP_FLAG_ASYNC);
             if (!wsclient->h_session)
