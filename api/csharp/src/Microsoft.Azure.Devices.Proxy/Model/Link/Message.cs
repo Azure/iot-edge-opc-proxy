@@ -64,12 +64,30 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         [DataMember(Name = "content", Order = 8)]
         public IMessageContent Content { get; set; }
-        public string DeviceId { get; internal set; }
+
+        internal string DeviceId { get; set; }
 
         /// <summary>
         /// Create an empty message 
         /// </summary>
         public Message() {
+        }
+
+        /// <summary>
+        /// Create a shallow clone - does not include content
+        /// </summary>
+        /// <param name="message"></param>
+        internal Message(Message message) : 
+            this(message.Source, message.Target, message.Proxy, message.Content) {
+            DeviceId = message.DeviceId;
+        }
+
+        /// <summary>
+        /// Create message with specific buffer
+        /// </summary>
+        /// <param name="buf"></param>
+        public Message(Reference source, Reference target, IMessageContent content) :
+            this(source, target, Reference.Null, content) {
         }
 
         /// <summary>
@@ -83,14 +101,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             Source = source ?? new Reference();
             Target = target ?? new Reference();
             Proxy = proxy ?? new Reference();
-        }
-
-        /// <summary>
-        /// Create message with specific buffer
-        /// </summary>
-        /// <param name="buf"></param>
-        public Message(Reference source, Reference target, IMessageContent content) : 
-            this(source, target, Reference.Null, content) {
         }
 
         /// <summary>

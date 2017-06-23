@@ -5,6 +5,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
     using System.Text;
@@ -15,16 +16,14 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// expected that all entries contain server and server meta data if
     /// available.
     /// </summary>
-    public class DnsServiceEntry : IEquatable<DnsServiceEntry> {
+    public class DnsServiceEntry : Poco<DnsServiceEntry>, IEnumerable<KeyValuePair<string, string>> {
 
         /// <summary>
         /// In case of dns-sd, the SRV entry related to PTR record.
         /// This address should be resolved using the Host resolver
         /// or can be passed directly to BindAsync/ConnectAsync.
         /// </summary>
-        public ProxySocketAddress Address { get; internal set; }
-
-        // TODO: Need to have interface info in here!
+        public SocketAddress Address { get; internal set; }
 
         /// <summary>
         /// In case of dns-sd, PTR entry.  This is the full record
@@ -41,36 +40,48 @@ namespace Microsoft.Azure.Devices.Proxy {
         public DnsTxtRecord[] TxtRecords { get; internal set; }
 
         /// <summary>
-        /// Internal constructor
+        /// Returns a value for a key in the text records 
         /// </summary>
-        internal DnsServiceEntry() { }
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
+        /// <param name="key"></param>
         /// <returns></returns>
-        public bool Equals(DnsServiceEntry that) {
-            if (that == null) {
-                return false;
+        public string this[string key] {
+            get {
+                foreach (var record in TxtRecords) {
+                    if (record.AsKeyValuePair().Key.Equals(key)) {
+                        return key;
+                    }
+                }
+                throw new IndexOutOfRangeException($"{key} not found");
             }
-            return
-                this.Service.Equals(that.Service) &&
-                this.Address.Equals(that.Address) &&
-                this.TxtRecords.SequenceEqual(that.TxtRecords);
         }
 
         /// <summary>
-        /// Comparison
+        /// Enumerator to iterate through text record key value pairs
         /// </summary>
-        /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(object that) {
-            return Equals(that as DnsServiceEntry);
+        public IEnumerator<KeyValuePair<String, String>> GetEnumerator() {
+            foreach (var item in TxtRecords) {
+                yield return item.AsKeyValuePair();
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        public override bool IsEqual(DnsServiceEntry that) {
+            return
+                Service.Equals(that.Service) &&
+                Address.Equals(that.Address) &&
+                TxtRecords.SequenceEqual(that.TxtRecords);
+        }
+
+        protected override void SetHashCode() {
+            MixToHash(Service);
+            MixToHash(Address);
+            MixToHash(TxtRecords);
         }
 
         /// <summary>
-        /// Stringify address
+        /// Stringify entry
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
@@ -84,15 +95,6 @@ namespace Microsoft.Azure.Devices.Proxy {
                 bld.AppendLine(TxtRecords[i].ToString());
             }
             return bld.ToString();
-        }
-
-        /// <summary>
-        /// Returns hash 
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode() {
-            return
-                ToString().GetHashCode();
         }
     }
 }

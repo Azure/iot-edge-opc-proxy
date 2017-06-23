@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Properties of item
         /// </summary>
         [DataMember(Name = "props", Order = 5)]
-        public HashSet<PropertyBase> Properties { get; set; } = new HashSet<PropertyBase>();
+        public List<PropertyBase> Properties { get; set; } = new List<PropertyBase>();
 
         /// <summary>
         /// Proxy from which the response was received
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsEqual(Error, that.Error) &&
                 IsEqual(Flags, that.Flags) &&
                 IsEqual(Item, that.Item) &&
-                Properties.SetEquals(that.Properties);
+                Properties.SequenceEqual(that.Properties);
         }
 
         protected override void SetHashCode() {

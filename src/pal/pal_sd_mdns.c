@@ -201,8 +201,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
         }
     }
 
-    if (error == 0 && 
-        resolve_result.records_len > 0)
+    if (error == 0 && resolve_result.records_len > 0)
     {
         // Allocate variable length record set (todo: cache in browser)
         resolve_result.records = (prx_property_t*)mem_zalloc(
@@ -229,8 +228,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
 
     result = browser->cb(browser->context, (int32_t)itf_index,
         pal_sd_mdns_error_to_prx_error(error), pal_sd_result_resolve, 
-        &resolve_result, pal_sd_mdns_flag_to_pal_flags(flags));
-
+        &resolve_result, pal_sd_mdns_flag_to_pal_flags(flags | kDNSServiceFlagsAdd));
     if (result != er_ok)
     {
         if (result != er_aborted)

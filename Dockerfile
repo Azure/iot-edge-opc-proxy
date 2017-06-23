@@ -1,4 +1,4 @@
-FROM alpine:3.5
+FROM alpine:3.6
 
 RUN set -ex \
         && \
@@ -11,12 +11,14 @@ RUN set -ex \
         binutils \
         make \
         libc-dev \
-        curl-dev
+        libressl-dev \
+        curl-dev \
+        avahi-dev
 
 ADD / /proxy_build
         
 RUN \
-	bash /proxy_build/bld/build.sh -C Release --skip-unittests --use-zlog \
+	bash /proxy_build/bld/build.sh -C Release --skip-unittests --use-zlog --use-dnssd embedded \
         && \
     mv /proxy_build/build/cmake/Release/bin/* /usr/bin \
         && \
@@ -30,6 +32,8 @@ RUN apk del .build-deps \
         && \
     apk add --no-cache --virtual .run-deps \
         bash \
-        curl
+        curl \
+        libressl \
+        avahi
 
 ENTRYPOINT ["proxyd"]

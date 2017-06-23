@@ -16,8 +16,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         internal Exception _innerException;
         public new Exception InnerException => _innerException; 
 
-        public SocketException(string message, Exception e,
-            SocketError errorCode)
+        public SocketException(string message, Exception e, SocketError errorCode)
             : base() {
             Error = errorCode;
             _message = message;
@@ -28,12 +27,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             : this(message, e, SocketError.Fatal) {
         }
 
-        public SocketException(string message, SocketError errorCode = SocketError.Fatal)
-            : this(message, null, errorCode) {
+        public SocketException(string message)
+            : this(message, SocketError.Fatal) {
         }
 
         public SocketException(SocketError errorCode)
             : this(errorCode.ToString(), errorCode) {
+        }
+
+        public SocketException(string message, SocketError errorCode)
+            : this(message, (Exception)null, errorCode) {
         }
 
         public SocketException(Exception e)
@@ -44,7 +47,11 @@ namespace Microsoft.Azure.Devices.Proxy {
             : this(e.GetCombinedExceptionMessage(), e) {
         }
 
-        public SocketException(string message, AggregateException e, SocketError errorCode = SocketError.Fatal)
+        public SocketException(string message, AggregateException e)
+            : this(message, e, SocketError.Fatal) {
+        }
+
+        public SocketException(string message, AggregateException e, SocketError errorCode )
             : this(message, (Exception)e?.Flatten(), errorCode) {
         }
     }

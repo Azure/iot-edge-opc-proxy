@@ -9,7 +9,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System;
 
     public class ProxyException : SocketException {
-
         /// <summary>
         /// Constructor taking a socket error.
         /// </summary>
@@ -30,29 +29,36 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Constructor taking an exception
         /// </summary>
         /// <param name="message"></param>
-        public ProxyException(Exception inner) :
-            this("An exception occurred communicating with a proxy.", inner) {
-        }
-
-        /// <summary>
-        /// Constructor taking an exception
-        /// </summary>
-        /// <param name="message"></param>
         public ProxyException(string message, Exception inner) :
             base(message, inner) {
         }
-    }
 
-
-    public class ProxyNotFoundException : ProxyException {
-
-        public ProxyNotFoundException() : 
-            this(null) {
+        /// <summary>
+        /// Constructor taking an aggregate
+        /// </summary>
+        /// <param name="message"></param>
+        public ProxyException(string message, AggregateException inner) :
+            base(message, inner) {
         }
 
-        public ProxyNotFoundException(Exception innerException) :
-            base("Proxy not found", innerException) {
+        /// <summary>
+        /// Create proxy exception
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        /// <param name="errorcode"></param>
+        public ProxyException(String message, Exception inner, SocketError errorcode) :
+            base(message, inner, errorcode) {
+        }
+
+        /// <summary>
+        /// Create proxy exception with aggregate
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inner"></param>
+        /// <param name="errorcode"></param>
+        public ProxyException(String message, AggregateException inner, SocketError errorcode) :
+            base(message, inner, errorcode) {
         }
     }
-
 }

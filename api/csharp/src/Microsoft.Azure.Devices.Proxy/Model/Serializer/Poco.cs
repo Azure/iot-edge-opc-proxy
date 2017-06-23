@@ -5,6 +5,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.Linq;
 
@@ -74,19 +75,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Helper to mix an array of items into the hash value
         /// </summary>
         /// <param name="hash"></param>
-        protected void MixToHash<T>(IEnumerable<T> enumeration) {
+        protected void MixToHash(IEnumerable enumeration) {
             foreach (var item in enumeration) {
-                MixToHash(item);
-            }
-        }
-
-        /// <summary>
-        /// Helper to mix an array of items into the hash value
-        /// </summary>
-        /// <param name="hash"></param>
-        protected void MixToHash(object[] arr) {
-            foreach (var item in arr) {
-                MixToHash(item);
+                MixToHash(item.GetHashCode());
             }
         }
 
@@ -95,7 +86,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="hash"></param>
         protected void MixToHash(object item) {
-            MixToHash(item.GetHashCode());
+            if (item is IEnumerable) {
+                MixToHash((IEnumerable)item);
+            }
+            else {
+                MixToHash(item.GetHashCode());
+            }
         }
 
         /// <summary>

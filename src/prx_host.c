@@ -295,7 +295,7 @@ static int32_t prx_host_init_from_command_line(
             case 'T':
                 __prx_config_set_int(prx_config_key_log_telemetry, 1);
                 break;
-            case 'f':
+            case 'F':
                 __prx_config_set_int(prx_config_key_browse_fs, 1);
                 break;
             case 'r':
