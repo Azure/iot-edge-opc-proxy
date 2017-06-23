@@ -118,22 +118,22 @@ static void pal_wsclient_lws_log(
     {
         log_info(global_wsworker_pool->log, " -- WARNING -- %s", msg);
     }
-    else if (level & LLL_INFO)
-    {
-        log_trace(global_wsworker_pool->log, "%s", msg);
-    }
     else if (level & LLL_NOTICE)
     {
         log_info(global_wsworker_pool->log, "%s", msg);
     }
-#ifdef LOG_VERBOSE
-    else if (level & LLL_DEBUG)
+    else if (level & LLL_INFO)
     {
         log_debug(global_wsworker_pool->log, "%s", msg);
     }
     else if (level & LLL_CLIENT)
     {
         log_debug(global_wsworker_pool->log, "CLIENT: %s", msg);
+    }
+#ifdef LOG_VERBOSE
+    else if (level & LLL_DEBUG)
+    {
+        log_debug(global_wsworker_pool->log, "%s", msg);
     }
     else if (level & LLL_PARSER) 
     {
