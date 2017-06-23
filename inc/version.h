@@ -13,7 +13,7 @@
 #endif
 
 #if !defined(MODULE_REL_VER)
-#define MODULE_REL_VER 0
+#define MODULE_REL_VER 1
 #endif
 
 #if !defined(SCM_VERSION)
@@ -30,6 +30,12 @@
     "." _TOSTRING(MODULE_MIN_VER) \
     "." _TOSTRING(MODULE_REL_VER) \
     "." SCM_VERSION
+
+// Integer version
+#define MODULE_VER_NUM \
+     ((MODULE_MAJ_VER << 24) | \
+      (MODULE_MIN_VER << 16) | \
+      (MODULE_REL_VER << 8))
 
 #define MODULE_NAME "iot-edge-reverse-proxy"
 

@@ -79,7 +79,6 @@ DEFINE_HASHTABLE_INSERT(prx_browse_session_add, io_ref_t, prx_browse_stream_t);
 DEFINE_HASHTABLE_SEARCH(prx_browse_session_get, io_ref_t, prx_browse_stream_t);
 DEFINE_HASHTABLE_REMOVE(prx_browse_session_remove, io_ref_t, prx_browse_stream_t);
 
-
 //
 // Free stream on scheduler
 //
@@ -384,6 +383,8 @@ static void prx_browse_session_handle_resolve_request(
     dbg_assert_ptr(session);
     dbg_assert_ptr(browse_request);
     dbg_assert_is_task(browser->scheduler);
+
+
 
     // TODO --- For now fail...
     prx_browse_session_handle_unknown_request(session, browse_request);

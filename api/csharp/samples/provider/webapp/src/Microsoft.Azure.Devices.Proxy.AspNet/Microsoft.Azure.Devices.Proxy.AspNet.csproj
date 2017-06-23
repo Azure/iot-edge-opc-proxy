@@ -3,8 +3,8 @@
   <PropertyGroup>
     <Description>The Asp.NET Core websocket stream provider is an alternative stream channel provider for Azure IoT Edge OPC proxy.</Description>
     <AssemblyTitle>Asp.NET Core websocket stream provider implementation for Azure IoT proxy</AssemblyTitle>
-    <VersionPrefix>0.2.0</VersionPrefix>
-    <Version>0.2.0</Version>
+    <VersionPrefix>0.2.1</VersionPrefix>
+    <Version>0.2.1</Version>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>

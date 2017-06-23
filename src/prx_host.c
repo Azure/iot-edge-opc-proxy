@@ -85,7 +85,7 @@ static int32_t prx_host_install_server(
         if (result == er_not_found)
         {
             result = prx_ns_entry_create(
-                prx_ns_entry_type_proxy, name, name, &entry);
+                prx_ns_entry_type_proxy, name, name, MODULE_VER_NUM, &entry);
             if (result != er_ok)
                 break;
             result = prx_ns_create_entry(host->remote, entry);

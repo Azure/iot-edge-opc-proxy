@@ -344,6 +344,13 @@ typedef int32_t (*prx_ns_entry_get_index_t)(
     );
 
 //
+// Provider to return version of the entry
+//
+typedef uint32_t (*prx_ns_entry_get_version_t)(
+    void* context
+    );
+
+//
 // Provider to return unique address of entry
 //
 typedef int32_t (*prx_ns_entry_get_addr_t)(
@@ -384,6 +391,7 @@ struct prx_ns_entry
     prx_ns_entry_get_cs_t get_cs;
     prx_ns_entry_get_type_t get_type;
     prx_ns_entry_get_id_t get_id;
+    prx_ns_entry_get_version_t get_version;
     prx_ns_entry_get_name_t get_name;
     prx_ns_entry_get_index_t get_index;
     prx_ns_entry_get_addr_t get_addr;
@@ -470,6 +478,19 @@ decl_inline_1(int32_t, prx_ns_entry_get_index,
 }
 
 //
+// Returns version of entry
+//
+decl_inline_1(uint32_t, prx_ns_entry_get_version,
+    prx_ns_entry_t*, entry
+)
+{
+    if (!entry)
+        return 0;
+    dbg_assert_ptr(entry->get_version);
+    return entry->get_version(entry->context);
+}
+
+//
 // Returns unique address of entry
 //
 decl_inline_2(int32_t, prx_ns_entry_get_addr,
@@ -508,10 +529,11 @@ decl_internal_3(int32_t, prx_ns_entry_to_prx_socket_address,
 //
 // Create in memory entry 
 //
-decl_internal_4(int32_t, prx_ns_entry_create,
+decl_internal_5(int32_t, prx_ns_entry_create,
     uint32_t, type,
     const char*, id,
     const char*, name,
+    uint32_t, version,
     prx_ns_entry_t**, entry
 );
 

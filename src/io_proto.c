@@ -11,8 +11,6 @@
 #undef ENABLE_GLOBAL
 #include "io_types.h"
 
-#define VERSION  ((MODULE_MAJ_VER << 6) | (MODULE_MIN_VER + 5))
-
 //
 // Protocol factory creates protocol messages from pool memory
 //
@@ -863,7 +861,7 @@ int32_t io_encode_message(
     dbg_assert_msg(msg);
 
     __io_encode_type_begin(ctx, msg, 8);
-    result = io_encode_uint8(ctx, "version", VERSION);
+    result = io_encode_uint32(ctx, "version", MODULE_VER_NUM);
     if (result != er_ok)
         return result;
 
@@ -893,18 +891,19 @@ int32_t io_decode_message(
 )
 {
     int32_t result;
-    uint8_t version;
+    uint32_t version;
 
     dbg_assert_ptr(ctx);
     dbg_assert_msg(msg);
 
     __io_decode_type_begin(ctx, msg, 8);
-    result = io_decode_uint8(ctx, "version", &version);
+    result = io_decode_uint32(ctx, "version", &version);
     if (result != er_ok)
         return result;
-    if (version != VERSION)
+
+    if ((version & 0xffff0000) != (MODULE_VER_NUM & 0xffff0000))
     {
-        log_error(NULL, "Received message with unknown version %d.", version);
+        log_error(NULL, "Received message with incompatible version %x.", version);
         return er_invalid_format;
     }
 
