@@ -1082,15 +1082,25 @@ static int32_t prx_server_socket_handle_openrequest(
         if (message->content.open_request.connection_string &&
             strlen(message->content.open_request.connection_string) > 0)
         {
-            // Create new websocket connection using websocket transport
-            result = io_cs_create_from_string(
-                message->content.open_request.connection_string, &cs);
-            if (result != er_ok)
+            if (message->content.open_request.type == 0)
+            {
+                // Create new websocket connection using websocket transport
+                result = io_cs_create_from_string(
+                    message->content.open_request.connection_string, &cs);
+                if (result != er_ok)
+                    break;
+                result = prx_ns_entry_create_from_cs(
+                    prx_ns_entry_type_link, &server_sock->stream_id, cs, &entry);
+                if (result != er_ok)
+                    break;
+            }
+            else
+            {
+                log_error(server_sock->log, "Connection string type %d not supported."
+                    " Failing open request!", message->content.open_request.type);
+                result = er_not_supported;
                 break;
-            result = prx_ns_entry_create_from_cs(
-                prx_ns_entry_type_link, &server_sock->stream_id, cs, &entry);
-            if (result != er_ok)
-                break;
+            }
         }
         else if (!server_sock->polled)
         {
@@ -1107,6 +1117,7 @@ static int32_t prx_server_socket_handle_openrequest(
             // server listener connection which forwards to socket control handler.
             server_sock->stream = server_sock->server->listener;
             server_sock->server_stream = true;
+            result = er_ok; 
         }
         else if (server_sock->polled)
         {

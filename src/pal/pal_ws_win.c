@@ -832,7 +832,6 @@ int32_t pal_wsclient_create(
     int32_t result;
     DWORD max_conns;
     BOOL non_blocking;
-    char* buf;
     const char* value;
     wchar_t* w_value = NULL;
     pal_wsclient_t* wsclient;

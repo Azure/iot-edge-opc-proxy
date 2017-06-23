@@ -405,7 +405,8 @@ static int32_t io_encode_poll_message(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, message, 1);
+    __io_encode_type_begin(ctx, message, 2);
+    __io_encode_value(ctx, uint64, message, sequence_number);
     __io_encode_value(ctx, uint64, message, timeout);
     __io_encode_type_end(ctx);
     return result;
@@ -420,7 +421,8 @@ static int32_t io_decode_poll_message(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, message, 1);
+    __io_decode_type_begin(ctx, message, 2);
+    __io_decode_value(ctx, uint64, message, sequence_number);
     __io_decode_value(ctx, uint64, message, timeout);
     __io_decode_type_end(ctx);
     return result;
@@ -436,7 +438,8 @@ static int32_t io_encode_data_message(
 {
     int32_t result;
 
-    __io_encode_type_begin(ctx, message, 3);
+    __io_encode_type_begin(ctx, message, 4);
+    __io_encode_value(ctx, uint64, message, sequence_number);
     __io_encode_object(ctx, prx_socket_address, message, source_address);
     result = io_encode_bin(ctx, "buffer",
         message->buffer, (uint32_t)message->buffer_length);
@@ -460,7 +463,8 @@ static int32_t io_decode_data_message(
 {
     int32_t result;
 
-    __io_decode_type_begin(ctx, message, 3);
+    __io_decode_type_begin(ctx, message, 4);
+    __io_decode_value(ctx, uint64, message, sequence_number);
     __io_decode_object(ctx, prx_socket_address, message, source_address);
     result = io_decode_bin_default(ctx, "buffer", 
         (void**)&message->buffer, &message->buffer_length);

@@ -15,37 +15,41 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class PollRequest : Serializable<PollRequest>, IMessageContent, IRequest {
 
         /// <summary>
+        /// Sequence number of the data message to retrieve.
+        /// </summary>
+        [DataMember(Name = "sequence_number", Order = 1)]
+        public ulong SequenceNumber { get; set; }
+
+        /// <summary>
         /// How long to wait in milliseconds
         /// </summary>
-        [DataMember(Name = "timeout", Order = 1)]
+        [DataMember(Name = "timeout", Order = 2)]
         public ulong Timeout { get; set; }
 
         /// <summary>
         /// Default constructor
         /// </summary>
         /// <param name="timeout"></param>
-        public PollRequest() {
-            Timeout = 60000;
-        }
+        public PollRequest() : this (60000, 0){}
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="timeout"></param>
-        public PollRequest(ulong timeout) {
+        public PollRequest(ulong timeout, ulong sequenceNumber = 0) {
             Timeout = timeout;
+            SequenceNumber = sequenceNumber;
         }
 
-        /// <summary>
-        /// Returns whether 2 request are equal.
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        public override bool IsEqual(PollRequest that) =>
-            IsEqual(Timeout, that.Timeout);
-        
+        public override bool IsEqual(PollRequest that) {
+            return 
+                IsEqual(Timeout, that.Timeout) && 
+                IsEqual(SequenceNumber, that.SequenceNumber);
+        }
 
-        protected override void SetHashCode() =>
+        protected override void SetHashCode() {
             MixToHash(Timeout.GetHashCode());
+            MixToHash(SequenceNumber.GetHashCode());
+        }
     }
 }

@@ -201,7 +201,7 @@ TEST_FUNCTION(pal_win_wsclient_create__success_2)
     static const char* k_host_valid = "lkjafsd";
     static const uint16_t k_port_valid = 10;
     static const char* k_path_valid = "/9845/sadkf";
-    static const char* k_proxy_host = "1234567890";
+    static const char* k_proxy_host = "1234567890:123456";
     static const char* k_proxy_port = "123456";
     static const char* k_proxy_valid = "1234567890:123456";
     static const char* k_proxy_user = "test";
@@ -263,8 +263,6 @@ TEST_FUNCTION(pal_win_wsclient_create__success_2)
         .SetReturn((void*)k_wide_char_valid);
     STRICT_EXPECTED_CALL(MultiByteToWideChar(CP_UTF8, 0, k_proxy_valid, -1, k_wide_char_valid, 10))
         .SetReturn(10);
-    STRICT_EXPECTED_CALL(h_free((void*)(UT_MEM + 128), IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
-        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
     STRICT_EXPECTED_CALL(WinHttpOpen(NULL, WINHTTP_ACCESS_TYPE_NAMED_PROXY, k_wide_char_valid, IGNORED_PTR_ARG, WINHTTP_FLAG_ASYNC))
         .ValidateArgumentBuffer(4, L"<local>", 16)
         .SetReturn(k_session_handle_valid);

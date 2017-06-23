@@ -265,6 +265,7 @@ io_open_request_t;
 //
 typedef struct io_poll_message
 {
+    uint64_t sequence_number;
     uint64_t timeout;
 }
 io_poll_message_t;
@@ -281,6 +282,7 @@ io_poll_message_t;
 //
 typedef struct io_data_message
 {
+    uint64_t sequence_number;
     prx_socket_address_t source_address;
     size_t control_buffer_length;
     uint8_t* control_buffer;
