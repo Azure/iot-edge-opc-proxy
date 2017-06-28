@@ -41,10 +41,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         Ipv6ProtectionLevel,
         Ipv6Only,
         TcpNodelay,
+
         IpMulticastJoin, 
         IpMulticastLeave,
 
         // ...
+
+        PropsTimeout,
         __prx_so_max
     }
 

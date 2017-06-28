@@ -11,8 +11,6 @@
 #undef ENABLE_GLOBAL
 #include "io_types.h"
 
-#define VERSION  ((MODULE_MAJ_VER << 6) | (MODULE_MIN_VER + 5))
-
 //
 // Protocol factory creates protocol messages from pool memory
 //
@@ -405,7 +403,8 @@ static int32_t io_encode_poll_message(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, message, 1);
+    __io_encode_type_begin(ctx, message, 2);
+    __io_encode_value(ctx, uint64, message, sequence_number);
     __io_encode_value(ctx, uint64, message, timeout);
     __io_encode_type_end(ctx);
     return result;
@@ -420,7 +419,8 @@ static int32_t io_decode_poll_message(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, message, 1);
+    __io_decode_type_begin(ctx, message, 2);
+    __io_decode_value(ctx, uint64, message, sequence_number);
     __io_decode_value(ctx, uint64, message, timeout);
     __io_decode_type_end(ctx);
     return result;
@@ -436,7 +436,8 @@ static int32_t io_encode_data_message(
 {
     int32_t result;
 
-    __io_encode_type_begin(ctx, message, 3);
+    __io_encode_type_begin(ctx, message, 4);
+    __io_encode_value(ctx, uint64, message, sequence_number);
     __io_encode_object(ctx, prx_socket_address, message, source_address);
     result = io_encode_bin(ctx, "buffer",
         message->buffer, (uint32_t)message->buffer_length);
@@ -460,7 +461,8 @@ static int32_t io_decode_data_message(
 {
     int32_t result;
 
-    __io_decode_type_begin(ctx, message, 3);
+    __io_decode_type_begin(ctx, message, 4);
+    __io_decode_value(ctx, uint64, message, sequence_number);
     __io_decode_object(ctx, prx_socket_address, message, source_address);
     result = io_decode_bin_default(ctx, "buffer", 
         (void**)&message->buffer, &message->buffer_length);
@@ -859,7 +861,7 @@ int32_t io_encode_message(
     dbg_assert_msg(msg);
 
     __io_encode_type_begin(ctx, msg, 8);
-    result = io_encode_uint8(ctx, "version", VERSION);
+    result = io_encode_uint32(ctx, "version", MODULE_VER_NUM);
     if (result != er_ok)
         return result;
 
@@ -889,18 +891,19 @@ int32_t io_decode_message(
 )
 {
     int32_t result;
-    uint8_t version;
+    uint32_t version;
 
     dbg_assert_ptr(ctx);
     dbg_assert_msg(msg);
 
     __io_decode_type_begin(ctx, msg, 8);
-    result = io_decode_uint8(ctx, "version", &version);
+    result = io_decode_uint32(ctx, "version", &version);
     if (result != er_ok)
         return result;
-    if (version != VERSION)
+
+    if ((version & 0xffff0000) != (MODULE_VER_NUM & 0xffff0000))
     {
-        log_error(NULL, "Received message with unknown version %d.", version);
+        log_error(NULL, "Received message with incompatible version %x.", version);
         return er_invalid_format;
     }
 

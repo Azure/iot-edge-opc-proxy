@@ -118,22 +118,22 @@ static void pal_wsclient_lws_log(
     {
         log_info(global_wsworker_pool->log, " -- WARNING -- %s", msg);
     }
-    else if (level & LLL_INFO)
-    {
-        log_trace(global_wsworker_pool->log, "%s", msg);
-    }
     else if (level & LLL_NOTICE)
     {
         log_info(global_wsworker_pool->log, "%s", msg);
     }
-#ifdef LOG_VERBOSE
-    else if (level & LLL_DEBUG)
+    else if (level & LLL_INFO)
     {
         log_debug(global_wsworker_pool->log, "%s", msg);
     }
     else if (level & LLL_CLIENT)
     {
         log_debug(global_wsworker_pool->log, "CLIENT: %s", msg);
+    }
+#ifdef LOG_VERBOSE
+    else if (level & LLL_DEBUG)
+    {
+        log_debug(global_wsworker_pool->log, "%s", msg);
     }
     else if (level & LLL_PARSER) 
     {
@@ -1029,43 +1029,35 @@ static int32_t pal_wsworker_thread(
 // Provide proxy information if configured
 //
 static int32_t pal_wsworker_get_proxy_info(
-    char** proxy_address,
-    unsigned int* port
+    char** proxy_address
 )
 {
     size_t buf_len;
     const char* proxy;
-    const char* port_str;
     const char* user;
     const char* pwd;
 
     dbg_assert_ptr(proxy_address);
-    dbg_assert_ptr(port);
 
     proxy = __prx_config_get(prx_config_key_proxy_host, NULL);
     if (!proxy)
     {
         *proxy_address = NULL;
-        *port = 0;
         return er_ok;  // No proxy configured, return success
     }
-    port_str = __prx_config_get(prx_config_key_proxy_port, NULL);
     user = __prx_config_get(prx_config_key_proxy_user, NULL);
     pwd = __prx_config_get(prx_config_key_proxy_pwd, NULL);
 
     buf_len = 
           strlen(proxy) 
-        + (port_str ? strlen(port_str) + 1 : 0)  // Add port sep
         + (user ? strlen(user) + 1 : 0) // user sep @
         + (pwd ? strlen(pwd) + 1 : 0) // add pwd sep :
         + 1;  // plus null term
     
     // Use malloc for lws to free
-    *proxy_address = (char*)crt_alloc(buf_len); 
+    *proxy_address = (char*)mem_zalloc(buf_len);
     if (!*proxy_address)
         return er_out_of_memory;
-
-    memset(*proxy_address, 0, buf_len);
     // Concat proxy address string
     if (user)
     {
@@ -1078,12 +1070,6 @@ static int32_t pal_wsworker_get_proxy_info(
         strcat(*proxy_address, "@");
     }
     strcat(*proxy_address, proxy);
-    if (port_str)
-    {
-        strcat(*proxy_address, ":");
-        strcat(*proxy_address, port_str);
-    }
-    *port = atoi(port_str);
     return er_ok;
 }
 
@@ -1176,12 +1162,12 @@ static int32_t pal_wsworker_pool_attach(
 #endif
         info.user = worker;
 
-        result = pal_wsworker_get_proxy_info(
-            (char**)&info.http_proxy_address, &info.http_proxy_port);
+        result = pal_wsworker_get_proxy_info((char**)&info.http_proxy_address);
         if (result != er_ok)
             break;
-
         worker->context = lws_create_context(&info);
+        if (info.http_proxy_address)
+            mem_free((char*)info.http_proxy_address);
         if (!worker->context)
         {
             log_error(worker->log, "Failed to create lws context!");

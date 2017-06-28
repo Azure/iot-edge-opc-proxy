@@ -3,7 +3,8 @@
   <PropertyGroup>
     <Description>Managed Service API for IoT Device Proxy</Description>
     <AssemblyTitle>Microsoft Azure Devices Proxy API</AssemblyTitle>
-    <VersionPrefix>0.2.0</VersionPrefix>
+    <Version>0.2.1</Version>
+    <VersionPrefix>0.2.1</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;net45;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>

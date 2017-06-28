@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
     /// Txt record entry - represents meta data of service record
     /// </summary>
-    public class DnsTxtRecord : IEquatable<DnsTxtRecord> {
+    public class DnsTxtRecord : Poco<DnsTxtRecord> {
 
         /// <summary>
         /// Value of the record as binary buffer.
@@ -24,25 +24,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="key"></param>
         /// <param name="valueRaw"></param>
-        internal DnsTxtRecord(byte[] valueRaw) {
-            Value = valueRaw;
-        }
-
-        /// <summary>
-        /// Return object as string - assumption is that it is a utf-8 txt record.
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString() => Encoding.UTF8.GetString(Value);
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool Equals(Object obj) {
-            return this.Equals(obj as DnsTxtRecord);
-        }
-
+        internal DnsTxtRecord(byte[] valueRaw) => Value = valueRaw;
+        
         /// <summary>
         /// Returns this record as key value pair
         /// </summary>
@@ -57,25 +40,14 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public bool Equals(DnsTxtRecord that) {
-            if (that == null) {
-                return false;
-            }
-            return
-                this.Value.SequenceEqual(that.Value);
-        }
+        public override Boolean IsEqual(DnsTxtRecord that) => Value.SequenceEqual(that.Value);
+
+        protected override void SetHashCode() => MixToHash(Value);
 
         /// <summary>
-        /// Returns hash for efficient lookup in list
+        /// Return object as string - assumption is that it is a utf-8 txt record.
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode() {
-            return ToString().GetHashCode();
-        }
+        public override string ToString() => Encoding.UTF8.GetString(Value);
     }
 }

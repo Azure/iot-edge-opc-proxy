@@ -855,9 +855,11 @@ TEST_FUNCTION(io_encode_poll_message__success)
     int32_t result;
 
     message_valid.timeout = 524;
+    message_valid.sequence_number = 33333333;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 2);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, timeout);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
@@ -879,10 +881,12 @@ TEST_FUNCTION(io_encode_poll_message__neg)
     int32_t result;
 
     message_valid.timeout = 123456;
+    message_valid.sequence_number = 5555;
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 1);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 2);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, timeout);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
@@ -891,7 +895,7 @@ TEST_FUNCTION(io_encode_poll_message__neg)
     result = io_encode_poll_message(&k_ctx_valid, &message_valid);
 
     // assert
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_writing, er_writing, er_writing, er_ok, er_writing);
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_writing, er_writing, er_writing, er_writing, er_ok, er_writing);
 }
 
 // 
@@ -905,7 +909,8 @@ TEST_FUNCTION(io_decode_poll_message__success)
     int32_t result;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, timeout);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
@@ -929,7 +934,8 @@ TEST_FUNCTION(io_decode_poll_message__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 1);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, timeout);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
@@ -939,7 +945,7 @@ TEST_FUNCTION(io_decode_poll_message__neg)
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
-        er_invalid_format, er_out_of_memory, er_out_of_memory, er_ok, er_out_of_memory);
+        er_invalid_format, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok, er_out_of_memory);
 }
 
 // 
@@ -951,13 +957,15 @@ TEST_FUNCTION(io_encode_data_message__success)
     io_data_message_t message_valid;
     int32_t result;
 
+    message_valid.sequence_number = 555;
     message_valid.buffer = (uint8_t*)UT_MEM;
     message_valid.buffer_length = 10;
     message_valid.control_buffer = NULL;
     message_valid.control_buffer_length = 0;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &message_valid, source_address);
     STRICT_EXPECTED_CALL(io_encode_bin(&k_ctx_valid, "buffer", UT_MEM, 10))
         .SetReturn(er_ok);
@@ -982,6 +990,7 @@ TEST_FUNCTION(io_encode_data_message__neg)
     io_data_message_t message_valid;
     int32_t result;
 
+    message_valid.sequence_number = 2;
     message_valid.buffer = (uint8_t*)UT_MEM;
     message_valid.buffer_length = 10;
     message_valid.control_buffer = NULL;
@@ -989,7 +998,8 @@ TEST_FUNCTION(io_encode_data_message__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &message_valid, source_address);
     STRICT_EXPECTED_CALL(io_encode_bin(&k_ctx_valid, "buffer", UT_MEM, 10))
         .SetReturn(er_ok)
@@ -1022,7 +1032,8 @@ TEST_FUNCTION(io_decode_data__success)
     message_valid.buffer_length = 0;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &message_valid, source_address);
     STRICT_EXPECTED_CALL(io_decode_bin_default(&k_ctx_valid, "buffer", IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_size(&k_read_valid, sizeof(k_read_valid))
@@ -1055,7 +1066,8 @@ TEST_FUNCTION(io_decode_data__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint64, &message_valid, sequence_number);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &message_valid, source_address);
     STRICT_EXPECTED_CALL(io_decode_bin_default(&k_ctx_valid, "buffer", IGNORED_PTR_ARG, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_size(&k_read_valid, sizeof(k_read_valid))
@@ -1071,6 +1083,8 @@ TEST_FUNCTION(io_decode_data__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
+    message_valid.buffer = (uint8_t*)UT_MEM;
+    message_valid.buffer_length = 0;
     result = io_decode_data_message(&k_ctx_valid, &message_valid);
 
     // assert

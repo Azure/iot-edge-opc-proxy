@@ -85,7 +85,7 @@ static int32_t prx_host_install_server(
         if (result == er_not_found)
         {
             result = prx_ns_entry_create(
-                prx_ns_entry_type_proxy, name, name, &entry);
+                prx_ns_entry_type_proxy, name, name, MODULE_VER_NUM, &entry);
             if (result != er_ok)
                 break;
             result = prx_ns_create_entry(host->remote, entry);
@@ -269,33 +269,12 @@ static int32_t prx_host_init_from_command_line(
                 __prx_config_set_int(prx_config_key_connect_flag, 1);
                 break;
             case 'p':
-                for (c = 0; c < _countof(buffer) - 1 && optarg[c] && optarg[c] != ':'; c++)
-                    buffer[c] = optarg[c];
-                if (c >= _countof(buffer) - 1)
-                {
-                    printf("ERROR: Proxy host cannot be longer than %d characters!\n",
-                        (int)(_countof(buffer) - 1));
-                    result = er_arg;
-                    break;
-                }
-                buffer[c] = 0;
-                __prx_config_set(prx_config_key_proxy_host, buffer);
-                if (optarg[c++] == ':')
-                {
-                    if (!atoi(&optarg[c]))
-                    {
-                        printf("ERROR: Bad arg for --proxy option (%.128s). \n\n",
-                            optarg ? optarg : "");
-                        result = er_arg;
-                        break;
-                    }
-                    __prx_config_set(prx_config_key_proxy_port, &optarg[c]);
-                }
+                __prx_config_set(prx_config_key_proxy_host, optarg);
                 break;
             case 'T':
                 __prx_config_set_int(prx_config_key_log_telemetry, 1);
                 break;
-            case 'f':
+            case 'F':
                 __prx_config_set_int(prx_config_key_browse_fs, 1);
                 break;
             case 'r':

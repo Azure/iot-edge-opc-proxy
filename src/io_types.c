@@ -416,7 +416,7 @@ int32_t io_encode_prx_socket_properties(
     __io_encode_value(ctx, int32, prx_sp, sock_type);
     __io_encode_value(ctx, int32, prx_sp, proto_type);
     __io_encode_value(ctx, uint32, prx_sp, flags);
-    __io_encode_value(ctx, uint32, prx_sp, timeout);
+    __io_encode_value(ctx, uint64, prx_sp, timeout);
     __io_encode_object(ctx, prx_socket_address, prx_sp, address);
 
     for (size_t i = 0; i < _countof(prx_sp->options); i++)
@@ -470,7 +470,7 @@ int32_t io_decode_prx_socket_properties(
     __io_decode_value(ctx, int32, prx_sp, sock_type);
     __io_decode_value(ctx, int32, prx_sp, proto_type);
     __io_decode_value(ctx, uint32, prx_sp, flags);
-    __io_decode_value(ctx, uint32, prx_sp, timeout);
+    __io_decode_value(ctx, uint64, prx_sp, timeout);
     __io_decode_object(ctx, prx_socket_address, prx_sp, address);
 
     result = io_decode_array(ctx, "options", &size, &arr);

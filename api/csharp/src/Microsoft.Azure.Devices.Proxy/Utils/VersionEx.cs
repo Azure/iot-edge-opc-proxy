@@ -6,7 +6,7 @@
 namespace System {
     using Reflection;
 
-    public class VersionEx {
+    public static class VersionEx {
         /// <summary>
         /// Get assembly version
         /// </summary>
@@ -16,7 +16,7 @@ namespace System {
                     var assembly = typeof(VersionEx).GetTypeInfo().Assembly;
                     var ver = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
                     if (ver == null || !Version.TryParse(ver, out _assemblyVersion)) {
-                        _assemblyVersion = new Version(0, 0, 0);
+                        _assemblyVersion = new Version(0, 0, 0, 0);
                     }
                 }
                 return _assemblyVersion;
@@ -24,5 +24,18 @@ namespace System {
         }
 
         private static Version _assemblyVersion;
+
+        /// <summary>
+        /// Compresses the version into a 32 bit integer
+        /// </summary>
+        /// <param name="version"></param>
+        /// <returns></returns>
+        public static uint ToUInt(this Version version) {
+            return 
+                (uint)((byte)version.Major << 24) | 
+                (uint)((byte)version.Minor << 16) | 
+                (uint)((byte)version.Build << 8) | 
+                       (byte)version.Revision;
+        }
     }
 }

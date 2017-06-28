@@ -25,17 +25,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Default constructor
         /// </summary>
-        public Property() : this (0, default(T)) {
-        }
+        public Property() : this (0, default(T)) {}
 
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="type"></param>
         /// <param name="value"></param>
-        public Property(uint type, T value) : base(type) {
-            Value = value;
-        }
+        public Property(uint type, T value) : base(type) => Value = value;
 
         /// <summary>
         /// Comparison
@@ -46,10 +43,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (that == null) {
                 return false;
             }
-            return
-                base.IsEqual(that) &&
-                StructuralComparisons.StructuralEqualityComparer.Equals(
-                    this.Value, that.Value);
+            return base.IsEqual(that) &&
+                StructuralComparisons.StructuralEqualityComparer.Equals(Value, that.Value);
         }
 
         public override bool IsEqual(object that) => Equals(that as Property<T>);

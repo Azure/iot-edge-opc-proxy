@@ -34,8 +34,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public static void AddRange<T>(this ISet<T> set, IEnumerable<T> enumerable) {
-            foreach (var item in enumerable)
+            foreach (var item in enumerable) {
                 set.Add(item);
+            }
         }
 
         public static IEnumerable<T> AsEnumerable<T>(this T obj) {

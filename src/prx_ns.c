@@ -35,6 +35,7 @@ typedef struct prx_ns_generic_entry
     io_ref_t id;                              // Unique id of the entry
     io_cs_t* cs;                    // Entry specific connection string
     uint32_t type;                                     // Type of entry
+    uint32_t version;                           // Version of the entry
 }
 prx_ns_generic_entry_t;
 
@@ -249,6 +250,17 @@ static int32_t prx_ns_generic_entry_get_index(
 }
 
 //
+// Returns version of entry
+//
+static uint32_t prx_ns_generic_entry_get_version(
+    prx_ns_generic_entry_t* entry
+)
+{
+    dbg_assert_ptr(entry);
+    return entry->version;
+}
+
+//
 // Returns type of entry
 //
 static uint32_t prx_ns_generic_entry_get_type(
@@ -280,6 +292,7 @@ static int32_t prx_ns_generic_entry_create(
     uint32_t type,
     io_ref_t* id,
     const char* name,
+    uint32_t version,
     io_cs_t* cs,
     prx_ns_generic_entry_t** created
 );
@@ -296,8 +309,8 @@ static int32_t prx_ns_generic_entry_clone(
     prx_ns_generic_entry_t *created;
     dbg_assert_ptr(entry);
 
-    result = prx_ns_generic_entry_create(entry->type, &entry->id,
-        entry->name ? STRING_c_str(entry->name) : NULL, entry->cs, &created);
+    result = prx_ns_generic_entry_create(entry->type, &entry->id, entry->name ? 
+        STRING_c_str(entry->name) : NULL, entry->version, entry->cs, &created);
     if (result != er_ok)
         return result;
 
@@ -359,6 +372,7 @@ static int32_t prx_ns_generic_entry_create(
     uint32_t type,
     io_ref_t* id,
     const char* name,
+    uint32_t version,
     io_cs_t* cs,
     prx_ns_generic_entry_t** created
 )
@@ -375,6 +389,7 @@ static int32_t prx_ns_generic_entry_create(
     {
         DList_InitializeListHead(&entry->link);
         entry->type = type;
+        entry->version = version;
 
         if (id)
             io_ref_copy(id, &entry->id);
@@ -416,6 +431,8 @@ static int32_t prx_ns_generic_entry_create(
             prx_ns_generic_entry_get_id;
         entry->itf.get_index = (prx_ns_entry_get_index_t)
             prx_ns_generic_entry_get_index;
+        entry->itf.get_version = (prx_ns_entry_get_version_t)
+            prx_ns_generic_entry_get_version;
         entry->itf.get_name = (prx_ns_entry_get_name_t)
             prx_ns_generic_entry_get_name;
         entry->itf.get_links = (prx_ns_entry_get_links_t)
@@ -444,7 +461,7 @@ static int32_t prx_ns_generic_entry_encode(
     if (io_codec_json == io_codec_ctx_get_codec_id(ctx))
     {
         __io_encode_type_begin(ctx, entry, 
-            entry->type != prx_ns_entry_type_gw ? 4 : 3);
+            entry->type != prx_ns_entry_type_gw ? 5 : 4);
 
         __io_encode_value(ctx, STRING_HANDLE, entry, name);
         result = io_encode_ref(ctx, &entry->id);
@@ -456,15 +473,17 @@ static int32_t prx_ns_generic_entry_encode(
 
         if (entry->type != prx_ns_entry_type_gw)
             __io_encode_value(ctx, uint32, entry, type);
+        __io_encode_value(ctx, uint32, entry, version);
         __io_encode_type_end(ctx);
     }
     else
     {
-        __io_encode_type_begin(ctx, entry, 4);
+        __io_encode_type_begin(ctx, entry, 5);
         __io_encode_value(ctx, STRING_HANDLE, entry, name);
         __io_encode_object(ctx, ref, entry, id);
         __io_encode_object(ctx, cs, entry, cs);
         __io_encode_value(ctx, uint32, entry, type);
+        __io_encode_value(ctx, uint32, entry, version);
         __io_encode_type_end(ctx);
     }
     return result;
@@ -487,7 +506,7 @@ static int32_t prx_ns_generic_entry_decode(
 
     if (io_codec_json == io_codec_ctx_get_codec_id(ctx))
     {
-        __io_decode_type_begin(ctx, entry, 3);
+        __io_decode_type_begin(ctx, entry, 4);
         __io_decode_value(ctx, STRING_HANDLE, entry, name);
         result = io_decode_ref(ctx, &entry->id);
         if (result != er_ok)
@@ -503,15 +522,17 @@ static int32_t prx_ns_generic_entry_decode(
         result = io_decode_uint32(ctx, "type", &entry->type);
         if (result != er_ok)
             entry->type = prx_ns_entry_type_gw;
+        __io_decode_value(ctx, uint32, entry, version);
         __io_decode_type_end(ctx);
     }
     else
     {
-        __io_decode_type_begin(ctx, entry, 4);
+        __io_decode_type_begin(ctx, entry, 5);
         __io_decode_value(ctx, STRING_HANDLE, entry, name);
         __io_decode_object(ctx, ref, entry, id);
         __io_decode_object(ctx, cs, entry, cs);
         __io_decode_value(ctx, uint32, entry, type);
+        __io_decode_value(ctx, uint32, entry, version);
         __io_decode_type_end(ctx);
     }
     return result;
@@ -595,7 +616,7 @@ static int32_t prx_ns_generic_registry_decode(
             result = io_decode_object(&arr, NULL, NULL, &obj);
             if (result != er_ok)
                 break;
-            result = prx_ns_generic_entry_create(0, NULL, NULL, NULL, &next);
+            result = prx_ns_generic_entry_create(0, NULL, NULL, 0, NULL, &next);
             if (result != er_ok)
                 break;
             DList_InsertTailList(&registry->entries, &next->link);
@@ -758,8 +779,8 @@ static int32_t prx_ns_generic_registry_entry_create(
         if (type & prx_ns_entry_type_proxy)
             type |= prx_ns_entry_type_gw;
 
-        result = prx_ns_generic_entry_create(
-            type, &id, prx_ns_entry_get_name(entry), cs, &next);
+        result = prx_ns_generic_entry_create(type, &id, prx_ns_entry_get_name(entry), 
+            prx_ns_entry_get_version(entry), cs, &next);
         if (result != er_ok)
             break;
         DList_InsertTailList(&registry->entries, &next->link);
@@ -813,8 +834,8 @@ static int32_t prx_ns_generic_registry_entry_update(
         result = prx_ns_entry_get_cs(entry, &cs);
         if (result != er_ok)
             break;
-        result = prx_ns_generic_entry_create(
-            prx_ns_entry_get_type(entry), &id, prx_ns_entry_get_name(entry), cs, &update);
+        result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &id, 
+            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry), cs, &update);
         if (result != er_ok)
             break;
         DList_RemoveEntryList(&next->link);
@@ -1017,23 +1038,43 @@ static int32_t prx_ns_iot_hub_rest_status_code_to_prx_error(
 //
 // Set proxy information on handle if configured
 //
-static void prx_ns_iot_hub_rest_call_configure_proxy(
-    HTTPAPIEX_HANDLE http_handle
+static int32_t prx_ns_iot_hub_rest_call_configure_proxy(
+    HTTPAPIEX_HANDLE http_handle,
+    void** buffer_to_free
 )
 {
+    int32_t result;
     HTTP_PROXY_OPTIONS proxy_options;
-    const char* ptr;
+    char* ptr, *buffer = NULL;
+    int port = 0;
 
     dbg_assert_ptr(http_handle);
+    dbg_assert_ptr(buffer_to_free);
 
-    ptr = __prx_config_get(prx_config_key_proxy_host, NULL);
+    *buffer_to_free = NULL;
+    ptr = (char*)__prx_config_get(prx_config_key_proxy_host, NULL);
     if (!ptr)
-        return;
+        return er_ok;
+    result = string_clone(ptr, &buffer);
+    if (result != er_ok)
+        return result;
 
-    proxy_options.host_address = ptr;
+    // Remove port from buffer to just leave string
+    ptr = buffer;
+    while (*ptr && *ptr != ':')
+        ptr++;
+    if (*ptr)
+    {
+        *ptr++ = 0;
+        port = atoi(ptr);
+    }
+    if (!port)
+        port = 80;  // Try default port 80
+
+    proxy_options.host_address = buffer;
+    proxy_options.port = port;
     proxy_options.username = __prx_config_get(prx_config_key_proxy_user, NULL);
     proxy_options.password = __prx_config_get(prx_config_key_proxy_pwd, NULL);
-    proxy_options.port = __prx_config_get_int(prx_config_key_proxy_port, 0);
 
     if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
         &proxy_options))
@@ -1041,6 +1082,9 @@ static void prx_ns_iot_hub_rest_call_configure_proxy(
         log_trace(NULL, "Failed to configure proxy settings using httpapi option."
             "Proxy settings need to be configured using platform mechanisms.");
     }
+
+    *buffer_to_free = buffer;
+    return er_ok;
 }
 
 //
@@ -1060,10 +1104,11 @@ static int32_t prx_ns_iot_hub_rest_call(
 {
     int32_t result;
     HTTPAPIEX_RESULT http_result;
-    HTTPAPIEX_HANDLE http_handle = NULL;
-    HTTP_HEADERS_HANDLE request_headers = NULL, response_headers = NULL;
-    STRING_HANDLE token = NULL, path = NULL, request_id = NULL;
-    io_token_provider_t* provider = NULL;
+    HTTPAPIEX_HANDLE http_handle;
+    HTTP_HEADERS_HANDLE request_headers, response_headers;
+    STRING_HANDLE token, path, request_id;
+    io_token_provider_t* provider;
+    void* proxy_buffer;
     int64_t ttl;
 
     dbg_assert_ptr(spec);
@@ -1072,6 +1117,15 @@ static int32_t prx_ns_iot_hub_rest_call(
 
     for (int retry = 0; retry < 10; retry++)
     {
+        token = NULL;
+        path = NULL;
+        request_id = NULL;
+        request_headers = NULL;
+        response_headers = NULL;
+        provider = NULL;
+        http_handle = NULL;
+        proxy_buffer = NULL;
+
         do
         {
             result = io_cs_create_token_provider(spec, &provider);
@@ -1137,7 +1191,10 @@ static int32_t prx_ns_iot_hub_rest_call(
             http_handle = HTTPAPIEX_Create(io_cs_get_host_name(spec));
             if (!http_handle)
                 break;
-            prx_ns_iot_hub_rest_call_configure_proxy(http_handle);
+
+            result = prx_ns_iot_hub_rest_call_configure_proxy(http_handle, &proxy_buffer);
+            if (result != er_ok)
+                break;
 
             http_result = HTTPAPIEX_ExecuteRequest(http_handle, type,
                 STRING_c_str(path), req_headers,
@@ -1166,6 +1223,8 @@ static int32_t prx_ns_iot_hub_rest_call(
             io_token_provider_release(provider);
         if (http_handle)
             HTTPAPIEX_Destroy(http_handle);
+        if (proxy_buffer)
+            mem_free(proxy_buffer);
 
         if (result != er_ok || *status_code != 429)
             break; // Done...
@@ -1284,7 +1343,7 @@ static const char* prx_ns_iot_hub_twin_entry_get_name(
 }
 
 //
-// Returns index of entry, which is part of twin
+// Returns index of entry
 //
 static int32_t prx_ns_iot_hub_twin_entry_get_index(
     prx_ns_iot_hub_twin_entry_t* entry
@@ -1292,6 +1351,21 @@ static int32_t prx_ns_iot_hub_twin_entry_get_index(
 {
     dbg_assert_ptr(entry);
     return (int32_t)(intptr_t)entry;
+}
+
+//
+// Returns version of the entry which is part of twin
+//
+static uint32_t prx_ns_iot_hub_twin_entry_get_version(
+    prx_ns_iot_hub_twin_entry_t* entry
+)
+{
+    JSON_Object* obj;
+    dbg_assert_ptr(entry);
+
+    obj = json_value_get_object(entry->twin);
+    dbg_assert_ptr(obj);
+    return (uint32_t)json_object_dotget_number(obj, "tags.version");
 }
 
 //
@@ -1310,7 +1384,7 @@ static uint32_t prx_ns_iot_hub_twin_entry_get_type(
 }
 
 //
-// Returns id of entry, which is part of twin
+// Returns address of entry, which is part of twin
 //
 static int32_t prx_ns_iot_hub_twin_entry_get_addr(
     prx_ns_iot_hub_twin_entry_t* entry,
@@ -1458,6 +1532,8 @@ static int32_t prx_ns_iot_hub_twin_entry_create(
             prx_ns_iot_hub_twin_entry_get_id;
         entry->itf.get_index = (prx_ns_entry_get_index_t)
             prx_ns_iot_hub_twin_entry_get_index;
+        entry->itf.get_version = (prx_ns_entry_get_version_t)
+            prx_ns_iot_hub_twin_entry_get_version;
         entry->itf.get_name = (prx_ns_entry_get_name_t)
             prx_ns_iot_hub_twin_entry_get_name;
         entry->itf.get_links = (prx_ns_entry_get_links_t)
@@ -1524,6 +1600,7 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
     STRING_HANDLE uri = NULL, id_string = NULL;
     int32_t status_code;
     uint32_t type;
+    uint32_t version;
     io_ref_t id;
     const char* name;
 
@@ -1572,6 +1649,10 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
         name = prx_ns_entry_get_name(entry);
         if (name &&
             0 != json_object_dotset_string(obj, "tags.name", name))
+            break;
+        version = prx_ns_entry_get_version(entry);
+        if (version &&
+            0 != json_object_dotset_number(obj, "tags.version", (double)version))
             break;
 
         // Patch existing document
@@ -2328,7 +2409,7 @@ int32_t prx_ns_iot_hub_create_from_cs(
         DList_InitializeListHead(&registry->link);
 
         result = prx_ns_generic_entry_create(
-            prx_ns_entry_type_hub, NULL, NULL, hub_cs, &registry->hub_entry);
+            prx_ns_entry_type_hub, NULL, NULL, 0, hub_cs, &registry->hub_entry);
         if (result != er_ok)
             break;
 
@@ -2518,7 +2599,7 @@ int32_t prx_ns_entry_create_from_cs(
     chk_arg_fault_return(cs);
     chk_arg_fault_return(created);
 
-    result = prx_ns_generic_entry_create(type, address, NULL, cs, &entry);
+    result = prx_ns_generic_entry_create(type, address, NULL, 0, cs, &entry);
     if (result != er_ok)
         return result;
 
@@ -2533,6 +2614,7 @@ int32_t prx_ns_entry_create(
     uint32_t type,
     const char* id,
     const char* name,
+    uint32_t version,
     prx_ns_entry_t** created
 )
 {
@@ -2546,7 +2628,7 @@ int32_t prx_ns_entry_create(
     result = io_cs_create("proxy.localhost", id, NULL, NULL, &cs);
     if (result != er_ok)
         return result;
-    result = prx_ns_generic_entry_create(type, NULL, name, cs, &entry);
+    result = prx_ns_generic_entry_create(type, NULL, name, version, cs, &entry);
     io_cs_free(cs);
     if (result != er_ok)
         return result;
@@ -2582,7 +2664,7 @@ int32_t prx_ns_entry_create_from_string(
         result = io_decode_object(&ctx, NULL, NULL, &obj);
         if (result != er_ok)
             break;
-        result = prx_ns_generic_entry_create(0, NULL, NULL, NULL, &generic_entry);
+        result = prx_ns_generic_entry_create(0, NULL, NULL, 0, NULL, &generic_entry);
         if (result != er_ok)
             break;
 
@@ -2636,7 +2718,8 @@ int32_t prx_ns_entry_to_STRING(
         if (result != er_ok)
             break;
         result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &addr,
-            prx_ns_entry_get_name(entry), cs, &generic_entry);
+            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry), 
+            cs, &generic_entry);
         if (result != er_ok)
             break;
 
