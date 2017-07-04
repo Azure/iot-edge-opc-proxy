@@ -597,6 +597,7 @@ TEST_FUNCTION(pal_lws_wsclient_connect__success)
     wsclient_valid.relative_path = L"foo";
     wsclient_valid.headers = k_headers_valid;
     wsclient_valid.port = 10;
+    wsclient_valid.secure = true;
 
     // arrange 
     STRICT_EXPECTED_CALL(WinHttpConnect(k_h_session_valid, IGNORED_PTR_ARG, 10, 0))
@@ -708,6 +709,7 @@ TEST_FUNCTION(pal_lws_wsclient_connect__neg_2)
     wsclient_valid.relative_path = L"foo";
     wsclient_valid.headers = k_headers_valid;
     wsclient_valid.port = 10;
+    wsclient_valid.secure = true;
 
     // arrange 
     STRICT_EXPECTED_CALL(WinHttpConnect(k_h_session_valid, IGNORED_PTR_ARG, 10, 0))
@@ -783,6 +785,7 @@ TEST_FUNCTION(pal_lws_wsclient_connect__neg_3)
     wsclient_valid.relative_path = L"foo";
     wsclient_valid.headers = k_headers_valid;
     wsclient_valid.port = 10;
+    wsclient_valid.secure = true;
 
     REGISTER_GLOBAL_MOCK_RETURNS(pal_os_last_error_as_prx_error, er_out_of_memory, er_out_of_memory);
 
