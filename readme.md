@@ -4,9 +4,9 @@ This project has adopted the Microsoft Open Source Code of Conduct. For more inf
 |------|-------------|
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-opc-ua-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
 
-# Azure IoT Edge Open Protocol Connector Proxy
+# Azure IoT Edge OPC
 
-Using the Azure IoT Edge Open Protocol Connector Reverse Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  
+Using the Azure IoT Edge OPC Reverse Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  
 
 An example for where this can be used is for tunneling OPC-UA binary protocol (secure channel) from a cloud application to a machine on the factory network, or tunneling SSH to an IoT device behind a firewall.
 
