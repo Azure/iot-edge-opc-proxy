@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Link request - create socket link 
     /// </summary>
     [DataContract]
-    public class LinkRequest : Serializable<LinkRequest>, IMessageContent, IRequest {
+    public class LinkRequest : Poco<LinkRequest>, IMessageContent, IRequest {
 
         public static readonly byte LINK_VERSION = 7;
 
@@ -21,37 +21,34 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Version number
         /// </summary>
         [DataMember(Name = "version", Order = 1)]
-        public Byte Version { get; set; }
+        public Byte Version {
+            get; set;
+        }
 
         /// <summary>
         /// Socket Properties
         /// </summary>
         [DataMember(Name = "props", Order = 2)]
-        public SocketInfo Properties { get; set; }
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public LinkRequest() {
-            // no-op
+        public SocketInfo Properties {
+            get; set;
         }
 
         /// <summary>
-        /// Convinience constructor
+        /// Create request
         /// </summary>
         /// <param name="properties"></param>
-        public LinkRequest(SocketInfo properties) {
-            Version = LINK_VERSION;
-            Properties = properties;
+        public static LinkRequest Create(SocketInfo properties) {
+            var request = Get();
+            request.Version = LINK_VERSION;
+            request.Properties = properties;
+            return request;
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
+        public IMessageContent Clone() => Create(Properties);
+
         public override bool IsEqual(LinkRequest that) {
-            return IsEqual(Version, that.Version) &&
+            return 
+                IsEqual(Version, that.Version) &&
                 IsEqual(Properties, that.Properties);
         }
 
@@ -59,5 +56,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             MixToHash(Version);
             MixToHash(Properties);
         }
+
+        public override string ToString() => Properties.ToString();
     }
 }

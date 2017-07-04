@@ -84,8 +84,8 @@ typedef int32_t (*prx_buffer_pool_grow_t)(
 #ifdef DBG_MEM
 #define _sentinel 0x98112124444ULL
 #define dbg_assert_buf(buf) \
-    dbg_assert(buf->sentinel == _sentinel, "Bad sentinel in %p (%p).", \
-        buf, (void*)buf->sentinel)
+    dbg_assert(buf->sentinel == _sentinel, "Bad sentinel in %p (%llx).", \
+        buf, buf->sentinel)
 #else
 #define dbg_assert_buf(buf)
 #endif

@@ -23,6 +23,9 @@ MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceBrowse,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, const char*, regtype, const char*, domain, DNSServiceBrowseReply, callBack, void*, context);
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceResolve,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, const char*, name, const char*, regtype, const char*, domain, DNSServiceResolveReply, callBack, void*, context);
+MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceGetAddrInfo,
+    DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, DNSServiceProtocol, protocol, const char*, hostname, DNSServiceGetAddrInfoReply, callBack, void*, context);
+
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceCreateConnection,
     DNSServiceRef*, sdRef);
 
@@ -41,7 +44,12 @@ BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(dnssd_sock_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceErrorType, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceFlags, int);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceProtocol, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceRef, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceDomainEnumReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceBrowseReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceResolveReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceGetAddrInfoReply, void*);
 END_DECLARE_TEST_SUITE()
 // -or- DECLARE_TEST_SUITE()
 

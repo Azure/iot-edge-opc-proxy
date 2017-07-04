@@ -12,27 +12,68 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
     /// Container class for host name information
     /// </summary>
-    public class DnsHostEntry : IEquatable<DnsHostEntry> {
+    public class DnsHostEntry : Poco<DnsHostEntry> {
 
         /// <summary>
         /// Contains host name
         /// </summary>
-        public string HostName { get; internal set; }
+        public string HostName {
+            get; private set;
+        }
 
         /// <summary>
         /// Other dns names for this host
         /// </summary>
-        public string[] Aliases { get; internal set; }
+        public string[] Aliases {
+            get; private set;
+        }
 
         /// <summary>
         /// Addresses for this host
         /// </summary>
-        public SocketAddress[] AddressList { get; internal set; }
+        public SocketAddress[] AddressList {
+            get; private set;
+        }
 
         /// <summary>
         /// Proxy on which this record is valid.
         /// </summary>
-        public SocketAddress Interface { get; internal set; }
+        public SocketAddress Interface {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Create entry
+        /// </summary>
+        /// <param name="hostName"></param>
+        /// <param name="aliases"></param>
+        /// <param name="addressList"></param>
+        /// <param name="interface"></param>
+        /// <returns></returns>
+        internal static DnsHostEntry Create(string hostName, string[] aliases,
+            SocketAddress[] addressList, SocketAddress @interface) {
+            var entry = Get();
+            entry.HostName = hostName;
+            entry.Aliases = aliases;
+            entry.AddressList = addressList;
+            entry.Interface = @interface;
+            return entry;
+        }
+
+        public override bool IsEqual(DnsHostEntry that) {
+            return
+                IsEqual(HostName, that.HostName) &&
+                IsEqual(Interface, that.Interface) &&
+                Aliases.SequenceEqual(that.Aliases) &&
+                AddressList.SequenceEqual(that.AddressList);
+        }
+
+        protected override void SetHashCode() {
+            MixToHash(HostName);
+            MixToHash(Interface);
+            MixToHash(Aliases);
+            MixToHash(AddressList);
+        }
 
         /// <summary>
         /// Return object as string
@@ -42,53 +83,15 @@ namespace Microsoft.Azure.Devices.Proxy {
             var str = new StringBuilder();
             str.Append(HostName);
             foreach (var alias in Aliases) {
-                str.Append(", ");
+                str.Append("[");
                 str.Append(alias);
+                str.Append("]");
             }
-            str.AppendLine();
             foreach (var address in AddressList) {
-                str.Append("  ");
-                str.AppendLine(address.ToString());
+                str.Append(", ");
+                str.Append(address.ToString());
             }
             return str.ToString();
-        }
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool Equals(Object obj) {
-            return this.Equals(obj as DnsHostEntry);
-        }
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public bool Equals(DnsHostEntry that) {
-            if (that == null) {
-                return false;
-            }
-            return
-                this.HostName.Equals(that.HostName) &&
-                this.Aliases.SequenceEqual(that.Aliases) &&
-                this.Interface.Equals(that.Interface) &&
-                this.AddressList.SequenceEqual(that.AddressList);
-        }
-
-        /// <summary>
-        /// Returns hash code
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode() {
-            int result = HostName.GetHashCode();
-            foreach (var address in AddressList) {
-                result = (result * 31) ^ address.GetHashCode();
-            }
-            result ^= Interface.GetHashCode();
-            return result;
         }
 
         /// <summary>
@@ -108,8 +111,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
 
             string hostName = string.Empty;
-            var addressList = new List<SocketAddress>();
-            var aliases = new List<string>();
+            var addressList = new HashSet<SocketAddress>();
+            var aliases = new HashSet<string>();
             foreach (var entry in entries) {
                 hostName = entry.HostName;
                 if (entry.AddressList != null) {

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// A null socket address (unspecified)
     /// </summary>
     [DataContract]
-    public class NullSocketAddress : SocketAddress, IEquatable<NullSocketAddress> {
+    public class AnySocketAddress : SocketAddress, IEquatable<AnySocketAddress> {
 
         [DataMember(Name = "family", Order = 1)]
         public override AddressFamily Family => AddressFamily.Unspecified;
@@ -23,9 +23,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public bool Equals(NullSocketAddress that) => that != null;
+        public bool Equals(AnySocketAddress that) => that != null;
 
-        public override bool IsEqual(object that) => Equals(that as NullSocketAddress);
+        public override bool IsEqual(object that) => Equals(that as AnySocketAddress);
 
         protected override void SetHashCode() {
             MixToHash(AddressFamily.Unspecified);
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return "null";
+            return "[ANY]";
         }
 
         public override ProxySocketAddress AsProxySocketAddress() =>

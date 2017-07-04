@@ -109,7 +109,8 @@ io_connection_event_t;
 typedef int32_t (*io_connection_cb_t)(
     void* context,
     io_connection_event_t ev,
-    io_message_t* message
+    io_message_t* message,
+    int32_t last_error
     );
 
 // 
@@ -118,6 +119,7 @@ typedef int32_t (*io_connection_cb_t)(
 typedef int32_t (*io_transport_create_connection_t)(
     void* context,
     prx_ns_entry_t* entry,
+    io_codec_id_t codec_id,
     io_connection_cb_t handler_cb,
     void* handler_ctx,
     prx_scheduler_t* scheduler,
@@ -136,9 +138,10 @@ struct io_transport
 //
 // Create connection from transport interface
 //
-decl_inline_6(int32_t, io_transport_create,
+decl_inline_7(int32_t, io_transport_create,
     io_transport_t*, transport,
     prx_ns_entry_t*, entry,
+    io_codec_id_t, codec_id,
     io_connection_cb_t, cb,
     void*, context,
     prx_scheduler_t*, scheduler,
@@ -148,7 +151,7 @@ decl_inline_6(int32_t, io_transport_create,
     chk_arg_fault_return(transport);
     dbg_assert_ptr(transport->on_create);
     return transport->on_create(transport->context, 
-        entry, cb, context, scheduler, connection);
+        entry, codec_id, cb, context, scheduler, connection);
 }
 
 #endif // _io_transport_h_

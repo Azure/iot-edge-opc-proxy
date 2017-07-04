@@ -199,7 +199,7 @@ static int32_t prx_host_init_from_command_line(
 {
     int32_t result;
 
-    int c;
+    int c, tmp;
     int option_index = 0;
 
     io_cs_t *cs = NULL;
@@ -228,6 +228,7 @@ static int32_t prx_host_init_from_command_line(
         { "version",                    no_argument,            NULL, 'v' },
         { "log-to-iothub",              no_argument,            NULL, 'T' },
         { "allow-fs-browsing",          no_argument,            NULL, 'F' },
+        { "allow-ws-unsecure",          no_argument,            NULL, 'W' },
         { "blacklisted-ports",          required_argument,      NULL, 'r' },
         { "import",                     required_argument,      NULL, 's' },
         { "name",                       required_argument,      NULL, 'n' },
@@ -253,12 +254,13 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwdhvTFr:s:n:c:l:L:C:H:D:p:x:y:t:<:",
+            c = getopt_long(argc, argv, "iuwWdhvTFr:s:n:c:l:L:C:H:D:p:x:y:t:<:",
                 long_options, &option_index);
             if (c == -1)
                 break;
             switch (c)
             {
+            case 'W':
             case 'w':
                 if (0 == (pal_caps() & pal_cap_wsclient))
                 {
@@ -266,7 +268,9 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                __prx_config_set_int(prx_config_key_connect_flag, 1);
+                tmp = __prx_config_get_int(prx_config_key_connect_flag, 0);
+                __prx_config_set_int(prx_config_key_connect_flag, 
+                    tmp | (c == 'w' ? 0x1 : 0x2));
                 break;
             case 'p':
                 __prx_config_set(prx_config_key_proxy_host, optarg);

@@ -23,21 +23,44 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// This address should be resolved using the Host resolver
         /// or can be passed directly to BindAsync/ConnectAsync.
         /// </summary>
-        public SocketAddress Address { get; internal set; }
+        public SocketAddress Address {
+            get; private set;
+        }
 
         /// <summary>
         /// In case of dns-sd, PTR entry.  This is the full record
         /// that was used to query the entry (including the proxy
         /// interface on which the entry was found.
         /// </summary>
-        public DnsServiceRecord Service { get; internal set; }
+        public DnsServiceRecord Service {
+            get; private set;
+        }
 
         /// <summary>
         /// In case of dns-sd, TXT records associated with the SRV 
         /// record. Use these to look up additional properties of
         /// the service, e.g. uri, configuration parameters, etc.
         /// </summary>
-        public DnsTxtRecord[] TxtRecords { get; internal set; }
+        public DnsTxtRecord[] TxtRecords {
+            get; private set;
+        }
+
+        /// <summary>
+        /// Create entry
+        /// </summary>
+        /// <param name="hostName"></param>
+        /// <param name="aliases"></param>
+        /// <param name="addressList"></param>
+        /// <param name="interface"></param>
+        /// <returns></returns>
+        internal static DnsServiceEntry Create(SocketAddress address,
+            DnsServiceRecord service, DnsTxtRecord[] txtRecords) {
+            var entry = Get();
+            entry.Address = address;
+            entry.Service = service;
+            entry.TxtRecords = txtRecords;
+            return entry;
+        }
 
         /// <summary>
         /// Returns a value for a key in the text records 
@@ -59,7 +82,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Enumerator to iterate through text record key value pairs
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<KeyValuePair<String, String>> GetEnumerator() {
+        public IEnumerator<KeyValuePair<string, string>> GetEnumerator() {
             foreach (var item in TxtRecords) {
                 yield return item.AsKeyValuePair();
             }
@@ -69,8 +92,8 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         public override bool IsEqual(DnsServiceEntry that) {
             return
-                Service.Equals(that.Service) &&
-                Address.Equals(that.Address) &&
+                IsEqual(Service, that.Service) &&
+                IsEqual(Address, that.Address) &&
                 TxtRecords.SequenceEqual(that.TxtRecords);
         }
 
@@ -86,13 +109,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override string ToString() {
             var bld = new StringBuilder();
-            bld.AppendLine(Service.ToString());
-            bld.AppendLine(Address.ToString());
+            bld.Append(Service.ToString());
+            bld.Append("@");
+            bld.Append(Address.ToString());
             for (int i = 0; i < TxtRecords.Length; i++) {
-                bld.Append("  [");
+                bld.Append(",  [");
                 bld.Append(i);
                 bld.Append("] ");
-                bld.AppendLine(TxtRecords[i].ToString());
+                bld.Append(TxtRecords[i].ToString());
             }
             return bld.ToString();
         }

@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Platform independent network interface info
     /// </summary>
     [DataContract]
-    public class InterfaceInfo : Serializable<InterfaceInfo> {
+    public class InterfaceInfo : Poco<InterfaceInfo> {
 
         /// <summary>
         /// Address of interface

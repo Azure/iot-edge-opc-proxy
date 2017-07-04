@@ -58,33 +58,93 @@ bool io_url_equals(
 }
 
 //
-// Free address
+// Free url
 //
 void io_url_free(
-    io_url_t* address
+    io_url_t* url
 )
 {
-    if (!address)
+    if (!url)
         return;
 
-    if (address->scheme)
-        STRING_delete(address->scheme);
-    if (address->host_name)
-        STRING_delete(address->host_name);
-    if (address->path)
-        STRING_delete(address->path);
-    if (address->user_name)
-        STRING_delete(address->user_name);
-    if (address->password)
-        STRING_delete(address->password);
-    if (address->token_provider)
-        io_token_provider_release(address->token_provider);
+    if (url->scheme)
+        STRING_delete(url->scheme);
+    if (url->host_name)
+        STRING_delete(url->host_name);
+    if (url->path)
+        STRING_delete(url->path);
+    if (url->user_name)
+        STRING_delete(url->user_name);
+    if (url->password)
+        STRING_delete(url->password);
+    if (url->token_provider)
+        io_token_provider_release(url->token_provider);
 
-    mem_free_type(io_url_t, address);
+    mem_free_type(io_url_t, url);
 }
 
 //
-// Creates an address 
+// Creates an url from a url string
+//
+int32_t io_url_parse(
+    const char* string,
+    io_url_t** created
+)
+{
+    int32_t result;
+    char* copy, *ptr;
+    const char* scheme, *host_name, *path = NULL, *port_str = NULL;
+    const char* user_name = NULL, *password = NULL;
+
+    chk_arg_fault_return(string);
+    chk_arg_fault_return(created);
+
+    // Make a working copy
+    result = string_clone(string, &copy);
+    if (result != er_ok)
+        return result;
+    result = er_invalid_format;
+    do
+    {
+        // Todo: Support parsing username:password@hostname:port
+
+        // Parse scheme
+        scheme = ptr = copy;
+        while (*ptr && *ptr != ':') ptr++;
+        if (!*ptr) break;
+        *ptr++ = 0;
+        if (*ptr++ != '/' || *ptr++ != '/') break;
+
+        // Parse host name
+        host_name = ptr;
+        while (*ptr && *ptr != ':' && *ptr != '/') ptr++;
+        /**/ if (*ptr == ':')
+        {
+            *ptr++ = 0;
+            // Parse port
+            port_str = ptr;
+            while (*ptr && *ptr != '/') ptr++;
+        }
+        else if (*ptr == '/')
+            ;
+        else
+            break;
+        *ptr++ = 0;
+        if (*ptr)
+        {
+            // Remainder is path
+            path = ptr;
+        }
+        result = io_url_create(scheme, host_name, port_str ? 
+            (uint16_t)atoi(port_str) : 0, path, user_name, password, created);
+    } 
+    while (0);
+    mem_free(copy);
+    return result;
+}
+
+//
+// Creates a url 
 //
 int32_t io_url_create(
     const char* scheme,
@@ -97,87 +157,87 @@ int32_t io_url_create(
 )
 {
     int32_t result = er_out_of_memory;
-    io_url_t* address;
+    io_url_t* url;
 
     chk_arg_fault_return(host_name);
     chk_arg_fault_return(created);
 
-    address = mem_zalloc_type(io_url_t);
-    if (!address)
+    url = mem_zalloc_type(io_url_t);
+    if (!url)
         return er_out_of_memory;
     do
     {
-        address->host_name = STRING_construct(host_name);
-        address->port = port;
+        url->host_name = STRING_construct(host_name);
+        url->port = port;
 
-        if (!address->host_name)
+        if (!url->host_name)
             break;
 
         if (scheme)
         {
-            if (!address->port)
+            if (!url->port)
             {
                 /**/ if (0 == string_compare_nocase(scheme, "wss"))
-                    address->port = 443;
+                    url->port = 443;
                 else if (0 == string_compare_nocase(scheme, "amqps"))
-                    address->port = 5671;
+                    url->port = 5671;
                 else if (0 == string_compare_nocase(scheme, "https"))
-                    address->port = 443;
+                    url->port = 443;
                 else if (0 == string_compare_nocase(scheme, "mqtts"))
-                    address->port = 8883;
+                    url->port = 8883;
                 else
                 {
                     result = er_invalid_format;
                     break;
                 }
             }
-            address->scheme = STRING_construct(scheme);
-            if (!address->scheme)
+            url->scheme = STRING_construct(scheme);
+            if (!url->scheme)
                 break;
         }
 
         if (path)
         {
-            address->path = STRING_construct(path);
-            if (!address->path)
+            url->path = STRING_construct(path);
+            if (!url->path)
                 break;
         }
 
         if (user_name)
         {
-            address->user_name = STRING_construct(user_name);
-            if (!address->user_name)
+            url->user_name = STRING_construct(user_name);
+            if (!url->user_name)
                 break;
         }
 
         if (password)
         {
-            address->password = STRING_construct(password);
-            if (!address->password)
+            url->password = STRING_construct(password);
+            if (!url->password)
                 break;
         }
 
-        *created = address;
+        *created = url;
         return er_ok;
 
     } while (0);
     
-    io_url_free(address);
+    io_url_free(url);
     return result;
 }
 
 //
-// Make a clone of the address configuration
+// Make a clone of the url configuration
 //
 int32_t io_url_clone(
-    io_url_t* address,
+    io_url_t* url,
     io_url_t** cloned
 )
 {
     int32_t result;
     io_url_t* copy;
 
-    chk_arg_fault_return(address);
+    chk_arg_fault_return(url);
     chk_arg_fault_return(cloned);
 
     copy = mem_zalloc_type(io_url_t);
@@ -186,30 +246,30 @@ int32_t io_url_clone(
     do
     {
         result = er_out_of_memory;
-        copy->port = address->port;
+        copy->port = url->port;
 
-        if (address->scheme)
-            copy->scheme = STRING_clone(address->scheme);
-        if (address->host_name)
-            copy->host_name = STRING_clone(address->host_name);
-        if (address->path)
-            copy->path = STRING_clone(address->path);
-        if (address->user_name)
-            copy->user_name = STRING_clone(address->user_name);
-        if (address->password)
-            copy->password = STRING_clone(address->password);
+        if (url->scheme)
+            copy->scheme = STRING_clone(url->scheme);
+        if (url->host_name)
+            copy->host_name = STRING_clone(url->host_name);
+        if (url->path)
+            copy->path = STRING_clone(url->path);
+        if (url->user_name)
+            copy->user_name = STRING_clone(url->user_name);
+        if (url->password)
+            copy->password = STRING_clone(url->password);
 
-        if ((address->scheme && !copy->scheme) ||
-            (address->host_name && !copy->host_name) ||
-            (address->path && !copy->path) ||
-            (address->user_name && !copy->user_name) ||
-            (address->password && !copy->password))
+        if ((url->scheme && !copy->scheme) ||
+            (url->host_name && !copy->host_name) ||
+            (url->path && !copy->path) ||
+            (url->user_name && !copy->user_name) ||
+            (url->password && !copy->password))
             break;
 
-        if (address->token_provider)
+        if (url->token_provider)
         {
             result = io_token_provider_clone(
-                address->token_provider, &copy->token_provider);
+                url->token_provider, &copy->token_provider);
             if (result != er_ok)
                 break;
         }

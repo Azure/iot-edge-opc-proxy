@@ -13,30 +13,49 @@ namespace Microsoft.Azure.Devices.Proxy {
     // Link response or error
     /// </summary>
     [DataContract]
-    public class LinkResponse : Serializable<LinkResponse>, IMessageContent, IResponse {
+    public class LinkResponse : Poco<LinkResponse>, IMessageContent, IResponse {
         /// <summary>
         /// Remote link address 
         /// </summary>
         [DataMember(Name = "link_id", Order = 1)]
-        public Reference LinkId { get; set; }
+        public Reference LinkId {
+            get; set;
+        }
 
         /// <summary>
         /// Interface address assigned on remote
         /// </summary>
         [DataMember(Name = "local_address", Order = 2)]
-        public SocketAddress LocalAddress { get; set; }
+        public SocketAddress LocalAddress {
+            get; set;
+        }
 
         /// <summary>
         /// Peer IP address proxy connected to
         /// </summary>
         [DataMember(Name = "peer_address", Order = 3)]
-        public SocketAddress PeerAddress { get; set; }
+        public SocketAddress PeerAddress {
+            get; set;
+        }
 
         /// <summary>
-        /// Comparison
+        /// Create response
         /// </summary>
-        /// <param name="that"></param>
+        /// <param name="linkId"></param>
+        /// <param name="localAddress"></param>
+        /// <param name="peerAddress"></param>
         /// <returns></returns>
+        public static LinkResponse Create(Reference linkId, 
+            SocketAddress localAddress, SocketAddress peerAddress) {
+            var response = Get();
+            response.LinkId = linkId;
+            response.LocalAddress = localAddress;
+            response.PeerAddress = peerAddress;
+            return response;
+        }
+
+        public IMessageContent Clone() => Create(LinkId, LocalAddress, PeerAddress);
+
         public override bool IsEqual(LinkResponse that) {
             return IsEqual(LinkId, that.LinkId) &&
                 IsEqual(LocalAddress, that.LocalAddress) &&
@@ -48,5 +67,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             MixToHash(LocalAddress);
             MixToHash(PeerAddress);
         }
+
+        public override string ToString() =>
+            $"{LinkId} (Local: {LocalAddress}, Peer: {PeerAddress})";
     }
 }

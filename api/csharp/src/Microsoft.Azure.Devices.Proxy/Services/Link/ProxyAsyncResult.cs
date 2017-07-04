@@ -12,16 +12,22 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Address, e.g. as result from receive or accept
         /// </summary>
-        public SocketAddress Address { get; set; }
+        public SocketAddress Address {
+            get; set;
+        }
 
         /// <summary>
         /// Count bytes
         /// </summary>
-        public int Count { get; set; }
+        public int Count {
+            get; set;
+        }
 
         /// <summary>
         /// Proxy instance, e.g. created as part of accept
         /// </summary>
-        public IProxySocket Link { get; set; }
+        public IProxySocket Link {
+            get; set;
+        }
     }
 }

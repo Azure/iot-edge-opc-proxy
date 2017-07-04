@@ -11,6 +11,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Void response for open requests
     /// </summary>
     [DataContract]
-    public class OpenResponse : VoidMessage, IResponse {
+    public class OpenResponse : VoidMessage<OpenResponse>, IResponse {
     }
 }

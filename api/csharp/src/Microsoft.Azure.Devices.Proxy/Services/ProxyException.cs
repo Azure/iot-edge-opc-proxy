@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="message"></param>
         /// <param name="inner"></param>
         /// <param name="errorcode"></param>
-        public ProxyException(String message, Exception inner, SocketError errorcode) :
+        public ProxyException(string message, Exception inner, SocketError errorcode) :
             base(message, inner, errorcode) {
         }
 
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="message"></param>
         /// <param name="inner"></param>
         /// <param name="errorcode"></param>
-        public ProxyException(String message, AggregateException inner, SocketError errorcode) :
+        public ProxyException(string message, AggregateException inner, SocketError errorcode) :
             base(message, inner, errorcode) {
         }
     }

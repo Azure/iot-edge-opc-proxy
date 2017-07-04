@@ -12,6 +12,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Request to close a link identified by message channel id
     /// </summary>
     [DataContract]
-    public class CloseRequest : VoidMessage, IRequest {
+    public class CloseRequest : VoidMessage<CloseRequest>, IRequest {
     }
 }

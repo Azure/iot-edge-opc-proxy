@@ -13,13 +13,13 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Socket address base class
     /// </summary>
     [DataContract]
-    public abstract class SocketAddress : Serializable<SocketAddress> {
+    public class SocketAddress : Poco<SocketAddress> {
 
         /// <summary>
         /// Address family
         /// </summary>
         [DataMember(Name = "family", Order = 1)]
-        public abstract AddressFamily Family { get; }
+        public virtual AddressFamily Family { get; } = AddressFamily.Unspecified;
 
         /// <summary>
         /// Comparison
@@ -29,8 +29,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override bool IsEqual(SocketAddress that) =>
             IsEqual(Family, that.Family);
 
-
-        public abstract ProxySocketAddress AsProxySocketAddress();
+        public virtual ProxySocketAddress AsProxySocketAddress() => null;
 
         /// <summary>
         /// Parse a string into a socket address
@@ -40,7 +39,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public static bool TryParse(string address, out SocketAddress parsed) {
             /**/ if (string.IsNullOrEmpty(address)) {
-                parsed = new NullSocketAddress();
+                parsed = new AnySocketAddress();
             }
             else if (InetSocketAddress.TryParse(address, out InetSocketAddress inet)) {
                 parsed = inet;
@@ -49,10 +48,12 @@ namespace Microsoft.Azure.Devices.Proxy {
                 parsed = proxy;
             }
             else {
-                parsed = new NullSocketAddress();
+                parsed = new AnySocketAddress();
                 return false;
             }
             return true;
         }
+
+        protected override void SetHashCode() => MixToHash(Family);
     }
 }

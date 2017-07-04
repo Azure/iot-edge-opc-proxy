@@ -40,6 +40,12 @@
     avahi_s_service_resolver_new
 #define avahi_service_resolver_free \
     avahi_s_service_resolver_free
+#define AvahiHostNameResolver \
+    AvahiSHostNameResolver
+#define avahi_hostname_resolver_new \
+    avahi_s_hostname_resolver_new
+#define avahi_hostname_resolver_free \
+    avahi_s_hostname_resolver_free
 #define AvahiServiceBrowser \
     AvahiSServiceBrowser
 #define avahi_service_browser_new \
@@ -94,13 +100,15 @@ struct pal_sdbrowser
 //
 typedef struct pal_sdhandle
 {
-    AvahiServiceResolver* resolver;                    // Active resolvers
+    AvahiServiceResolver* resolver;                   // Service resolvers
+    AvahiHostNameResolver* address;       // Host name to address resolver
     AvahiServiceTypeBrowser* service_types;          // or type enumerator
     AvahiDomainBrowser* domains;                      // Or domain browser
     AvahiServiceBrowser* services;            // and / or services browser
 
     pal_sdbrowser_t* browser;                       // Owner of the handle
     char* service_name;                          // For resolve operations
+    uint16_t port;
     DLIST_ENTRY link;           // Link to queue browser clients in server
 }
 pal_sdhandle_t;
@@ -356,6 +364,8 @@ static void pal_sdbrowser_remove_handle(
     // Assumption is that this is under polling lock
     if (handle->resolver)
         avahi_service_resolver_free(handle->resolver);
+    if (handle->address)
+        avahi_hostname_resolver_free(handle->address);
     if (handle->service_types)
         avahi_service_type_browser_free(handle->service_types);
     if (handle->domains)
@@ -437,7 +447,7 @@ static int32_t pal_sdbrowser_translate_avahi_event(
 //
 // Callback
 //
-static void pal_sdbrowser_resolve_callback (
+static void pal_sdbrowser_service_resolve_callback (
     AvahiServiceResolver *avahi_handle,
     AvahiIfIndex itf_index,
     AvahiProtocol protocol, 
@@ -456,7 +466,7 @@ static void pal_sdbrowser_resolve_callback (
     int32_t result;
     pal_sdhandle_t* handle = (pal_sdhandle_t*)context;
     pal_sdbrowser_t* browser;
-    pal_sd_resolve_result_t resolve_result;
+    pal_sd_service_entry_t resolve_result;
     prx_socket_address_proxy_t addr;
     AvahiStringList* iter;
     int32_t pal_flags = 0;
@@ -477,7 +487,7 @@ static void pal_sdbrowser_resolve_callback (
     {
         result = browser->cb(browser->context, itf_index, 
             pal_sdclient_last_avahi_error(browser->client),
-            pal_sd_result_resolve, NULL, 0);
+            pal_sd_result_entry, NULL, 0);
     }
     else
     {
@@ -515,7 +525,7 @@ static void pal_sdbrowser_resolve_callback (
             }
         }
         result = browser->cb(browser->context, itf_index, result,
-            pal_sd_result_resolve, &resolve_result, pal_flags);
+            pal_sd_result_entry, &resolve_result, pal_flags);
 
         if (resolve_result.records)
             mem_free(resolve_result.records);
@@ -567,7 +577,7 @@ static void pal_sdbrowser_enumerate_services_and_resolve_callback(
         if (result == er_ok && !pal_flags)
             return;
         result = browser->cb(browser->context, itf_index, result,
-            pal_sd_result_resolve, NULL, 0);
+            pal_sd_result_entry, NULL, 0);
     }
     else
     {
@@ -584,7 +594,7 @@ static void pal_sdbrowser_enumerate_services_and_resolve_callback(
         {
             handle->resolver = avahi_service_resolver_new(browser->client->client,
                 itf_index, protocol, service_name, service_type, domain,
-                AVAHI_PROTO_UNSPEC, 0, pal_sdbrowser_resolve_callback, handle);
+                AVAHI_PROTO_UNSPEC, 0, pal_sdbrowser_service_resolve_callback, handle);
             if (handle->resolver)
                 return; // done
 
@@ -594,7 +604,7 @@ static void pal_sdbrowser_enumerate_services_and_resolve_callback(
 
         // Pass on error info
         result = browser->cb(browser->context, itf_index, result,
-            pal_sd_result_resolve, NULL, 0);
+            pal_sd_result_entry, NULL, 0);
     }
     if (result == er_ok)
         return;
@@ -610,7 +620,7 @@ static void pal_sdbrowser_enumerate_services_and_resolve_callback(
 //
 // Resolve services
 //
-static int32_t pal_sdbrowser_resolve(
+static int32_t pal_sdbrowser_resolve_service(
     pal_sdbrowser_t* browser,
     const char* service_name,
     const char* service_type,
@@ -979,6 +989,161 @@ static int32_t pal_sdbrowser_enumerate_domains(
 }
 
 //
+// Callback
+//
+static void pal_sdbrowser_hostname_resolver_callback(
+    AvahiHostNameResolver *avahi_handle,
+    AvahiIfIndex itf_index,
+    AvahiProtocol protocol,
+    AvahiResolverEvent ev,
+    const char *name,
+    const AvahiAddress *address,
+    AvahiLookupResultFlags flags,
+    void *context
+)
+{
+    int32_t result;
+    pal_sdhandle_t* handle = (pal_sdhandle_t*)context;
+    pal_sdbrowser_t* browser;
+    prx_addrinfo_t addrinfo_result;
+    int32_t pal_flags = 0;
+
+    (void)avahi_handle;
+    (void)protocol;
+    (void)flags;
+
+    dbg_assert_ptr(handle);
+    browser = handle->browser;
+    dbg_assert_ptr(browser);
+
+    if (ev == AVAHI_RESOLVER_FAILURE)
+    {
+        result = browser->cb(browser->context, itf_index,
+            pal_sdclient_last_avahi_error(browser->client),
+            pal_sd_result_addrinfo, NULL, 0);
+    }
+    else
+    {
+        result = er_ok;
+        memset(&addrinfo_result, 0, sizeof(addrinfo_result));
+        addrinfo_result.name = name;
+
+        // Convert address to prx_socket_address_t
+        dbg_assert_ptr(address);
+        switch (address->proto)
+        {
+        case AVAHI_PROTO_INET6:
+            addrinfo_result.address.un.family = prx_address_family_inet6;
+            addrinfo_result.address.un.ip.port = handle->port;
+            memcpy(addrinfo_result.address.un.ip.un.in6.un.u8,
+                address->data.ipv6.address, sizeof(addrinfo_result.address.un.ip.un.in6.un.u8));
+            break;
+        case AVAHI_PROTO_INET:
+            addrinfo_result.address.un.family = prx_address_family_inet;
+            addrinfo_result.address.un.ip.port = handle->port;
+            addrinfo_result.address.un.ip.un.in4.un.addr = address->data.ipv4.address;
+            break;
+        default:
+            dbg_assert(0, "Bad family returned");
+            addrinfo_result.address.un.family = prx_address_family_unspec;
+            result = er_invalid_format;
+            break;
+        }
+        result = browser->cb(browser->context, itf_index, result,
+            pal_sd_result_addrinfo, &addrinfo_result, pal_flags);
+    }
+
+    if (result == er_ok)
+        return;
+
+    pal_sdbrowser_remove_handle(handle);
+    if (result != er_aborted)
+    {
+        log_error(browser->log, "getaddrinfo callback returned %s...",
+            prx_err_string(result));
+    }
+}
+
+//
+// Resolve service entries into addrinfo objects
+//
+int32_t pal_sdbrowser_resolve(
+    pal_sdbrowser_t* browser,
+    prx_socket_address_proxy_t* addr,
+    int32_t itf_index
+)
+{
+    int32_t result;
+    pal_sdhandle_t* handle;
+
+    chk_arg_fault_return(browser);
+    chk_arg_fault_return(addr);
+    dbg_assert_ptr(browser->client);
+
+    avahi_threaded_poll_lock(browser->client->polling);
+    do
+    {
+        result = pal_sdbrowser_add_handle(browser, &handle);
+        if (result != er_ok)
+            break;
+
+        handle->port = addr->port;
+        handle->address = avahi_hostname_resolver_new(browser->client->client,
+            itf_index == prx_itf_index_all ? AVAHI_IF_UNSPEC : (uint32_t)itf_index,
+            AVAHI_PROTO_UNSPEC, addr->host, AVAHI_PROTO_UNSPEC, 0,
+            pal_sdbrowser_hostname_resolver_callback, handle);
+        if (!handle->address)
+        {
+            result = pal_sdclient_last_avahi_error(browser->client);
+            break;
+        }
+      
+        // Done
+        result = er_ok;
+        handle = NULL;
+        break;
+    } 
+    while (0);
+
+    avahi_threaded_poll_unlock(browser->client->polling);
+
+    if (handle)
+        pal_sdbrowser_remove_handle(handle);
+    return result;
+}
+
+//
+// Resolve services, or browse services and domains
+//
+int32_t pal_sdbrowser_browse(
+    pal_sdbrowser_t* browser,
+    const char* service_name,      // Pass null to browse services
+    const char* service_type, // Pass null to browse service types
+    const char* domain,           // Pass null for domain browsing
+    int32_t itf_index
+)
+{
+    chk_arg_fault_return(browser);
+
+    if (service_name)
+        // Resolve service name to host
+        return pal_sdbrowser_resolve_service(browser, 
+                    service_name, service_type, domain, itf_index);
+    if (service_type)
+        // Browse
+        return pal_sdbrowser_enumerate_services(browser,
+                                  service_type, domain, itf_index);
+    if (domain)
+        // Enumerate service types in domain
+        return pal_sdbrowser_enumerate_service_types(browser,
+                                                domain, itf_index);
+
+        // Enumerate domains
+        return pal_sdbrowser_enumerate_domains(browser,
+                                                  NULL, itf_index);
+}
+
+//
 // Create a browser instance for name service query
 //
 int32_t pal_sdbrowser_create(
@@ -1005,35 +1170,6 @@ int32_t pal_sdbrowser_create(
 
     *created = browser;
     return er_ok;
-}
-
-//
-// Resolve services, or browse services and domains
-//
-int32_t pal_sdbrowser_browse(
-    pal_sdbrowser_t* browser,
-    const char* service_name,      // Pass null to browse services
-    const char* service_type, // Pass null to browse service types
-    const char* domain,           // Pass null for domain browsing
-    int32_t itf_index
-)
-{
-    if (service_name)
-        // Resolve service name to host
-        return pal_sdbrowser_resolve(browser, 
-                    service_name, service_type, domain, itf_index);
-    if (service_type)
-        // Browse
-        return pal_sdbrowser_enumerate_services(browser,
-                                  service_type, domain, itf_index);
-    if (domain)
-        // Enumerate service types in domain
-        return pal_sdbrowser_enumerate_service_types(browser,
-                                                domain, itf_index);
-
-        // Enumerate domains
-        return pal_sdbrowser_enumerate_domains(browser,
-                                                  NULL, itf_index);
 }
 
 //

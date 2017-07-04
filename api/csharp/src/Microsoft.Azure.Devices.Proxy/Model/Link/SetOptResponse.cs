@@ -12,6 +12,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Void response for set option requests
     /// </summary>
     [DataContract]
-    public class SetOptResponse : VoidMessage, IResponse {
+    public class SetOptResponse : VoidMessage<SetOptResponse>, IResponse {
     }
 }

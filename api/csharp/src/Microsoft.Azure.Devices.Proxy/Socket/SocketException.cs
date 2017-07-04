@@ -54,5 +54,22 @@ namespace Microsoft.Azure.Devices.Proxy {
         public SocketException(string message, AggregateException e, SocketError errorCode )
             : this(message, (Exception)e?.Flatten(), errorCode) {
         }
+
+
+        internal static SocketException Create(string message, Exception e) {
+            if (e is SocketException) {
+                return (SocketException)e;
+            }
+            if (e is AggregateException) {
+                var s = e.GetFirstOf<SocketException>();
+                if (s != null) {
+                    return s;
+                }
+            }
+            if (e.InnerException != null) {
+                return Create(message, e.InnerException);
+            }
+            return new SocketException(message, e);
+        }
     }
 }

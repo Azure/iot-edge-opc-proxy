@@ -67,7 +67,7 @@ decl_public_4(int32_t, pal_getifnameinfo,
 );
 
 //
-// Look up socket address
+// Look up host name 
 //
 decl_public_6(int32_t, pal_getaddrinfo,
     const char*, host_name,

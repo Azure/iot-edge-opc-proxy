@@ -2562,6 +2562,8 @@ TEST_FUNCTION(pal_posix_getaddrinfo__neg_1)
     STRICT_EXPECTED_CALL(h_free(UT_MEM_ALLOCED, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
     STRICT_EXPECTED_CALL(freeaddrinfo(ai_info_ptr_valid));
+    STRICT_EXPECTED_CALL(pal_caps())
+        .SetReturn(0);
 
     // act 
     result = pal_getaddrinfo(k_host_name_valid, k_service_valid, k_family_valid, k_flags_valid, &info_valid, &info_count_valid);
@@ -2619,6 +2621,8 @@ TEST_FUNCTION(pal_posix_getaddrinfo__neg_2)
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
     STRICT_EXPECTED_CALL(freeaddrinfo(ai_info_ptr_valid));
+    STRICT_EXPECTED_CALL(pal_caps())
+        .SetReturn(0);
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
@@ -2638,7 +2642,7 @@ TEST_FUNCTION(pal_posix_freeaddrinfo__success_1)
 
     for (size_t i = 0; i < _countof(addr_info_valid); i++)
     {
-        addr_info_valid[i].reserved = (i == _countof(addr_info_valid) - 1) ? 0 : 1;
+        addr_info_valid[i].reserved = (i == _countof(addr_info_valid) - 1) ? 1 : 0;
         addr_info_valid[i].name = (char*)i+1;
     }
 

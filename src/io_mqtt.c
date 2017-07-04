@@ -53,6 +53,7 @@ struct io_mqtt_connection
     DLIST_ENTRY subscriptions;             // Topics subscribed to on conn
     io_mqtt_status_t status;                          // connection status
     ticks_t last_success;                     // Last successful connected
+    int32_t last_error;
     ticks_t last_activity;
     io_mqtt_connection_reconnect_t reconnect_cb; // Call when disconnected
     void* reconnect_ctx;
@@ -164,6 +165,7 @@ static void io_mqtt_connection_clear_failures(
 )
 {
     connection->last_success = connection->last_activity = ticks_get();
+    connection->last_error = er_ok;
     connection->back_off_in_seconds = 0;
 }
 
@@ -268,6 +270,7 @@ static void io_mqtt_connection_subscribe_all(
     payload = (SUBSCRIBE_PAYLOAD*)mem_zalloc(payload_count * sizeof(SUBSCRIBE_PAYLOAD));
     if (!payload)
     {
+        connection->last_error = er_out_of_memory;
         __do_next(connection, io_mqtt_connection_hard_reset);
         return;
     }
@@ -291,6 +294,7 @@ static void io_mqtt_connection_subscribe_all(
             payload_count);
         if (result != 0)
         {
+            connection->last_error = er_comm;
             __do_next(connection, io_mqtt_connection_hard_reset);
             break;
         }
@@ -343,6 +347,7 @@ static void io_mqtt_connection_unsubscribe_all(
     topics = (char**)mem_zalloc(topics_count * sizeof(const char*));
     if (!topics)
     {
+        connection->last_error = er_out_of_memory;
         __do_next(connection, io_mqtt_connection_hard_reset);
         return;
     }
@@ -364,6 +369,7 @@ static void io_mqtt_connection_unsubscribe_all(
             (const char**)topics, topics_count);
         if (result != 0)
         {
+            connection->last_error = er_out_of_memory;
             __do_next(connection, io_mqtt_connection_hard_reset);
             break;
         }
@@ -415,6 +421,7 @@ static void io_mqtt_connection_publish_message(
     {
         message->published = false;
         log_error(connection->log, "Failure publishing messages payload...");
+        connection->last_error = er_writing;
         __do_next(connection, io_mqtt_connection_soft_reset);
     }
     // Wait for pub_ack
@@ -459,6 +466,7 @@ static void io_mqtt_connection_monitor(
             {
                 log_error(connection->log, "missing pub ack, hard reset...",
                     time_diff);
+                connection->last_error = er_writing;
                 __do_next(connection, io_mqtt_connection_hard_reset);
                 return;
             }
@@ -471,6 +479,7 @@ static void io_mqtt_connection_monitor(
         {
             log_error(connection->log, "no activity for %d ms, hard reset...",
                 time_diff);
+            connection->last_error = er_timeout;
             __do_next(connection, io_mqtt_connection_hard_reset);
             return;
         }
@@ -564,7 +573,7 @@ static void io_mqtt_connection_receive_message(
     properties = STRING_construct(props);
     payload = mqttmessage_getApplicationMsg(msg_handle);
     
-    log_trace(subscription->log, "RECV [size: %08d]", payload->length);
+    log_debug(subscription->log, "RECV [size: %08d]", payload->length);
     // Do callback
     subscription->receiver_cb(subscription->receiver_ctx,
         (io_mqtt_properties_t*)properties, payload->message, payload->length);
@@ -604,7 +613,7 @@ static int32_t io_mqtt_connection_handle_PUBLISH_ACK(
         return er_not_found; 
     }
 
-    log_trace(connection->log, "SENT [size: %08d, took %d]",
+    log_debug(connection->log, "SENT [size: %08d, took %d]",
         message->buf_len, ticks_get() - message->attempted);
     io_mqtt_connection_clear_failures(connection);
     
@@ -784,14 +793,14 @@ static void io_mqtt_connection_operation_callback(
         }
 
         // otherwise, hard reset
+        connection->last_error = er_closed;
         __do_next(connection, io_mqtt_connection_hard_reset);
         if (connection->status == io_mqtt_status_connecting ||
             connection->status == io_mqtt_status_connected)
         {
             log_info(connection->log, "Remote side disconnected.");
         }
-        break;
-
+        return;
     case MQTT_CLIENT_ON_PING_RESPONSE:
         log_info(connection->log, "Connection alive...");
         result = er_ok;
@@ -810,6 +819,7 @@ static void io_mqtt_connection_operation_callback(
 
     log_error(connection->log,
         "Connection %p in error status, reset connection...", connection);
+    connection->last_error = result;
     __do_next(connection, io_mqtt_connection_hard_reset);
 }
 
@@ -827,22 +837,28 @@ static void io_mqtt_connection_error_callback(
     switch (error)
     {
     case MQTT_CLIENT_CONNECTION_ERROR:
+        connection->last_error = er_connecting;
         log_error(connection->log, "Connection error, reset connection...");
         break;
     case MQTT_CLIENT_PARSE_ERROR:
+        connection->last_error = er_invalid_format;
         log_error(connection->log, "Parser error, reset connection...");
         break;
     case MQTT_CLIENT_MEMORY_ERROR:
+        connection->last_error = er_out_of_memory;
         log_error(connection->log, "Memory error, reset connection...");
         break;
     case MQTT_CLIENT_COMMUNICATION_ERROR:
+        connection->last_error = er_comm;
         log_error(connection->log, "Communication error, reset connection...");
         break;
     case MQTT_CLIENT_NO_PING_RESPONSE:
+        connection->last_error = er_timeout;
         log_error(connection->log, "No ping response, reset connection...");
         break;
     case MQTT_CLIENT_UNKNOWN_ERROR:
     default:
+        connection->last_error = er_unknown;
         log_error(connection->log, "Unknown error, reset connection...");
         break;
     }
@@ -1062,6 +1078,7 @@ static void io_mqtt_connection_reconnect(
 
     log_error(connection->log,
         "Failed to connect connection (%s)", prx_err_string(result));
+    connection->last_error = result;
     __do_next(connection, io_mqtt_connection_hard_reset);
 }
 
@@ -1085,8 +1102,8 @@ static void io_mqtt_connection_hard_reset(
     connection->status = io_mqtt_status_reset;
     io_mqtt_connection_complete_disconnect(connection);
 
-    if (connection->reconnect_cb &&
-        !connection->reconnect_cb(connection->reconnect_ctx))
+    if (connection->reconnect_cb && !connection->reconnect_cb(
+        connection->reconnect_ctx, connection->last_error))
         return;
 
     log_info(connection->log, "Reconnecting in %d seconds...",

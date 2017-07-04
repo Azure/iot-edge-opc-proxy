@@ -164,7 +164,7 @@ option(run_unittests "set run_unittests to ON to run unittests (default is OFF)"
 function(build_ut cur_test folder)
     if (run_unittests AND NOT CMAKE_CROSSCOMPILING)
         add_executable(${cur_test}_exe ${${cur_test}_test_files} 
-            ${${cur_test}_c_files} ${_IOTSDK_SRC}/xlogging.c ${_IOTSDK_SRC}/consolelogger.c
+            ${${cur_test}_c_files}
         )
         set_target_properties(${cur_test}_exe PROPERTIES FOLDER ${folder})
         target_compile_definitions(${cur_test}_exe PUBLIC -DUSE_CTEST)

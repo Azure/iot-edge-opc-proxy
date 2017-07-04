@@ -100,6 +100,7 @@ static int32_t pal_socket_from_os_error(
             (char*)&message, 0, NULL);
         if (message)
         {
+            string_trim_back(message, "\r\n\t ");
             log_info(NULL, "%s (0x%x)", message, error);
             LocalFree(message);
         }
@@ -794,7 +795,6 @@ static bool pal_socket_async_accept_begin(
 {
     int32_t result;
     DWORD received = 0;
-    int error;
     pal_socket_t* accepted;
     pal_socket_client_itf_t* accepted_itf;
 
@@ -842,13 +842,12 @@ static bool pal_socket_async_accept_begin(
             0, sizeof(async_op->addr_buf[0]), sizeof(async_op->addr_buf[1]),
             &received, &async_op->ov))
         {
-            error = WSAGetLastError();
-            if (error == WSA_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
             {
                 // Wait for callback
                 return false;
             }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -874,7 +873,7 @@ static bool pal_socket_async_connectpipe_begin(
 {
     int32_t result;
     DWORD received = 0;
-    DWORD error, os_type;
+    DWORD os_type;
     pal_socket_t* accepted;
     pal_socket_client_itf_t* accepted_itf;
 
@@ -940,13 +939,9 @@ static bool pal_socket_async_connectpipe_begin(
         async_op->buf_len = sizeof(accepted);
         if (!ConnectNamedPipe((HANDLE)accepted->sock_fd, &async_op->ov))
         {
-            error = GetLastError();
-            if (error == ERROR_IO_PENDING)
-            {
-                // Wait for callback
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
                 return false;
-            }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1004,13 +999,12 @@ static bool pal_socket_async_send_begin(
             &async_op->ov, NULL);
         if (error != 0)
         {
-            error = WSAGetLastError();
-            if (error == WSA_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
             {
                 // Wait for callback
                 return false;
             }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1059,13 +1053,12 @@ static bool pal_socket_async_recv_begin(
             &async_op->flags, &async_op->ov, NULL);
         if (error != 0)
         {
-            error = WSAGetLastError();
-            if (error == WSA_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
             {
                 // Wait for callback
                 return false;
             }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1136,8 +1129,8 @@ static bool pal_socket_async_sendto_begin(
             NULL);
         if (error != 0)
         {
-            error = WSAGetLastError();
-            if (error == WSA_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
             {
                 // Wait for callback
                 return false;
@@ -1193,13 +1186,12 @@ static bool pal_socket_async_recvfrom_begin(
             &async_op->addr_len, &async_op->ov, NULL);
         if (error != 0)
         {
-            error = WSAGetLastError();
-            if (error == WSA_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
             {
                 // Wait for callback
                 return false;
             }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1225,7 +1217,6 @@ static bool pal_socket_async_writefile_begin(
 {
     int32_t result;
     DWORD sent = 0;
-    DWORD error;
     int32_t flags;
 
     dbg_assert_ptr(async_op);
@@ -1247,13 +1238,9 @@ static bool pal_socket_async_writefile_begin(
         if (!WriteFile((HANDLE)async_op->sock->sock_fd, async_op->buffer, 
             (DWORD)async_op->buf_len, &sent, &async_op->ov))
         {
-            error = GetLastError();
-            if (error == ERROR_IO_PENDING)
-            {
-                // Wait for callback
+            result = pal_os_last_error_as_prx_error();
+            if (result == er_waiting)
                 return false;
-            }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1279,7 +1266,6 @@ static bool pal_socket_async_readfile_begin(
 {
     int32_t result;
     DWORD received = 0;
-    DWORD error;
 
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
@@ -1298,13 +1284,9 @@ static bool pal_socket_async_readfile_begin(
         if (!ReadFile((HANDLE)async_op->sock->sock_fd, async_op->buffer,
             (DWORD)async_op->buf_len, &received, &async_op->ov))
         {
-            error = GetLastError();
-            if (error == ERROR_IO_PENDING)
-            {
-                // Wait for callback
+            result = pal_os_last_error_as_prx_error();
+            if (result == er_waiting)
                 return false;
-            }
-            result = pal_os_to_prx_error(error);
         }
         else
         {
@@ -1357,15 +1339,9 @@ static int32_t pal_socket_async_connect_begin(
             (const struct sockaddr*)async_op->addr_buf, (int)async_op->addr_len,
             NULL, 0, &tmp, &async_op->ov))
         {
-            error = WSAGetLastError();
-            if (error == ERROR_IO_PENDING)
-            {
-                //
-                // Wait for callback, indicate open loop to break out...
-                //
-                return er_waiting;
-            }
-            result = pal_os_to_prx_error(error);
+            result = pal_os_last_net_error_as_prx_error();
+            if (result == er_waiting)
+                return result;
             log_error(async_op->sock->log, "Failed connecting socket (%s)",
                 prx_err_string(result));
         }
@@ -1393,7 +1369,6 @@ static int32_t pal_socket_async_createfile_begin(
 )
 {
     int32_t result;
-    DWORD error;
     HANDLE h_file;
 
     dbg_assert_ptr(async_op);
@@ -1411,8 +1386,8 @@ static int32_t pal_socket_async_createfile_begin(
             0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
         if (h_file == INVALID_HANDLE_VALUE)
         {
-            error = GetLastError();
-            if (error == ERROR_PIPE_BUSY)
+            result = pal_os_last_error_as_prx_error();
+            if (result == er_busy)
             {
                 // There is no overlapped connect - the server needs to have its named 
                 // pipe loop started and enough instances available.  Then we should  
@@ -1421,7 +1396,6 @@ static int32_t pal_socket_async_createfile_begin(
                 // TODO: Consider retry for timeout time on the scheduler.
             }
 
-            result = pal_os_to_prx_error(error);
             log_error(async_op->sock->log, "Failed to create named pipe handle. (%s)",
                 prx_err_string(result));
             break;
@@ -1897,7 +1871,6 @@ int32_t pal_socket_pair(
 )
 {
     int32_t result;
-    DWORD error;
     HANDLE fds[2];
     char pipe_name[32];
     OVERLAPPED ov;
@@ -1957,10 +1930,9 @@ int32_t pal_socket_pair(
 
         if (!ConnectNamedPipe(fds[0], &ov))
         {
-            error = GetLastError();
-            if (error != ERROR_IO_PENDING)
+            result = pal_os_last_net_error_as_prx_error();
+            if (result != er_waiting)
             {
-                result = pal_os_to_prx_error(error);
                 log_error(NULL, "Failed to connect named server pipe handle. (%s)",
                     prx_err_string(result));
                 break;

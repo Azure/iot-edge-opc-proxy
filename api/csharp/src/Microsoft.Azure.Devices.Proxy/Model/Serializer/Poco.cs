@@ -6,34 +6,37 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Collections;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
-    using System.Linq;
 
     /// <summary>
     /// Generic base class for any object in the object model.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class Poco<T> : Poco, IEquatable<T> where T : class {
+    public abstract class Poco<T> : Poco, IEquatable<T> where T : Poco, new() {
         public bool Equals(T other) => IsEqual(other);
 
-        /// <summary>
-        /// Equality
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
         public abstract bool IsEqual(T that);
 
         public override bool IsEqual(object that) {
             var val = that as T;
             return val == null ? false : IsEqual(val);
         }
+
+        public override void Dispose() {
+            ResetHash();
+            _pool.Return(this);
+        }
+
+        public static T Get() => _pool.Get() as T;
+        private static ObjectPool<Poco> _pool = new ObjectPool<Poco>(() => new T());
     }
 
     /// <summary>
     /// Utility base class for any object in the object model.
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public abstract class Poco {
+    public abstract class Poco : IDisposable {
 
         /// <summary>
         /// Comparison
@@ -68,7 +71,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="hash"></param>
         protected void MixToHash(int hash) {
-            _hash = (_hash ?? _offsetBasis ^ hash) * _prime;
+            if (hash == 0) {
+                return;
+            }
+            _hash = ((_hash ?? _offsetBasis) ^ hash) * _prime;
         }
 
         /// <summary>
@@ -77,7 +83,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="hash"></param>
         protected void MixToHash(IEnumerable enumeration) {
             foreach (var item in enumeration) {
-                MixToHash(item.GetHashCode());
+                MixToHash(item);
             }
         }
 
@@ -89,7 +95,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (item is IEnumerable) {
                 MixToHash((IEnumerable)item);
             }
-            else {
+            else if (item != null) {
                 MixToHash(item.GetHashCode());
             }
         }
@@ -190,6 +196,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             return false;
         }
 
+
         /// <summary>
         /// Called to set the objects hashcode
         /// </summary>
@@ -200,7 +207,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public abstract bool IsEqual(object that); 
+        public abstract bool IsEqual(object that);
+
+        public abstract void Dispose();
 
         // FNV-1a hash
         private int? _hash = null;

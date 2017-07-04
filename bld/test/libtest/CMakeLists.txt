@@ -13,6 +13,7 @@
         ${_TRUNNER_ROOT}/src/testmutex.c
         ${_CTEST_ROOT}/src/ctest.c
         ${_UMOCKC_ROOT}/src/umockalloc.c
+        ${_UMOCKC_ROOT}/src/umockautoignoreargs.c
         ${_UMOCKC_ROOT}/src/umockcall.c
         ${_UMOCKC_ROOT}/src/umockcallpairs.c
         ${_UMOCKC_ROOT}/src/umockcallrecorder.c

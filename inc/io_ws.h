@@ -33,7 +33,8 @@ decl_public_7(int32_t, io_ws_connection_create,
 // Reconnect callback
 //
 typedef bool (*io_ws_connection_reconnect_t)(
-    void* context
+    void* context,
+    int32_t last_error
 );
 
 //

@@ -35,6 +35,8 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return Ping;
             else if (content is PollRequest)
                 return Poll;
+            else if (content is PollResponse)
+                return Poll;
             else if (content is PingResponse)
                 return Ping;
             else if (content is LinkRequest)
@@ -89,7 +91,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (type == Close)
                 return isResponse ? typeof(CloseResponse) : typeof(CloseRequest);
             if (type == Poll)
-                return typeof(PollRequest);
+                return isResponse ? typeof(PollResponse) : typeof(PollRequest);
             if (type == Data)
                 return typeof(DataMessage);
             else

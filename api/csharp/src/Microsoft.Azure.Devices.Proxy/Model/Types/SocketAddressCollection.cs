@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                         yield return r;
                     }
                 }
-                else if (!(address is NullSocketAddress)) {
+                else if (!(address is AnySocketAddress)) {
                     yield return address;
                 }
             }

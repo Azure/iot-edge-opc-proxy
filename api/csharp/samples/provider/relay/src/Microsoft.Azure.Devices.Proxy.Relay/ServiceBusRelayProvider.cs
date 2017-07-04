@@ -4,22 +4,51 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy.Provider {
-    using Proxy;
-    using System.Threading.Tasks;
     using System;
+    using System.Threading.Tasks;
+    using Proxy;
 
     /// <summary>
     /// Provider that uses relay as stream channel, instead of the default 
     /// implementation
     /// </summary>
-    public class RelayProvider : DefaultProvider {
-
+    public class ServiceBusRelayProvider : DefaultProvider {
         private IStreamService _relay;
         public override IStreamService StreamService {
             get {
                 return _relay;
             }
         }
+
+        public static Task<IProvider> CreateAsync() => 
+            RelayProvider.CreateAsync((string)null, (string)null);
+
+        /// <summary>
+        /// Private constructor
+        /// </summary>
+        /// <param name="iothub"></param>
+        /// <param name="relay"></param>
+        internal ServiceBusRelayProvider(ConnectionString iothub, IStreamService relay) :
+            base(iothub) {
+            _relay = relay;
+        }
+
+        /// <summary>
+        /// Private constructor
+        /// </summary>
+        /// <param name="iothub"></param>
+        /// <param name="relay"></param>
+        internal ServiceBusRelayProvider(string iothub, IStreamService relay) :
+            base(iothub) {
+            _relay = relay;
+        }
+    }
+
+    /// <summary>
+    /// Provider that uses relay as stream channel, instead of the default 
+    /// implementation
+    /// </summary>
+    public class RelayProvider {
 
         /// <summary>
         /// Create relay provider
@@ -33,7 +62,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 throw new ArgumentException("Must provide relay connection string.");
             var service = await ServiceBusRelay.CreateAsync(relay.Entity ??
                 "__Microsoft_Azure_Devices_Proxy_1__", relay).ConfigureAwait(false);
-            return new RelayProvider(iothub, service);
+            return new ServiceBusRelayProvider(iothub, service);
         }
 
         /// <summary>
@@ -52,7 +81,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             var cs = ConnectionString.Parse(relay);
             var service = await ServiceBusRelay.CreateAsync(cs.Entity ??
                 "__Microsoft_Azure_Devices_Proxy_1__", cs).ConfigureAwait(false);
-            return new RelayProvider(iothub, service);
+            return new ServiceBusRelayProvider(iothub, service);
         }
 
         /// <summary>
@@ -61,26 +90,5 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public static Task<IProvider> CreateAsync() =>
             CreateAsync((string)null, (string)null);
-
-
-        /// <summary>
-        /// Private constructor
-        /// </summary>
-        /// <param name="iothub"></param>
-        /// <param name="relay"></param>
-        private RelayProvider(ConnectionString iothub, IStreamService relay) :
-            base(iothub) {
-            _relay = relay;
-        }
-
-        /// <summary>
-        /// Private constructor
-        /// </summary>
-        /// <param name="iothub"></param>
-        /// <param name="relay"></param>
-        private RelayProvider(string iothub, IStreamService relay) :
-            base(iothub) {
-            _relay = relay;
-        }
     }
 }

@@ -28,7 +28,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
-    <ProjectReference Include="..\provider\relay\src\Microsoft.Azure.Devices.Proxy.Relay\Microsoft.Azure.Devices.Proxy.Relay.csproj" />
     <ProjectReference Include="..\provider\webapp\src\Microsoft.Azure.Devices.Proxy.AspNet\Microsoft.Azure.Devices.Proxy.AspNet.csproj" />
   </ItemGroup>
 

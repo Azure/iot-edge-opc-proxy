@@ -157,7 +157,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__success)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -183,7 +183,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__arg_host_invalid)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, NULL,
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -208,7 +208,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__arg_path_invalid)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
-        k_port_valid, NULL, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, NULL, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -234,7 +234,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__arg_callback_invalid)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
-        k_port_valid, k_path_valid, NULL, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, NULL, k_callback_context_valid, &wsclient_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -259,7 +259,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__arg_websocket_invalid)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, NULL);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, NULL);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -302,7 +302,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__neg_1)
 
     // act 
     result = pal_wsclient_create(NULL, k_host_valid,
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -390,7 +390,7 @@ TEST_FUNCTION(pal_lws_wsclient_create__neg_2)
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,

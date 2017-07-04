@@ -3,43 +3,28 @@
 //  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
 // ------------------------------------------------------------
 
-// Keep in sync with native layer, in particular order of members!
-
 namespace Microsoft.Azure.Devices.Proxy {
-    using System;
-    using System.Runtime.Serialization;
 
     /// <summary>
-    /// Property base class - wrapper for serveral property types, 
+    /// Property interface - wrapper for serveral property types, 
     /// including socket option values and dns records. Describes
     /// properties of a remote item (e.g. socket, file, etc.)
     /// </summary>
-    [DataContract]
-    public class PropertyBase : Serializable<PropertyBase> {
-
+    public interface IProperty {
         /// <summary>
         /// Property type
         /// </summary>
-        [DataMember(Name = "type", Order = 1)]
-        public uint Type { get; set; }
+        uint Type { get; }
+    }
+
+    /// <summary>
+    /// Typed property includes value
+    /// </summary>
+    public interface IProperty<T> : IProperty {
 
         /// <summary>
-        /// Constructor
+        /// Property value
         /// </summary>
-        /// <param name="type"></param>
-        public PropertyBase(uint type) {
-            Type = type;
-        }
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool IsEqual(PropertyBase that) =>
-            IsEqual(Type, that.Type);
-
-        protected override void SetHashCode() =>
-            MixToHash(Type);
+        T Value { get; }
     }
 }

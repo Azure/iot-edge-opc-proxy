@@ -107,5 +107,4 @@ namespace Microsoft.Azure.Devices.Proxy {
             base(socket, buffer, size, endpoint) {
         }
     }
-
 }

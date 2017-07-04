@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Platform independent file info
     /// </summary>
     [DataContract]
-    public class FileInfo : Serializable<FileInfo> {
+    public class FileInfo : Poco<FileInfo> {
 
         /// <summary>
         /// Id of file

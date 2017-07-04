@@ -1317,7 +1317,7 @@ enum __DNSSERVICEERR
     DNSSERVICEERR_RANGE_END
 };
 
-typedef int DNSServiceErrorType, DNSServiceFlags, dnssd_sock_t;
+typedef int DNSServiceErrorType, DNSServiceFlags, DNSServiceProtocol, dnssd_sock_t;
 typedef void* DNSServiceRef;
 
 #define kDNSServiceFlagsBrowseDomains   0x20
@@ -1326,6 +1326,9 @@ typedef void* DNSServiceRef;
 #define kDNSServiceFlagsMoreComing      0x10
 
 #define kDNSServiceInterfaceIndexAny 0
+
+#define kDNSServiceProtocol_IPv4        0x1
+#define kDNSServiceProtocol_IPv6        0x2
 
 #define DNSSD_API
 
@@ -1345,6 +1348,12 @@ typedef void (*DNSServiceDomainEnumReply) (
     DNSServiceRef sdRef, DNSServiceFlags flags,
     uint32_t interfaceIndex, DNSServiceErrorType errorCode,
     const char *replyDomain, void *context
+    );
+typedef void (*DNSServiceGetAddrInfoReply) (
+    DNSServiceRef sdRef, DNSServiceFlags flags,
+    uint32_t interfaceIndex, DNSServiceErrorType errorCode,
+    const char *hostname, const struct sockaddr *address,
+    uint32_t ttl, void *context
     );
 
 // avahi-error.h
@@ -1416,11 +1425,35 @@ enum __AVAHIERR
     AVAHIERR_RANGE_END
 };
 
+// avahi-address.h
 
 typedef int AvahiIfIndex, AvahiProtocol, AvahiBrowserEvent;
 #define AVAHI_IF_UNSPEC 0
 #define AVAHI_PROTO_UNSPEC 0
-typedef void AvahiAddress;
+#define AVAHI_PROTO_INET 2
+#define AVAHI_PROTO_INET6 3
+
+typedef struct AvahiIPv4Address 
+{ 
+    uint32_t address; 
+} 
+AvahiIPv4Address;
+typedef struct AvahiIPv6Address 
+{ 
+    uint8_t address[16]; 
+} 
+AvahiIPv6Address;
+typedef struct AvahiAddress
+{
+    AvahiProtocol proto;
+    union {
+        AvahiIPv6Address ipv6;
+        AvahiIPv4Address ipv4;
+    } 
+    data;
+}
+AvahiAddress;
+
 typedef struct AvahiStringList 
 {
     struct AvahiStringList *next;
@@ -1458,7 +1491,7 @@ typedef void (*AvahiClientCallback) (AvahiClient *s, AvahiClientState state, voi
 #define AVAHI_DOMAIN_BROWSER_BROWSE_DEFAULT 2
 
 typedef int AvahiLookupResultFlags, AvahiLookupFlags, AvahiDomainBrowserType, AvahiResolverEvent;
-typedef void AvahiDomainBrowser, AvahiServiceBrowser, AvahiServiceTypeBrowser, AvahiServiceResolver;
+typedef void AvahiDomainBrowser, AvahiServiceBrowser, AvahiServiceTypeBrowser, AvahiServiceResolver, AvahiHostNameResolver;
 typedef void(*AvahiDomainBrowserCallback) (
     AvahiDomainBrowser *b, AvahiIfIndex interface,
     AvahiProtocol protocol, AvahiBrowserEvent event,
@@ -1480,6 +1513,11 @@ typedef void(*AvahiServiceResolverCallback) (
     const char *domain, const char *host_name,
     const AvahiAddress *a, uint16_t port,
     AvahiStringList *txt, AvahiLookupResultFlags flags, void *userdata);
+typedef void(*AvahiHostNameResolverCallback) (
+    AvahiHostNameResolver *r, AvahiIfIndex interface,
+    AvahiProtocol protocol, AvahiResolverEvent event,
+    const char *name, const AvahiAddress *a,
+    AvahiLookupResultFlags flags, void *userdata);
 
 //
 // Adapter types

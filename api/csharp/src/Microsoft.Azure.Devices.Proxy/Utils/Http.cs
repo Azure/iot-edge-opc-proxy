@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Stringify exception
         /// </summary>
         /// <returns></returns>
-        public override String ToString() => $"{StatusCode}: {Response}";
+        public override string ToString() => $"{StatusCode}: {Response}";
     }
 
     public class Http {
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Default constructor
         /// </summary>
         public Http() {
-            _client = new HttpClient();
+            _client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
         }
 
 
@@ -91,8 +91,19 @@ namespace Microsoft.Azure.Devices.Proxy {
                         msg.Content = new StringContent(payload, Encoding.UTF8, contentType);
                     }
                 }
-                try { 
-                    var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
+                try {
+#if !NET_STANDARD2_0 && !NET45 && !NET46
+                    // https://github.com/dotnet/corefx/issues/10040 causes deadlocks
+                    ct = CancellationToken.None;
+#endif
+#if PERF 
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+#endif
+                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, 
+                        ct).ConfigureAwait(false);
+#if PERF
+                    System.Diagnostics.Trace.TraceInformation($"CallAsync to {uri} took {sw.Elapsed}");
+#endif
                     queryHeaders(resp.StatusCode, resp.Headers);
                     if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
                         throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
@@ -138,7 +149,18 @@ namespace Microsoft.Azure.Devices.Proxy {
                     }
                 }
                 try {
-                    var resp = await _client.SendAsync(msg, ct).ConfigureAwait(false);
+#if !NET_STANDARD2_0 && !NET45 && !NET46
+                    // https://github.com/dotnet/corefx/issues/10040 causes deadlocks
+                    ct = CancellationToken.None;
+#endif
+#if PERF 
+                    var sw = System.Diagnostics.Stopwatch.StartNew();
+#endif
+                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, 
+                        ct).ConfigureAwait(false);
+#if PERF
+                    System.Diagnostics.Trace.TraceInformation($"StreamAsync to {uri} took {sw.Elapsed}");
+#endif
                     queryHeaders(resp.StatusCode, resp.Headers);
                     if ((int)resp.StatusCode < 200 || (int)resp.StatusCode >= 300) {
                         throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());

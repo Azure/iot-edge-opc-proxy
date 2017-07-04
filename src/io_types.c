@@ -41,7 +41,7 @@ int32_t io_decode_prx_addrinfo(
 
     __io_decode_type_begin(ctx, prx_ai, 2);
     __io_decode_object(ctx, prx_socket_address, prx_ai, address);
-    result = io_decode_string_default(ctx, "name", &prx_ai->name);
+    result = io_decode_string_default(ctx, "name", (char**)&prx_ai->name);
     if (result != er_ok)
         return result;
     __io_decode_type_end(ctx);
@@ -405,7 +405,6 @@ int32_t io_encode_prx_socket_properties(
 )
 {
     int32_t result;
-    size_t size = 0;
     io_codec_ctx_t arr;
 
     dbg_assert_ptr(ctx);
@@ -419,29 +418,18 @@ int32_t io_encode_prx_socket_properties(
     __io_encode_value(ctx, uint64, prx_sp, timeout);
     __io_encode_object(ctx, prx_socket_address, prx_sp, address);
 
-    for (size_t i = 0; i < _countof(prx_sp->options); i++)
-    {
-        if (prx_sp->options[i].type > prx_so_unknown &&
-            prx_sp->options[i].type < __prx_so_max)
-            size++;
-    }
-
-    result = io_encode_array(ctx, "options", size, &arr);
+    result = io_encode_array(ctx, "options", prx_sp->options_len, &arr);
     if (result != er_ok)
         return result;
-    for (size_t i = 0; i < _countof(prx_sp->options); i++)
+    for (size_t i = 0; i < prx_sp->options_len; i++)
     {
-        if (prx_sp->options[i].type > prx_so_unknown &&
-            prx_sp->options[i].type < __prx_so_max)
-        {
-            io_codec_ctx_t obj;
-            result = io_encode_object(&arr, NULL, false, &obj);
-            if (result != er_ok)
-                break;
-            result = io_encode_prx_property(&obj, &prx_sp->options[i]);
-            if (result != er_ok)
-                break;
-        }
+        io_codec_ctx_t obj;
+        result = io_encode_object(&arr, NULL, false, &obj);
+        if (result != er_ok)
+            break;
+        result = io_encode_prx_property(&obj, &prx_sp->options[i]);
+        if (result != er_ok)
+            break;
     }
     if (result != er_ok)
         return result;
@@ -458,9 +446,8 @@ int32_t io_decode_prx_socket_properties(
 )
 {
     int32_t result;
-    size_t size;
-    prx_property_t option;
     io_codec_ctx_t arr;
+    size_t allocated;
     
     dbg_assert_ptr(ctx);
     dbg_assert_ptr(prx_sp);
@@ -473,24 +460,37 @@ int32_t io_decode_prx_socket_properties(
     __io_decode_value(ctx, uint64, prx_sp, timeout);
     __io_decode_object(ctx, prx_socket_address, prx_sp, address);
 
-    result = io_decode_array(ctx, "options", &size, &arr);
+    prx_sp->options = NULL;
+    result = io_decode_array(ctx, "options", &prx_sp->options_len, &arr);
     if (result != er_ok)
         return result;
-
-    memset(prx_sp->options, 0, sizeof(prx_sp->options));
-    for (size_t i = 0; i < size; i++)
+    if (prx_sp->options_len > 0)
+    {
+        if (!ctx->default_allocator)
+        {
+            prx_sp->options = (prx_property_t*)mem_alloc(prx_sp->options_len *
+                sizeof(prx_property_t));
+            if (!prx_sp->options)
+                return er_out_of_memory;
+        }
+        else
+        {
+            allocated = 0;
+            result = ctx->default_allocator(ctx, prx_sp->options_len *
+                sizeof(prx_property_t), (void**)&prx_sp->options, &allocated);
+            if (result != er_ok)
+                return result;
+        }
+    }
+    for (size_t i = 0; i < prx_sp->options_len; i++)
     {
         io_codec_ctx_t obj;
         result = io_decode_object(&arr, NULL, NULL, &obj);
         if (result != er_ok)
             break;
-        option.type = 0;
-        result = io_decode_prx_property(&obj, &option);
+        result = io_decode_prx_property(&obj, &prx_sp->options[i]);
         if (result != er_ok)
             break;
-
-        if (option.type > prx_so_unknown && option.type < __prx_so_max)
-            memcpy(&prx_sp->options[option.type], &option, sizeof(option));
     }
     if (result != er_ok)
         return result;

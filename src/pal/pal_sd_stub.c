@@ -51,6 +51,25 @@ int32_t pal_sdbrowser_create(
     return er_not_impl;
 }
 
+
+//
+// Resolve service entries into addrinfo objects
+//
+int32_t pal_sdbrowser_resolve(
+    pal_sdbrowser_t* browser,
+    prx_socket_address_proxy_t* addr,
+    int32_t itf_index
+)
+{
+    (void)browser;
+    (void)addr;
+    (void)itf_index;
+
+    dbg_assert(0, "Unexpected");
+
+    return er_not_impl;
+}
+
 //
 // Resolve services, or browse services and domains
 //

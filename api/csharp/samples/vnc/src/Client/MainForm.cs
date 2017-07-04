@@ -34,7 +34,7 @@ namespace RemoteViewing.Example {
     public partial class MainForm : Form {
         public MainForm() {
 #if !PERF
-            Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.RelayProvider.CreateAsync().Result;
+            Socket.Provider = Microsoft.Azure.Devices.Proxy.Provider.ServiceBusRelayProvider.CreateAsync().Result;
 #endif
             InitializeComponent();
         }

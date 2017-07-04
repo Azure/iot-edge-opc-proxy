@@ -12,6 +12,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Void response for poll requests
     /// </summary>
     [DataContract]
-    public class PollResponse : VoidMessage, IResponse {
+    public class PollResponse :  VoidMessage<PollResponse>, IResponse {
     }
 }

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// be used to communicate to one or more proxy endpoint instances 
     /// (e.g. to support udp multicast send receive across proxies).
     /// </summary>
-    public interface IProxySocket : IProxyOptions, IProxyStream {
+    public interface IProxySocket : IProxyOptions, IProxyStream, IDisposable {
 
         /// <summary>
         /// Local reference id of activated remote socket link

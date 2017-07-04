@@ -179,9 +179,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Connected = true;
                 IsBound = true;
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException($"Exception connecting to {endpoint.ToString()}", 
-                    e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create($"Exception connecting to {endpoint.ToString()}", e);
             }
         }
 
@@ -210,6 +212,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         public void Connect(string host, int port) =>
             Connect(new ProxySocketAddress(host, (ushort)port, 0));
+
+        //
+        // Same, async
+        //
+        public Task ConnectAsync(string host, int port, CancellationToken ct) =>
+            ConnectAsync(new ProxySocketAddress(host, port), ct);
 
         //
         // Same, async
@@ -268,9 +276,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 await _internal.BindAsync(endpoint, ct).ConfigureAwait(false);
                 IsBound = true;
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException($"Exception binding to {endpoint.ToString()}", 
-                    e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create($"Exception binding to {endpoint.ToString()}", e);
             }
         }
 
@@ -422,8 +432,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ct.ThrowIfCancellationRequested();
                 return new Socket(this, result.Link);
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during Accept", e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Exception during Accept", e);
             }
         }
 
@@ -502,8 +515,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ct.ThrowIfCancellationRequested();
                 return result;
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during Send", e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Exception during Send", e);
             }
         }
 
@@ -680,8 +696,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ct.ThrowIfCancellationRequested();
                 return result;
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during SendTo", e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Exception during SendTo", e);
             }
         }
 
@@ -915,8 +934,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ct.ThrowIfCancellationRequested();
                 return result.Count;
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during Receive", e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Exception during Receive", e);
             }
         }
 
@@ -1092,8 +1114,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ct.ThrowIfCancellationRequested();
                 return Tuple.Create(result.Address, result.Count);
             }
-            catch (Exception e) when (!(e is SocketException) && !(e is OperationCanceledException)) {
-                throw new SocketException("Exception during ReceiveFrom", e, e.GetSocketError());
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Exception during ReceiveFrom", e);
             }
         }
 
@@ -1363,6 +1388,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Without cancellation token
         //
         public async Task CloseAsync() {
+            if (_cleanedUp) {
+                throw new ObjectDisposedException(this.GetType().FullName);
+            }
+            if (!Connected) {
+                return;
+            }
+
             var cts = new CancellationTokenSource(SendTimeout);
             try {
                 await CloseAsync(cts.Token).ConfigureAwait(false);
@@ -1415,15 +1447,14 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_cleanedUp) {
                 return;
             }
-            _cleanedUp = !Connected;
-            if (!_cleanedUp) {
-                try {
-                    Close();
+            lock (this) {
+                if (!_cleanedUp) {
+                    _internal?.Dispose();
+                    _internal = null;
+
+                    _cleanedUp = true;
                 }
-                catch { }
-                _cleanedUp = true;
             }
-            _internal = null;
         }
 
         //

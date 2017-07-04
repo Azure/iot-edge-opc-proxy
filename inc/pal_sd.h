@@ -25,7 +25,8 @@ typedef enum pal_sd_result_type
     pal_sd_result_domain,
     pal_sd_result_type,
     pal_sd_result_service,
-    pal_sd_result_resolve
+    pal_sd_result_entry,
+    pal_sd_result_addrinfo
 }
 pal_sd_result_type_t;
 
@@ -49,7 +50,7 @@ typedef int32_t (*pal_sd_result_cb_t)(
     );
 
 //
-// Browse result
+// Intermediate browse result
 //
 typedef struct pal_sd_browse_result
 {
@@ -60,15 +61,15 @@ typedef struct pal_sd_browse_result
 pal_sd_browse_result_t;
 
 //
-// Resolve result
+// Service entry result
 //
-typedef struct pal_sd_resolve_result
+typedef struct pal_sd_service_entry
 {
     prx_socket_address_proxy_t* addr;     // The host:port address
     size_t records_len;                   // Number of txt records
     prx_property_t* records;                       // in blob form 
 }
-pal_sd_resolve_result_t;
+pal_sd_service_entry_t;
 
 //
 // Called before any of the following functions are used
@@ -78,7 +79,7 @@ decl_public_0(int32_t, pal_sd_init,
 );
 
 //
-// Create a browser instance to browse objects
+// Create a client to create browsers (browse sessions)
 //
 decl_public_1(int32_t, pal_sdclient_create,
     pal_sdclient_t**, client
@@ -95,13 +96,22 @@ decl_public_4(int32_t, pal_sdbrowser_create,
 );
 
 //
-// Resolve services, or browse services and domains
+// Browse domains, service types, or services
 //
 decl_public_5(int32_t, pal_sdbrowser_browse,
     pal_sdbrowser_t*, browser,
     const char*, service_name,     // Pass null to browse services
     const char*, service_type,  // Pass null to browse all domains
     const char*, domain,           // Pass null for default domain
+    int32_t, itf_index
+);
+
+//
+// Resolve service entries into addrinfo objects
+//
+decl_public_3(int32_t, pal_sdbrowser_resolve,
+    pal_sdbrowser_t*, browser,
+    prx_socket_address_proxy_t*, addr,       // from service entry
     int32_t, itf_index
 );
 

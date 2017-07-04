@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// prx_addrinfo provides a platform independent host resolution
     /// </summary>
     [DataContract]
-    public class AddressInfo : Serializable<AddressInfo> {
+    public class AddressInfo : Poco<AddressInfo> {
 
         /// <summary>
         /// Address found for resolved name

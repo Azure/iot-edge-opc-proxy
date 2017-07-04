@@ -1185,14 +1185,17 @@ TEST_FUNCTION(io_encode_prx_socket_properties__success_2)
     static io_codec_ctx_t k_ctx_valid;
     const size_t k_size_valid = 2;
     prx_socket_properties_t prx_sp_valid;
+    prx_property_t prx_sp_props[2];
     int32_t result;
 
     memset(&prx_sp_valid, 0, sizeof(prx_sp_valid));
     prx_sp_valid.family = prx_sp_valid.address.un.family = prx_address_family_unspec;
-    prx_sp_valid.options[prx_so_broadcast].type = prx_so_broadcast;
-    prx_sp_valid.options[prx_so_broadcast].property.value = 1;
-    prx_sp_valid.options[prx_so_debug].type = prx_so_debug;
-    prx_sp_valid.options[prx_so_debug].property.value = 1;
+    prx_sp_valid.options_len = k_size_valid;
+    prx_sp_valid.options = prx_sp_props;
+    prx_sp_props[0].type = prx_so_debug;
+    prx_sp_props[0].property.value = 1;
+    prx_sp_props[1].type = prx_so_broadcast;
+    prx_sp_props[1].property.value = 1;
 
     // arrange
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 7);
@@ -1257,15 +1260,17 @@ TEST_FUNCTION(io_encode_prx_socket_properties__neg)
     static io_codec_ctx_t k_ctx_valid;
     const size_t k_size_valid = 2;
     prx_socket_properties_t prx_sp_valid;
+    prx_property_t prx_sp_props[2];
     int32_t result;
 
     memset(&prx_sp_valid, 0, sizeof(prx_sp_valid));
     prx_sp_valid.family = prx_sp_valid.address.un.family = prx_address_family_unspec;
-
-    prx_sp_valid.options[prx_so_broadcast].type = prx_so_broadcast;
-    prx_sp_valid.options[prx_so_broadcast].property.value = 1;
-    prx_sp_valid.options[prx_so_debug].type = prx_so_debug;
-    prx_sp_valid.options[prx_so_debug].property.value = 1;
+    prx_sp_valid.options_len = k_size_valid;
+    prx_sp_valid.options = prx_sp_props;
+    prx_sp_props[0].type = prx_so_debug;
+    prx_sp_props[0].property.value = 1;
+    prx_sp_props[1].type = prx_so_broadcast;
+    prx_sp_props[1].property.value = 1;
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
@@ -1413,6 +1418,10 @@ TEST_FUNCTION(io_decode_prx_socket_properties__success_2)
         .CopyOutArgumentBuffer_size(&k_size_valid, sizeof(k_size_valid))
         .SetReturn(er_ok);
 
+    STRICT_EXPECTED_CALL(h_realloc(2 * sizeof(prx_property_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM);
+
     STRICT_EXPECTED_CALL(io_decode_object(IGNORED_PTR_ARG, NULL, NULL, IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
         .CopyOutArgumentBuffer_object(&k_ctx_valid, sizeof(io_codec_ctx_t))
@@ -1441,6 +1450,7 @@ TEST_FUNCTION(io_decode_prx_socket_properties__success_2)
         .IgnoreArgument(3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
+
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -1492,7 +1502,10 @@ TEST_FUNCTION(io_decode_prx_socket_properties__neg)
         .CopyOutArgumentBuffer_size(&k_size_valid, sizeof(k_size_valid))
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
-
+    STRICT_EXPECTED_CALL(h_realloc(2 * sizeof(prx_property_t), NULL, false, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
+        .SetReturn((void*)UT_MEM)
+        .SetFailReturn(NULL);
     STRICT_EXPECTED_CALL(io_decode_object(IGNORED_PTR_ARG, NULL, NULL, IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
         .CopyOutArgumentBuffer_object(&k_ctx_valid, sizeof(io_codec_ctx_t))
@@ -1535,10 +1548,10 @@ TEST_FUNCTION(io_decode_prx_socket_properties__neg)
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_invalid_format, er_out_of_memory,  er_out_of_memory,  er_out_of_memory, er_out_of_memory,
-        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory, er_out_of_memory, 
-        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory, er_out_of_memory, 
-        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory);
+        er_invalid_format, er_out_of_memory,  er_out_of_memory,  er_out_of_memory,  er_out_of_memory,
+        er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory,  er_out_of_memory, 
+        er_out_of_memory,  er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory, 
+        er_out_of_memory,  er_out_of_memory,  er_out_of_memory,  er_invalid_format, er_out_of_memory);
 }
 
 // 

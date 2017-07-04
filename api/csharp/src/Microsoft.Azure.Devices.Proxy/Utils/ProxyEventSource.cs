@@ -3,6 +3,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.Diagnostics.Tracing;
     using System.Globalization;
@@ -93,22 +94,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
 
-        // 40200 - 40219 Available
+        // 40200 - 40220 Available
 
-        [Event(40220, Level = EventLevel.Error, Message = "{0} No proxies installed on IoT Hub.")]
-        public void NoProxyInstalled(object source) {
+        [Event(40221, Message = "{0} A ping to {1} did not find {2} ({3}).")]
+        public void PingFailure(object source, object proxy, object address, object response) {
             if (this.IsEnabled()) {
-                this.WriteEvent(40220, CreateSourceString(source));
+                this.WriteEvent(40221, CreateSourceString(source), proxy, address);
             }
-            Trace.TraceError($"No proxies installed - Add proxies to IoT Hub! ({source})");
-        }
-
-        [Event(40221, Level = EventLevel.Error, Message = "{0} Ping broadcast attempt {1} failed, remaining records {2}.")]
-        public void BroadcastRetry(object source, int attempt, int remaining) {
-            if (this.IsEnabled()) {
-                this.WriteEvent(40221, CreateSourceString(source), attempt, remaining);
-            }
-            Trace.TraceWarning($"Ping broadcast attempt {attempt} failed - Remaining # of records to try: {remaining}...");
+            Trace.TraceInformation($"A ping to {proxy} did not find {address} ({response})...");
         }
 
         [Event(40222, Message = "{0} start linking through {1} to {2}.")]
@@ -127,14 +120,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             Trace.TraceInformation($"Opening link through {proxy} to {info}...");
         }
 
-        [Event(40224, Message = "{0} failed to link through {1} to {2}. Response {3} : {4}")]
-        public void LinkFailure(object source, object proxy, object info, object response, Exception e) {
+        [Event(40224, Message = "{0} failed to link through {1} to {2}")]
+        public void LinkFailure(object source, object proxy, object info) {
             if (this.IsEnabled()) {
-                this.WriteEvent(40224, CreateSourceString(source), proxy, info, response, ExceptionToString(e));
+                this.WriteEvent(40224, CreateSourceString(source), proxy, info);
             }
-            if (e != null) {
-                Trace.TraceError($"Failed to link through {proxy} to {info} ({e})...");
-            }
+            Trace.TraceError($"Failed to link through {proxy} to {info} ...");
         }
 
         [Event(40225, Message = "{0} linked through {1} to {2}.")]

@@ -23,7 +23,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Device id as unique identifier of the record on the hub
         /// </summary>
-        public string Id { get; set; }
+        public string Id {
+            get; set;
+        }
 
         /// <summary>
         /// Returns the address of the record
@@ -45,12 +47,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Returns the name of the record
         /// </summary>
         public string Name {
-            get {
-                return this[_nameTag] ?? "";
-            }
-            set {
-                this[_nameTag] = value;
-            }
+            get => this[_nameTag] ?? "";
+            set => this[_nameTag] = value;
         }
 
         /// <summary>
@@ -104,9 +102,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Clone constructor
         /// </summary>
-        public IoTHubRecord(INameRecord record) : this(record.Id) {
-            Assign(record);
-        }
+        public IoTHubRecord(INameRecord record) : this(record.Id) => Assign(record);
 
         /// <summary>
         /// Add address
@@ -237,9 +233,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public override bool Equals(object that) {
-            return Equals(that as INameRecord);
-        }
+        public override bool Equals(object that) => Equals(that as INameRecord);
+        
 
         /// <summary>
         /// Returns hash for efficient lookup in list
@@ -249,6 +244,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             return Address.GetHashCode();
         }
 
+        public override string ToString() => $"Record {Id} for {Name} with address {Address}";
 
         /// <summary>
         /// Create record type expression from type

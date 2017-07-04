@@ -10,37 +10,62 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Collections.Concurrent;
     using System.Threading;
     using System.Threading.Tasks;
+    using System.Threading.Tasks.Dataflow;
 
     /// <summary>
     /// Proxy link represents a 1:1 link with a remote socket. Proxy
     /// Link is created via LinkRequest, and OpenRequest Handshake.
     /// </summary>
-    internal sealed class ProxyLink : IProxyLink {
+    internal class ProxyLink : IProxyLink {
 
         /// <summary>
         /// Remote link id
         /// </summary>
-        public Reference RemoteId { get; private set; }
+        public Reference RemoteId {
+            get; private set;
+        }
 
         /// <summary>
         /// Local address on remote side
         /// </summary>
-        public SocketAddress LocalAddress { get; private set; }
+        public SocketAddress LocalAddress {
+            get; private set;
+        }
 
         /// <summary>
         /// Peer address on remote side
         /// </summary>
-        public SocketAddress PeerAddress { get; private set; }
+        public SocketAddress PeerAddress {
+            get; private set;
+        }
 
         /// <summary>
         /// Bound proxy for this stream
         /// </summary>
-        public INameRecord Proxy { get; private set; }
+        public INameRecord Proxy {
+            get; private set;
+        }
 
         /// <summary>
         /// Proxy the socket is bound on.  
         /// </summary>
-        public SocketAddress ProxyAddress => Proxy.Address.ToSocketAddress();
+        public SocketAddress ProxyAddress {
+            get => Proxy.Address.ToSocketAddress();
+        }
+
+        /// <summary>
+        /// Target buffer block
+        /// </summary>
+        public ITargetBlock<Message> SendBlock {
+            get => _send;
+        }
+
+        /// <summary>
+        /// Source buffer block
+        /// </summary>
+        public ISourceBlock<Message> ReceiveBlock {
+            get => _receive;
+        }
 
         /// <summary>
         /// Constructor for proxy link object
@@ -52,13 +77,48 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="peerAddress"></param>
         internal ProxyLink(ProxySocket socket, INameRecord proxy, Reference remoteId, 
             SocketAddress localAddress, SocketAddress peerAddress) {
-            _streamId = new Reference();
-            _socket = socket;
-            Proxy = proxy;
-            RemoteId = remoteId;
-            LocalAddress = localAddress;
-            PeerAddress = peerAddress;
+
+            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+
+            Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
+            RemoteId = remoteId ?? throw new ArgumentNullException(nameof(remoteId));
+            LocalAddress = localAddress ?? throw new ArgumentNullException(nameof(localAddress));
+            PeerAddress = peerAddress ?? throw new ArgumentNullException(nameof(peerAddress));
+
+            _send = new BufferBlock<Message>(new DataflowBlockOptions {
+                NameFormat = "Send (in Link) Id={1}",
+                EnsureOrdered = true,
+                BoundedCapacity = 3
+            });
+
+            _receive = new TransformManyBlock<Message, Message>((message) => {
+                if (message.Error == (int)SocketError.Closed ||
+                    message.TypeId == MessageContent.Close) {
+                    // Remote side closed
+                    OnRemoteClose(message);
+                }
+                else if (message.Error != (int)SocketError.Success) {
+                    if (!OnReceiveError(message)) {
+                        ProxySocket.ThrowIfFailed(message);
+                    }
+                }
+                else if (message.TypeId == MessageContent.Data) {
+                    return message.AsEnumerable();
+                }
+                else {
+                    // Todo: log error?
+                }
+                return Enumerable.Empty<Message>();
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Receive (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = true,
+                BoundedCapacity = 3
+            });
         }
+
 
         /// <summary>
         /// Begin open of stream, this provides the connection string for the
@@ -68,15 +128,24 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public async Task<OpenRequest> BeginOpenAsync(CancellationToken ct) {
             try {
+#if DEBUG_MESSAGE_CONTENT
+                var encoding = CodecId.Json;
+#else
+                var encoding = CodecId.Mpack;
+#endif
                 _connection = await _socket.Provider.StreamService.CreateConnectionAsync(
-                    _streamId, RemoteId, Proxy).ConfigureAwait(false);
-                return new OpenRequest {
-                    ConnectionString = _connection.ConnectionString != null ?
-                        _connection.ConnectionString.ToString() : "",
-                    IsPolled = _connection.IsPolled,
-                    StreamId = _streamId,
-                    MaxReceiveBuffer = 0x800  // TODO: Need to select based on hub / Streaming
-                };
+                    _streamId, RemoteId, Proxy, encoding).ConfigureAwait(false);
+
+                return OpenRequest.Create(_streamId, (int)encoding, 
+                    _connection.ConnectionString != null ?
+                        _connection.ConnectionString.ToString() : "", 0, _connection.IsPolled,
+#if NO_MSG_OVER_8K 
+                    // TODO: Remove this when > 88 k messages are supported
+                    800
+#else
+                    0
+#endif
+                    );
             }
             catch (OperationCanceledException) {
                 return null;
@@ -92,46 +161,17 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_connection == null)
                 return false;
             try {
-                _stream = await _connection.OpenAsync(ct).ConfigureAwait(false);
+                var stream = await _connection.OpenAsync(ct).ConfigureAwait(false);
+
+                _receiveLink = stream.ReceiveBlock.ConnectTo(_receive);
+                _sendLink = _send.ConnectTo(stream.SendBlock);
+
                 return true;
             }
             catch (OperationCanceledException) {
                 return false;
             }
         }
-
-        /// <summary>
-        /// Receive queue from stream to read from
-        /// </summary>
-        public ConcurrentQueue<Message> ReceiveQueue => 
-            _stream?.ReceiveQueue;
-
-        /// <summary>
-        /// Receive more on link stream
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task ReceiveAsync(CancellationToken ct) {
-            if (_stream == null) {
-                throw new SocketException(SocketError.Closed);
-            }
-            await _stream.ReceiveAsync(ct);
-        }
-
-        /// <summary>
-        /// Forward cloned message through this link
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task SendAsync(Message message, CancellationToken ct) {
-            if (_stream == null) {
-                throw new SocketException(SocketError.Closed);
-            }
-            await _stream.SendAsync(new Message(
-                _streamId, RemoteId, Proxy.Address, message.Content), ct);
-        }
-
 
         /// <summary>
         /// Send socket option message
@@ -141,11 +181,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         public async Task SetSocketOptionAsync(
             SocketOption option, ulong value, CancellationToken ct) {
+            using (var request = Message.Create(_socket.Id, RemoteId, SetOptRequest.Create(
+                Property<ulong>.Create((uint)option, value)))) {
 
-            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
-                new Message(_socket.Id, RemoteId, new SetOptRequest(
-                    new Property<ulong>((uint)option, value))), ct).ConfigureAwait(false);
-            ProxySocket.ThrowIfFailed(response);
+                var response = await _socket.Provider.ControlChannel.CallAsync(
+                    Proxy, request, TimeSpan.MaxValue, ct).ConfigureAwait(false);
+                ProxySocket.ThrowIfFailed(response);
+            }
         }
 
         /// <summary>
@@ -156,15 +198,19 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public async Task<ulong> GetSocketOptionAsync(
             SocketOption option, CancellationToken ct) {
-            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
-                new Message(_socket.Id, RemoteId, new GetOptRequest(
-                    option)), ct).ConfigureAwait(false);
-            ProxySocket.ThrowIfFailed(response);
-            var optionValue = ((GetOptResponse)response.Content).OptionValue as Property<ulong>;
-            if (optionValue == null) {
-                throw new ProxyException("Bad option value returned");
+            using (var request = Message.Create(_socket.Id, RemoteId, GetOptRequest.Create(
+                option))) {
+
+                var response = await _socket.Provider.ControlChannel.CallAsync(
+                    Proxy, request, TimeSpan.MaxValue, ct).ConfigureAwait(false);
+                ProxySocket.ThrowIfFailed(response);
+
+                var optionValue = ((GetOptResponse)response.Content).OptionValue as Property<ulong>;
+                if (optionValue == null) {
+                    throw new ProxyException("Bad option value returned");
+                }
+                return optionValue.Value;
             }
-            return optionValue.Value;
         }
 
         /// <summary>
@@ -172,7 +218,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="ct"></param>
         public async Task CloseAsync(CancellationToken ct) {
-            var tasks = new Task[] { UnlinkAsync(ct), CloseStreamAsync(ct) };
+            var tasks = new Task[] { UnlinkAsync(ct), TerminateConnectionAsync(ct) };
             try {
                 // Close both ends
                 await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -180,7 +226,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             catch (AggregateException ae) {
                 if (ae.InnerExceptions.Count == tasks.Length) {
                     // Only throw if all tasks failed.
-                    throw new SocketException("Exception during close", ae.GetSocketError());
+                    throw SocketException.Create("Exception during close", ae);
                 }
                 ProxyEventSource.Log.HandledExceptionAsInformation(this, ae.Flatten());
             }
@@ -194,18 +240,34 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private async Task CloseStreamAsync(CancellationToken ct) {
+        private async Task TerminateConnectionAsync(CancellationToken ct) {
             IConnection connection = _connection;
-            IMessageStream stream = _stream;
             _connection = null;
-            _stream = null;
+
+            ProxyEventSource.Log.StreamClosing(this, null);
             try {
-                ProxyEventSource.Log.StreamClosing(this, _stream);
-                await stream.SendAsync(new Message(_socket.Id, RemoteId, 
-                    new CloseRequest()), ct).ConfigureAwait(false);
+                try {
+                    await SendBlock.SendAsync(Message.Create(_socket.Id, RemoteId,
+                    CloseRequest.Create()), ct).ConfigureAwait(false);
+                }
+                catch { }
+                try {
+                    await connection.CloseAsync().ConfigureAwait(false);
+                }
+                catch { }
+
+               // try {
+               //     SendBlock.Complete();
+               //     await SendBlock.Completion.ConfigureAwait(false);
+               // }
+               // catch { }
+               // try {
+               //     ReceiveBlock.Complete();
+               //     await ReceiveBlock.Completion.ConfigureAwait(false);
+               // }
+               // catch { }
             }
             finally {
-                await connection.CloseAsync().ConfigureAwait(false);
                 ProxyEventSource.Log.StreamClosed(this, null);
             }
         }
@@ -216,22 +278,42 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         /// <returns></returns>
         private async Task UnlinkAsync(CancellationToken ct) {
-            var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
-                new Message(_socket.Id, RemoteId, 
-                    new CloseRequest()), ct).ConfigureAwait(false);
-            ProxyEventSource.Log.ObjectDestroyed(this);
-            if (response != null) {
-                SocketError errorCode = (SocketError)response.Error;
-                if (errorCode != SocketError.Success &&
-                    errorCode != SocketError.Timeout &&
-                    errorCode != SocketError.Closed) {
-                    throw new SocketException(errorCode);
+            var request = Message.Create(_socket.Id, RemoteId, CloseRequest.Create());
+            try {
+                var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
+                    request, TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
+                ProxyEventSource.Log.ObjectDestroyed(this);
+                if (response != null) {
+                    SocketError errorCode = (SocketError)response.Error;
+                    if (errorCode != SocketError.Success &&
+                        errorCode != SocketError.Timeout &&
+                        errorCode != SocketError.Closed) {
+                        throw new SocketException(errorCode);
+                    }
                 }
             }
-            else {
-                throw new SocketException(SocketError.Closed);
+            catch (Exception e) when (!(e is SocketException)) {
+                throw SocketException.Create("Failed to close", e);
+            }
+            finally {
+                request.Dispose();
             }
         }
+
+
+        /// <summary>
+        /// Called when error message is received over stream
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns>Whether to continue (true) or fail (false)</returns>
+        protected virtual bool OnReceiveError(Message message) => false;
+
+        /// <summary>
+        /// Called when we determine that remote side closed
+        /// </summary>
+        protected virtual void OnRemoteClose(Message message) =>
+            throw new SocketException("Remote side closed", null, SocketError.Closed);
+
 
         /// <summary>
         /// Returns a string that represents the current object.
@@ -243,9 +325,12 @@ namespace Microsoft.Azure.Devices.Proxy {
               + $"with stream {_streamId} (Socket {_socket})";
         }
 
-        private IMessageStream _stream;
-        private readonly ProxySocket _socket;
         private IConnection _connection;
-        private readonly Reference _streamId;
+        private readonly IPropagatorBlock<Message, Message> _send;
+        private IDisposable _sendLink;
+        private readonly IPropagatorBlock<Message, Message> _receive;
+        private IDisposable _receiveLink;
+        private readonly ProxySocket _socket;
+        private readonly Reference _streamId = new Reference();
     }
 }

@@ -250,10 +250,10 @@ io_getopt_response_t;
 typedef struct io_open_request
 {
     io_ref_t stream_id;
+    int32_t encoding;
     int32_t type;
     const char* connection_string;
     bool polled;
-    uint32_t max_send;
     uint32_t max_recv;
 }
 io_open_request_t;
@@ -319,6 +319,7 @@ struct io_message
     io_ref_t source_id;             // Source proxy address and
     io_ref_t proxy_id;     // Proxy the message is sent through
     io_ref_t target_id;            // Target address of message
+    uint32_t seq_id;         // A Sequence number for debugging
     int32_t error_code;                            // Exception
     bool is_response;           // Request or response message?
     uint32_t type;               // Identifies the content type

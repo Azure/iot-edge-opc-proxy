@@ -34,10 +34,9 @@ namespace MsgPack {
         public abstract Task WriteAsync(Writer writer, T obj, 
             SerializerContext context, CancellationToken ct);
 
-
-        public Task<object> GetAsync(Reader reader,
+        public async Task<object> GetAsync(Reader reader,
             SerializerContext context, CancellationToken ct) =>
-            ReadAsync(reader, context, ct).ContinueWith((t) => (object)t.Result);
+            await ReadAsync(reader, context, ct);
 
         public Task SetAsync(Writer writer, object obj,
             SerializerContext context, CancellationToken ct) =>

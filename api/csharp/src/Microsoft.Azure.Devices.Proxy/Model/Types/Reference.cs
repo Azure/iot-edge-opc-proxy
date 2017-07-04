@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// A reference identifies entities in the proxy
     /// </summary>
     [DataContract]
-    public class Reference : Serializable<Reference> {
+    public class Reference : Poco<Reference> {
 
         /// <summary>
         /// Null reference

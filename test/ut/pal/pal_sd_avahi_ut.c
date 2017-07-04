@@ -63,6 +63,13 @@ MOCKABLE_FUNCTION(, AvahiClient*, avahi_service_resolver_get_client,
     AvahiServiceResolver*, resolver);
 MOCKABLE_FUNCTION(, int, avahi_service_resolver_free, 
     AvahiServiceResolver*, resolver);
+MOCKABLE_FUNCTION(, AvahiHostNameResolver*, avahi_hostname_resolver_new,
+    AvahiClient*, client, AvahiIfIndex, interface, AvahiProtocol, protocol, const char*, name,
+    AvahiProtocol, aprotocol, AvahiLookupFlags, flags, AvahiHostNameResolverCallback, callback, void*, userdata);
+MOCKABLE_FUNCTION(, AvahiClient*, avahi_hostname_resolver_get_client,
+    AvahiHostNameResolver*, resolver);
+MOCKABLE_FUNCTION(, int, avahi_hostname_resolver_free,
+    AvahiHostNameResolver*, resolver);
 
 //
 // 2. Include unit under test

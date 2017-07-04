@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Connection string
     /// </summary>
     [DataContract]
-    public class ConnectionString : Serializable<ConnectionString> {
+    public class ConnectionString : Poco<ConnectionString> {
 
         public enum Id {
             HostName,
@@ -139,12 +139,19 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create connection string
         /// </summary>
-        public ConnectionString(string host, string deviceId, string keyName, string key) 
+        public ConnectionString(string host, string endpoint,
+            string keyName, string key, bool device = true) 
             : this() {
             items[Id.HostName] = host;
-            items[Id.DeviceId] = deviceId;
+            if (device) {
+                items[Id.DeviceId] = endpoint;
+                items[Id.SharedAccessKey] = key;
+            }
+            else {
+                items[Id.EndpointName] = endpoint;
+                items[Id.SharedAccessToken] = key;
+            }
             items[Id.SharedAccessKeyName] = keyName;
-            items[Id.SharedAccessKey] = key;
         }
 
         /// <summary>
@@ -155,8 +162,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="token"></param>
         public ConnectionString(Uri endpoint, string keyName, string token)
             : this() {
-            items[Id.HostName] = endpoint.DnsSafeHost;
-            items[Id.EndpointName] = endpoint.AbsolutePath.TrimStart('/');
+            items[Id.Endpoint] = endpoint.ToString();
             items[Id.SharedAccessKeyName] = keyName;
             items[Id.SharedAccessToken] = token;
         }

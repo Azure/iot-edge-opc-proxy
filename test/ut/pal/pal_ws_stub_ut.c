@@ -50,7 +50,7 @@ TEST_FUNCTION(pal_stub_wsclient_create__neg)
 
     // act 
     result = pal_wsclient_create(k_protocol_name_valid, k_host_valid, 
-        k_port_valid, k_path_valid, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
+        k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();

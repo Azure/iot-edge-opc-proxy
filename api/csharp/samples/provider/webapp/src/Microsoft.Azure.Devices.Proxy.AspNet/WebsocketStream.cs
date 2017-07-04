@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     /// </summary>
     public class WebSocketStream : Stream {
 
-        public static int DefaultBufferSize { get; } = 4096;
+        public static int DefaultBufferSize { get; } = 0x1000;
 
         /// <summary>
         /// Returns whether the stream is closed
@@ -51,12 +51,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Setting position is not supported
         /// </summary>
         public override Int64 Position {
-            get {
-                throw new NotSupportedException();
-            }
-            set {
-                throw new NotSupportedException();
-            }
+            get => throw new NotSupportedException();
+            set => throw new NotSupportedException();
         }
 
         /// <summary>
@@ -146,7 +142,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             if (IsClosed)
                 throw new IOException("Stream closed");
             if (_needsFlush) {
-                await _asyncActiveSemaphore.WaitAsync();
+                await _asyncWrite.WaitAsync();
                 try {
                     if (_needsFlush) {
                         await _websocket.SendAsync(new ArraySegment<byte>(_writebuffer, 0, _writePos),
@@ -156,7 +152,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     }
                 }
                 finally {
-                    _asyncActiveSemaphore.Release();
+                    _asyncWrite.Release();
                 }
             }
         }
@@ -167,7 +163,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="ct"></param>
         /// <returns></returns>
         public async Task SkipAsync(CancellationToken ct) {
-            await _asyncActiveSemaphore.WaitAsync();
+            await _asyncRead.WaitAsync();
             try {
                 while (!_readEnd) {
                     // Read until we hit the end
@@ -179,7 +175,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
             }
             finally {
-                _asyncActiveSemaphore.Release();
+                _asyncRead.Release();
             }
         }
 
@@ -205,6 +201,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             int readByNow = ReadBuffer(array, offset, count);
             if (readByNow == count)
                 return readByNow;
+            else if (_readEnd) {
+                // Indicate end of stream and reset end message marker
+                _readEnd = false;
+                return readByNow;
+            }
+
             if (readByNow > 0) {
                 count -= readByNow;
                 offset += readByNow;
@@ -233,8 +235,9 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 _readEnd = result.EndOfMessage;
                 _readPos = 0;
             }
-            if (_readPos == _readLen)
+            if (_readPos == _readLen) {
                 return -1;
+            }
             return _readbuffer[_readPos++];
         }
 
@@ -264,7 +267,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
             int readByNow = 0;
             // lock to avoid race with other async tasks 
-            Task semaphoreLockTask = _asyncActiveSemaphore.WaitAsync();
+            Task semaphoreLockTask = _asyncRead.WaitAsync();
             if (semaphoreLockTask.Status == TaskStatus.RanToCompletion) {
                 bool completeSynchronously = true;
                 try {
@@ -289,7 +292,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
                 finally {
                     if (completeSynchronously) {
-                        _asyncActiveSemaphore.Release();
+                        _asyncRead.Release();
                     }
                     else {
                         // Release in async
@@ -342,7 +345,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             }
             finally {
                 // Now release
-                _asyncActiveSemaphore.Release();
+                _asyncRead.Release();
             }
         }
 
@@ -453,12 +456,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             if (IsClosed)
                 throw new IOException("Stream closed");
             // Do double checked locking and speed synchronized path...
-            Task semaphoreLockTask = _asyncActiveSemaphore.WaitAsync();
+            Task semaphoreLockTask = _asyncWrite.WaitAsync();
             if (semaphoreLockTask.Status == TaskStatus.RanToCompletion) {
                 bool synchronous = true;
                 try {
                     // If the write completely fits into the buffer complete here
-                    synchronous = (count < _bufferSize - _writePos);
+                    synchronous = (count < (_bufferSize - _writePos));
                     if (synchronous) {
                         Exception ex;
                         TryWriteBuffer(buffer, ref offset, ref count, out ex);
@@ -470,7 +473,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
                 finally {
                     if (synchronous) {
-                        _asyncActiveSemaphore.Release();
+                        _asyncWrite.Release();
                     }
                     else {
                         // Release in real async write below
@@ -506,7 +509,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
             }
             finally {
-                _asyncActiveSemaphore.Release();
+                _asyncWrite.Release();
             }
         }
 
@@ -566,17 +569,18 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         private WebSocket _websocket;
         private readonly int _bufferSize;
 
+        private SemaphoreSlim _asyncRead = new SemaphoreSlim(1, 1);
         private byte[] _readbuffer;
         private int _readPos;
         private bool _readEnd;
         private int _readLen;
 
+        private SemaphoreSlim _asyncWrite = new SemaphoreSlim(1, 1);
         private byte[] _writebuffer;
         private int _writePos;
         private bool _needsFlush;
         private Task<int> _lastRead;
 
-        private SemaphoreSlim _asyncActiveSemaphore = new SemaphoreSlim(1, 1);
     }
 }
 

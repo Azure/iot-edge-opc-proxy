@@ -159,7 +159,7 @@ Operations (Mutually exclusive):
                 }
             }
             else if (op == Op.Resolve) {
-                var entries = ResolveAddressAsync(address, period, cache).Result;
+                var entries = ResolveHostnameAsync(address, period, cache).Result;
             }
             else if (op == Op.Dir) {
                 var files = BrowseFilesAsync(null, address?.Host, period, cache).Result;
@@ -209,8 +209,7 @@ Operations (Mutually exclusive):
         }
 
         /// <summary>
-        /// When all service types were browsed in all domains for period milliseconds, 
-        /// browse all service records 
+        /// Browse files in a particular folder recursively
         /// </summary>
         static async Task BrowseFilesRecursiveAsync(SocketAddress proxy, string folder,
             int period, bool cache) {
@@ -279,7 +278,7 @@ Operations (Mutually exclusive):
         }
 
         /// <summary>
-        /// Browse service names or types
+        /// Resolve service names 
         /// </summary>
         static async Task<IEnumerable<DnsServiceEntry>> ResolveServiceAsync(DnsServiceRecord record, 
             int period, bool fromCache) {
@@ -301,9 +300,9 @@ Operations (Mutually exclusive):
         }
 
         /// <summary>
-        /// Resolve address
+        /// Resolve host name
         /// </summary>
-        static async Task<IEnumerable<DnsHostEntry>> ResolveAddressAsync(ProxySocketAddress addr, 
+        static async Task<IEnumerable<DnsHostEntry>> ResolveHostnameAsync(SocketAddress addr, 
             int period, bool cache) {
             Console.WriteLine($"Resolving {addr} for {period} ms...");
             var entries = new HashSet<DnsHostEntry>();
@@ -355,17 +354,23 @@ Operations (Mutually exclusive):
         }
 
         /// <summary>
-        /// When all service types were browsed in all domains for period milliseconds, 
-        /// browse all service records 
+        /// When all service records were browsed for period milliseconds, resolve them
         /// </summary>
-        static async Task<HashSet<DnsServiceEntry>> ResolveServiceNamesAsync(int period) {
-            var entries = new HashSet<DnsServiceEntry>();
+        static async Task<ISet<DnsHostEntry>> ResolveServiceNamesAsync(int period) {
             var results = await Task.WhenAll(BrowseServiceNamesAsync(period).Result.Select(
                 s => {
                     return ResolveServiceAsync(s, period, true);
                 }).ToArray());
+
+            var entries = new HashSet<DnsHostEntry>();
             foreach (var result in results) {
-                entries.AddRange(result);
+                var results2 = await Task.WhenAll(result.Select(
+                    r => {
+                        return ResolveHostnameAsync(r.Address, period, true);
+                    }));
+                foreach (var hosts in results2) {
+                    entries.AddRange(hosts);
+                }
             }
             return entries;
         }

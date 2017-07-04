@@ -6,7 +6,6 @@
 // Keep in sync with native layer, in particular order of members!
 
 namespace Microsoft.Azure.Devices.Proxy {
-    using System;
     using System.Collections;
     using System.Runtime.Serialization;
 
@@ -14,40 +13,44 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Generic Property object.
     /// </summary>
     [DataContract]
-    public class Property<T> : PropertyBase, IEquatable<Property<T>> {
+    public class Property<T> : Poco<Property<T>>, IProperty<T> {
 
         /// <summary>
-        /// Option value
+        /// Property Type
+        /// </summary>
+        [DataMember(Name = "type", Order = 1)]
+        public uint Type { get; set; }
+
+        /// <summary>
+        /// Property value
         /// </summary>
         [DataMember(Name = "property", Order = 2)]
         public T Value { get; set; }
 
         /// <summary>
-        /// Default constructor
+        /// Create property
         /// </summary>
-        public Property() : this (0, default(T)) {}
+        /// <param name="type"></param>
+        public static Property<T> Create(uint type) =>
+            Create(type, default(T));
 
         /// <summary>
-        /// Constructor
+        /// Create property
         /// </summary>
         /// <param name="type"></param>
         /// <param name="value"></param>
-        public Property(uint type, T value) : base(type) => Value = value;
-
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public bool Equals(Property<T> that) {
-            if (that == null) {
-                return false;
-            }
-            return base.IsEqual(that) &&
-                StructuralComparisons.StructuralEqualityComparer.Equals(Value, that.Value);
+        public static Property<T> Create(uint type, T value) {
+            var prop = Get();
+            prop.Type = type;
+            prop.Value = value;
+            return prop;
         }
 
-        public override bool IsEqual(object that) => Equals(that as Property<T>);
+        public override bool IsEqual(Property<T> that) {
+            return
+                IsEqual(Type, that.Type) &&
+                StructuralComparisons.StructuralEqualityComparer.Equals(Value, that.Value);
+        }
 
         protected override void SetHashCode() {
             MixToHash(Type);

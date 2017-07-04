@@ -6,3 +6,4 @@
 
 __decl_test(ns, arg, "Device registry tools.");
 __decl_test(sd, arg, "Service discovery tools.");
+__decl_test(sr, arg, "Name service resolve tools.");

@@ -56,11 +56,12 @@ typedef void (*pal_wsclient_event_handler_t)(
 //
 // Create free threaded websocket client
 //
-decl_public_7(int32_t, pal_wsclient_create,
+decl_public_8(int32_t, pal_wsclient_create,
     const char*, protocol_name,
     const char*, host,
     uint16_t, port,
     const char*, path,
+    bool, secure,
     pal_wsclient_event_handler_t, callback,
     void*, callback_context,
     pal_wsclient_t**, wsclient

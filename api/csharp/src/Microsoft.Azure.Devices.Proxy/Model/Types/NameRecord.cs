@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Name service entry 
     /// </summary>
     [DataContract]
-    public class NameRecord : Serializable<NameRecord>, INameRecord {
+    public class NameRecord : Poco<NameRecord>, INameRecord {
         
         /// <summary>
         /// Name of entry
@@ -134,6 +134,8 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ReferenceSet.SetEquals(that.References)
                 ;
         }
+
+        public override string ToString() => $"Record {Id} for {Name} with address {Address}";
 
         public override bool IsEqual(NameRecord other) => Equals(other as INameRecord);
 

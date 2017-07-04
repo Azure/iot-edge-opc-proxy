@@ -19,7 +19,9 @@ namespace MsgPack {
         /// <summary>
         /// Last unsigned value read.
         /// </summary>
-        public ulong Value { get; private set; }
+        public ulong Value {
+            get; private set;
+        }
 
         /// <summary>
         /// Last signed value.
@@ -46,24 +48,21 @@ namespace MsgPack {
         /// Last boolean read.
         /// </summary>
         public bool Boolean {
-            get {
-                return Value != 0;
-            }
+            get => Value != 0;
         }
 
         /// <summary>
         /// Last floating point value read.
         /// </summary>
-        public double Double { get; private set; }
+        public double Double {
+            get; private set;
+        }
 
         /// <summary>
         /// Or whether the value was nil
         /// </summary>
         public bool IsNil {
-            get {
-                return
-                    _type == Types.Nil;
-            }
+            get => _type == Types.Nil;
         }
 
         /// <summary>

@@ -11,8 +11,6 @@ namespace MsgPack {
     /// Context object to carry type serializers during serialization
     /// </summary>
     public class SerializerContext {
-        private Dictionary<Type, object> _cache = new Dictionary<Type, object>();
-
         /// <summary>
         /// Get serializer for type
         /// </summary>
@@ -35,5 +33,7 @@ namespace MsgPack {
         protected void Add<T>(Serializer<T> serializer) {
             _cache.Add(typeof(T), serializer);
         }
+
+        private Dictionary<Type, object> _cache = new Dictionary<Type, object>();
     }
 }
