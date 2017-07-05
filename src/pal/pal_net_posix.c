@@ -140,7 +140,7 @@ static int32_t pal_sd_getaddrinfo(
     dbg_assert_ptr(ai_info);
     dbg_assert_ptr(ai_size);
 
-    result = pal_sdclient_create(&client);
+    result = pal_sdclient_create(NULL, NULL, &client);
     if (result != er_ok)
         return result;
     do
@@ -194,7 +194,7 @@ static int32_t pal_sd_getaddrinfo(
     while (0);
     if (browser)
         pal_sdbrowser_free(browser);
-    pal_sdclient_release(client);
+    pal_sdclient_free(client);
     if (ctx.result)
         pal_freeaddrinfo(ctx.result);
     if (ctx.signal)

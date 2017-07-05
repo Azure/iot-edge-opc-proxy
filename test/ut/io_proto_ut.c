@@ -728,6 +728,7 @@ TEST_FUNCTION(io_encode_open_request__success)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.encoding = 5;
     request_valid.max_recv = 800;
     request_valid.type = 0;
 
@@ -762,6 +763,7 @@ TEST_FUNCTION(io_encode_open_request__neg)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.encoding = 5;
     request_valid.max_recv = 800;
     request_valid.type = 0;
 

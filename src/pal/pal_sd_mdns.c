@@ -24,6 +24,8 @@ struct pal_sdclient
 {
     DNSServiceRef ref;           // Master connection for browsing
     uintptr_t event_handle;
+    pal_sdclient_error_cb_t cb;
+    void* context;
     log_t log;
 };
 
@@ -129,7 +131,7 @@ static int32_t pal_sd_mdns_error_to_prx_error(
 //
 // Convert flags
 //
-int32_t pal_sd_mdns_flag_to_pal_flags(
+static int32_t pal_sd_mdns_flag_to_pal_flags(
     int plat_flags
 )
 {
@@ -138,10 +140,26 @@ int32_t pal_sd_mdns_flag_to_pal_flags(
     if (0 == (plat_flags & kDNSServiceFlagsAdd))
         pal_flags |= pal_sd_result_removed;
 
-   // if (0 == (plat_flags & kDNSServiceFlagsMoreComing))
-   //     pal_flags |= pal_sd_result_all_for_now;
-
     return pal_flags;
+}
+
+//
+// Release client
+//
+static void pal_sdclient_release(
+    pal_sdclient_t* client
+)
+{
+    if (!client)
+        return;
+    if (DEC_REF(pal_sdclient_t, client) == DEC_RETURN_ZERO)
+    {
+        // Deregister from event port and wait for close complete
+        if (client->event_handle != 0)
+            pal_event_close(client->event_handle, false);
+        else
+            pal_sdclient_free(client);
+    }
 }
 
 //
@@ -542,9 +560,9 @@ static int32_t pal_sdbrowser_enumerate_domains(
 }
 
 //
-// Free client
+// Finally deallocate client when socket is destroyed.
 //
-static void pal_sdclient_free(
+static void pal_sdclient_on_destroy(
     pal_sdclient_t* client
 )
 {
@@ -552,7 +570,23 @@ static void pal_sdclient_free(
         return;
     if (client->ref)
         DNSServiceRefDeallocate(client->ref);
+
     mem_free_type(pal_sdclient_t, client);
+}
+
+//
+// In case of daemon communication error notify client to reconnect.
+//
+static void pal_sdclient_on_error(
+    pal_sdclient_t* client,
+    int32_t error_code
+)
+{
+    if (client->cb)
+    {
+        client->cb(client->context, error_code);
+        client->cb = NULL; // One shot callback
+    }
 }
 
 //
@@ -572,20 +606,21 @@ static int32_t pal_sdclient_socket_callback(
     {
     case pal_event_type_read:
         error = DNSServiceProcessResult(client->ref);
-        return pal_sd_mdns_error_to_prx_error(error);
+        if (error == kDNSServiceErr_NoError)
+            break;
+        error_code = pal_sd_mdns_error_to_prx_error(error);
+        pal_sdclient_on_error(client, error_code);
+        break;
     case pal_event_type_write:
         break;
     case pal_event_type_error:
-        // TODO:
-        (void)error_code;
-        log_error(client->log, "Error on client socket!");
+        pal_sdclient_on_error(client, error_code);
         break;
     case pal_event_type_close:
-        // TODO:
-        log_error(client->log, "Remote side closed!");
+        pal_sdclient_on_error(client, er_closed);
         break;
     case pal_event_type_destroy:
-        pal_sdclient_free(client);
+        pal_sdclient_on_destroy(client);
         break;
     case pal_event_type_unknown:
     default:
@@ -780,6 +815,7 @@ void pal_sdbrowser_free(
         DNSServiceRefDeallocate(browser->ref);
     if (browser->client)
         pal_sdclient_release(browser->client);
+
     mem_free_type(pal_sdbrowser_t, browser);
 }
 
@@ -787,6 +823,8 @@ void pal_sdbrowser_free(
 // Create client
 //
 int32_t pal_sdclient_create(
+    pal_sdclient_error_cb_t cb,
+    void* context,
     pal_sdclient_t** created
 )
 {
@@ -806,6 +844,8 @@ int32_t pal_sdclient_create(
     do
     {
         client->log = log_get("sd");
+        client->cb = cb;
+        client->context = context;
 
         error = DNSServiceCreateConnection(&client->ref);
         if (error != 0)
@@ -842,22 +882,19 @@ int32_t pal_sdclient_create(
 }
 
 //
-// Release client
+// Free client
 //
-void pal_sdclient_release(
+void pal_sdclient_free(
     pal_sdclient_t* client
 )
 {
     if (!client)
         return;
-    if (DEC_REF(pal_sdclient_t, client) == DEC_RETURN_ZERO)
-    {
-        // Deregister from event port and wait for close complete
-        if (client->event_handle != 0)
-            pal_event_close(client->event_handle, false);
-        else
-            pal_sdclient_free(client);
-    }
+
+    client->cb = NULL;
+    client->context = NULL;
+    
+    pal_sdclient_release(client);
 }
 
 //

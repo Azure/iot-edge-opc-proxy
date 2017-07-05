@@ -13,18 +13,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks.Dataflow;
 
     /// <summary>
-    /// Virtual socket connected to a set of proxies that provide browse services.
-    /// support.
+    /// Virtual broadcast socket connected to a set of proxies that provide browse services.
     /// </summary>
     internal class BrowseSocket : BroadcastSocket {
         private static readonly ushort _browsePort = 1; // Keep in sync with native
 
         /// <summary>
-        /// Internal constructor to create browse socket.
+        /// Internal constructor to create browse socket. Used in browse client.
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="codec">Codec to use on wire</param>
-        internal BrowseSocket(IProvider provider, int type, CodecId codec = CodecId.Json) :
+        internal BrowseSocket(IProvider provider, CodecId codec = CodecId.Mpack) :
             base(
                 //
                 // Set up socket as internal datagram socket and let proxy  
@@ -35,94 +34,32 @@ namespace Microsoft.Azure.Devices.Proxy {
                     Flags = (uint)SocketFlags.Internal,
                     Type = SocketType.Dgram,
                     Timeout = 90000,
+                    Address = new ProxySocketAddress("", _browsePort, (ushort)codec),
                     Protocol = ProtocolType.Unspecified,
                     Family = AddressFamily.Unspecified
                 }, 
                 provider) {
 
-            _type = type;
-            _codec = codec;
-        }
+            _requests = new TransformBlock<BrowseRequest, Message>(async (request) => {
+                if (_open.IsCancellationRequested) {
+                    throw new SocketException(SocketError.Closed);
+                }
+                var buffer = new MemoryStream();
+                await request.EncodeAsync(buffer, codec, _open.Token).ConfigureAwait(false);
+                return Message.Create(null, null, null, DataMessage.Create(buffer.ToArray()));
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Encode (in BrowseSocket) Id={1}",
+                EnsureOrdered = true,
+                BoundedCapacity = 3
+            });
 
-        /// <summary>
-        /// Connects to browse server on a proxy
-        /// </summary>
-        /// <param name="endpoint">proxy endpoint or null for all proxies</param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public override Task ConnectAsync(SocketAddress endpoint, CancellationToken ct) {
-            // Complete socket info by setting browse server port
-            Info.Address = new ProxySocketAddress("", _browsePort, (ushort)_codec);
-            return LinkAsync(endpoint, ct);
-        }
+            _requests.ConnectTo(SendBlock);
 
-        //   public IPropagatorBlock<BrowseRequest, BrowseResponse> BrowseBlock(ExecutionDataflowBlockOptions option) {
-        //
-        //       var responses = new TransformManyBlock<Message, BrowseResponse>(async (message) => {
-        //           if (_open.IsCancellationRequested) {
-        //               throw new SocketException(SocketError.Closed);
-        //           }
-        //           ThrowIfFailed(message);
-        //           if (message.TypeId != MessageContent.Data) {
-        //               throw new SocketException("No data message");
-        //           }
-        //           var data = message.Content as DataMessage;
-        //           if (data == null) {
-        //               throw new SocketException("Bad data");
-        //           }
-        //           var stream = new MemoryStream(data.Payload);
-        //
-        //           var response = await BrowseResponse.DecodeAsync(stream, _codec, ct).ConfigureAwait(false);
-        //           response.Interface = message.Proxy.ToSocketAddress();
-        //           return response;
-        //       }, option);
-        //
-        //       var requests = new ActionBlock<BrowseRequest>(async (request) => {
-        //
-        //           if (_open.IsCancellationRequested) {
-        //               throw new SocketException(SocketError.Closed);
-        //           }
-        //           var buffer = new MemoryStream();
-        //           await request.EncodeAsync(buffer, _codec, ct);
-        //           await SendBlock.SendAsync(new Message(null, null, null,
-        //               new DataMessage(buffer.ToArray())), ct).ConfigureAwait(false);
-        //
-        //       }, option);
-        //
-        //       return DataflowBlockEx.Encapsulate(requests, responses);
-        //   }
-
-        /// <summary>
-        /// Start browsing specified item
-        /// </summary>
-        /// <param name="item"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task BrowseBeginAsync(ProxySocketAddress item, CancellationToken ct) {
-            if (_open.IsCancellationRequested) {
-                throw new SocketException(SocketError.Closed);
-            }
-            var request = new BrowseRequest {
-                Item = item,
-                Handle = _id,
-                Type = _type
-            };
-            var buffer = new MemoryStream();
-            await request.EncodeAsync(buffer, _codec, ct).ConfigureAwait(false);
-            await SendBlock.SendAsync(Message.Create(null, null, null, 
-                DataMessage.Create(buffer.ToArray())), ct).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Read responses from socket
-        /// </summary>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task<BrowseResponse> BrowseNextAsync(CancellationToken ct) {
-            if (_open.IsCancellationRequested) {
-                throw new SocketException(SocketError.Closed);
-            }
-            using (var message = await ReceiveBlock.ReceiveAsync(ct).ConfigureAwait(false)) {
+            _responses = new TransformBlock<Message, BrowseResponse>(async (message) => {
+                if (_open.IsCancellationRequested) {
+                    throw new SocketException(SocketError.Closed);
+                }
                 ThrowIfFailed(message);
                 if (message.TypeId != MessageContent.Data) {
                     throw new SocketException("No data message");
@@ -131,14 +68,81 @@ namespace Microsoft.Azure.Devices.Proxy {
                 if (data == null) {
                     throw new SocketException("Bad data");
                 }
-
                 var stream = new MemoryStream(data.Payload);
-                var response = await Serializable.DecodeAsync<BrowseResponse>(stream, _codec,
-                    ct).ConfigureAwait(false);
+
+                var response = await Serializable.DecodeAsync<BrowseResponse>(stream, codec,
+                    _open.Token).ConfigureAwait(false);
                 response.Interface = message.Proxy.ToSocketAddress();
                 return response;
+            }, 
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Decode (in BrowseSocket) Id={1}",
+                EnsureOrdered = true,
+                BoundedCapacity = 3
+            });
+
+            ReceiveBlock.ConnectTo(_responses);
+        }
+
+        /// <summary>
+        /// Connects to browse server on a proxy
+        /// </summary>
+        /// <param name="endpoint">proxy endpoint or null for all proxies</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public override Task ConnectAsync(SocketAddress endpoint, CancellationToken ct) =>
+            LinkAsync(endpoint, ct);
+
+
+        // Init: Attach null block to receives.
+        // Create browser object.
+        //
+        // Browser attaches buffer block to responses, filtering on unique id
+        // Browser sends unique request to requests block
+        // Next, next next, using receiveAsync
+        //
+        // When done, dispose browser.
+        // Browser detaches from receive block on dispose
+        
+        /// <summary>
+        /// Start browsing specified item
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task BrowseBeginAsync(ProxySocketAddress item, int type, CancellationToken ct) {
+            if (_open.IsCancellationRequested) {
+                throw new SocketException(SocketError.Closed);
+            }
+            var request = new BrowseRequest {
+                Item = item,
+                Handle = _id,
+                Type = type
+            };
+            await _requests.SendAsync(request, ct);
+        }
+
+        /// <summary>
+        /// Read responses from socket
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<BrowseResponse> BrowseNextAsync(CancellationToken ct) {
+            try {
+                return await _responses.ReceiveAsync(ct);
+            }
+            catch (InvalidOperationException) {
+                // Pipeline completed
+                return null;
+            }
+            catch (OperationCanceledException) {
+                throw;
+            }
+            catch (Exception e) {
+                throw SocketException.Create("Browse next error", e);
             }
         }
+
 
         public override Task BindAsync(SocketAddress address, CancellationToken ct) {
             throw new NotSupportedException("Cannot call bind on browse socket");
@@ -160,7 +164,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         private readonly Reference _id = new Reference();
-        private readonly int _type;
-        private readonly CodecId _codec;
+        private IPropagatorBlock<BrowseRequest, Message> _requests;
+        private IPropagatorBlock<Message, BrowseResponse> _responses;
     }
 }

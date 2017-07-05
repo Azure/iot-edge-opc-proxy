@@ -121,7 +121,7 @@ int32_t print(
     ctx->browser = NULL;
     do
     {
-        result = pal_sdclient_create(&ctx->client);
+        result = pal_sdclient_create(NULL, NULL, &ctx->client);
         if (result != er_ok)
             break;
 
@@ -149,7 +149,7 @@ int32_t print(
     if (ctx->browser)
         pal_sdbrowser_free(ctx->browser);
     if (ctx->client)
-        pal_sdclient_release(ctx->client);
+        pal_sdclient_free(ctx->client);
     
     if (signal)
         signal_free(signal);
@@ -180,7 +180,7 @@ int32_t resolve(
     ctx->recursive = false;
     do
     {
-        result = pal_sdclient_create(&ctx->client);
+        result = pal_sdclient_create(NULL, NULL, &ctx->client);
         if (result != er_ok)
             break;
 
@@ -212,7 +212,7 @@ int32_t resolve(
     if (ctx->browser)
         pal_sdbrowser_free(ctx->browser);
     if (ctx->client)
-        pal_sdclient_release(ctx->client);
+        pal_sdclient_free(ctx->client);
 
     if (signal)
         signal_free(signal);

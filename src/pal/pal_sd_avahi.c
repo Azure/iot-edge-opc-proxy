@@ -42,10 +42,10 @@
     avahi_s_service_resolver_free
 #define AvahiHostNameResolver \
     AvahiSHostNameResolver
-#define avahi_hostname_resolver_new \
-    avahi_s_hostname_resolver_new
-#define avahi_hostname_resolver_free \
-    avahi_s_hostname_resolver_free
+#define avahi_host_name_resolver_new \
+    avahi_s_host_name_resolver_new
+#define avahi_host_name_resolver_free \
+    avahi_s_host_name_resolver_free
 #define AvahiServiceBrowser \
     AvahiSServiceBrowser
 #define avahi_service_browser_new \
@@ -78,6 +78,8 @@ struct pal_sdclient
 {
     AvahiClient* client;     // Avahi browser client - connected to daemon
     AvahiThreadedPoll* polling;                       // Main polling loop
+    pal_sdclient_error_cb_t cb;
+    void* context;
     log_t log;
 };
 
@@ -320,24 +322,11 @@ static void pal_sdclient_callback(
     case AVAHI_SERVER_FAILURE:
         error = avahi_client_errno(avahi_client);
         log_error(client->log, "Avahi client failure %s!", avahi_strerror(error));
-        if (client->client)
+        if (client->cb)
         {
-            break;
+            client->cb(client->context, pal_sd_avahi_error_to_prx_error(error));
+            client->cb = NULL;
         }
-
-        // TODO:
-        //  if (avahi_client_errno(avahi_client) == AVAHI_ERR_DISCONNECTED) 
-      //  {
-      //      /* We have been disconnected, so let reconnect */
-      //      fprintf(stderr, _("Disconnected, reconnecting ...\n"));
-      //      avahi_client_free(client);
-      //      if (!(client = avahi_client_new(avahi_simple_poll_get(simple_poll), 
-        // AVAHI_CLIENT_NO_FAIL, client_callback, config, &error))) {
-      //          fprintf(stderr, _("Failed to create client object: %s\n"), avahi_strerror(error));
-      //          avahi_simple_poll_quit(simple_poll);
-      //      }
-      //  }
-
         break;
     case AVAHI_SERVER_COLLISION:
     case AVAHI_SERVER_REGISTERING:
@@ -365,7 +354,7 @@ static void pal_sdbrowser_remove_handle(
     if (handle->resolver)
         avahi_service_resolver_free(handle->resolver);
     if (handle->address)
-        avahi_hostname_resolver_free(handle->address);
+        avahi_host_name_resolver_free(handle->address);
     if (handle->service_types)
         avahi_service_type_browser_free(handle->service_types);
     if (handle->domains)
@@ -1088,7 +1077,7 @@ int32_t pal_sdbrowser_resolve(
             break;
 
         handle->port = addr->port;
-        handle->address = avahi_hostname_resolver_new(browser->client->client,
+        handle->address = avahi_host_name_resolver_new(browser->client->client,
             itf_index == prx_itf_index_all ? AVAHI_IF_UNSPEC : (uint32_t)itf_index,
             AVAHI_PROTO_UNSPEC, addr->host, AVAHI_PROTO_UNSPEC, 0,
             pal_sdbrowser_hostname_resolver_callback, handle);
@@ -1202,6 +1191,8 @@ void pal_sdbrowser_free(
 // Create client
 //
 int32_t pal_sdclient_create(
+    pal_sdclient_error_cb_t cb,
+    void* context,
     pal_sdclient_t** created
 )
 {
@@ -1219,6 +1210,8 @@ int32_t pal_sdclient_create(
     do
     {
         client->log = log_get("sd");
+        client->cb = cb;
+        client->context = context;
 
         client->polling = avahi_threaded_poll_new();
         if (!client->polling)
@@ -1274,14 +1267,14 @@ int32_t pal_sdclient_create(
         return er_ok;
     } while (0);
 
-    pal_sdclient_release(client);
+    pal_sdclient_free(client);
     return result;
 }
 
 //
-// Release client
+// Free client
 //
-void pal_sdclient_release(
+void pal_sdclient_free(
     pal_sdclient_t* client
 )
 {

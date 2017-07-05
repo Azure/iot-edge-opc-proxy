@@ -53,6 +53,8 @@ struct prx_browse_session
 
     int32_t last_error;  // Last error received in connect/disconnect path
     struct hashtable* requests;                 // List of active requests
+    
+    pal_sdclient_t* owner; // The client used to create contained browsers
     DLIST_ENTRY link;           // Link to queue browser clients in server
     log_t log;
 };
@@ -619,6 +621,13 @@ static void prx_browse_session_handle_resolve_request(
                 &stream->sdbrowser);
             if (result != er_ok)
                 break;
+
+            //
+            // Save the sdclient used to create browser in this session. This allows
+            // us later to only clean up the browse sessions related to the client
+            // should the client fail.
+            //
+            session->owner = session->server->sdclient;
         }
         else
         {
@@ -1107,6 +1116,93 @@ static void prx_browse_session_socket_event_handler(
 }
 
 //
+// Called from different thread - indicates error in client.
+//
+static void prx_browse_server_sdclient_error(
+    void* context,
+    int32_t error
+);
+
+//
+// Reconnect client - this could fail, or could result in another error...
+//
+static void prx_browse_server_sdclient_reconnect(
+    prx_browse_server_t* server
+)
+{
+    int32_t result;
+
+    dbg_assert_ptr(server);
+    dbg_assert(!server->sdclient, "Reconnect, but client exists");
+    dbg_assert_is_task(server->scheduler);
+
+    result = pal_sdclient_create(prx_browse_server_sdclient_error,
+        server, &server->sdclient);
+    if (result != er_ok)
+    {
+        log_error(server->log, 
+            "Failed to create sd client (%s), retrying later... ",
+            prx_err_string(result));
+        __do_later(server, prx_browse_server_sdclient_reconnect, 30000);
+    }
+}
+
+//
+// Cancel all active browse sessions, close client and reconnect.
+//
+static void prx_browse_server_sdclient_reset(
+    prx_browse_server_t* server
+)
+{
+    prx_browse_session_t* next;
+    pal_sdclient_t* sdclient;
+
+    dbg_assert_ptr(server);
+    dbg_assert_ptr(server->sdclient);
+    dbg_assert_is_task(server->scheduler);
+
+    // Detach client. Access is safe since we are on process thread.
+    sdclient = server->sdclient;
+    server->sdclient = NULL;
+
+    // Close all active sd browsing sessions currently known to us.
+    lock_enter(server->sessions_lock);
+    if (!DList_IsListEmpty(&server->sessions))
+    {
+        next = containingRecord(server->sessions.Flink,
+            prx_browse_session_t, link);
+        if (next->owner == sdclient)
+        {
+            next->owner = NULL;
+            __do_next(next, prx_browse_session_free);
+        }
+    }
+    lock_exit(server->sessions_lock);
+
+    // Free client and recreate/reconnect - clear out all queued resets...
+    pal_sdclient_free(sdclient);
+    prx_scheduler_clear(server->scheduler, 
+        (prx_task_t)prx_browse_server_sdclient_reset, server);
+
+    __do_later(server, prx_browse_server_sdclient_reconnect, 3000);
+}
+
+//
+// Called from different thread - indicates error in client.
+//
+static void prx_browse_server_sdclient_error(
+    void* context,
+    int32_t error
+)
+{
+    prx_browse_server_t* server = (prx_browse_server_t*)context;
+    dbg_assert_ptr(server);
+    log_error(server->log, "Error in sdclient (%s), reset all active sessions... ",
+        prx_err_string(error));
+    __do_next(server, prx_browse_server_sdclient_reset);
+}
+
+//
 // Free browse server and release all associated resources
 //
 void prx_browse_server_free(
@@ -1115,7 +1211,6 @@ void prx_browse_server_free(
 {
     if (!server)
         return;
-
     // Free all sessions still open...
     if (server->sessions_lock)
         lock_enter(server->sessions_lock);
@@ -1136,7 +1231,7 @@ void prx_browse_server_free(
         prx_scheduler_release(server->scheduler, server);
 
     if (server->sdclient)
-        pal_sdclient_release(server->sdclient);
+        pal_sdclient_free(server->sdclient);
     if (server->sessions_lock)
         lock_free(server->sessions_lock);
     mem_free_type(prx_browse_server_t, server);
@@ -1255,7 +1350,8 @@ int32_t prx_browse_server_create(
 
         if (pal_caps() & pal_cap_dnssd)
         {
-            result = pal_sdclient_create(&server->sdclient);
+            result = pal_sdclient_create(prx_browse_server_sdclient_error,
+                server, &server->sdclient);
             if (result != er_ok)
                 break;
         }

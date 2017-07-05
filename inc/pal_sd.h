@@ -72,6 +72,14 @@ typedef struct pal_sd_service_entry
 pal_sd_service_entry_t;
 
 //
+// Called for client events
+//
+typedef void (*pal_sdclient_error_cb_t)(
+    void *context,
+    int32_t error
+    );
+
+//
 // Called before any of the following functions are used
 //
 decl_public_0(int32_t, pal_sd_init,
@@ -81,7 +89,9 @@ decl_public_0(int32_t, pal_sd_init,
 //
 // Create a client to create browsers (browse sessions)
 //
-decl_public_1(int32_t, pal_sdclient_create,
+decl_public_3(int32_t, pal_sdclient_create,
+    pal_sdclient_error_cb_t, cb,
+    void*, context,
     pal_sdclient_t**, client
 );
 
@@ -125,7 +135,7 @@ decl_public_1(void, pal_sdbrowser_free,
 //
 // Release handle to client
 //
-decl_public_1(void, pal_sdclient_release,
+decl_public_1(void, pal_sdclient_free,
     pal_sdclient_t*, client
 );
 

@@ -9,9 +9,13 @@
 // Create client
 //
 int32_t pal_sdclient_create(
+    pal_sdclient_error_cb_t cb,
+    void* context,
     pal_sdclient_t** client
 )
 {
+    (void)cb;
+    (void)context;
     (void)client;
 
     dbg_assert(0, "Unexpected");
@@ -20,9 +24,9 @@ int32_t pal_sdclient_create(
 }
 
 //
-// Release client
+// Free client
 //
-void pal_sdclient_release(
+void pal_sdclient_free(
     pal_sdclient_t* client
 )
 {

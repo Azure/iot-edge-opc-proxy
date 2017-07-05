@@ -516,9 +516,9 @@ TEST_FUNCTION(pal_mdns_sdbrowser_free__neg)
 
 #endif // pal_sdbrowser_free 
 
-#ifdef pal_sdclient_release 
+#ifdef pal_sdclient_free 
 // 
-// Test pal_sdclient_release happy path 
+// Test pal_sdclient_free happy path 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__success)
 {
@@ -529,7 +529,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__success)
     // ... 
 
     // act 
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -538,7 +538,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__success)
 }
 
 // 
-// Test pal_sdclient_release passing as client argument an invalid pal_sdclient_t* value 
+// Test pal_sdclient_free passing as client argument an invalid pal_sdclient_t* value 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
 {
@@ -549,7 +549,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
     // ... 
 
     // act 
-    handle = pal_sdclient_release();
+    handle = pal_sdclient_free();
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -558,7 +558,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
 }
 
 // 
-// Test pal_sdclient_release unhappy path 
+// Test pal_sdclient_free unhappy path 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__neg)
 {
@@ -573,13 +573,13 @@ TEST_FUNCTION(pal_mdns_sdclient_release__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);
 }
 
-#endif // pal_sdclient_release 
+#endif // pal_sdclient_free 
 
 #ifdef pal_sd_deinit 
 // 
