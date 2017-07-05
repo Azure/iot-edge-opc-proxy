@@ -24,19 +24,25 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Flow
         /// </summary>
         [DataMember(Name = "flow", Order = 3)]
-        public uint Flow { get; set; }
+        public uint Flow {
+            get; set;
+        }
 
         /// <summary>
         /// Serialization only
         /// </summary>
         [DataMember(Name = "addr", Order = 4)]
-        public byte[] Address { get; set; }
+        public byte[] Address {
+            get; set;
+        }
 
         /// <summary>
         /// Scope id
         /// </summary>
         [DataMember(Name = "scope_id", Order = 5)]
-        public uint ScopeId { get; set; }
+        public uint ScopeId {
+            get; set;
+        }
 
         /// <summary>
         /// Default constructor
@@ -67,9 +73,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Converts this socket address to a address
         /// </summary>
         /// <returns></returns>
-        public Reference AsReference() {
-            return new Reference(Address);
-        }
+        public Reference AsReference() => new Reference(Address);
 
         /// <summary>
         /// Returns the address as string

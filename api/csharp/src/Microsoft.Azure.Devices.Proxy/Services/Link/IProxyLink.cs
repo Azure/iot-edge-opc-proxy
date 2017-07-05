@@ -19,12 +19,16 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Proxy target record
         /// </summary>
-        INameRecord Proxy { get; }
+        INameRecord Proxy {
+            get;
+        }
 
         /// <summary>
         /// Remote id of this link
         /// </summary>
-        Reference RemoteId { get; }
+        Reference RemoteId {
+            get;
+        }
 
         /// <summary>
         /// Begin connect sequence, returns connection string to

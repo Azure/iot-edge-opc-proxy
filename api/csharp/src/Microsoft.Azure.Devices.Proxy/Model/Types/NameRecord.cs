@@ -13,47 +13,61 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// </summary>
     [DataContract]
     public class NameRecord : Poco<NameRecord>, INameRecord {
-        
+
         /// <summary>
         /// Name of entry
         /// </summary>
         [DataMember(Name = "name", Order = 1)]
-        public string Name { get; set; }
+        public string Name {
+            get; set;
+        }
 
         /// <summary>
         /// Address of entry
         /// </summary>
         [DataMember(Name = "addr", Order = 2)]
-        public Reference Address { get; set; }
+        public Reference Address {
+            get; set;
+        }
 
         /// <summary>
         /// Connection string for the entry
         /// </summary>
         [DataMember(Name = "cs", Order = 3)]
-        public string ConnectionString { get; set; }
+        public string ConnectionString {
+            get; set;
+        }
 
         /// <summary>
         /// Type of entry
         /// </summary>
         [DataMember(Name = "type", Order = 4)]
-        public NameRecordType Type { get; set; }
+        public NameRecordType Type {
+            get; set;
+        }
 
         /// <summary>
         /// Id of entry
         /// </summary>
         [DataMember(Name = "id", Order = 5)]
-        public string Id { get; set; }
+        public string Id {
+            get; set;
+        }
 
         /// <summary>
         /// References for this entry to support serializing
         /// </summary>
         [DataMember(Name = "references", Order = 6)]
-        public HashSet<Reference> ReferenceSet { get; set; } = new HashSet<Reference>();
+        public HashSet<Reference> ReferenceSet {
+            get; set;
+        } = new HashSet<Reference>();
 
         /// <summary>
         /// References as enumerable
         /// </summary>
-        public IEnumerable<Reference> References => ReferenceSet;
+        public IEnumerable<Reference> References {
+            get => ReferenceSet;
+        }
 
         /// <summary>
         /// Default constructor
@@ -91,17 +105,15 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Add a address
         /// </summary>
         /// <param name="address"></param>
-        public void AddReference(Reference address) {
+        public void AddReference(Reference address) => 
             ReferenceSet.Add(address);
-        }
 
         /// <summary>
         /// Add a address
         /// </summary>
         /// <param name="address"></param>
-        public void RemoveReference(Reference address) {
+        public void RemoveReference(Reference address) => 
             ReferenceSet.Remove(address);
-        }
 
         /// <summary>
         /// Copies members from passed in record
@@ -135,10 +147,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                 ;
         }
 
-        public override string ToString() => $"Record {Id} for {Name} with address {Address}";
+        public override string ToString() => 
+            $"Record {Id} for {Name} with address {Address}";
 
-        public override bool IsEqual(NameRecord other) => Equals(other as INameRecord);
+        public override bool IsEqual(NameRecord other) =>
+            Equals(other as INameRecord);
 
-        protected override void SetHashCode() => MixToHash(Address);
+        protected override void SetHashCode() => 
+            MixToHash(Address);
     }
 }

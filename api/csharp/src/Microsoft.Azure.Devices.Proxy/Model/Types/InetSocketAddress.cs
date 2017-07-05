@@ -16,13 +16,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     public abstract class InetSocketAddress : SocketAddress, IEquatable<InetSocketAddress> {
 
         [DataMember(Name = "family", Order = 1)]
-        public abstract override AddressFamily Family { get; }
+        public abstract override AddressFamily Family {
+            get;
+        }
 
         /// <summary>
         /// Port in host byte order
         /// </summary>
         [DataMember(Name = "port", Order = 2)]
-        public ushort Port { get; set; }
+        public ushort Port {
+            get; set;
+        }
 
         /// <summary>
         /// Comparison

@@ -74,6 +74,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         protected BroadcastSocket(SocketInfo info, IProvider provider) : 
             base (info, provider) {
 
+            // Broadcast to all connected links
             _send = new BroadcastBlock<Message>(message => message.Clone(),
             new DataflowBlockOptions {
                 NameFormat = "Send (in Socket) Id={1}",
@@ -81,153 +82,21 @@ namespace Microsoft.Azure.Devices.Proxy {
                 BoundedCapacity = 1
             });
 
+            // Receive from all connected links
             _receive = new BufferBlock<Message>(
             new DataflowBlockOptions {
                 NameFormat = "Receive (in Socket) Id={1}",
                 EnsureOrdered = true,
-                BoundedCapacity = 1
-            });
-        }
-
-        /// <summary>
-        /// Bind to provided endpoint(s) - return on first success
-        /// </summary>
-        /// <param name="endpoint"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        protected async Task LinkAsync(SocketAddress endpoint, CancellationToken ct) {
-
-            // Complete socket info
-            Info.Options.UnionWith(_optionCache.Select(p => Property<ulong>.Create(
-                (uint)p.Key, p.Value)));
-
-            //
-            // Create tpl network for connect - prioritize input above errored attempts using
-            // prioritized scheduling queue.
-            //
-            var tcs = new TaskCompletionSource<bool>();
-            ct.Register(() => tcs.TrySetCanceled());
-
-            var input = DataflowMessage<INameRecord>.CreateAdapter(new ExecutionDataflowBlockOptions {
-                NameFormat = "Adapt (Bind) Id={1}",
-                CancellationToken = _open.Token,
-                EnsureOrdered = false,
-                SingleProducerConstrained = true,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                MaxMessagesPerTask = DataflowBlockOptions.Unbounded
+                BoundedCapacity = 3
             });
 
-            var errors = new TransformManyBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
-                (error) => {
-                    // Handle errors that occur while linking
-                    int linksFound;
-                    lock (Links) {
-                        linksFound = Links.Count();
-                    }
-                    ProxyEventSource.Log.LinkFailure(this, error.Arg, error.Arg);
-                    if (linksFound == 0 && error.Exceptions.Count < 5) {
-                        return error.AsEnumerable();
-                    }
-                    else {
-                        // Give up
-                        error.Dispose();
-                        return Enumerable.Empty<DataflowMessage<INameRecord>>();
-                    }
-                },
+            // Reconnect block for connected links to push themselves for reconnect
+            _reconnect = new TransformBlock<BroadcastLink, INameRecord>(link => link.Proxy, 
             new ExecutionDataflowBlockOptions {
-                NameFormat = "Error (Bind) Id={1}",
-                CancellationToken = _open.Token,
+                NameFormat = "Reconnect (in Socket) Id={1}",
                 EnsureOrdered = true,
-                MaxDegreeOfParallelism = 1,
-                MaxMessagesPerTask = DataflowBlockOptions.Unbounded
+                BoundedCapacity = 3
             });
-
-            var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {
-                NameFormat = "Lookup (Bind) Id={1}",
-                CancellationToken = _open.Token,
-                EnsureOrdered = false,
-                MaxDegreeOfParallelism = 2, // 2 parallel lookups
-                MaxMessagesPerTask = 1
-            });
-
-            var linker = CreateLinkBlock(errors, new ExecutionDataflowBlockOptions {
-                NameFormat = "Link (Bind) Id={1}",
-                CancellationToken = _open.Token,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                EnsureOrdered = false,
-                MaxMessagesPerTask = 1
-            });
-
-            // When first connected mark tcs as complete
-            var connected = new ActionBlock<IProxyLink>(l => {
-                lock (Links) {
-                    if (!Links.Any()) {
-                        tcs.TrySetResult(true);
-                    }
-                    Links.Add(l);
-
-                    _send.ConnectTo(l.SendBlock);
-                    l.ReceiveBlock.ConnectTo(_receive);
-                }
-            }, new ExecutionDataflowBlockOptions {
-                NameFormat = "Connected (Bind) Id={1}",
-                CancellationToken = _open.Token,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                SingleProducerConstrained = true,
-                EnsureOrdered = false
-            });
-
-            // If no one connected but connected action completes, throw error.
-            var completed = connected.Completion.ContinueWith(t => {
-                lock (Links) {
-                    if (t.IsFaulted) {
-                        tcs.TrySetException(t.Exception);
-                    }
-                    else if (t.IsCanceled) {
-                        tcs.TrySetCanceled();
-                    }
-                    else if (!Links.Any()) {
-                        tcs.TrySetException(new ProxyNotFound("No proxy is online!"));
-                    }
-                }
-            });
-
-            query.ConnectTo(input);
-            input.ConnectTo(linker);
-            errors.ConnectTo(linker);
-            linker.ConnectTo(connected);
-
-            //
-            // Query generates name records from device registry based on the passed proxy information.
-            // these are then posted to the linker for linking.  When the first link is established
-            // Connect returns successful, but proxy continues linking until disposed
-            //
-            var queries = new List<Task<bool>>();
-            if (endpoint == null || endpoint is AnySocketAddress) {
-                queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                    Reference.All, NameRecordType.Proxy), ct));
-            }
-            else {
-                while (endpoint.Family == AddressFamily.Bound) {
-                    // Unwrap bound address
-                    endpoint = ((BoundSocketAddress)endpoint).LocalAddress;
-                }
-
-                if (endpoint.Family == AddressFamily.Collection) {
-                    foreach (var item in ((SocketAddressCollection)endpoint).Addresses()) {
-                        queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                            item.ToString(), NameRecordType.Proxy), ct));
-                    }
-                }
-                else {
-                    queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                        endpoint.ToString(), NameRecordType.Proxy), ct));
-                }
-            }
-
-            await Task.WhenAll(queries.ToArray());
-            // Signalled when the first links is queued to connected block or user cancelled
-            await tcs.Task.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -302,6 +171,120 @@ namespace Microsoft.Azure.Devices.Proxy {
             throw SocketException.Create("GetSocketOption failed", e);
         }
 
+        /// <summary>
+        /// Bind to provided endpoint(s) - sets up tpl flow network to mimic binding to 
+        /// a set of endpoints or all endpoints, and handling reconnects until the socket
+        /// is closed.  The socket is bound even if there are no endpoints immediately
+        /// connected (e.g. if proxies are off).  However, the idea is that the links are
+        /// automatically connected or reconnected as they become available.
+        /// </summary>
+        /// <param name="endpoint"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        protected async Task LinkAsync(SocketAddress endpoint, CancellationToken ct) {
+
+            // Complete socket info
+            Info.Options.UnionWith(_optionCache.Select(p => Property<ulong>.Create(
+                (uint)p.Key, p.Value)));
+
+            var input = DataflowMessage<INameRecord>.CreateAdapter(new ExecutionDataflowBlockOptions {
+                NameFormat = "Adapt (Bind) Id={1}",
+                CancellationToken = _open.Token,
+                EnsureOrdered = false,
+                SingleProducerConstrained = true,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded
+            });
+
+            // handle errors by throttling and then retry...
+            var errors = new TransformBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
+            async (error) => {
+                await Task.Delay(error.Exceptions.Count * _throttleDelayMs).ConfigureAwait(false);
+                return error;
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Error (Bind) Id={1}",
+                CancellationToken = _open.Token,
+            });
+
+            var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {
+                NameFormat = "Lookup (Bind) Id={1}",
+                CancellationToken = _open.Token,
+                EnsureOrdered = false,
+                MaxDegreeOfParallelism = 2, // 2 parallel lookups
+                MaxMessagesPerTask = 1
+            });
+
+            var linker = CreateLinkBlock(errors, new ExecutionDataflowBlockOptions {
+                NameFormat = "Link (Bind) Id={1}",
+                CancellationToken = _open.Token,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                EnsureOrdered = false,
+                MaxMessagesPerTask = 1
+            });
+
+            // When first connected mark tcs as complete
+            var connected = new ActionBlock<IProxyLink>(l => {
+                lock (Links) {
+                    var link = l as BroadcastLink;
+                    link.Attach(_send, _receive);
+                    Links.Add(link);
+                }
+            }, new ExecutionDataflowBlockOptions {
+                NameFormat = "Connected (Bind) Id={1}",
+                CancellationToken = _open.Token,
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = true,
+                EnsureOrdered = false
+            });
+
+            query.ConnectTo(input);
+            _reconnect.ConnectTo(input);
+            input.ConnectTo(linker);
+            errors.ConnectTo(linker);
+            linker.ConnectTo(connected);
+
+            //
+            // Query generates name records from device registry based on the passed 
+            // proxy information. These are then posted to the linker for linking. 
+            //
+            var queries = new List<Task<bool>>();
+            if (endpoint == null || endpoint is AnySocketAddress) {
+                queries.Add(query.SendAsync(Provider.NameService.NewQuery(
+                    Reference.All, NameRecordType.Proxy), ct));
+            }
+            else {
+                while (endpoint.Family == AddressFamily.Bound) {
+                    // Unwrap bound address
+                    endpoint = ((BoundSocketAddress)endpoint).LocalAddress;
+                }
+
+                if (endpoint.Family == AddressFamily.Collection) {
+                    foreach (var item in ((SocketAddressCollection)endpoint).Addresses()) {
+                        queries.Add(query.SendAsync(Provider.NameService.NewQuery(
+                            item.ToString(), NameRecordType.Proxy), ct));
+                    }
+                }
+                else {
+                    queries.Add(query.SendAsync(Provider.NameService.NewQuery(
+                        endpoint.ToString(), NameRecordType.Proxy), ct));
+                }
+            }
+            await Task.WhenAll(queries.ToArray()).ConfigureAwait(false);
+
+            // Now the network is primed with proxy endpoints
+        }
+
+        /// <summary>
+        /// Reconnect the broadcast socket by requeing to reconnect block.
+        /// </summary>
+        /// <param name="broadcastLink"></param>
+        internal void Reconnect(BroadcastLink link) {
+            lock (Links) {
+                Links.Remove(link);
+            }
+            _reconnect.Post(link);
+        }
 
         /// <summary>
         /// Create broadcast link
@@ -313,7 +296,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         protected override IProxyLink CreateLink(INameRecord proxy, Reference linkId,
             SocketAddress localAddress, SocketAddress peerAddress) {
-            // now create local link and open link for streaming
+            // now create broadcast link and open link for streaming
             return new BroadcastLink(this, proxy, linkId, localAddress, peerAddress);
         }
 
@@ -322,7 +305,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         protected CancellationTokenSource _open = new CancellationTokenSource();
-        protected readonly IPropagatorBlock<Message, Message> _send;
-        protected readonly IPropagatorBlock<Message, Message> _receive;
+        private readonly IPropagatorBlock<Message, Message> _send;
+        private readonly IPropagatorBlock<Message, Message> _receive;
+        private readonly IPropagatorBlock<BroadcastLink, INameRecord> _reconnect;
+        private const int _throttleDelayMs = 1000;
     }
 }

@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     await DeleteConnectionAsync(name).ConfigureAwait(false);
                 }
                 catch { }
-                response = await CreateConnectionAsync(name);
+                response = await CreateConnectionAsync(name).ConfigureAwait(false);
             }
             catch (Exception ex) {
                 ProxyEventSource.Log.HandledExceptionAsInformation(this, ex);

@@ -168,7 +168,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             async (error) => {
                 ProxyEventSource.Log.LinkFailure(this, error.Arg, Host);
                 Host.RemoveReference(error.Arg.Address);
-                await Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), ct);
+                await Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), 
+                    ct).ConfigureAwait(false);
                 return error;
             },
             new ExecutionDataflowBlockOptions {
@@ -245,11 +246,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
             }
 
-            await Task.WhenAll(queries.ToArray());
+            // TODO: Consider waiting later or cancelling wait when link received...
+            await Task.WhenAll(queries.ToArray()).ConfigureAwait(false);
 
             // Wait until a connected link is received.  Then cancel the remainder of the pipeline.
             _link = await connection.ReceiveAsync(ct);
             connection.Complete();
+
             Host.AddReference(_link.Proxy.Address);
             var update = Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), ct);
         }

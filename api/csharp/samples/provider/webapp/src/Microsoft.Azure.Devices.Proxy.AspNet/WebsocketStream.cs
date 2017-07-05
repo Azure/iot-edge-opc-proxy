@@ -118,10 +118,11 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         public async Task CloseAsync(CancellationToken ct) {
             try {
-                await FlushAsync(ct);
+                await FlushAsync(ct).ConfigureAwait(false);
             }
             catch { }
-            await _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed", ct);
+            await _websocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed",
+                ct).ConfigureAwait(false);
             _websocket = null;
         }
 
@@ -142,7 +143,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             if (IsClosed)
                 throw new IOException("Stream closed");
             if (_needsFlush) {
-                await _asyncWrite.WaitAsync();
+                await _asyncWrite.WaitAsync().ConfigureAwait(false);
                 try {
                     if (_needsFlush) {
                         await _websocket.SendAsync(new ArraySegment<byte>(_writebuffer, 0, _writePos),
@@ -163,7 +164,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="ct"></param>
         /// <returns></returns>
         public async Task SkipAsync(CancellationToken ct) {
-            await _asyncRead.WaitAsync();
+            await _asyncRead.WaitAsync().ConfigureAwait(false);
             try {
                 while (!_readEnd) {
                     // Read until we hit the end

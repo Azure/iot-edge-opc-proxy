@@ -15,81 +15,211 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
 
     class Program {
 
-        static string host_name;
+        static string host_name = System.Net.Dns.GetHostName();
         static Random rand = new Random();
 
+        enum Op {
+            None, Perf, Sync, Async, All
+        }
+
+        ///
+        /// <summary>
+        ///
+        /// Simple TCP/IP Services
+        ///
+        /// Port 7:  Echo http://tools.ietf.org/html/rfc862
+        /// Port 19: Chargen http://tools.ietf.org/html/rfc864
+        /// Port 13: daytime http://tools.ietf.org/html/rfc867
+        /// Port 17: quotd http://tools.ietf.org/html/rfc865
+        ///
+        /// </summary>
         static void Main(string[] args) {
+            Op op = Op.None;
+            bool bypass = false;
+            int index = 0;
+            int timeout = 10;
+            int bufferSize = 60000;
 
-            if (args.Length > 0)
-                host_name = args[0];
-            else
-                host_name = System.Net.Dns.GetHostName();
-
-            // Socket.Provider = Provider.ServiceBusRelayProvider.CreateAsync().Result;
-            Provider.WebSocketProvider.Create();
-
-            //
-            // Simple TCP/IP Services
-            //
-            // Port 7:  Echo http://tools.ietf.org/html/rfc862
-            // Port 19: Chargen http://tools.ietf.org/html/rfc864
-            // Port 13: daytime http://tools.ietf.org/html/rfc867
-            // Port 17: quotd http://tools.ietf.org/html/rfc865
-            //
-            for (int j = 1; ; j++) {
-#if PERF
-                try {
-                    // PerfLoopComparedAsync(60000).Wait();
-                    PerfLoopAsync(60000).Wait();
-                }
-                catch (Exception e) {
-                    Console.Out.WriteLine($"{e.Message}");
-                    Thread.Sleep(4000);
-                }
-#endif
-#if TRUE
-                Console.Clear();
-                Console.Out.WriteLine($"#{j} Sync tests...");
-                try {
-                    SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
-                    Receive(19);
-                    Receive(13);
-                    Receive(17);
-                    Receive(19);
-                    EchoLoop(j+1);
-                }
-                catch (Exception e) {
-                    Console.Out.WriteLine($"{e.Message}");
-                    Thread.Sleep(4000);
-                }
-#endif
-#if TRUE
-                Console.Clear();
-                Console.Out.WriteLine($"#{j} Async tests...");
-                var tasks = new List<Task>();
-                try {
-                    for (int i = 0; i < j + 1; i++) {
-                        tasks.Add(ReceiveAsync(i, 19));
-                        tasks.Add(ReceiveAsync(i, 13));
-                        tasks.Add(ReceiveAsync(i, 17));
-                        tasks.Add(EchoLoopAsync(i, 5));
+            // Parse command line
+            try {
+                for (int i = 0; i < args.Length; i++) {
+                    switch (args[i]) {
+                        case "--all":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
+                            op = Op.All;
+                            break;
+                        case "-s":
+                        case "--sync":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
+                            op = Op.Sync;
+                            break;
+                        case "-a":
+                        case "--async":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
+                            op = Op.Async;
+                            break;
+                        case "-p":
+                        case "--perf":
+                            if (op != Op.None) {
+                                throw new ArgumentException("Operations are mutual exclusive");
+                            }
+                            op = Op.Perf;
+                            break;
+                        case "-t":
+                        case "--timeout":
+                            i++;
+                            if (i >= args.Length || !int.TryParse(args[i], out timeout)) {
+                                throw new ArgumentException($"Bad -t arg");
+                            }
+                            break;
+                        case "-b":
+                        case "--start-at":
+                            i++;
+                            if (i >= args.Length || !int.TryParse(args[i], out index)) {
+                                throw new ArgumentException($"Bad -b arg");
+                            }
+                            break;
+                        case "-z":
+                        case "--buffer-size":
+                            i++;
+                            if (i >= args.Length || !int.TryParse(args[i], out bufferSize)) {
+                                throw new ArgumentException($"Bad -b arg");
+                            }
+                            break;
+                        case "--bypass":
+                            bypass = true;
+                            break;
+                        case "-R":
+                        case "--relay":
+                            Socket.Provider = Provider.RelayProvider.CreateAsync().Result;
+                            break;
+                        case "-W":
+                        case "--websocket":
+                            Provider.WebSocketProvider.Create();
+                            break;
+                        case "-?":
+                        case "-h":
+                        case "--help":
+                            throw new ArgumentException("Help");
+                        default:
+                            throw new ArgumentException($"Unknown {args[i]}");
                     }
-
-                    Task.WaitAll(tasks.ToArray(), new CancellationTokenSource(TimeSpan.FromMinutes(10)).Token);
-                    Console.Out.WriteLine($"#{j} ... complete!");
                 }
-                catch (OperationCanceledException) {
-                    foreach (var pending in tasks) {
-                        Console.Out.WriteLine($"{pending}  did not complete after 1 hour");
-                    }
-                    Thread.Sleep(4000);
-                }
-                catch (Exception e) {
-                    Console.Out.WriteLine($"{e.Message}");
-                    Thread.Sleep(4000);
-                }
-#endif
             }
+            catch (Exception e) {
+                Console.WriteLine(e.Message);
+                Console.WriteLine(
+                    @"
+Simple - Proxy .net simple tcp/ip sample.  
+usage:       Simple [options] operation [args]
+
+Options:
+    --relay
+     -R      Use relay provider instead of default provider.
+    --websocket
+     -W      Use websocket kestrel provider.
+    --buffer-size
+     -z      Specifies the buffer size for performance tests.
+             Defaults to 60000 bytes.
+    --start-at
+     -b      Begins the test loop at this index. Defaults to 0.
+    --timeout
+     -t      Async tests timeout in minutes. Defaults to 10.
+
+    --help
+     -?
+     -h      Prints out this help.
+
+Operations (Mutually exclusive):
+    --all    Do async and sync tests (default).
+     -s 
+    --sync   
+             Run sync tests
+     -a
+    --async  Run async tests
+     -p 
+    --perf 
+             Run performance tests.
+"
+                    );
+                return;
+            }
+
+            if (op == Op.None) {
+                op = Op.All;
+            }
+
+            if (op == Op.Perf) {
+                try {
+                    if (bypass) {
+                        PerfLoopComparedAsync(bufferSize).Wait();
+                    }
+                    else {
+                        PerfLoopAsync(bufferSize).Wait();
+                    }
+                }
+                catch (Exception e) {
+                    Console.Out.WriteLine($"{e.Message}");
+                    Thread.Sleep(4000);
+                }
+            }
+            else {
+                for (int j = index + 1; ; j++) {
+                    if (op == Op.Sync || op == Op.All) {
+                        Console.Clear();
+                        Console.Out.WriteLine($"#{j} Sync tests...");
+                        try {
+                            SendReceive(7, Encoding.UTF8.GetBytes("Simple test to echo server"));
+                            Receive(19);
+                            Receive(13);
+                            Receive(17);
+                            Receive(19);
+                            EchoLoop(j + 1);
+                        }
+                        catch (Exception e) {
+                            Console.Out.WriteLine($"{e.Message}");
+                            Thread.Sleep(4000);
+                        }
+                    }
+                    if (op == Op.Async || op == Op.All) {
+                        Console.Clear();
+                        Console.Out.WriteLine($"#{j} Async tests...");
+                        var tasks = new List<Task>();
+                        try {
+                            for (int i = 0; i < j + 1; i++) {
+                                tasks.Add(ReceiveAsync(i, 19));
+                                tasks.Add(ReceiveAsync(i, 13));
+                                tasks.Add(ReceiveAsync(i, 17));
+                                tasks.Add(EchoLoopAsync(i, 5));
+                            }
+
+                            Task.WaitAll(tasks.ToArray(),
+                                new CancellationTokenSource(TimeSpan.FromMinutes(timeout)).Token);
+                            Console.Out.WriteLine($"#{j} ... complete!");
+                        }
+                        catch (OperationCanceledException) {
+                            foreach (var pending in tasks) {
+                                Console.Out.WriteLine(
+                                    $"{pending}  did not complete after {timeout} minutes.");
+                            }
+                            Thread.Sleep(4000);
+                        }
+                        catch (Exception e) {
+                            Console.Out.WriteLine($"{e.Message}");
+                            Thread.Sleep(4000);
+                        }
+                    }
+                }
+            }
+
+            Console.WriteLine("Press a key to exit...");
+            Console.ReadKey();
         }
 
         public static void Receive(int port) {

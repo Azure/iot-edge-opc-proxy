@@ -44,14 +44,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="codec"></param>
         /// <returns></returns>
         protected override async Task CloseStreamAsync(ICodecStream<HybridConnectionStream> codec) {
-            // try {
-            //     if (_open.IsCancellationRequested) {
-            //         // User is asking for a graceful close, shutdown properly
-            //         await codec.Stream.ShutdownAsync(new CancellationTokenSource(
-            //             ServiceBusRelay._closeTimeout).Token).ConfigureAwait(false);
-            //     }
-            // }
-            // catch { }
+            try {
+                if (_open.IsCancellationRequested) {
+                    // User is asking for a graceful close, shutdown properly
+                    await codec.Stream.ShutdownAsync(new CancellationTokenSource(
+                        ServiceBusRelay._closeTimeout).Token).ConfigureAwait(false);
+                }
+            }
+            catch { }
             try {
                 // ... then gracefully close
                 await codec.Stream.CloseAsync(new CancellationTokenSource(
@@ -70,17 +70,32 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             while (!_open.IsCancellationRequested) {
                 try {
                     if (_lastMessage == null) {
-                        if (!await _send.OutputAvailableAsync(_open.Token)) {
+                        if (_send.Completion.IsCompleted) {
                             // Pipeline closed, close the connection
                             _receive.Complete();
                             _open.Cancel();
                             break;
                         }
-                        if (!_send.TryReceive(out _lastMessage)) {
-                            continue;
+                        try {
+                            _lastMessage = await _send.ReceiveAsync(_timeout,
+                                _open.Token).ConfigureAwait(false);
+                        }
+                        catch (TimeoutException) {
+                            _lastMessage = Message.Create(StreamId, _remoteId,
+                                PollRequest.Create((ulong)_timeout.TotalMilliseconds));
+                        }
+                        catch (OperationCanceledException) when (!_open.IsCancellationRequested) {
+                            _lastMessage = Message.Create(StreamId, _remoteId,
+                                PollRequest.Create((ulong)_timeout.TotalMilliseconds));
                         }
                     }
-                    // Poor man's buffered stream.  
+                    //
+                    // Every write on the hybrid connection stream right now results in a binary 
+                    // message not an individual fragment.
+                    // when using the codec directly on the stream then the first write confuses the 
+                    // proxy decoder, which assumes a websocket message contains an entire message.
+                    // Override here to buffer the entire message in a memory stream before writing.
+                    //
                     using (var mem = new MemoryStream()) {
                         _lastMessage.Encode(mem, CodecId.Mpack);
                         var buffered = mem.ToArray();
@@ -88,6 +103,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             buffered, 0, buffered.Length, _open.Token).ConfigureAwait(false);
                     }
                     await codec.Stream.FlushAsync(_open.Token).ConfigureAwait(false);
+                    _lastMessage.Dispose();
                     _lastMessage = null;
                 }
                 catch (OperationCanceledException) {

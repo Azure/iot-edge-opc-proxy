@@ -4,12 +4,11 @@
     <VersionPrefix>0.2.1</VersionPrefix>
     <Description>A Netcat like client using Azure Device proxy library</Description>
     <AssemblyTitle>PNetcat sample application</AssemblyTitle>
-    <TargetFrameworks>netcoreapp1.0;netcoreapp1.1;net46</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
     <AssemblyName>PNetcat</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>PNetcat</PackageId>
-    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.0' ">1.0.4</RuntimeFrameworkVersion>
-    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">1.1.1</RuntimeFrameworkVersion>
+    <RuntimeFrameworkVersion Condition=" '$(TargetFramework)' == 'netcoreapp1.1' ">1.1.2</RuntimeFrameworkVersion>
     <GenerateAssemblyTitleAttribute>true</GenerateAssemblyTitleAttribute>
     <GenerateAssemblyDescriptionAttribute>true</GenerateAssemblyDescriptionAttribute>
     <GenerateAssemblyConfigurationAttribute>true</GenerateAssemblyConfigurationAttribute>

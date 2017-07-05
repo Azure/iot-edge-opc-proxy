@@ -16,25 +16,33 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class ProxySocketAddress : InetSocketAddress, IEquatable<ProxySocketAddress> {
 
         [DataMember(Name = "family", Order = 1)]
-        public override AddressFamily Family => AddressFamily.Proxy;
+        public override AddressFamily Family {
+            get => AddressFamily.Proxy;
+        }
 
         /// <summary>
         /// Interface Index field
         /// </summary>
         [DataMember(Name = "itf_index", Order = 3)]
-        public int InterfaceIndex { get; set; } = -1;
+        public int InterfaceIndex {
+            get; set;
+        } = -1;
 
         /// <summary>
         /// Interface Index field
         /// </summary>
         [DataMember(Name = "flags", Order = 4)]
-        public ushort Flags { get; set; }
+        public ushort Flags {
+            get; set;
+        }
 
         /// <summary>
         /// Host name to use
         /// </summary>
         [DataMember(Name = "host", Order = 5)]
-        public string Host { get; set; } = "";
+        public string Host {
+            get; set;
+        } = "";
 
         /// <summary>
         /// Default constructor
@@ -51,12 +59,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="interfaceIndex"></param>
         public ProxySocketAddress(string host, ushort port = 0,
             ushort flags = 0, int interfaceIndex = -1) : this() {
-            if (host == null) {
-                throw new ArgumentNullException(nameof(host));
-            }
+            Host = host ?? throw new ArgumentNullException(nameof(host));
             Port = port;
             Flags = flags;
-            Host = host;
             InterfaceIndex = interfaceIndex;
         }
 

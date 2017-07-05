@@ -145,7 +145,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Read - provide core Read functionality.
         /// </summary>
         public override int Read([In, Out] byte[] buffer, int offset, int size) {
-            bool canRead = CanRead;  /// Prevent race with Dispose.
+            bool canRead = CanRead;  // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -182,7 +182,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Write - provide core Write functionality.
         /// </summary>
         public override void Write(byte[] buffer, int offset, int size) {
-            bool canWrite = CanWrite; /// Prevent race with Dispose.
+            bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -192,7 +192,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -219,7 +219,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// BeginRead - provide async read functionality.
         /// </summary>
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int size, AsyncCallback callback, Object state) {
-            bool canRead = CanRead; /// Prevent race with Dispose.
+            bool canRead = CanRead; // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -229,7 +229,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -284,7 +284,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// ReadAsync - provide async read functionality.
         /// </summary>
         public override Task<int> ReadAsync(byte[] buffer, int offset, int size, CancellationToken ct) {
-            bool canRead = CanRead;  /// Prevent race with Dispose.
+            bool canRead = CanRead;  // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -294,7 +294,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -324,7 +324,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// BeginWrite - provide async write functionality.
         /// </summary>
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int size, AsyncCallback callback, Object state) {
-            bool canWrite = CanWrite; /// Prevent race with Dispose.
+            bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -334,7 +334,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -391,7 +391,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// WriteAsync - provide async write functionality.
         /// </summary>
         public override Task WriteAsync(byte[] buffer, int offset, int size, CancellationToken ct) {
-            bool canWrite = CanWrite; /// Prevent race with Dispose.
+            bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
@@ -401,7 +401,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -468,7 +468,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Disposes the Network stream.
         /// </summary>
         protected override void Dispose(bool disposing) {
-            /// Mark this as disposed before changing anything else.
+            // Mark this as disposed before changing anything else.
             bool cleanedUp = _cleanedUp;
             _cleanedUp = true;
             if (!cleanedUp && disposing) {

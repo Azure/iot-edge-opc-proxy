@@ -6,22 +6,7 @@
 // Keep in sync with native layer, in particular order of members!
 
 namespace Microsoft.Azure.Devices.Proxy {
-    using System;
     using System.Runtime.Serialization;
-
-    /// <summary>
-    /// flags used in calls to getnameinfo
-    /// </summary>
-    public enum GetNameInfoFlag {
-        HostNameRequired = 0x1
-    }
-
-    /// <summary>
-    /// flags used in calls to getaddrinfo
-    /// </summary>
-    public enum GetAddrInfoFlag {
-        Passive = 0x1
-    }
 
     /// <summary>
     /// prx_addrinfo provides a platform independent host resolution
@@ -33,13 +18,30 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Address found for resolved name
         /// </summary>
         [DataMember(Name = "address", Order = 1)]
-        public SocketAddress SocketAddress { get; set; }
+        public SocketAddress SocketAddress {
+            get; set;
+        }
 
         /// <summary>
         /// Canonical name
         /// </summary>
         [DataMember(Name = "name", Order = 2)]
-        public string CanonicalName { get; set; } = "";
+        public string CanonicalName {
+            get; set;
+        }
+
+        /// <summary>
+        /// Create info
+        /// </summary>
+        public static AddressInfo Create(SocketAddress socketAddress, 
+            string canonicalName = "") {
+            var info = Get();
+            info.SocketAddress = socketAddress;
+            info.CanonicalName = canonicalName;
+            return info;
+        }
+
+        public AddressInfo Clone() => Create(SocketAddress, CanonicalName);
 
         /// <summary>
         /// Comparison

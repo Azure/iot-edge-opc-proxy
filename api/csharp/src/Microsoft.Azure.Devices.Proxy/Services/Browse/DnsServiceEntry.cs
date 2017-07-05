@@ -111,12 +111,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             var bld = new StringBuilder();
             bld.Append(Service.ToString());
             bld.Append("@");
-            bld.Append(Address.ToString());
+            bld.AppendLine(Address.ToString());
             for (int i = 0; i < TxtRecords.Length; i++) {
                 bld.Append(",  [");
                 bld.Append(i);
                 bld.Append("] ");
-                bld.Append(TxtRecords[i].ToString());
+                bld.AppendLine(TxtRecords[i].ToString());
             }
             return bld.ToString();
         }

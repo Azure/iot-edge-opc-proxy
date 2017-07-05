@@ -68,9 +68,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="stream"></param>
         /// <param name="codecId"></param>
         /// <returns></returns>
-        public static Task<T> DecodeAsync<T>(Stream stream, CodecId codecId, CancellationToken ct) {
+        public static async Task<T> DecodeAsync<T>(Stream stream, CodecId codecId, CancellationToken ct) {
             using (var reader = stream.AsCodecStream(codecId)) {
-                return reader.ReadAsync<T>(ct);
+                return await reader.ReadAsync<T>(ct).ConfigureAwait(false);
             }
         }
 
@@ -92,10 +92,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="stream"></param>
         /// <param name=""></param>
         /// <param name="codecId"></param>
-        public static Task EncodeAsync<T>(this T ziss, Stream stream, CodecId codecId, 
+        public static async Task EncodeAsync<T>(this T ziss, Stream stream, CodecId codecId, 
             CancellationToken ct) where T : Poco {
             using (var writer = stream.AsCodecStream(codecId)) {
-                return writer.WriteAsync(ziss, ct);
+                await writer.WriteAsync(ziss, ct).ConfigureAwait(false);
             }
         }
     }

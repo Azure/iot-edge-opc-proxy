@@ -163,8 +163,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             try {
                 var stream = await _connection.OpenAsync(ct).ConfigureAwait(false);
 
-                _receiveLink = stream.ReceiveBlock.ConnectTo(_receive);
-                _sendLink = _send.ConnectTo(stream.SendBlock);
+                _streamReceive = stream.ReceiveBlock.ConnectTo(_receive);
+                _streamSend = _send.ConnectTo(stream.SendBlock);
 
                 return true;
             }
@@ -306,7 +306,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="message"></param>
         /// <returns>Whether to continue (true) or fail (false)</returns>
-        protected virtual bool OnReceiveError(Message message) => false;
+        protected virtual bool OnReceiveError(Message message) => 
+            false;
 
         /// <summary>
         /// Called when we determine that remote side closed
@@ -325,12 +326,12 @@ namespace Microsoft.Azure.Devices.Proxy {
               + $"with stream {_streamId} (Socket {_socket})";
         }
 
+        protected readonly ProxySocket _socket;
         private IConnection _connection;
+        private IDisposable _streamSend;
+        private IDisposable _streamReceive;
         private readonly IPropagatorBlock<Message, Message> _send;
-        private IDisposable _sendLink;
         private readonly IPropagatorBlock<Message, Message> _receive;
-        private IDisposable _receiveLink;
-        private readonly ProxySocket _socket;
         private readonly Reference _streamId = new Reference();
     }
 }

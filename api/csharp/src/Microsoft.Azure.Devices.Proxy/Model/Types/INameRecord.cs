@@ -15,27 +15,37 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Name
         /// </summary>
-        string Name { get; set; }
+        string Name {
+            get; set;
+        }
 
         /// <summary>
         /// Address of the record
         /// </summary>
-        Reference Address { get; set; }
+        Reference Address {
+            get; set;
+        }
 
         /// <summary>
         /// Unique id of the record
         /// </summary>
-        string Id { get; set; }
+        string Id {
+            get; set;
+        }
 
         /// <summary>
         /// Record type
         /// </summary>
-        NameRecordType Type { get; set; }
+        NameRecordType Type {
+            get; set;
+        }
 
         /// <summary>
         /// Returns list of references for this record
         /// </summary>
-        IEnumerable<Reference> References { get; }
+        IEnumerable<Reference> References {
+            get;
+        }
         
         /// <summary>
         /// Add a address to another record 

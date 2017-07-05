@@ -24,13 +24,17 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Interface to use
         /// </summary>
         [DataMember(Name = "itf_index", Order = 2)]
-        public int InterfaceIndex { get; set; }
+        public int InterfaceIndex {
+            get; set;
+        }
 
         /// <summary>
         /// Returns the 32 bit address as a buffer
         /// </summary>
         [DataMember(Name = "addr", Order = 3)]
-        public byte[] Address { get; set; }
+        public byte[] Address {
+            get; set;
+        }
 
         /// <summary>
         /// Constructor

@@ -14,7 +14,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Property type
         /// </summary>
-        uint Type { get; }
+        uint Type {
+            get;
+        }
     }
 
     /// <summary>
@@ -25,6 +27,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Property value
         /// </summary>
-        T Value { get; }
+        T Value {
+            get;
+        }
     }
 }

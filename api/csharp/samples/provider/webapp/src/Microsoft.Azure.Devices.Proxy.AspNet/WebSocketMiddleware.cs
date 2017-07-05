@@ -74,10 +74,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Creates new connection
         /// </summary>
-        /// <param name="streamId"></param>
-        /// <param name="remoteId"></param>
-        /// <param name="proxy"></param>
-        /// <param name="encoding"></param>
+        /// <param name="streamId">Local reference id of the stream</param>
+        /// <param name="remoteId">Remote reference of link</param>
+        /// <param name="proxy">The proxy server</param>
+        /// <param name="encoding">The encoding to use</param>
         /// <returns></returns>
         public Task<IConnection> CreateConnectionAsync(Reference streamId,
             Reference remoteId, INameRecord proxy, CodecId encoding) {
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             uri.Scheme = _secure ? "wss" : "ws";
             uri.Path = streamId.ToString();
             var connection = new WebSocketConnection(this, streamId, remoteId, encoding, 
-                new ConnectionString(uri.Uri, "proxy", "secret"));
+                ConnectionString.Create(uri.Uri, "proxy", "secret"));
             _connectionMap.AddOrUpdate(streamId, connection, (r, s) => connection);
             return Task.FromResult((IConnection)connection);
         }

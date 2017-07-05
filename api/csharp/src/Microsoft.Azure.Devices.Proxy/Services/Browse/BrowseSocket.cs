@@ -56,41 +56,41 @@ namespace Microsoft.Azure.Devices.Proxy {
             return LinkAsync(endpoint, ct);
         }
 
-     //   public IPropagatorBlock<BrowseRequest, BrowseResponse> BrowseBlock(ExecutionDataflowBlockOptions option) {
-     //
-     //       var responses = new TransformManyBlock<Message, BrowseResponse>(async (message) => {
-     //           if (_open.IsCancellationRequested) {
-     //               throw new SocketException(SocketError.Closed);
-     //           }
-     //           ThrowIfFailed(message);
-     //           if (message.TypeId != MessageContent.Data) {
-     //               throw new SocketException("No data message");
-     //           }
-     //           var data = message.Content as DataMessage;
-     //           if (data == null) {
-     //               throw new SocketException("Bad data");
-     //           }
-     //           var stream = new MemoryStream(data.Payload);
-     //
-     //           var response = await BrowseResponse.DecodeAsync(stream, _codec, ct);
-     //           response.Interface = message.Proxy.ToSocketAddress();
-     //           return response;
-     //       }, option);
-     //
-     //       var requests = new ActionBlock<BrowseRequest>(async (request) => {
-     //
-     //           if (_open.IsCancellationRequested) {
-     //               throw new SocketException(SocketError.Closed);
-     //           }
-     //           var buffer = new MemoryStream();
-     //           await request.EncodeAsync(buffer, _codec, ct);
-     //           await SendBlock.SendAsync(new Message(null, null, null,
-     //               new DataMessage(buffer.ToArray())), ct).ConfigureAwait(false);
-     //
-     //       }, option);
-     //
-     //       return DataflowBlockEx.Encapsulate(requests, responses);
-     //   }
+        //   public IPropagatorBlock<BrowseRequest, BrowseResponse> BrowseBlock(ExecutionDataflowBlockOptions option) {
+        //
+        //       var responses = new TransformManyBlock<Message, BrowseResponse>(async (message) => {
+        //           if (_open.IsCancellationRequested) {
+        //               throw new SocketException(SocketError.Closed);
+        //           }
+        //           ThrowIfFailed(message);
+        //           if (message.TypeId != MessageContent.Data) {
+        //               throw new SocketException("No data message");
+        //           }
+        //           var data = message.Content as DataMessage;
+        //           if (data == null) {
+        //               throw new SocketException("Bad data");
+        //           }
+        //           var stream = new MemoryStream(data.Payload);
+        //
+        //           var response = await BrowseResponse.DecodeAsync(stream, _codec, ct).ConfigureAwait(false);
+        //           response.Interface = message.Proxy.ToSocketAddress();
+        //           return response;
+        //       }, option);
+        //
+        //       var requests = new ActionBlock<BrowseRequest>(async (request) => {
+        //
+        //           if (_open.IsCancellationRequested) {
+        //               throw new SocketException(SocketError.Closed);
+        //           }
+        //           var buffer = new MemoryStream();
+        //           await request.EncodeAsync(buffer, _codec, ct);
+        //           await SendBlock.SendAsync(new Message(null, null, null,
+        //               new DataMessage(buffer.ToArray())), ct).ConfigureAwait(false);
+        //
+        //       }, option);
+        //
+        //       return DataflowBlockEx.Encapsulate(requests, responses);
+        //   }
 
         /// <summary>
         /// Start browsing specified item
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Type = _type
             };
             var buffer = new MemoryStream();
-            await request.EncodeAsync(buffer, _codec, ct);
+            await request.EncodeAsync(buffer, _codec, ct).ConfigureAwait(false);
             await SendBlock.SendAsync(Message.Create(null, null, null, 
                 DataMessage.Create(buffer.ToArray())), ct).ConfigureAwait(false);
         }
@@ -133,7 +133,8 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
 
                 var stream = new MemoryStream(data.Payload);
-                var response = await Serializable.DecodeAsync<BrowseResponse>(stream, _codec, ct);
+                var response = await Serializable.DecodeAsync<BrowseResponse>(stream, _codec,
+                    ct).ConfigureAwait(false);
                 response.Interface = message.Proxy.ToSocketAddress();
                 return response;
             }

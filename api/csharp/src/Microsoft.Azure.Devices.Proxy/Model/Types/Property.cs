@@ -19,13 +19,17 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Property Type
         /// </summary>
         [DataMember(Name = "type", Order = 1)]
-        public uint Type { get; set; }
+        public uint Type {
+            get; set;
+        }
 
         /// <summary>
         /// Property value
         /// </summary>
         [DataMember(Name = "property", Order = 2)]
-        public T Value { get; set; }
+        public T Value {
+            get; set;
+        }
 
         /// <summary>
         /// Create property

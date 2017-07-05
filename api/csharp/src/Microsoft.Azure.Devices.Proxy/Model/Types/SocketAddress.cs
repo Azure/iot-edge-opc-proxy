@@ -19,7 +19,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Address family
         /// </summary>
         [DataMember(Name = "family", Order = 1)]
-        public virtual AddressFamily Family { get; } = AddressFamily.Unspecified;
+        public virtual AddressFamily Family {
+            get => AddressFamily.Unspecified;
+        }
 
         /// <summary>
         /// Comparison

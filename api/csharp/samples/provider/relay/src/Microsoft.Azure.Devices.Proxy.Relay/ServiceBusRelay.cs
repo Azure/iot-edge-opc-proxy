@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <param name="name">Name of the listener connection</param>
         /// <param name="connectionString">Relay root connection string</param>
-        /// <returns></returns>
+        /// <returns>Stream service instance wrapping name space</returns>
         public static async Task<IStreamService> CreateAsync(string name, 
             ConnectionString connectionString) {
             var ns  = new ServiceBusNamespace(connectionString);
@@ -56,17 +56,18 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Creates connection
         /// </summary>
-        /// <param name="streamId"></param>
-        /// <param name="remoteId"></param>
-        /// <param name="proxy"></param>
-        /// <returns></returns>
+        /// <param name="streamId">Local reference id of the stream</param>
+        /// <param name="remoteId">Remote reference of link</param>
+        /// <param name="proxy">The proxy server</param>
+        /// <param name="encoding">The encoding to use</param>
+        /// <returns>Created connection</returns>
         public async Task<IConnection> CreateConnectionAsync(Reference streamId,
             Reference remoteId, INameRecord proxy, CodecId encoding) {
             var uri = new UriBuilder(_uri);
             uri.Scheme = "http";
             var token = await _tokenProvider.GetTokenAsync(uri.ToString(), 
                 TimeSpan.FromHours(24)).ConfigureAwait(false);
-            var cs = new ConnectionString(_uri.DnsSafeHost,
+            var cs = ConnectionString.Create(_uri.DnsSafeHost,
                 _uri.AbsolutePath.TrimStart('/'), "proxy", token.TokenString, false);
             var connection = new ServiceBusRelayConnection(this, streamId, remoteId, encoding, cs);
             _connectionMap.AddOrUpdate(streamId, connection, (r, s) => connection);
@@ -76,7 +77,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Opens the listener and starts listening thread
         /// </summary>
-        /// <returns></returns>
         private async Task OpenAsync() {
             _listener = new HybridConnectionListener(_uri, _tokenProvider);
 
@@ -97,7 +97,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Pre-check before accept.
         /// </summary>
         /// <param name="context"></param>
-        /// <returns></returns>
+        /// <returns>Successful acceptance or not</returns>
         private Task<bool> OnAcceptAsync(RelayedHttpListenerContext context) {
             var id = context.Request.Headers["x-Id"];
             if (!string.IsNullOrEmpty(id) && Reference.TryParse(id, out Reference streamId)) {
@@ -116,8 +116,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Run listener
         /// </summary>
-        /// <param name="ct"></param>
-        /// <returns></returns>
         private async Task ListenAsync() {
             while (!_cts.IsCancellationRequested) {
                 try {
@@ -166,7 +164,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     ProxyEventSource.Log.HandledExceptionAsError(this, ex);
                 }
             }
-            await _listener.CloseAsync();
+            await _listener.CloseAsync().ConfigureAwait(false);
         }
 
         private void OnConnecting(object o, EventArgs e) {

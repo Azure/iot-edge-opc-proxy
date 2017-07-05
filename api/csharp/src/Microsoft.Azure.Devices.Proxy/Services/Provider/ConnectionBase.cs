@@ -192,7 +192,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             break;
                         }
                         try {
-                            _lastMessage = await _send.ReceiveAsync(_timeout, _open.Token);
+                            _lastMessage = await _send.ReceiveAsync(_timeout, 
+                                _open.Token).ConfigureAwait(false);
                         }
                         catch (TimeoutException) {
                             _lastMessage = Message.Create(StreamId, _remoteId,
@@ -275,7 +276,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             bool parentHasFaulted) {
             ProxyEventSource.Log.StreamClosing(this, codec.Stream);
             if (!parentHasFaulted) {
-                await CloseStreamAsync(codec);
+                await CloseStreamAsync(codec).ConfigureAwait(false);
             }
             try {
                 codec.Stream.Dispose();

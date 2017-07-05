@@ -143,10 +143,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 ca.Begin();
                 try {
                     if (query.cached != null) {
-                        await results.SendAsync(query.cached);
+                        await results.SendAsync(query.cached).ConfigureAwait(false);
                     }
                     else {
-                        await LookupAsync(query.sql, results, ct);
+                        await LookupAsync(query.sql, results, ct).ConfigureAwait(false);
                     }
                 }
                 finally {
@@ -175,7 +175,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             do {
                 var response = await PagedLookupAsync(sql, continuation, ct).ConfigureAwait(false);
                 foreach (var result in response.Item2) {
-                    await target.SendAsync(result, ct);
+                    await target.SendAsync(result, ct).ConfigureAwait(false);
                 }
                 continuation = response.Item1;
             }
@@ -291,12 +291,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         return;
                     }
                     else {
-                        await UpdateRecordAsync(tup.Item1, _close.Token);
+                        await UpdateRecordAsync(tup.Item1, _close.Token).ConfigureAwait(false);
                     }
                 }
                 else {
                     _cache.TryRemove(tup.Item1.Id, out INameRecord record);
-                    await RemoveRecordAsync(record, _close.Token);
+                    await RemoveRecordAsync(record, _close.Token).ConfigureAwait(false);
                 }
                 base.Invalidate();
             },
@@ -331,7 +331,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             }
             catch (TransientException) {
                 // Retrieve the twin object and update it
-                var result = await GetRecordAsync(record, ct);
+                var result = await GetRecordAsync(record, ct).ConfigureAwait(false);
                 if (result == null) {
                     return null;
                 }
@@ -424,7 +424,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             //
             if (hubRecord == null) {
                 // Create and convert generic record into hub record
-                hubRecord = await AddRecordAsync(record, ct);
+                hubRecord = await AddRecordAsync(record, ct).ConfigureAwait(false);
                 if (hubRecord == null) {
                     return record;
                 }
@@ -441,7 +441,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 // 
                 if (string.IsNullOrEmpty(json)) {
                     try {
-                        return await GetRecordAsync(record, ct);
+                        return await GetRecordAsync(record, ct).ConfigureAwait(false);
                     }
                     catch {
                         return record;
@@ -494,7 +494,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         private async void SynchronizeCacheAsync() {
             foreach (var kv in _cache) {
                 try {
-                    var record = await UpdateRecordAsync(kv.Value, CancellationToken.None);
+                    var record = await UpdateRecordAsync(kv.Value, 
+                        CancellationToken.None).ConfigureAwait(false);
                     if (record != null) {
                         if (!record.Equals(kv.Value)) {
                             _cache.TryUpdate(kv.Key, record, kv.Value);
@@ -678,7 +679,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             TimeSpan timeout, CancellationToken ct) {
             bool log = true;
             try {
-                message = await InvokeDeviceMethodInternalAsync(message, timeout, ct);
+                message = await InvokeDeviceMethodInternalAsync(message, timeout, 
+                    ct).ConfigureAwait(false);
                 _calls++;
                 return message;
             }
@@ -797,7 +799,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             using (var message = request.Clone()) {
                 message.Proxy = record.Address;
                 message.DeviceId = record.Id;
-                return await InvokeDeviceMethodAsync(message, timeout, ct);
+                return await InvokeDeviceMethodAsync(message, timeout, ct).ConfigureAwait(false);
             }
         }
 

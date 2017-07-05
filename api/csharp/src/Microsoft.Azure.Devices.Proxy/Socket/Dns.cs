@@ -199,9 +199,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         /// <returns></returns>
         public static async Task<DnsHostEntry> GetHostEntryAsync(SocketAddress address, CancellationToken ct) {
-            var resolver = await ResolveAsync(null, address, true, ct);
+            var resolver = await ResolveAsync(null, address, true, ct).ConfigureAwait(false);
             var entries = new List<DnsHostEntry>();
-            while(await resolver.MoveNextAsync(ct)) {
+            while(await resolver.MoveNextAsync(ct).ConfigureAwait(false)) {
                 entries.Add(resolver.Current);
             }
             return DnsHostEntry.ToEntry(address, entries);
@@ -300,7 +300,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Get addresses for host
         //
         public static async Task<SocketAddress[]> GetHostAddressesAsync(string hostName, CancellationToken ct) {
-            var result = await GetHostByNameAsync(hostName, ct);
+            var result = await GetHostByNameAsync(hostName, ct).ConfigureAwait(false);
             return result.AddressList;
         }
 

@@ -7,7 +7,12 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
 
+    /// <summary>
+    /// Base interface for multicast options
+    /// </summary>
     public interface IMulticastOption {
-        AddressFamily Family { get; }
+        AddressFamily Family {
+            get;
+        }
     }
 }

@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 try {
                     // Create link, i.e. perform bind, connect, listen, etc. on proxy
                     response = await Provider.ControlChannel.CallAsync(
-                        proxy, linkRequest, TimeSpan.MaxValue, ct);
+                        proxy, linkRequest, TimeSpan.MaxValue, ct).ConfigureAwait(false);
 
                     var linkResponse = response?.Content as LinkResponse;
                     if (linkResponse == null || response.Error != (int)SocketError.Success) {

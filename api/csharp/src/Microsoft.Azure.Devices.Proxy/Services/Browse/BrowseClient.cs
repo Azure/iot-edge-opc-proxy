@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     return false;
                 }
                 while (true) {
-                    var response = await Socket.BrowseNextAsync(ct);
+                    var response = await Socket.BrowseNextAsync(ct).ConfigureAwait(false);
                     if (response == null) {
                         _done = true;
                         return false;
@@ -187,8 +187,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Service);
             try { 
-                await socket.ConnectAsync(proxy ?? record.Interface, ct);
-                await socket.BrowseBeginAsync(record.ToSocketAddress(), ct);
+                await socket.ConnectAsync(proxy ?? record.Interface, ct).ConfigureAwait(false);
+                await socket.BrowseBeginAsync(record.ToSocketAddress(), ct).ConfigureAwait(false);
                 return new ServiceRecordResolver(record) { Socket = socket, CacheOnly = cacheOnly };
             }
             catch(Exception) {
@@ -212,12 +212,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             SocketAddress proxy, string type, string domain, bool cacheOnly, CancellationToken ct) {
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Service);
             try {
-                await socket.ConnectAsync(proxy, ct);
+                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
                 using (var record = DnsServiceRecord.Create(null,
                     string.IsNullOrEmpty(type) ? null : type,
                     string.IsNullOrEmpty(domain) ? null : domain, null)) {
                     using (var address = record.ToSocketAddress()) {
-                        await socket.BrowseBeginAsync(address, ct);
+                        await socket.BrowseBeginAsync(address, ct).ConfigureAwait(false);
                     }
                 }
                 return new ServiceRecordBrowser() { Socket = socket, CacheOnly = cacheOnly };
@@ -245,8 +245,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Resolve);
             try {
-                await socket.ConnectAsync(proxy, ct);
-                await socket.BrowseBeginAsync(address, ct);
+                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
+                await socket.BrowseBeginAsync(address, ct).ConfigureAwait(false);
                 return new HostEntryResolver(address) { Socket = socket, CacheOnly = cacheOnly };
             }
             catch (Exception) {
@@ -267,8 +267,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             SocketAddress proxy, string folder, bool cacheOnly, CancellationToken ct) {
             var socket = new BrowseSocket(Socket.Provider, BrowseRequest.Dirpath);
             try {
-                await socket.ConnectAsync(proxy, ct);
-                await socket.BrowseBeginAsync(new ProxySocketAddress(folder ?? ""), ct);
+                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
+                await socket.BrowseBeginAsync(new ProxySocketAddress(folder ?? ""), ct).ConfigureAwait(false);
                 return new DirectoryBrowser() { Socket = socket, CacheOnly = cacheOnly, Throw = true };
             }
             catch(Exception) {

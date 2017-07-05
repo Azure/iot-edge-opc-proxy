@@ -8,7 +8,6 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
 
@@ -53,63 +52,49 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Get host name from connection string
         /// </summary>
         public string HostName {
-            get {
-                return this[Id.HostName];
-            }
+            get => this[Id.HostName];
         }
 
         /// <summary>
         /// Get device id
         /// </summary>
         public string DeviceId {
-            get {
-                return this[Id.DeviceId];
-            }
+            get => this[Id.DeviceId];
         }
 
         /// <summary>
         /// Get shared access key name
         /// </summary>
         public string SharedAccessKeyName {
-            get {
-                return this[Id.SharedAccessKeyName];
-            }
+            get => this[Id.SharedAccessKeyName];
         }
 
         /// <summary>
         /// Get shared access key
         /// </summary>
         public string SharedAccessKey {
-            get {
-                return this[Id.SharedAccessKey];
-            }
+            get => this[Id.SharedAccessKey];
         }
 
         /// <summary>
         /// Get shared access key
         /// </summary>
         public string SharedAccessToken {
-            get {
-                return this[Id.SharedAccessToken];
-            }
+            get => this[Id.SharedAccessToken];
         }
 
         /// <summary>
         /// Get Endpoint address
         /// </summary>
         public Uri Endpoint {
-            get {
-                return new Uri(this[Id.Endpoint]);
-            }
+            get => new Uri(this[Id.Endpoint]);
         }
 
         /// <summary>
         /// Get Endpoint address
         /// </summary>
         public string Entity {
-            get {
-                return this[Id.Entity];
-            }
+            get => this[Id.Entity];
         }
 
         /// <summary>
@@ -124,34 +109,26 @@ namespace Microsoft.Azure.Devices.Proxy {
                     return null;
                 return value;
             }
-            set {
-                items.Add(id, value);
-            }
+            set => items.Add(id, value);
         }
 
         /// <summary>
         /// Create connection string
         /// </summary>
-        public ConnectionString() {
-            items = new Dictionary<Id, string>();
-        }
-
-        /// <summary>
-        /// Create connection string
-        /// </summary>
-        public ConnectionString(string host, string endpoint,
-            string keyName, string key, bool device = true) 
-            : this() {
-            items[Id.HostName] = host;
+        public static ConnectionString Create(string host, string endpoint,
+            string keyName, string key, bool device = true) {
+            var connectionString = Create();
+            connectionString.items[Id.HostName] = host;
             if (device) {
-                items[Id.DeviceId] = endpoint;
-                items[Id.SharedAccessKey] = key;
+                connectionString.items[Id.DeviceId] = endpoint;
+                connectionString.items[Id.SharedAccessKey] = key;
             }
             else {
-                items[Id.EndpointName] = endpoint;
-                items[Id.SharedAccessToken] = key;
+                connectionString.items[Id.EndpointName] = endpoint;
+                connectionString.items[Id.SharedAccessToken] = key;
             }
-            items[Id.SharedAccessKeyName] = keyName;
+            connectionString.items[Id.SharedAccessKeyName] = keyName;
+            return connectionString;
         }
 
         /// <summary>
@@ -160,12 +137,29 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="endpoint"></param>
         /// <param name="keyName"></param>
         /// <param name="token"></param>
-        public ConnectionString(Uri endpoint, string keyName, string token)
-            : this() {
-            items[Id.Endpoint] = endpoint.ToString();
-            items[Id.SharedAccessKeyName] = keyName;
-            items[Id.SharedAccessToken] = token;
+        public static ConnectionString Create(Uri endpoint, string keyName, string token) {
+            var connectionString = Create();
+            connectionString.items[Id.Endpoint] = endpoint.ToString();
+            connectionString.items[Id.SharedAccessKeyName] = keyName;
+            connectionString.items[Id.SharedAccessToken] = token;
+            return connectionString;
         }
+
+        /// <summary>
+        /// Create connection string
+        /// </summary>
+        public static ConnectionString Create() => Create(new Dictionary<Id, string>());
+
+        /// <summary>
+        /// Create connection string
+        /// </summary>
+        protected static ConnectionString Create(Dictionary<Id, string> items) {
+            var connectionString = Get();
+            connectionString.items = items;
+            return connectionString;
+        }
+
+        public ConnectionString Clone() => Create(items);
 
         /// <summary>
         /// Parse connection string
@@ -175,7 +169,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public static ConnectionString Parse(string connectionString) {
             if (connectionString == null)
                 throw new ArgumentException("Connection string must be non null");
-            ConnectionString cs = new ConnectionString();
+            var cs = ConnectionString.Create();
             foreach (var elem in connectionString.Split(';')) {
                 int i = elem.IndexOf("=");
                 if (i < 0)
@@ -191,7 +185,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            StringBuilder b = new StringBuilder();
+            var b = new StringBuilder();
             foreach (var kv in items) {
                 b.Append(kv.Key.ToString());
                 b.Append("=");
