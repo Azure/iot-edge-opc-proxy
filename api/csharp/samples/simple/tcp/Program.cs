@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                         case "--buffer-size":
                             i++;
                             if (i >= args.Length || !int.TryParse(args[i], out bufferSize)) {
-                                throw new ArgumentException($"Bad -b arg");
+                                throw new ArgumentException($"Bad -z arg");
                             }
                             break;
                         case "--bypass":

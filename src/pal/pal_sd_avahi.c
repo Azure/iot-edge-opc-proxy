@@ -485,7 +485,7 @@ static void pal_sdbrowser_service_resolve_callback (
         addr.family = prx_address_family_proxy;
         addr.flags = 0;
         addr.itf_index = itf_index;
-        addr.port = swap_16(port);
+        addr.port = port;
         strncpy(addr.host, host ? host : "", sizeof(addr.host));
 
         resolve_result.addr = &addr;

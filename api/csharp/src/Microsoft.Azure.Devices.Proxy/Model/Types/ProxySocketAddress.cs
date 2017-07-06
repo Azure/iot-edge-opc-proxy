@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Comparison
+        /// Comparison - equality does not include flags and interface index
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
@@ -130,8 +130,6 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         protected override void SetHashCode() {
             base.SetHashCode();
-            MixToHash(InterfaceIndex);
-            MixToHash(Flags);
             MixToHash(Host);
         }
 
