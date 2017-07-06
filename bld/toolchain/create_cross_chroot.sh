@@ -5,7 +5,7 @@
 apt-get install sbuild
 
 # Create the sbuild chroot:
-sbuild-createchroot stretch /home/stretch-cross http://ftp.de.debian.org/debian/
+sbuild-createchroot stretch $(pwd)/stretch-cross http://ftp.de.debian.org/debian/ $(dirname "$0")/stretch
 # In the line above, you probably want to specify another location for the chroot
 # and another mirror (e.g. an approx packet proxy).
 
