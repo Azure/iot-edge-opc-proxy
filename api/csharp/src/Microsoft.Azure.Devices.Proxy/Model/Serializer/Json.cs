@@ -32,21 +32,21 @@ namespace Microsoft.Azure.Devices.Proxy {
         protected override JsonContract CreateContract(Type objectType) {
             JsonContract contract = base.CreateContract(objectType);
             /**/ if (typeof(Reference).IsAssignableFrom(objectType)) {
-                contract.Converter = new AddressConverter();
+                contract.Converter = new ReferenceConverter();
             }
             else if (typeof(SocketAddress).IsAssignableFrom(objectType)) {
                 contract.Converter = new SocketAddressConverter();
             }
-            else if (typeof(PropertyBase).IsAssignableFrom(objectType)) {
+            else if (typeof(IProperty).IsAssignableFrom(objectType)) {
                 contract.Converter = new PropertyConverter();
             }
-            else if (typeof(MulticastOption).IsAssignableFrom(objectType)) {
+            else if (typeof(IMulticastOption).IsAssignableFrom(objectType)) {
                 contract.Converter = new MulticastOptionConverter();
             }
             else if (typeof(Message).IsAssignableFrom(objectType)) {
                 contract.Converter = new MessageConverter();
             }
-            else if (typeof(VoidMessage).IsAssignableFrom(objectType)) {
+            else if (typeof(IVoidMessage).IsAssignableFrom(objectType)) {
                 contract.Converter = new VoidConverter();
             }
             else if (typeof(IMessageContent).IsAssignableFrom(objectType)) {
@@ -57,7 +57,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         class MessageReferencePlaceHolder : IMessageContent {
-            public Message Ref { get; set; }  
+            public Message Ref { get; set; }
+
+            public IMessageContent Clone() {
+                throw new NotImplementedException();
+            }
+            public void Dispose() {
+                throw new NotImplementedException();
+            }
         }
 
         class MessageConverter : JsonConverter {
@@ -66,10 +73,13 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             public override object ReadJson(JsonReader reader, Type objectType, 
                 object existingValue, JsonSerializer serializer) {
-                Message message = new Message();
+                var message = Message.Get();
                 // Hand this message to the content converter as existing object
                 message.Content = new MessageReferencePlaceHolder { Ref = message };
                 serializer.Populate(reader, message);
+                if ((message.Version >> 16) != (VersionEx.Assembly.ToUInt() >> 16)) {
+                    throw new FormatException($"Bad message version {message.Version}");
+                }
                 return message;
             }
 
@@ -87,14 +97,17 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return false;
             }
             private object Deserialize(Type t, JsonReader reader, JsonSerializer serializer) {
-                var message = Activator.CreateInstance(t);
+                var content = Activator.CreateInstance(t);
+
+                // TODO: Create empty
+
                 if (reader.TokenType != JsonToken.Null)
-                    serializer.Populate(reader, message);
-                return message;
+                    serializer.Populate(reader, content);
+                return content;
             }
             public override object ReadJson(JsonReader reader, Type objectType,
                 object existingValue, JsonSerializer serializer) {
-                Message reference = ((MessageReferencePlaceHolder)existingValue).Ref;
+                var reference = ((MessageReferencePlaceHolder)existingValue).Ref;
                 return Deserialize(MessageContent.TypeOf(reference.TypeId,
                     reference.IsResponse), reader, serializer);
             }
@@ -116,7 +129,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        class AddressConverter : JsonConverter {
+        class ReferenceConverter : JsonConverter {
             public override bool CanConvert(Type objectType) {
                 return false;
             }
@@ -165,7 +178,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 AddressFamily family = (AddressFamily)jsonObject.Value<int>("family");
                 switch(family) {
                     case AddressFamily.Unspecified:
-                        return new NullSocketAddress();
+                        return new AnySocketAddress();
                     case AddressFamily.Unix:
                         return jsonObject.ToObject<UnixSocketAddress>();
                     case AddressFamily.Proxy:
@@ -194,8 +207,8 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             public override object ReadJson(JsonReader reader, Type objectType,
                 object existingValue, JsonSerializer serializer) {
-                JObject jsonObject = JObject.Load(reader);
-                AddressFamily family = (AddressFamily)jsonObject.Value<int>("family");
+                var jsonObject = JObject.Load(reader);
+                var family = (AddressFamily)jsonObject.Value<int>("family");
                 switch (family) {
                     case AddressFamily.InterNetwork:
                         return jsonObject.ToObject<Inet4MulticastOption>();
@@ -225,28 +238,20 @@ namespace Microsoft.Azure.Devices.Proxy {
                 uint type = jsonObject.Value<uint>("type");
                 if (type == (uint)SocketOption.IpMulticastJoin ||
                     type == (uint)SocketOption.IpMulticastLeave) {
-                    return new Property<MulticastOption> {
-                        Type = type,
-                        Value = jsonObject.GetValue("property").ToObject<MulticastOption>(serializer)
-                    };
+                    return Property<IMulticastOption>.Create(type,
+                        jsonObject.GetValue("property").ToObject<IMulticastOption>(serializer));
                 }
                 else if (type == (uint)PropertyType.FileInfo) {
-                    return new Property<FileInfo> {
-                        Type = type,
-                        Value = jsonObject.GetValue("property").ToObject<FileInfo>(serializer)
-                    };
+                    return Property<FileInfo>.Create(type,
+                        jsonObject.GetValue("property").ToObject<FileInfo>(serializer));
                 }
                 else if (type == (uint)PropertyType.AddressInfo) {
-                    return new Property<AddressInfo> {
-                        Type = type,
-                        Value = jsonObject.GetValue("property").ToObject<AddressInfo>(serializer)
-                    };
+                    return Property<AddressInfo>.Create(type,
+                        jsonObject.GetValue("property").ToObject<AddressInfo>(serializer));
                 }
                 else if (type == (uint)PropertyType.InterfaceInfo) {
-                    return new Property<InterfaceInfo> {
-                        Type = type,
-                        Value = jsonObject.GetValue("property").ToObject<InterfaceInfo>(serializer)
-                    };
+                    return Property<InterfaceInfo>.Create(type,
+                        jsonObject.GetValue("property").ToObject<InterfaceInfo>(serializer));
                 }
                 else if (type >= (uint)DnsRecordType.Simple &&
                          type < (uint)DnsRecordType.__prx_record_max) {

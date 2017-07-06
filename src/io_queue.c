@@ -196,18 +196,17 @@ static io_queue_buffer_t* io_queue_state_pop(
 )
 {
     io_queue_buffer_t* queue_buffer = NULL;
-    if (queue)
+    dbg_assert_ptr(queue);
+    
+    lock_enter(queue->queue_lock);
+    if (!DList_IsListEmpty(list))
     {
-        lock_enter(queue->queue_lock);
-        if (!DList_IsListEmpty(list))
-        {
-            queue_buffer = containingRecord(
-                DList_RemoveHeadList(list), io_queue_buffer_t, qlink);
-            dbg_assert_buf(queue_buffer);
-            DList_InitializeListHead(&queue_buffer->qlink);
-        }
-        lock_exit(queue->queue_lock);
+        queue_buffer = containingRecord(
+            DList_RemoveHeadList(list), io_queue_buffer_t, qlink);
+        dbg_assert_buf(queue_buffer);
+        DList_InitializeListHead(&queue_buffer->qlink);
     }
+    lock_exit(queue->queue_lock);
     return queue_buffer;
 }
 

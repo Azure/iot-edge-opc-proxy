@@ -50,14 +50,4 @@ namespace Microsoft.Azure.Devices.Proxy {
         PropsTimeout,
         __prx_so_max
     }
-
-
-    /// <summary>
-    /// Shutdown value for Shutdown option
-    /// </summary>
-    public enum SocketShutdown {
-        Read = 0,
-        Write = 1,
-        Both = 2
-    }
 }

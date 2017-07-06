@@ -63,13 +63,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 },
                 Type = BrowseRequest.Service
             };
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Mpack, BrowseRequestType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseRequest.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<BrowseRequest>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -89,54 +89,54 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 Error = 0
             };
 
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("some test = test")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("a record")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("spasdfsdafsda")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("asd=3433434")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("FPOÜDFD")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("some test = test")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("a record")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("spasdfsdafsda")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("asd=3433434")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("FPOÜDFD")
-            });
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                 Encoding.UTF8.GetBytes("some test = test")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("a record")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("spasdfsdafsda")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("asd=3433434")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("FPOÜDFD")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("some test = test")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("a record")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("spasdfsdafsda")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("asd=3433434")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("FPOÜDFD")
+            ));
 
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Mpack, BrowseResponseType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseResponse.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<BrowseResponse>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -155,13 +155,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 },
                 Error = 0
             };
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Mpack, BrowseResponseType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseResponse.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode <BrowseResponse>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -181,13 +181,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 },
                 Type = BrowseRequest.Service
             };
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Json, BrowseRequestType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseRequest.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<BrowseRequest>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -206,54 +206,54 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 },
                 Error = 0
             };
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("some test = test")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("a record")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("spasdfsdafsda")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("asd=3433434")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("FPOÜDFD")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("some test = test")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("a record")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("spasdfsdafsda")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("asd=3433434")
-            });
-            response.Properties.Add(new Property<byte[]> {
-                Type = (uint)DnsRecordType.Txt,
-                Value = Encoding.UTF8.GetBytes("FPOÜDFD")
-            });
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("some test = test")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("a record")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("spasdfsdafsda")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("asd=3433434")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("FPOÜDFD")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("some test = test")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("a record")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("spasdfsdafsda")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("asd=3433434")
+            ));
+            response.Properties.Add(Property<byte[]>.Create(
+                (uint)DnsRecordType.Txt,
+                Encoding.UTF8.GetBytes("FPOÜDFD")
+            ));
 
             // Act
             response.Encode(stream, CodecId.Json);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Json, BrowseResponseType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseResponse.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<BrowseResponse>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -272,13 +272,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
                 },
                 Error = 0
             };
-            MemoryStream stream = new MemoryStream();
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
 
             byte[] buf = Interop.TypeDecodeEncode(CodecId.Json, BrowseResponseType, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            var returned = BrowseResponse.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<BrowseResponse>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -293,20 +293,20 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackPingRequestWriteRead() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Flags = 1;
             address.Port = 777;
             address.Host = "localhost";
 
-            Message request = new Message(null, null, null, new PingRequest(address));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, PingRequest.Create(address));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             
             
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -315,23 +315,23 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackPingResponseWriteRead() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Flags = 0xff;
             address.Port = 65500;
             address.Host = "rawrawrawraw";
 
-            PingResponse args = new PingResponse(address);
+            var args = PingResponse.Create(address);
             args.PhysicalAddress[3] = 3;
             args.PhysicalAddress[5] = 5;
             args.TimeMs = 1333333;
 
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -340,11 +340,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackLinkRequestWriteRead1() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 443;
             address.Host = "myhosttolinkto";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.InterNetwork;
             props.Protocol = ProtocolType.Udp;
@@ -352,13 +352,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (uint)SocketFlags.Passive;
             // no options
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -367,11 +367,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackLinkRequestWriteRead2() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 443;
             address.Host = "myhosttolinkto";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.InterNetwork;
             props.Protocol = ProtocolType.Udp;
@@ -379,19 +379,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (uint)SocketFlags.Passive;
 
             for (Int32 i = 0; i < 10; i++) {
-                var ov = new Property<ulong>();
-                ov.Type = (uint)(13 - i);
-                ov.Value = (ulong)i;
-                props.Options.Add(ov);
+                props.Options.Add(Property<ulong>.Create((uint)(13 - i), (ulong)i));
             }
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -400,11 +397,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackLinkRequestWriteRead3() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 1;
             address.Host = "";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.Proxy;
             props.Protocol = ProtocolType.Unspecified;
@@ -412,26 +409,23 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (uint)SocketFlags.Internal;
 
             for (Int32 i = 0; i < 3; i++) {
-                var ov = new Property<ulong>();
-                ov.Type = (uint)(13 - i);
-                ov.Value = (ulong)i;
-                props.Options.Add(ov);
+                props.Options.Add(Property<ulong>.Create((uint)(13 - i), (ulong)i));
             }
 
-            props.Options.Add(new Property<MulticastOption>((uint)SocketOption.IpMulticastJoin,
+            props.Options.Add(Property<IMulticastOption>.Create((uint)SocketOption.IpMulticastJoin,
                 new Inet4MulticastOption { InterfaceIndex = 5, Address = BitConverter.GetBytes((int)234) }));
             var ab = new byte[16];
             new Random().NextBytes(ab);
-            props.Options.Add(new Property<MulticastOption>((uint)SocketOption.IpMulticastLeave,
+            props.Options.Add(Property<IMulticastOption>.Create((uint)SocketOption.IpMulticastLeave,
                 new Inet6MulticastOption { InterfaceIndex = 5, Address = ab }));
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -445,18 +439,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             new Random().NextBytes(ab);
             Inet6SocketAddress sap = new Inet6SocketAddress(ab, 443, 1, 0);
 
-            LinkResponse args = new LinkResponse();
-            args.LocalAddress = sal;
-            args.PeerAddress = sap;
-            args.LinkId = new Reference();
-
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = LinkResponse.Create(new Reference(), sal, sap);
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
            
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -465,17 +455,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackSetOptRequestWriteRead() {
             // Arrange
-            var optionValue = new Property<ulong>();
-            optionValue.Type = (uint)SocketOption.Broadcast;
-            optionValue.Value = 1;
-
-            Message request = new Message(null, null, null, new SetOptRequest(optionValue));
-            MemoryStream stream = new MemoryStream();
+            var optionValue = Property<ulong>.Create((uint)SocketOption.Broadcast, 1);
+            var request = Message.Create(null, null, null, SetOptRequest.Create(optionValue));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -484,13 +471,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackSetOptResponseWriteRead() {
             // Arrange
-            Message response = new Message(null, null, null, new SetOptResponse());
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, SetOptResponse.Create());
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
             
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -499,13 +486,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackGetOptRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new GetOptRequest(SocketOption.Broadcast));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, GetOptRequest.Create(SocketOption.Broadcast));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
  
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -518,13 +505,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             optionValue.Type = (uint)SocketOption.Broadcast;
             optionValue.Value = 1;
 
-            Message response = new Message(null, null, null, new GetOptResponse(optionValue));
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, GetOptResponse.Create(optionValue));
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -534,19 +521,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestMpackOpenRequestWriteRead() {
 
             // Arrange
-            OpenRequest args = new OpenRequest();
-            args.Type = 0;
-            args.StreamId = new Reference();
-            args.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
-            args.IsPolled = true;
-
-            Message request = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = OpenRequest.Create(new Reference(), (int)CodecId.Mpack,
+                "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj", 0, true);
+            var request = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -556,13 +539,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestMpackOpenResponseWriteRead() {
 
             // Arrange
-            Message response = new Message(null, null, null, new OpenResponse());
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, OpenResponse.Create());
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -571,36 +554,47 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackPollRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new PollRequest(100000));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, PollRequest.Create(100000));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
         }
 
         [TestMethod]
+        public void TestMpackPollResponseWriteRead() {
+            // Arrange
+            var response = Message.Create(null, null, null, PollResponse.Create());
+            var stream = new MemoryStream();
+
+            // Act
+            response.Encode(stream, CodecId.Mpack);
+            byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
+
+            // Assert
+            Assert.IsTrue(response.Equals(returned));
+        }
+
+        [TestMethod]
         public void TestMpackDataWriteRead1() {
             // Arrange
-            Inet4SocketAddress source = new Inet4SocketAddress(0xffaabbcc, 9643);
-
-            DataMessage args = new DataMessage();
-            args.Source = source;
-            args.Payload = new byte[145];
-            args.Control = new byte[0];
+            var source = new Inet4SocketAddress(0xffaabbcc, 9643);
+            var args = DataMessage.Create(new byte[145], source, 12);
             new Random().NextBytes(args.Payload);
 
-            Message datagramIn = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(datagramIn.Equals(returned));
@@ -610,20 +604,17 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestMpackDataWriteRead2() {
 
             // Arrange
-            DataMessage args = new DataMessage();
-            args.Source = new NullSocketAddress();
-            args.Payload = new byte[600];
-            args.Control = new byte[50];
+            var args = DataMessage.Create(new byte[600], new AnySocketAddress(), new byte[50], 12);
             new Random().NextBytes(args.Payload);
             new Random().NextBytes(args.Control);
 
-            Message datagramIn = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(datagramIn.Equals(returned));
@@ -633,19 +624,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestMpackOpenPlusDataWriteRead() {
 
             // Arrange
-            OpenRequest args1 = new OpenRequest();
-            args1.StreamId = new Reference();
-            args1.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
-            args1.IsPolled = false;
-            DataMessage args2 = new DataMessage();
-            args2.Source = new NullSocketAddress();
-            args2.Payload = new byte[600];
-            args2.Control = new byte[0];
+            var args1 = OpenRequest.Create(new Reference(), (int)CodecId.Mpack, 
+                "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj", 0, false);
+            var args2 = DataMessage.Create(new byte[600], new AnySocketAddress(), 12);
             new Random().NextBytes(args2.Payload);
 
-            Message datagramIn1 = new Message(null, null, null, args1);
-            Message datagramIn2 = new Message(null, null, null, args2);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn1 = Message.Create(null, null, null, args1);
+            var datagramIn2 = Message.Create(null, null, null, args2);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn1.Encode(stream, CodecId.Mpack);
@@ -653,8 +639,8 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 2, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
 
             stream = new MemoryStream(buf);
-            Message returned1 = Message.Decode(stream, CodecId.Mpack);
-            Message returned2 = Message.Decode(stream, CodecId.Mpack);
+            Message returned1 = Serializable.Decode<Message>(stream, CodecId.Mpack);
+            Message returned2 = Serializable.Decode<Message>(stream, CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(datagramIn1.Equals(returned1));
@@ -665,27 +651,18 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestMpackDataPlusDataWriteRead() {
 
             // Arrange
-            DataMessage args1 = new DataMessage();
-            args1.Source = new NullSocketAddress();
-            args1.Payload = new byte[145];
-            args1.Control = new byte[0];
+            var args1 = DataMessage.Create(new byte[145], new AnySocketAddress(), 11);
             new Random().NextBytes(args1.Payload);
-            DataMessage args2 = new DataMessage();
-            args2.Source = new NullSocketAddress();
-            args2.Payload = new byte[600];
-            args2.Control = new byte[0];
+            var args2 = DataMessage.Create(new byte[600], new AnySocketAddress(), 12);
             new Random().NextBytes(args2.Payload);
-            DataMessage args3 = new DataMessage();
-            args3.Source = new NullSocketAddress();
-            args3.Payload = new byte[400];
-            args3.Control = new byte[30];
+            var args3 = DataMessage.Create(new byte[400], new AnySocketAddress(), new byte[30], 13);
             new Random().NextBytes(args3.Payload);
             new Random().NextBytes(args3.Control);
 
-            Message datagramIn1 = new Message(null, null, null, args1);
-            Message datagramIn2 = new Message(null, null, null, args2);
-            Message datagramIn3 = new Message(null, null, null, args3);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn1 = Message.Create(null, null, null, args1);
+            var datagramIn2 = Message.Create(null, null, null, args2);
+            var datagramIn3 = Message.Create(null, null, null, args3);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn1.Encode(stream, CodecId.Mpack);
@@ -694,9 +671,9 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 3, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
 
             stream = new MemoryStream(buf);
-            Message returned1 = Message.Decode(stream, CodecId.Mpack);
-            Message returned2 = Message.Decode(stream, CodecId.Mpack);
-            Message returned3 = Message.Decode(stream, CodecId.Mpack);
+            Message returned1 = Serializable.Decode<Message>(stream, CodecId.Mpack);
+            Message returned2 = Serializable.Decode<Message>(stream, CodecId.Mpack);
+            Message returned3 = Serializable.Decode<Message>(stream, CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(datagramIn1.Equals(returned1));
@@ -707,13 +684,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackCloseRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new CloseRequest());
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, new CloseRequest());
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -722,19 +699,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestMpackCloseResponseWriteRead() {
             // Arrange
-            CloseResponse args = new CloseResponse();
-            args.ErrorCode = (Int32)SocketError.Closed;
-            args.TimeOpenInMilliseconds = 1000;
-            args.BytesSent = 200;
-            args.BytesReceived = 1;
-
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = CloseResponse.Create(1000, 3000, 200, (int)SocketError.Closed);
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Mpack);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Mpack, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Mpack);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Mpack);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -743,18 +715,18 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonPingRequestWriteRead() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Flags = 1;
             address.Port = 777;
             address.Host = "localhost";
 
-            Message request = new Message(null, null, null, new PingRequest(address));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, PingRequest.Create(address));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -763,23 +735,23 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonPingResponseWriteRead() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Flags = 0xff;
             address.Port = 65500;
             address.Host = "rawrawrawraw";
 
-            PingResponse args = new PingResponse(address);
+            var args = PingResponse.Create(address);
             args.PhysicalAddress[3] = 3;
             args.PhysicalAddress[5] = 5;
             args.TimeMs = 1333333;
 
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -788,11 +760,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonLinkRequestWriteRead1() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 443;
             address.Host = "myhosttolinkto";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.InterNetwork;
             props.Protocol = ProtocolType.Udp;
@@ -800,13 +772,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (UInt32)SocketFlags.Passive;
             // no options
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -815,11 +787,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonLinkRequestWriteRead2() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 443;
             address.Host = "myhosttolinkto";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.InterNetwork;
             props.Protocol = ProtocolType.Udp;
@@ -827,19 +799,16 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (uint)SocketFlags.Passive;
 
             for (Int32 i = 0; i < 10; i++) {
-                var ov = new Property<ulong>();
-                ov.Type = (uint)(13 - i);
-                ov.Value = (ulong)i;
-                props.Options.Add(ov);
+                props.Options.Add(Property<ulong>.Create((uint)(13 - i), (ulong)i));
             }
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -848,11 +817,11 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonLinkRequestWriteRead3() {
             // Arrange
-            ProxySocketAddress address = new ProxySocketAddress();
+            var address = new ProxySocketAddress();
             address.Port = 1;
             address.Host = "";
 
-            SocketInfo props = new SocketInfo();
+            var props = new SocketInfo();
             props.Address = address;
             props.Family = AddressFamily.Proxy;
             props.Protocol = ProtocolType.Unspecified;
@@ -860,26 +829,23 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             props.Flags = (uint)SocketFlags.Internal;
 
             for (Int32 i = 0; i < 3; i++) {
-                var ov = new Property<ulong>();
-                ov.Type = (uint)(13 - i);
-                ov.Value = (ulong)i;
-                props.Options.Add(ov);
+                props.Options.Add(Property<ulong>.Create((uint)(13 - i), (ulong)i));
             }
 
-            props.Options.Add(new Property<MulticastOption>((uint)SocketOption.IpMulticastJoin,
+            props.Options.Add(Property<IMulticastOption>.Create((uint)SocketOption.IpMulticastJoin,
                 new Inet4MulticastOption { InterfaceIndex = 5, Address = BitConverter.GetBytes((int)234) }));
             var ab = new byte[16];
             new Random().NextBytes(ab);
-            props.Options.Add(new Property<MulticastOption>((uint)SocketOption.IpMulticastLeave,
+            props.Options.Add(Property<IMulticastOption>.Create((uint)SocketOption.IpMulticastLeave,
                 new Inet6MulticastOption { InterfaceIndex = 5, Address = ab }));
 
-            Message request = new Message(null, null, null, new LinkRequest(props));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, LinkRequest.Create(props));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -888,23 +854,19 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonLinkResponseWriteRead() {
             // Arrange
-            Inet4SocketAddress sal = new Inet4SocketAddress(0xffaabbcc, 9643);
+            var sal = new Inet4SocketAddress(0xffaabbcc, 9643);
             var ab = new byte[16];
             new Random().NextBytes(ab);
-            Inet6SocketAddress sap = new Inet6SocketAddress(ab, 443, 1, 0);
+            var sap = new Inet6SocketAddress(ab, 443, 1, 0);
 
-            LinkResponse args = new LinkResponse();
-            args.LocalAddress = sal;
-            args.PeerAddress = sap;
-            args.LinkId = new Reference();
-
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = LinkResponse.Create(new Reference(), sal, sap);
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -913,17 +875,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonSetOptRequestWriteRead() {
             // Arrange
-            var optionValue = new Property<ulong>();
-            optionValue.Type = (uint)SocketOption.Broadcast;
-            optionValue.Value = 1;
-
-            Message request = new Message(null, null, null, new SetOptRequest(optionValue));
-            MemoryStream stream = new MemoryStream();
+            var optionValue = Property<ulong>.Create((uint)SocketOption.Broadcast, 1);
+            var request = Message.Create(null, null, null, SetOptRequest.Create(optionValue));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -932,13 +891,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonSetOptResponseWriteRead() {
             // Arrange
-            Message response = new Message(null, null, null, new SetOptResponse());
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, SetOptResponse.Create());
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -947,13 +906,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonGetOptRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new GetOptRequest(SocketOption.Broadcast));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, GetOptRequest.Create(SocketOption.Broadcast));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -962,17 +921,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonGetOptResponseWriteRead() {
             // Arrange
-            var optionValue = new Property<ulong>();
-            optionValue.Type = (uint)SocketOption.Broadcast;
-            optionValue.Value = 1;
-
-            Message response = new Message(null, null, null, new GetOptResponse(optionValue));
-            MemoryStream stream = new MemoryStream();
+            var optionValue = Property<ulong>.Create((uint)SocketOption.Broadcast, 1);
+            var response = Message.Create(null, null, null, GetOptResponse.Create(optionValue));
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -982,19 +938,15 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestJsonOpenRequestWriteRead() {
 
             // Arrange
-            OpenRequest args = new OpenRequest();
-            args.Type = 0;
-            args.StreamId = new Reference();
-            args.ConnectionString = "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj";
-            args.IsPolled = true;
-
-            Message request = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = OpenRequest.Create(new Reference(), (int)CodecId.Mpack,
+                "dfksjaödfjkasdfölskajdfölsadfjkslöajksadlöjksdlöfsjkadflösdajkfösdlafj", 0, true);
+            var request = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -1004,13 +956,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestJsonOpenResponseWriteRead() {
 
             // Arrange
-            Message response = new Message(null, null, null, new OpenResponse());
-            MemoryStream stream = new MemoryStream();
+            var response = Message.Create(null, null, null, OpenResponse.Create());
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));
@@ -1019,36 +971,47 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonPollRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new PollRequest(100000));
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, PollRequest.Create(100000));
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
         }
 
         [TestMethod]
+        public void TestJsonPollResponseWriteRead() {
+            // Arrange
+            var response = Message.Create(null, null, null, PollResponse.Create());
+            var stream = new MemoryStream();
+
+            // Act
+            response.Encode(stream, CodecId.Json);
+            byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
+
+            // Assert
+            Assert.IsTrue(response.Equals(returned));
+        }
+
+        [TestMethod]
         public void TestJsonDataWriteRead1() {
             // Arrange
-            Inet4SocketAddress source = new Inet4SocketAddress(0xffaabbcc, 9643);
-
-            DataMessage args = new DataMessage();
-            args.Source = source;
-            args.Payload = new byte[145];
-            args.Control = new byte[0];
+            var source = new Inet4SocketAddress(0xffaabbcc, 9643);
+            var args = DataMessage.Create(new byte[145], source, 12);
             new Random().NextBytes(args.Payload);
 
-            Message datagramIn = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(datagramIn.Equals(returned));
@@ -1058,20 +1021,17 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         public void TestJsonDataWriteRead2() {
 
             // Arrange
-            DataMessage args = new DataMessage();
-            args.Source = new NullSocketAddress();
-            args.Payload = new byte[600];
-            args.Control = new byte[50];
+            var args = DataMessage.Create(new byte[600], new AnySocketAddress(), new byte[50], 12);
             new Random().NextBytes(args.Payload);
             new Random().NextBytes(args.Control);
 
-            Message datagramIn = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var datagramIn = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             datagramIn.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(datagramIn.Equals(returned));
@@ -1080,13 +1040,13 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonCloseRequestWriteRead() {
             // Arrange
-            Message request = new Message(null, null, null, new CloseRequest());
-            MemoryStream stream = new MemoryStream();
+            var request = Message.Create(null, null, null, new CloseRequest());
+            var stream = new MemoryStream();
 
             // Act
             request.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(request.Equals(returned));
@@ -1095,19 +1055,14 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
         [TestMethod]
         public void TestJsonCloseResponseWriteRead() {
             // Arrange
-            CloseResponse args = new CloseResponse();
-            args.ErrorCode = (Int32)SocketError.Closed;
-            args.TimeOpenInMilliseconds = 1000;
-            args.BytesSent = 200;
-            args.BytesReceived = 1;
-
-            Message response = new Message(null, null, null, args);
-            MemoryStream stream = new MemoryStream();
+            var args = CloseResponse.Create(1000, 3000, 200, (int)SocketError.Closed);
+            var response = Message.Create(null, null, null, args);
+            var stream = new MemoryStream();
 
             // Act
             response.Encode(stream, CodecId.Json);
             byte[] buf = Interop.MessageDecodeEncode(CodecId.Json, 1, stream.GetBuffer(), stream.Length, buffer, buffer.Length);
-            Message returned = Message.Decode(new MemoryStream(buf), CodecId.Json);
+            var returned = Serializable.Decode<Message>(new MemoryStream(buf), CodecId.Json);
 
             // Assert
             Assert.IsTrue(response.Equals(returned));

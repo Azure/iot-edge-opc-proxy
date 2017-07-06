@@ -12,10 +12,9 @@ namespace System.Threading.Tasks {
         /// Execute's an async Task<T> method which has a void return value synchronously
         /// </summary>
         /// <param name="task">Task<T> method to execute</param>
-        public static void Run(Func<Task> task) {
-            Task.Factory.StartNew(() => task().Wait(), CancellationToken.None, 
-                TaskCreationOptions.None, TaskScheduler.Default).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public static void Run(Func<Task> task) =>
+            Task.Run(task).GetAwaiter().GetResult();
+        
 
         /// <summary>
         /// Execute's an async Task<T> method which has a T return type synchronously
@@ -23,10 +22,8 @@ namespace System.Threading.Tasks {
         /// <typeparam name="T">Return Type</typeparam>
         /// <param name="task">Task<T> method to execute</param>
         /// <returns></returns>
-        public static T Run<T>(Func<Task<T>> task) {
-            return Task.Factory.StartNew(() => task().Result, CancellationToken.None,
-               TaskCreationOptions.None, TaskScheduler.Default).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
+        public static T Run<T>(Func<Task<T>> task) =>
+            Task.Run(task).GetAwaiter().GetResult();
     }
 }
 

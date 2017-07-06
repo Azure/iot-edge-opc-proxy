@@ -21,7 +21,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Returns the 32 bit address as a buffer
         /// </summary>
         [DataMember(Name = "addr", Order = 3)]
-        public byte[] Address { get; set; }
+        public byte[] Address {
+            get; set;
+        }
 
         /// <summary>
         /// Default constructor

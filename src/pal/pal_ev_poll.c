@@ -458,6 +458,7 @@ int32_t pal_event_port_create(
     pal_event_port_close((uintptr_t)pal_port);
     return result;
 }
+
 //
 // Free the event port and vector
 //

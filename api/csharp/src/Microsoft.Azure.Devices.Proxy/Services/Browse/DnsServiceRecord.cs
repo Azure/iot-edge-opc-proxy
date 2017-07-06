@@ -10,47 +10,83 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Represents an abstract service record. In the case of dns-sd, this is the 
     /// record pointed to by PTR. 
     /// </summary>
-    public class DnsServiceRecord : IEquatable<DnsServiceRecord> {
+    public class DnsServiceRecord : Poco<DnsServiceRecord> {
 
         /// <summary>
         /// Name of service 
         /// </summary>
-        public string Name { get; internal set; }
+        public string Name {
+            get; private set;
+        }
 
         /// <summary>
         /// Type of service
         /// </summary>
-        public string Type { get; internal set; }
+        public string Type {
+            get; private set;
+        }
 
         /// <summary>
         /// Reply Domain
         /// </summary>
-        public string Domain { get; internal set; }
+        public string Domain {
+            get; private set;
+        }
 
         /// <summary>
         /// Proxy on which this record is valid.
         /// </summary>
-        public SocketAddress Interface { get; internal set; }
+        public SocketAddress Interface {
+            get; private set;
+        }
 
         /// <summary>
         /// Whether the record was removed
         /// </summary>
-        public bool Removed { get; internal set; }
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        internal DnsServiceRecord() {}
+        public bool Removed {
+            get; private set;
+        }
 
         /// <summary>
         /// Clone record
         /// </summary>
         /// <param name="service"></param>
-        internal DnsServiceRecord(DnsServiceRecord service) {
-            Name = service.Name;
-            Type = service.Type;
-            Domain = service.Domain;
-            Interface = service.Interface;
+        internal static DnsServiceRecord Clone(DnsServiceRecord service) => Create(
+            service.Name, service.Type, service.Domain, service.Interface, service.Removed);
+
+        /// <summary>
+        /// Clone and update record
+        /// </summary>
+        /// <param name="service"></param>
+        /// <param name="interface"></param>
+        /// <param name="removed"></param>
+        /// <returns></returns>
+        internal static DnsServiceRecord Create(DnsServiceRecord service, 
+            SocketAddress @interface, bool removed) {
+            var record = Clone(service);
+            record.Interface = @interface;
+            record.Removed = removed;
+            return record;
+        }
+
+        /// <summary>
+        /// Create new record
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="domain"></param>
+        /// <param name="interface"></param>
+        /// <param name="removed"></param>
+        /// <returns></returns>
+        internal static DnsServiceRecord Create(string name, string type, 
+            string domain, SocketAddress @interface, bool removed = false) {
+            var record = Get();
+            record.Name = name;
+            record.Type = type;
+            record.Domain = domain;
+            record.Interface = @interface;
+            record.Removed = removed;
+            return record;
         }
 
         /// <summary>
@@ -97,11 +133,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
                 domain.TrimEnd('.');
             }
-            return new DnsServiceRecord {
-                Name = name, 
-                Type = type, 
-                Domain = domain
-            };
+            return Create(name, type, domain, null, false);
         }
 
         /// <summary>
@@ -149,51 +181,27 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        internal static DnsServiceRecord FromSocketAddress(
-            ProxySocketAddress address) {
+        internal static DnsServiceRecord FromSocketAddress(ProxySocketAddress address, 
+            SocketAddress @interface = null, bool removed = false) {
             var record = Parse(address.Host);
             record._flags = address.Flags;
             record._interfaceIndex = address.InterfaceIndex;
+            record.Interface = @interface;
+            record.Removed = removed;
             return record;
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public bool Equals(DnsServiceRecord that) {
-            if (that == null) {
-                return false;
-            }
-            if (string.IsNullOrEmpty(this.Name)) {
-                if (!string.IsNullOrEmpty(that.Name))
-                    return false;
-            }
-            else if (!this.Name.Equals(that.Name))
-                return false;
-            if (string.IsNullOrEmpty(this.Type)) {
-                if (!string.IsNullOrEmpty(that.Type))
-                    return false;
-            }
-            else if (!this.Type.Equals(that.Type))
-                return false;
-            if (string.IsNullOrEmpty(this.Domain)) {
-                if (!string.IsNullOrEmpty(that.Domain))
-                    return false;
-            }
-            else if (!this.Domain.Equals(that.Domain))
-                return false;
-            return true;
+        public override bool IsEqual(DnsServiceRecord that) {
+            return
+                IsEqual(Name, that.Name) &&
+                IsEqual(Type, that.Type) &&
+                IsEqual(Domain, that.Domain);
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool Equals(object that) {
-            return Equals(that as DnsServiceRecord);
+        protected override void SetHashCode() {
+            MixToHash(Name);
+            MixToHash(Type);
+            MixToHash(Domain);
         }
 
         /// <summary>
@@ -202,12 +210,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override string ToString() => 
             $"{FullString} on {Interface}{(Removed ? " REMOVED" : "")}";
-
-        /// <summary>
-        /// Returns hash for efficient lookup in list
-        /// </summary>
-        /// <returns></returns>
-        public override int GetHashCode() => ToString().GetHashCode();
 
 
         private ushort _flags = 0;

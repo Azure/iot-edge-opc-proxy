@@ -146,15 +146,18 @@ static int32_t io_cs_validate(
     dbg_assert_ptr(cs);
 
     val = io_cs_get_host_name(cs);
-    if (!val)
-        return er_invalid_format;
-    else
+    if (val && !cs->entries[io_cs_entry_endpoint])
     {
         if (!strlen(val))
             return er_invalid_format;
         result = io_cs_validate_host_name(val);
         if (result != er_ok)
             return result;
+    }
+    else if (!val)
+    {
+        // If no host name parsed from endpoint then fail, must have one!
+        return er_invalid_format;
     }
 
     if (cs->entries[io_cs_entry_device_id])
@@ -166,11 +169,12 @@ static int32_t io_cs_validate(
         if (result != er_ok)
             return result;
     }
-
-    // Currently validation fails due to &skn for non iothub tokens
     else
     {
+        //
+        // Currently validation fails due to &skn for non iothub tokens
         // Todo: Validate non device id tokens as well...
+        //
         return er_ok;
     }
 

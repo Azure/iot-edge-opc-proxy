@@ -12,39 +12,34 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Set option request
     /// </summary>
     [DataContract]
-    public class SetOptRequest : Serializable<SetOptRequest>, IMessageContent, IRequest {
+    public class SetOptRequest : Poco<SetOptRequest>, IMessageContent, IRequest {
 
         /// <summary>
         /// Option and Value to set
         /// </summary>
         [DataMember(Name = "so_val", Order = 1)]
-        public PropertyBase OptionValue { get; set; }
-
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public SetOptRequest() {
-            // no-op
+        public IProperty OptionValue {
+            get; set;
         }
 
         /// <summary>
-        /// Convinience constructor
+        /// Create request
         /// </summary>
-        public SetOptRequest(PropertyBase optionValue) {
-            OptionValue = optionValue;
+        public static SetOptRequest Create(IProperty optionValue) {
+            var request = Get();
+            request.OptionValue = optionValue;
+            return request;
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
+        public IMessageContent Clone() => Create(OptionValue);
+
         public override bool IsEqual(SetOptRequest that) =>
             IsEqual(OptionValue, that.OptionValue);
 
         protected override void SetHashCode() => 
             MixToHash(OptionValue);
-        
+
+        public override string ToString() => 
+            OptionValue.ToString();
     }
 }

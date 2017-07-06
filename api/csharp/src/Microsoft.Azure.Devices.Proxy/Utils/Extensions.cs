@@ -39,6 +39,27 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
+        public static void Append(this StringBuilder stringBuilder, byte[] bytes, int size) {
+            bool truncate = bytes.Length > size;
+            int length = truncate ? size : bytes.Length;
+            bool ascii = true;
+            for (int i = 0; i < length; i++) {
+                if (bytes[i] <= 32 || bytes[i] > 127) {
+                    ascii = false;
+                    break;
+                }
+            }
+            var content = ascii ? Encoding.ASCII.GetString(bytes, 0, length) :
+                BitConverter.ToString(bytes, 0, length);
+            length = content.IndexOf('\n');
+            if (length > 0) {
+                stringBuilder.Append(content, 0, length - 1);
+            }
+            else {
+                stringBuilder.Append(content);
+            }
+        }
+
         public static IEnumerable<T> AsEnumerable<T>(this T obj) {
             yield return obj;
         }
@@ -66,18 +87,23 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public static SocketError GetSocketError(this Exception ex) {
-            SocketError error = SocketError.Fatal;
-            if (ex is SocketException) {
-                return ((SocketException)ex).Error;
+            var s = GetFirstOf<SocketException>(ex);
+            return s != null ? s.GetSocketError() : SocketError.Fatal;
+        }
+
+        public static T GetFirstOf<T>(this Exception ex) where T : Exception{
+            if (ex is T) {
+                return (T)ex;
             }
             else if (ex is AggregateException) {
                 foreach (Exception e in ((AggregateException)ex).InnerExceptions) {
-                    error = e.GetSocketError();
-                    if (error != SocketError.Fatal)
-                        break;
+                    var found = GetFirstOf<T>(e);
+                    if (found != null) {
+                        return found;
+                    }
                 }
             }
-            return error;
+            return null;
         }
     }
 }

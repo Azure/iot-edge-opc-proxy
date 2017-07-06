@@ -944,15 +944,7 @@ STRING_HANDLE STRING_construct_base64(
     size_t buf_len
 )
 {
-    BUFFER_HANDLE buffer;
-    STRING_HANDLE result = NULL;
-    buffer = BUFFER_new();
-    if (!buffer)
-        return NULL;
-    if (0 == BUFFER_build(buffer, buf, buf_len))
-        result = Base64_Encode(buffer);
-    BUFFER_delete(buffer);
-    return result;
+    return Base64_Encode_Bytes((const unsigned char*)buf, buf_len);
 }
 
 //

@@ -23,6 +23,9 @@ MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceBrowse,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, const char*, regtype, const char*, domain, DNSServiceBrowseReply, callBack, void*, context);
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceResolve,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, const char*, name, const char*, regtype, const char*, domain, DNSServiceResolveReply, callBack, void*, context);
+MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceGetAddrInfo,
+    DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, DNSServiceProtocol, protocol, const char*, hostname, DNSServiceGetAddrInfoReply, callBack, void*, context);
+
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceCreateConnection,
     DNSServiceRef*, sdRef);
 
@@ -41,7 +44,12 @@ BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(dnssd_sock_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceErrorType, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceFlags, int);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceProtocol, int);
 REGISTER_UMOCK_ALIAS_TYPE(DNSServiceRef, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceDomainEnumReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceBrowseReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceResolveReply, void*);
+REGISTER_UMOCK_ALIAS_TYPE(DNSServiceGetAddrInfoReply, void*);
 END_DECLARE_TEST_SUITE()
 // -or- DECLARE_TEST_SUITE()
 
@@ -508,9 +516,9 @@ TEST_FUNCTION(pal_mdns_sdbrowser_free__neg)
 
 #endif // pal_sdbrowser_free 
 
-#ifdef pal_sdclient_release 
+#ifdef pal_sdclient_free 
 // 
-// Test pal_sdclient_release happy path 
+// Test pal_sdclient_free happy path 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__success)
 {
@@ -521,7 +529,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__success)
     // ... 
 
     // act 
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -530,7 +538,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__success)
 }
 
 // 
-// Test pal_sdclient_release passing as client argument an invalid pal_sdclient_t* value 
+// Test pal_sdclient_free passing as client argument an invalid pal_sdclient_t* value 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
 {
@@ -541,7 +549,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
     // ... 
 
     // act 
-    handle = pal_sdclient_release();
+    handle = pal_sdclient_free();
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -550,7 +558,7 @@ TEST_FUNCTION(pal_mdns_sdclient_release__arg_client_invalid)
 }
 
 // 
-// Test pal_sdclient_release unhappy path 
+// Test pal_sdclient_free unhappy path 
 // 
 TEST_FUNCTION(pal_mdns_sdclient_release__neg)
 {
@@ -565,13 +573,13 @@ TEST_FUNCTION(pal_mdns_sdclient_release__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);
 }
 
-#endif // pal_sdclient_release 
+#endif // pal_sdclient_free 
 
 #ifdef pal_sd_deinit 
 // 

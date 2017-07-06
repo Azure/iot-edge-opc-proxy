@@ -14,47 +14,47 @@ namespace Microsoft.Azure.Devices.Proxy {
     // Ping response
     /// </summary>
     [DataContract]
-    public class PingResponse : Serializable<PingResponse>, IMessageContent, IResponse {
+    public class PingResponse : Poco<PingResponse>, IMessageContent, IResponse {
 
         /// <summary>
         /// Address pingged, in form of local address
         /// </summary>
         [DataMember(Name = "address", Order = 1)]
-        public SocketAddress SocketAddress { get; set; }
+        public SocketAddress SocketAddress {
+            get; set;
+        }
 
         /// <summary>
         /// Mac address of machine 
         /// </summary>
         [DataMember(Name = "physical_address", Order = 2)]
-        public byte[] PhysicalAddress { get; set; } = new byte[8];
+        public byte[] PhysicalAddress {
+            get; set;
+        }
 
         /// <summary>
         /// Time ping took
         /// </summary>
         [DataMember(Name = "time_ms", Order = 3)]
-        public uint TimeMs { get; set; }
-
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public PingResponse() {
-            // Noop
+        public uint TimeMs {
+            get; set;
         }
 
         /// <summary>
-        /// Constructor
+        /// Create response
         /// </summary>
         /// <param name="socketAddress"></param>
-        public PingResponse(SocketAddress socketAddress) {
-            SocketAddress = socketAddress;
+        public static PingResponse Create(SocketAddress socketAddress, 
+            byte[] physicalAddress = null, uint timeMs = 0) {
+            var response = Get();
+            response.SocketAddress = socketAddress;
+            response.PhysicalAddress = physicalAddress ?? new byte[8];
+            response.TimeMs = timeMs;
+            return response;
         }
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
+        public IMessageContent Clone() => Create(SocketAddress, PhysicalAddress, TimeMs);
+
         public override bool IsEqual(PingResponse that) {
             return
                 IsEqual(SocketAddress, that.SocketAddress) &&
@@ -67,5 +67,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             MixToHash(PhysicalAddress);
             MixToHash(TimeMs);
         }
+
+        public override string ToString() => $"{SocketAddress}";
     }
 }

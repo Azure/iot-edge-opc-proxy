@@ -63,6 +63,13 @@ MOCKABLE_FUNCTION(, AvahiClient*, avahi_service_resolver_get_client,
     AvahiServiceResolver*, resolver);
 MOCKABLE_FUNCTION(, int, avahi_service_resolver_free, 
     AvahiServiceResolver*, resolver);
+MOCKABLE_FUNCTION(, AvahiHostNameResolver*, avahi_host_name_resolver_new,
+    AvahiClient*, client, AvahiIfIndex, interface, AvahiProtocol, protocol, const char*, name,
+    AvahiProtocol, aprotocol, AvahiLookupFlags, flags, AvahiHostNameResolverCallback, callback, void*, userdata);
+MOCKABLE_FUNCTION(, AvahiClient*, avahi_host_name_resolver_get_client,
+    AvahiHostNameResolver*, resolver);
+MOCKABLE_FUNCTION(, int, avahi_host_name_resolver_free,
+    AvahiHostNameResolver*, resolver);
 
 //
 // 2. Include unit under test
@@ -542,9 +549,9 @@ TEST_FUNCTION(pal_avahi_sdbrowser_free__neg)
 
 #endif // pal_sdbrowser_free 
 
-#ifdef pal_sdclient_release 
+#ifdef pal_sdclient_free 
 // 
-// Test pal_sdclient_release happy path 
+// Test pal_sdclient_free happy path 
 // 
 TEST_FUNCTION(pal_avahi_sdclient_release__success)
 {
@@ -555,7 +562,7 @@ TEST_FUNCTION(pal_avahi_sdclient_release__success)
     // ... 
 
     // act 
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -564,7 +571,7 @@ TEST_FUNCTION(pal_avahi_sdclient_release__success)
 }
 
 // 
-// Test pal_sdclient_release passing as client argument an invalid pal_sdclient_t* value 
+// Test pal_sdclient_free passing as client argument an invalid pal_sdclient_t* value 
 // 
 TEST_FUNCTION(pal_avahi_sdclient_release__arg_client_invalid)
 {
@@ -575,7 +582,7 @@ TEST_FUNCTION(pal_avahi_sdclient_release__arg_client_invalid)
     // ... 
 
     // act 
-    handle = pal_sdclient_release();
+    handle = pal_sdclient_free();
 
     // assert 
     ASSERT_EXPECTED_CALLS();
@@ -584,7 +591,7 @@ TEST_FUNCTION(pal_avahi_sdclient_release__arg_client_invalid)
 }
 
 // 
-// Test pal_sdclient_release unhappy path 
+// Test pal_sdclient_free unhappy path 
 // 
 TEST_FUNCTION(pal_avahi_sdclient_release__neg)
 {
@@ -599,13 +606,13 @@ TEST_FUNCTION(pal_avahi_sdclient_release__neg)
 
     // act 
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_sdclient_release(k_client_valid);
+    result = pal_sdclient_free(k_client_valid);
 
     // assert 
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);
 }
 
-#endif // pal_sdclient_release 
+#endif // pal_sdclient_free 
 
 #ifdef pal_sd_deinit 
 // 

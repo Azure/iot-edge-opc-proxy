@@ -568,9 +568,9 @@ static CONCRETE_IO_HANDLE xio_wsclient_create(
         if (result != er_ok)
             break;
 
-        result = pal_wsclient_create(
-            ws_io_config->protocol, ws_io_config->hostname,
-            (uint16_t)ws_io_config->port, ws_io_config->resource_name,
+        result = pal_wsclient_create(ws_io_config->protocol, 
+            ws_io_config->hostname, (uint16_t)ws_io_config->port, 
+            ws_io_config->resource_name, true,
             xio_wsclient_event_handler, ws, &ws->websocket);
         if (result != er_ok)
             break;

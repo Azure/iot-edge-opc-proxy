@@ -17,9 +17,18 @@ namespace Microsoft.Azure.Devices.Proxy {
     public interface IProxyLink : IProxyOptions, IMessageStream {
 
         /// <summary>
-        /// Remote id of this socket
+        /// Proxy target record
         /// </summary>
-        Reference RemoteId { get; }
+        INameRecord Proxy {
+            get;
+        }
+
+        /// <summary>
+        /// Remote id of this link
+        /// </summary>
+        Reference RemoteId {
+            get;
+        }
 
         /// <summary>
         /// Begin connect sequence, returns connection string to

@@ -28,7 +28,9 @@ namespace NetCoreConsoleClient
         public static void Main(string[] args)
         {
             Console.WriteLine(".Net Core OPC UA Console Client sample");
-
+#if PERF
+            Microsoft.Azure.Devices.Proxy.Provider.WebSocketProvider.Create(); 
+#endif
             string endpointURL;
             if (args.Length == 0)
             {

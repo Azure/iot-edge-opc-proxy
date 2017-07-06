@@ -110,13 +110,13 @@ decl_internal_2(void*, prx_buffer_new,
 //
 decl_inline_2(size_t, prx_buffer_get_size,
     prx_buffer_factory_t*, buffer_factory,
-    void*, buffer
+    const void*, buffer
 )
 {
     if (!buffer_factory)
         return 0;
     dbg_assert_ptr(buffer_factory->on_get_size);
-    return buffer_factory->on_get_size(buffer_factory->context, buffer);
+    return buffer_factory->on_get_size(buffer_factory->context, (void*)buffer);
 }
 
 //

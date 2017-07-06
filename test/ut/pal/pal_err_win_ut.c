@@ -66,7 +66,7 @@ TEST_FUNCTION(pal_win_os_to_prx_error__success)
         er_fault,     er_aborted,     er_aborted,    er_arg,            er_waiting,
         er_not_found, er_not_found,   er_nomore,     er_busy,           er_closed,    
         er_closed,    er_not_found,   er_permission,
-        er_timeout,   er_aborted,     er_aborted,    er_aborted,        er_reset,
+        er_timeout,   er_aborted,     er_aborted,    er_aborted,        er_closed,
         er_refused,   er_closed,      er_closed,     
         er_unknown);
 }

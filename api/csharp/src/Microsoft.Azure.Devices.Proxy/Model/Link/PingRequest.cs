@@ -12,39 +12,35 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Ping request
     /// </summary>
     [DataContract]
-    public class PingRequest : Serializable<PingRequest>, IMessageContent, IRequest {
+    public class PingRequest : Poco<PingRequest>, IMessageContent, IRequest {
 
         /// <summary>
         /// Socket address to ping, typically proxy address
         /// </summary>
         [DataMember(Name = "address", Order = 1)]
-        public SocketAddress SocketAddress { get; set; }
-
-        /// <summary>
-        /// Default constructor
-        /// </summary>
-        public PingRequest() {
-            // Noop
+        public SocketAddress SocketAddress {
+            get; set;
         }
 
         /// <summary>
-        /// Convinience constructor
+        /// Create request
         /// </summary>
         /// <param name="address"></param>
-        public PingRequest(SocketAddress socketAddress) {
-            this.SocketAddress = socketAddress;
+        public static PingRequest Create(SocketAddress socketAddress) {
+            var request = Get();
+            request.SocketAddress = socketAddress;
+            return request;
         }
 
+        public IMessageContent Clone() => Create(SocketAddress);
 
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
         public override bool IsEqual(PingRequest that) =>
             IsEqual(SocketAddress, that.SocketAddress);
 
         protected override void SetHashCode() =>
             MixToHash(SocketAddress);
+
+        public override string ToString() => 
+            $"{SocketAddress}";
     }
 }

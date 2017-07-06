@@ -3,10 +3,7 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy {
-    using System;
-    using System.Collections.Concurrent;
-    using System.Threading;
-    using System.Threading.Tasks;
+    using System.Threading.Tasks.Dataflow;
 
     /// <summary>
     /// Message stream for async message send/receive between client
@@ -14,21 +11,18 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// </summary>
     public interface IMessageStream {
 
-        ConcurrentQueue<Message> ReceiveQueue { get; }
+        /// <summary>
+        /// Target block to send messages to proxy
+        /// </summary>
+        ITargetBlock<Message> SendBlock {
+            get;
+        }
 
         /// <summary>
-        /// Receive a message from stream into queue
+        /// Source block to receive messages from proxy
         /// </summary>
-        /// <param name="ct">To cancel receive</param>
-        /// <returns></returns>
-        Task ReceiveAsync(CancellationToken ct);
-
-        /// <summary>
-        /// Send message on stream
-        /// </summary>
-        /// <param name="message"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        Task SendAsync(Message message, CancellationToken ct);
+        ISourceBlock<Message> ReceiveBlock {
+            get;
+        }
     }
 }

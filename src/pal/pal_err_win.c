@@ -3,6 +3,7 @@
 
 #include "os.h"
 #include "util_mem.h"
+#include "util_string.h"
 #include "pal_err.h"
 #include "pal_types.h"
 
@@ -39,7 +40,7 @@ int32_t pal_os_to_prx_error(
     case STATUS_CANCELLED:             return er_aborted;
     case STATUS_CONNECTION_ABORTED:    return er_aborted;
     case STATUS_REQUEST_ABORTED:       return er_aborted;
-    case STATUS_CONNECTION_RESET:      return er_reset;
+    case STATUS_CONNECTION_RESET:      return er_closed;
     case STATUS_CONNECTION_REFUSED:    return er_refused;
     case STATUS_PIPE_BROKEN:           return er_closed;
     case STATUS_PIPE_DISCONNECTED:     return er_closed;
@@ -85,14 +86,16 @@ int32_t pal_os_last_error_as_prx_error(
 
     error = GetLastError();
 
-    if (error != ERROR_SUCCESS)
+    if (error != ERROR_SUCCESS &&
+        error != ERROR_IO_PENDING)
     {
         FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (char*)&message, 0, NULL);
-
+        if (message)
+            string_trim_back(message, "\r\n\t ");
         log_info(NULL, "Platform error code %d (%s)",
             error, message ? message : "<unknown>");
         LocalFree(message);

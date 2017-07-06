@@ -13,13 +13,15 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Browse rpc request
     /// </summary>
     [DataContract]
-    public class BrowseRequest : Serializable<BrowseRequest> {
+    public class BrowseRequest : Poco<BrowseRequest> {
 
         /// <summary>
         /// Request id
         /// </summary>
         [DataMember(Name = "handle", Order = 1)]
-        public Reference Handle { get; set; }
+        public Reference Handle {
+            get; set;
+        }
 
         public static readonly byte BROWSE_VERSION = 1;
 
@@ -33,7 +35,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         // Type of request - service, address resolver, folders
         //
         public static readonly int Cancel = 0;  // Cancel request with handle
-        public static readonly int Resolve = 1;  // Resolve string to address
+        public static readonly int Resolve = 1;    // Resolve host to address
         public static readonly int Service = 2;            // Browse services
         public static readonly int Dirpath = 3;         // Recurse a dir path
 
@@ -41,19 +43,25 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Type of request
         /// </summary>
         [DataMember(Name = "type", Order = 3)]
-        public int Type { get; set; }
+        public int Type {
+            get; set;
+        }
 
         /// <summary>
         /// Flags - 0 for now
         /// </summary>
         [DataMember(Name = "flags", Order = 4)]
-        public int Flags { get; set; }
+        public int Flags {
+            get; set;
+        }
 
         /// <summary>
         /// Item to browse
         /// </summary>
         [DataMember(Name = "item", Order = 5)]
-        public SocketAddress Item { get; set; }
+        public SocketAddress Item {
+            get; set;
+        }
 
         /// <summary>
         /// Comparison

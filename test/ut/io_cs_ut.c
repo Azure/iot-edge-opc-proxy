@@ -444,7 +444,6 @@ TEST_FUNCTION(io_cs_create_from_string__arg_connection_string_no_hostname)
     STRICT_EXPECTED_CALL(string_key_value_parser(k_component, IGNORED_PTR_ARG, ';', (void*)UT_MEM))
         .IgnoreArgument(2)
         .SetFailReturn(er_invalid_format);
-    
 
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));
     EXPECTED_CALL(string_is_equal_nocase(IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_PTR_ARG));

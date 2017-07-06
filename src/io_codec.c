@@ -4,10 +4,11 @@
 #include "util_mem.h"
 #include "io_codec.h"
 #include "util_string.h"
+
 #include "cmp.h"
 #include "parson.h"
-#include "azure_c_shared_utility/base64.h"
 
+#include "azure_c_shared_utility/base64.h"
 
 //
 // Initialize a context object from a stream

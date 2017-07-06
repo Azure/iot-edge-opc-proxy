@@ -8,21 +8,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
     public class NullProvider : IProvider {
         public IRemotingService ControlChannel {
-            get {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
         }
 
         public INameService NameService {
-            get {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
         }
 
         public IStreamService StreamService {
-            get {
-                throw new NotImplementedException();
-            }
+            get => throw new NotImplementedException();
         }
 
         /// <summary>

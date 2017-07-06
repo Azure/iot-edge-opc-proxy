@@ -14,16 +14,28 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Multi cast socket option
     /// </summary>
     [DataContract]
-    public class Inet6MulticastOption : MulticastOption, IEquatable<Inet6MulticastOption> {
+    public class Inet6MulticastOption : Poco<Inet6MulticastOption>, IMulticastOption {
 
         [DataMember(Name = "family", Order = 1)]
-        public override AddressFamily Family => AddressFamily.InterNetworkV6;
+        public AddressFamily Family {
+            get => AddressFamily.InterNetworkV6;
+        }
+
+        /// <summary>
+        /// Interface to use
+        /// </summary>
+        [DataMember(Name = "itf_index", Order = 2)]
+        public int InterfaceIndex {
+            get; set;
+        }
 
         /// <summary>
         /// Bind address
         /// </summary>
         [DataMember(Name = "addr", Order = 3)]
-        public byte[] Address { get; set; }
+        public byte[] Address {
+            get; set;
+        }
 
         /// <summary>
         /// Scope id
@@ -31,16 +43,27 @@ namespace Microsoft.Azure.Devices.Proxy {
         public uint ScopeId => InterfaceIndex > 0 ? (uint)InterfaceIndex : 0;
 
         /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="interfaceIndex"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public static Inet6MulticastOption Create(int interfaceIndex, byte[] address) {
+            var option = Get();
+            option.InterfaceIndex = interfaceIndex;
+            option.Address = address;
+            return option;
+        }
+
+        /// <summary>
         /// Comparison
         /// </summary>
         /// <param name="that"></param>
         /// <returns></returns>
-        public bool Equals(Inet6MulticastOption that) {
-            if (that == null) {
-                return false;
-            }
+        public override bool IsEqual(Inet6MulticastOption that) {
             return
-                IsEqual(that as MulticastOption) &&
+                IsEqual(Family, that.Family) &&
+                IsEqual(InterfaceIndex, that.InterfaceIndex) &&
                 IsEqual(Address, that.Address) &&
                 IsEqual(ScopeId, that.ScopeId);
         }
@@ -54,7 +77,8 @@ namespace Microsoft.Azure.Devices.Proxy {
             Equals(that as Inet6MulticastOption);
 
         protected override void SetHashCode() {
-            base.SetHashCode();
+            MixToHash(Family);
+            MixToHash(InterfaceIndex);
             MixToHash(Address);
             MixToHash(ScopeId);
         }

@@ -728,15 +728,17 @@ TEST_FUNCTION(io_encode_open_request__success)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.encoding = 5;
     request_valid.max_recv = 800;
     request_valid.type = 0;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 6);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, encoding);
     STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "connection-string", k_cs_valid))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
@@ -761,16 +763,18 @@ TEST_FUNCTION(io_encode_open_request__neg)
 
     request_valid.connection_string = k_cs_valid;
     request_valid.polled = false;
+    request_valid.encoding = 5;
     request_valid.max_recv = 800;
     request_valid.type = 0;
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 6);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
-    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, encoding);
     STRICT_EXPECTED_CALL(io_encode_string(&k_ctx_valid, "connection-string", k_cs_valid))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
     STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
@@ -795,12 +799,13 @@ TEST_FUNCTION(io_decode_open_request__success)
     int32_t result;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 5);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 6);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, encoding);
     STRICT_EXPECTED_CALL(io_decode_string_default(&k_ctx_valid, "connection-string", IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_string(&k_cs_valid, sizeof(k_cs_valid))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
@@ -825,12 +830,13 @@ TEST_FUNCTION(io_decode_open_request__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 5);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 6);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &request_valid, stream_id);
-    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, encoding);
     STRICT_EXPECTED_CALL(io_decode_string_default(&k_ctx_valid, "connection-string", IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_string(&k_cs_valid, sizeof(k_cs_valid))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, int32, &request_valid, type);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, bool, &request_valid, polled);
     STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &request_valid, max_recv);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);

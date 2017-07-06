@@ -4,50 +4,46 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy {
-    using System.Collections.Generic;
+    using System;
     using System.Threading;
-    using System.Threading.Tasks;
+    using System.Threading.Tasks.Dataflow;
 
     /// <summary>
-    /// Interface for name services exposed by provider object
+    /// Interface for name services exposed by provider object.  
     /// </summary>
     public interface INameService {
         /// <summary>
-        /// Lookup record by name
+        /// Creates a query based on name. The name can also be a stringified 
+        /// address, or an alias name of the record. It cannot be null or empty.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="type"></param>
-        /// <param name="ct"></param>
+        /// <param name="name">The name to query for</param>
+        /// <param name="type">The type of record</param>
         /// <returns></returns>
-        Task<IEnumerable<INameRecord>> LookupAsync(string name, NameRecordType type,
-             CancellationToken ct);
+        IQuery NewQuery(string name, NameRecordType type);
 
         /// <summary>
-        /// Lookup record by address
+        /// Creates a query based on address. It is valid to specify Reference.All 
+        /// to receive all records of a particular type. It is not valid to specify 
+        /// null or Reference.Null as address.
         /// </summary>
-        /// <param name="address"></param>
-        /// <param name="type"></param>
-        /// <param name="ct"></param>
+        /// <param name="address">The address to query for</param>
+        /// <param name="type">The type of records</param>
         /// <returns></returns>
-        Task<IEnumerable<INameRecord>> LookupAsync(Reference address, NameRecordType type,
-            CancellationToken ct);
+        IQuery NewQuery(Reference address, NameRecordType type);
 
         /// <summary>
-        /// Adds or updates a record in the name service
+        /// Produces name records for a set of queries posted to the returned Lookup 
+        /// block.  Results will be send to the results block.
         /// </summary>
-        /// <param name="proxy"></param>
-        /// <param name="name"></param>
-        /// <param name="ct"></param>
+        /// <param name="results">target block to post results to</param>
+        /// <param name="ct">Cancel the current query in progress</param>
         /// <returns></returns>
-        Task AddOrUpdateAsync(INameRecord record, CancellationToken ct);
+        IPropagatorBlock<IQuery, INameRecord> Lookup(ExecutionDataflowBlockOptions options);
 
         /// <summary>
-        /// Removes a record in the name service
+        /// Post name record to add or update (true) the record in the name service
+        /// or remove it (false). Add, update, remove are all done in the 
         /// </summary>
-        /// <param name="proxy"></param>
-        /// <param name="name"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        Task RemoveAsync(INameRecord record, CancellationToken ct);
+        ITargetBlock<Tuple<INameRecord, bool>> Update { get; }
     }
 }

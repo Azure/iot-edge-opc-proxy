@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\src\testmutex.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockalloc.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockautoignoreargs.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcall.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallpairs.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\src\umockcallrecorder.c" />
@@ -36,6 +37,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\trunner\inc\testrunnerswitcher.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\macro_utils.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockalloc.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockautoignoreargs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcall.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallpairs.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\umock\inc\umockcallrecorder.h" />

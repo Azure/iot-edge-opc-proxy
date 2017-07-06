@@ -6,17 +6,17 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
 
-    public class ProxyNotFoundException : ProxyException {
+    public class ProxyNotFound : ProxyException {
 
-        public ProxyNotFoundException(string message) : 
+        public ProxyNotFound(string message) : 
             base(message, null, SocketError.NoHost) {
         }
 
-        public ProxyNotFoundException(Exception innerException) :
+        public ProxyNotFound(Exception innerException) :
             base("Proxy not found", innerException, SocketError.NoHost) {
         }
 
-        public ProxyNotFoundException(AggregateException innerException) :
+        public ProxyNotFound(AggregateException innerException) :
             base("Proxy not found", innerException, SocketError.NoHost) {
         }
     }

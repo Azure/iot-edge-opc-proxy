@@ -12,18 +12,16 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Void args or return
     /// </summary>
     [DataContract]
-    public abstract class VoidMessage : Serializable<VoidMessage>, IMessageContent {
-        /// <summary>
-        /// Comparison
-        /// </summary>
-        /// <param name="that"></param>
-        /// <returns></returns>
-        public override bool IsEqual(VoidMessage that) {
-            return true;
-        }
+    public class VoidMessage<T> : Poco<T>, IVoidMessage where T : Poco, new() {
 
-        protected override void SetHashCode() {
-            MixToHash(0);
-        }
+        public static T Create() => Get();
+
+        public IMessageContent Clone() => (IMessageContent)Get();
+
+        public override bool IsEqual(T that) => true;
+
+        protected override void SetHashCode() => MixToHash(0);
+
+        public override string ToString() => "void";
     }
 }

@@ -63,8 +63,7 @@ namespace MsgPack {
         /// <returns></returns>
         public override async Task<T> ReadAsync(Reader reader, 
             SerializerContext context, CancellationToken ct) {
-
-            T result = (T)typeof(T).GetConstructor(_noType).Invoke(_noObj);
+            var result = CreateInstance();
 
             // Read object header
             int members = await reader.ReadObjectHeaderAsync(ct).ConfigureAwait(false);
@@ -75,7 +74,7 @@ namespace MsgPack {
                 if (members == 0) {
                     throw new FormatException("Not enough members");
                 }
-                object obj = await ReadAsync(reader, 
+                object obj = await ReadAsync(reader,
                     item.Prop.PropertyType, context, ct).ConfigureAwait(false);
                 if (item != null && obj != null) {
                     item.Prop.SetValue(result, obj);
@@ -83,6 +82,17 @@ namespace MsgPack {
                 --members;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Create instance of T
+        /// </summary>
+        /// <returns></returns>
+        private static T CreateInstance() {
+
+            // TODO: Create empty using Create constructor
+
+            return (T)typeof(T).GetConstructor(_noType).Invoke(_noObj);
         }
 
         /// <summary>

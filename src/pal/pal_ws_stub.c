@@ -32,6 +32,7 @@ int32_t pal_wsclient_create(
     const char* host,
     uint16_t port,
     const char* path,
+    bool secure,
     pal_wsclient_event_handler_t callback,
     void* callback_context,
     pal_wsclient_t** wsclient
@@ -41,6 +42,7 @@ int32_t pal_wsclient_create(
     (void)host;
     (void)port;
     (void)path;
+    (void)secure;
     (void)callback;
     (void)callback_context;
     (void)wsclient;

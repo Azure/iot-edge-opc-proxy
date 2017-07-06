@@ -5,6 +5,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Threading;
     using System.Threading.Tasks;
 
     public class TcpClient : IDisposable {
@@ -68,8 +69,20 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Connect async
         //
+        public Task ConnectAsync(SocketAddress endpoint, CancellationToken ct) =>
+            Socket.ConnectAsync(endpoint, ct);
+
+        //
+        // Connect async
+        //
         public Task ConnectAsync(SocketAddress endpoint) =>
             Socket.ConnectAsync(endpoint);
+
+        //
+        // Connect async
+        //
+        public Task ConnectAsync(string host, int port, CancellationToken ct) =>
+            Socket.ConnectAsync(host, port, ct);
 
         //
         // Connect async

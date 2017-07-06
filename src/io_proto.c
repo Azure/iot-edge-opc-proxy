@@ -10,6 +10,7 @@
 #include "io_proto.h"
 #undef ENABLE_GLOBAL
 #include "io_types.h"
+#include "pal_mt.h"
 
 //
 // Protocol factory creates protocol messages from pool memory
@@ -20,12 +21,13 @@ struct io_message_factory
     prx_buffer_factory_t* buffers;     // Dynamic buffers for payload allocs
 };
 
+atomic_t _counter;
 
 #if defined(DBG_MEM)
 #define dbg_assert_msg(m) \
     do { if (m->buffer) \
         prx_buffer_get_size(m->owner->buffers, m->buffer); \
-    prx_buffer_get_size(m->owner->messages, m); } while(0)
+    prx_buffer_get_size(m->owner->messages, (void*)m); } while(0)
 #else
 #define dbg_assert_msg(m) \
     dbg_assert_ptr(m);
@@ -359,13 +361,14 @@ static int32_t io_encode_open_request(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, request, 5);
+    __io_encode_type_begin(ctx, request, 6);
     __io_encode_object(ctx, ref, request, stream_id);
-    __io_encode_value(ctx, int32, request, type);
+    __io_encode_value(ctx, int32, request, encoding);
     result = io_encode_string(
         ctx, "connection-string", request->connection_string);
     if (result != er_ok)
         return result;
+    __io_encode_value(ctx, int32, request, type);
     __io_encode_value(ctx, bool, request, polled);
     __io_encode_value(ctx, uint32, request, max_recv);
     __io_encode_type_end(ctx);
@@ -381,13 +384,14 @@ static int32_t io_decode_open_request(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, request, 5);
+    __io_decode_type_begin(ctx, request, 6);
     __io_decode_object(ctx, ref, request, stream_id);
-    __io_decode_value(ctx, int32, request, type);
+    __io_decode_value(ctx, int32, request, encoding);
     result = io_decode_string_default(
         ctx, "connection-string", (char**)&request->connection_string);
     if (result != er_ok)
         return result;
+    __io_decode_value(ctx, int32, request, type);
     __io_decode_value(ctx, bool, request, polled);
     __io_decode_value(ctx, uint32, request, max_recv);
     __io_decode_type_end(ctx);
@@ -746,6 +750,7 @@ int32_t io_message_create(
         return result;
 
     message->type = type;
+    message->seq_id = (uint32_t)atomic_inc(_counter);
     io_ref_copy(source, &message->source_id);
     io_ref_copy(target, &message->target_id);
     dbg_assert_msg(message);
@@ -860,7 +865,7 @@ int32_t io_encode_message(
     dbg_assert_ptr(ctx);
     dbg_assert_msg(msg);
 
-    __io_encode_type_begin(ctx, msg, 8);
+    __io_encode_type_begin(ctx, msg, 9);
     result = io_encode_uint32(ctx, "version", MODULE_VER_NUM);
     if (result != er_ok)
         return result;
@@ -869,6 +874,7 @@ int32_t io_encode_message(
     __io_encode_object(ctx, ref, msg, proxy_id);
     __io_encode_object(ctx, ref, msg, target_id);
 
+    __io_encode_value(ctx, uint32, msg, seq_id);
     __io_encode_value(ctx, int32, msg, error_code);
     __io_encode_value(ctx, bool, msg, is_response);
     __io_encode_value(ctx, uint32, msg, type);
@@ -896,7 +902,7 @@ int32_t io_decode_message(
     dbg_assert_ptr(ctx);
     dbg_assert_msg(msg);
 
-    __io_decode_type_begin(ctx, msg, 8);
+    __io_decode_type_begin(ctx, msg, 9);
     result = io_decode_uint32(ctx, "version", &version);
     if (result != er_ok)
         return result;
@@ -911,6 +917,7 @@ int32_t io_decode_message(
     __io_decode_object(ctx, ref, msg, proxy_id);
     __io_decode_object(ctx, ref, msg, target_id);
 
+    __io_decode_value(ctx, uint32, msg, seq_id);
     __io_decode_value(ctx, int32, msg, error_code);
     __io_decode_value(ctx, bool, msg, is_response);
     __io_decode_value(ctx, uint32, msg, type);

@@ -10,56 +10,87 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Runtime.Serialization;
 
     /// <summary>
-    /// Address info flags
-    /// </summary>
-    [Flags]
-    public enum IfAddrInfoFlag {
-        InterfaceUp = 0x1,
-        Loopback = 0x2,
-        Multicast = 0x4
-    }
-
-    /// <summary>
     /// Platform independent network interface info
     /// </summary>
     [DataContract]
-    public class InterfaceInfo : Serializable<InterfaceInfo> {
+    public class InterfaceInfo : Poco<InterfaceInfo> {
 
         /// <summary>
         /// Address of interface
         /// </summary>
         [DataMember(Name = "address", Order = 1)]
-        public SocketAddress Address { get; set; }
+        public SocketAddress Address {
+            get; set;
+        }
 
         /// <summary>
         /// Subnet mask in form of prefix
         /// </summary>
         [DataMember(Name = "prefix", Order = 2)]
-        public byte SubnetPrefix { get; set; }
+        public byte SubnetPrefix {
+            get; set;
+        }
+
+        public static readonly byte InterfaceUp = 0x1;
+        public static readonly byte Loopback = 0x2;
+        public static readonly byte Multicast = 0x4;
 
         /// <summary>
-        /// Flags (see above)
+        /// Address info flags - see above
         /// </summary>
         [DataMember(Name = "flags", Order = 3)]
-        public byte Flags { get; set; }
+        public byte Flags {
+            get; set;
+        }
 
         /// <summary>
         /// Name of interface entry, e.g. eth0:
         /// </summary>
         [DataMember(Name = "name", Order = 4)]
-        public string Name { get; set; } = "";
+        public string Name {
+            get; set;
+        } = "";
 
         /// <summary>
         /// Index of interface 
         /// </summary>
         [DataMember(Name = "index", Order = 5)]
-        public int Index { get; set; }
+        public int Index {
+            get; set;
+        }
 
         /// <summary>
         /// Broadcast address for this interface
         /// </summary>
         [DataMember(Name = "broadcast_addr", Order = 6)]
-        public SocketAddress Broadcast { get; set; }
+        public SocketAddress Broadcast {
+            get; set;
+        }
+
+        /// <summary>
+        /// Create interface info
+        /// </summary>
+        /// <param name="address"></param>
+        /// <param name="subnetPrefix"></param>
+        /// <param name="flags"></param>
+        /// <param name="name"></param>
+        /// <param name="index"></param>
+        /// <param name="broadcast"></param>
+        /// <returns></returns>
+        public static InterfaceInfo Create(SocketAddress address, byte subnetPrefix,
+            byte flags, string name, int index, SocketAddress broadcast) {
+            var info = Get();
+            info.Address = address;
+            info.SubnetPrefix = subnetPrefix;
+            info.Flags = flags;
+            info.Name = name;
+            info.Index = index;
+            info.Broadcast = broadcast;
+            return info;
+        }
+
+        public InterfaceInfo Clone() => Create(Address, SubnetPrefix, Flags, Name,
+            Index, Broadcast);
 
         /// <summary>
         /// Comparison

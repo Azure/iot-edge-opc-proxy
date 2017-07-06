@@ -20,12 +20,13 @@ typedef struct io_codec io_codec_t;
 //
 typedef enum io_codec_id
 {
-    io_codec_mpack = 1,
+    io_codec_auto = 0,
+    io_codec_mpack,
     io_codec_json,
 
     //...
 
-    io_codec_unknown = 0
+    io_codec_unknown = io_codec_auto
 }
 io_codec_id_t;
 

@@ -202,7 +202,7 @@ typedef struct prx_addrinfo
 {
     prx_socket_address_t address;                    // Address
     int32_t reserved;  // Used to mark whether it needs freeing
-    char* name;                   // Canonical name of the host
+    const char* name;             // Canonical name of the host
 }
 prx_addrinfo_t;
 
@@ -436,8 +436,8 @@ typedef struct prx_socket_properties
     uint32_t flags;                       // prx_socket_flags_t
     uint64_t timeout;    // Timeout of socket after which to gc
     prx_socket_address_t address;      // address of the socket 
-    prx_property_t options[__prx_so_max]; 
-                                    // options to apply on open
+    size_t options_len;
+    prx_property_t* options;        // options to apply on open
 }
 prx_socket_properties_t;
 

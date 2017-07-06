@@ -15,13 +15,15 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Browse rpc response
     /// </summary>
     [DataContract]
-    public class BrowseResponse : Serializable<BrowseResponse> {
+    public class BrowseResponse : Poco<BrowseResponse> {
 
         /// <summary>
         /// Original request handle 
         /// </summary>
         [DataMember(Name = "handle", Order = 1)]
-        public Reference Handle { get; set; }
+        public Reference Handle {
+            get; set;
+        }
 
         //
         // Response flags denoting the type of response or event occurred
@@ -35,30 +37,40 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Flags
         /// </summary>
         [DataMember(Name = "flags", Order = 2)]
-        public int Flags { get; set; }
+        public int Flags {
+            get; set;
+        }
 
         /// <summary>
         /// Error - Results in exception if not Ok.
         /// </summary>
         [DataMember(Name = "error_code", Order = 3)]
-        public int Error { get; set; }
+        public int Error {
+            get; set;
+        }
 
         /// <summary>
         /// Browsed item or null if response is empty.
         /// </summary>
         [DataMember(Name = "item", Order = 4)]
-        public SocketAddress Item { get; set; }
+        public SocketAddress Item {
+            get; set;
+        }
 
         /// <summary>
         /// Properties of item
         /// </summary>
         [DataMember(Name = "props", Order = 5)]
-        public List<PropertyBase> Properties { get; set; } = new List<PropertyBase>();
+        public List<IProperty> Properties {
+            get; set;
+        } = new List<IProperty>();
 
         /// <summary>
         /// Proxy from which the response was received
         /// </summary>
-        public SocketAddress Interface { get; internal set; }
+        public SocketAddress Interface {
+            get; internal set;
+        }
 
         /// <summary>
         /// Comparison

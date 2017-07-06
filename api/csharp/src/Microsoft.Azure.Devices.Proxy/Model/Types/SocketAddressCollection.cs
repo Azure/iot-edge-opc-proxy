@@ -19,13 +19,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class SocketAddressCollection : SocketAddress, IEquatable<SocketAddressCollection> {
 
         [DataMember(Name = "family", Order = 1)]
-        public override AddressFamily Family => AddressFamily.Collection;
+        public override AddressFamily Family {
+            get => AddressFamily.Collection;
+        }
 
         /// <summary>
         /// Storage of socket addresses
         /// </summary>
         [DataMember(Name = "includes", Order = 2)]
-        HashSet<SocketAddress> Inner { get; set; }
+        HashSet<SocketAddress> Inner {
+            get; set;
+        }
 
         /// <summary>
         /// Create an address from a list
@@ -60,7 +64,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                         yield return r;
                     }
                 }
-                else if (!(address is NullSocketAddress)) {
+                else if (!(address is AnySocketAddress)) {
                     yield return address;
                 }
             }

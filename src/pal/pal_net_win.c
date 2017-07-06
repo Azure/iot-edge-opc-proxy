@@ -41,8 +41,8 @@ int32_t pal_os_to_prx_net_error(
     case WSAENETDOWN:                 return er_network;
     case WSAENETUNREACH:              return er_undelivered;
     case WSAENETRESET:                return er_network;
-    case WSAECONNABORTED:             return er_connecting;
-    case WSAECONNRESET:               return er_aborted;
+    case WSAECONNABORTED:             return er_closed;
+    case WSAECONNRESET:               return er_closed;
     case WSAENOBUFS:                  return er_out_of_memory;
     case WSAEISCONN:                  return er_connecting;
     case WSAENOTCONN:                 return er_closed;
@@ -150,14 +150,16 @@ int32_t pal_os_last_net_error_as_prx_error(
 
     error = WSAGetLastError();
     if (error != 0 &&
-        error != WSAEWOULDBLOCK)
+        error != WSAEWOULDBLOCK &&
+        error != WSA_IO_PENDING)
     {
         FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
             FORMAT_MESSAGE_IGNORE_INSERTS,
             NULL, error, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             (char*)&message, 0, NULL);
-
+        if (message)
+            string_trim_back(message, "\r\n\t ");
         log_info(NULL, "Networking error code %d (%s)",
             error, message ? message : "<unknown>");
         LocalFree(message);

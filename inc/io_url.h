@@ -24,6 +24,14 @@ typedef struct io_url
 io_url_t;
 
 //
+// Creates a url from a string
+//
+decl_internal_2(int32_t, io_url_parse,
+    const char*, string,
+    io_url_t**, url
+);
+
+//
 // Creates a url 
 //
 decl_internal_7(int32_t, io_url_create,

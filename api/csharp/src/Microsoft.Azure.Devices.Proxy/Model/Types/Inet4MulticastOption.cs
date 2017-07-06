@@ -13,16 +13,41 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// Multi cast socket option
     /// </summary>
     [DataContract]
-    public class Inet4MulticastOption : MulticastOption, IEquatable<Inet4MulticastOption> {
+    public class Inet4MulticastOption : Poco<Inet4MulticastOption>, IMulticastOption {
 
         [DataMember(Name = "family", Order = 1)]
-        public override AddressFamily Family => AddressFamily.InterNetwork;
+        public AddressFamily Family {
+            get => AddressFamily.InterNetwork;
+        }
+
+        /// <summary>
+        /// Interface to use
+        /// </summary>
+        [DataMember(Name = "itf_index", Order = 2)]
+        public int InterfaceIndex {
+            get; set;
+        }
 
         /// <summary>
         /// Returns the 32 bit address as a buffer
         /// </summary>
         [DataMember(Name = "addr", Order = 3)]
-        public byte[] Address { get; set; }
+        public byte[] Address {
+            get; set;
+        }
+
+        /// <summary>
+        /// Constructor
+        /// </summary>
+        /// <param name="interfaceIndex"></param>
+        /// <param name="address"></param>
+        /// <returns></returns>
+        public static Inet4MulticastOption Create(int interfaceIndex, byte[] address) {
+            var option = Get();
+            option.InterfaceIndex = interfaceIndex;
+            option.Address = address;
+            return option;
+        }
 
         /// <summary>
         /// Returns address as 32 bit int
@@ -30,19 +55,16 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public uint ToUInt32() => BitConverter.ToUInt32(Address, 0);
 
-        public bool Equals(Inet4MulticastOption that) {
-            if (that == null) {
-                return false;
-            }
+        public override bool IsEqual(Inet4MulticastOption that) {
             return
-                IsEqual(that as MulticastOption) &&
+                IsEqual(Family, that.Family) &&
+                IsEqual(InterfaceIndex, that.InterfaceIndex) &&
                 IsEqual(ToUInt32(), that.ToUInt32());
         }
 
-        public override bool IsEqual(object that) => Equals(that as Inet4MulticastOption);
-
         protected override void SetHashCode() {
-            base.SetHashCode();
+            MixToHash(Family);
+            MixToHash(InterfaceIndex);
             MixToHash(ToUInt32());
         }
     }

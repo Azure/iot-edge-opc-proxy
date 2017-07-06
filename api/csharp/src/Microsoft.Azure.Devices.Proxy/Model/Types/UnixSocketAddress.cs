@@ -16,13 +16,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class UnixSocketAddress : SocketAddress, IEquatable<UnixSocketAddress> {
 
         [DataMember(Name = "family", Order = 1)]
-        public override AddressFamily Family => AddressFamily.Unix;
+        public override AddressFamily Family {
+            get => AddressFamily.Unix;
+        }
 
         /// <summary>
         /// Path to the unix pipe
         /// </summary>
         [DataMember(Name = "path", Order = 2)]
-        public string Path { get; set; } = "";
+        public string Path {
+            get; set;
+        } = "";
 
         /// <summary>
         /// Default constructor

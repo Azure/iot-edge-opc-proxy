@@ -8,8 +8,8 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
-    using Microsoft.Azure.Devices.Proxy;
     using System.Collections.Generic;
+    using Microsoft.Azure.Devices.Proxy;
 
     class Program {
 

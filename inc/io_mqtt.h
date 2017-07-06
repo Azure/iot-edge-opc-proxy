@@ -59,7 +59,8 @@ decl_internal_5(int32_t, io_mqtt_connection_subscribe,
 // Reconnect callback
 //
 typedef bool (*io_mqtt_connection_reconnect_t)(
-    void* context
+    void* context,
+    int32_t last_error
     );
 
 //

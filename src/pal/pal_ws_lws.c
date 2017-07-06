@@ -74,6 +74,7 @@ struct pal_wsclient
     uint16_t port;
     char* relative_path;
     char* protocol_name;
+    bool secure;
     STRING_HANDLE headers;
 
     atomic_t state;                           // State of the client
@@ -897,7 +898,7 @@ static int32_t pal_wsworker_thread(
                     connect_info.context = worker->context;
                     connect_info.address = next->host;
                     connect_info.port = next->port;
-                    connect_info.ssl_connection = LCCSCF_USE_SSL;
+                    connect_info.ssl_connection = next->secure ? LCCSCF_USE_SSL : 0;
                     connect_info.path = next->relative_path;
                     connect_info.host = next->host;
                     connect_info.origin = next->host;
@@ -907,9 +908,10 @@ static int32_t pal_wsworker_thread(
                     connect_info.userdata = next;
                     next->wsi = lws_client_connect_via_info(&connect_info);
 #else
-                    next->wsi = lws_client_connect_extended(worker->context,
-                        next->host, next->port, 1 /* ssl */, next->relative_path, next->host,
-                        next->host, worker->protocols->name, -1 /* ietf_latest */, next);
+                    next->wsi = lws_client_connect_extended(worker->context, 
+                        next->host, next->port, next->secure ? 1 : 0,
+                        next->relative_path, next->host, next->host, 
+                        worker->protocols->name, -1 /* ietf_latest */, next);
 #endif
                     if (!next->wsi)
                     {
@@ -1273,6 +1275,7 @@ int32_t pal_wsclient_create(
     const char* host,
     uint16_t port,
     const char* path,
+    bool secure,
     pal_wsclient_event_handler_t callback,
     void* context,
     pal_wsclient_t** created
@@ -1296,6 +1299,7 @@ int32_t pal_wsclient_create(
         wsclient->log = log_get("pal_ws");
         wsclient->cb = callback;
         wsclient->context = context;
+        wsclient->secure = secure;
         DList_InitializeListHead(&wsclient->link);
 
         result = string_clone(host, &wsclient->host);

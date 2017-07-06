@@ -33,7 +33,8 @@ static int32_t pal_sd_result_printer(
 )
 {
     pal_sd_browse_result_t* rec = (pal_sd_browse_result_t*)result;
-    pal_sd_resolve_result_t* res = (pal_sd_resolve_result_t*)result;
+    pal_sd_service_entry_t* res = (pal_sd_service_entry_t*)result;
+    prx_addrinfo_t* ainfo = (prx_addrinfo_t*)result;
     sd_ctx_t* ctx = (sd_ctx_t*)context;
 
     if (error != er_ok)
@@ -56,7 +57,7 @@ static int32_t pal_sd_result_printer(
         printf("[SVC] %s I:%x  D: %s  T: %s  N: %s \n", flags & pal_sd_result_removed ? "REM" : "   ",
             itf_index, rec->domain, rec->service_type, rec->service_name);
         break;
-    case pal_sd_result_resolve:
+    case pal_sd_result_entry:
         printf("[RES]   ->: %s:%d  I:%x \n", res->addr->host, 
             res->addr->port, itf_index);
         for (size_t i = 0; i < res->records_len; i++)
@@ -65,6 +66,24 @@ static int32_t pal_sd_result_printer(
                (int)res->records[i].property.bin.size, 
                     res->records[i].property.bin.value);
         }
+        break;
+    case pal_sd_result_addrinfo:
+        if (ainfo->address.un.family == prx_address_family_inet)
+        {
+            printf("[ADR]   ->: %s: %d.%d.%d.%d:%d \n", ainfo->name,
+                ainfo->address.un.ip.un.in4.un.u8[0], ainfo->address.un.ip.un.in4.un.u8[1],
+                ainfo->address.un.ip.un.in4.un.u8[2], ainfo->address.un.ip.un.in4.un.u8[3],
+                ainfo->address.un.ip.port);
+        }
+        else
+        {
+            printf("[ADR]   ->: %s: [%x:%x:%x:%x:%x:%x:%x:%x]:%d \n", ainfo->name,
+                ainfo->address.un.ip.un.in6.un.u16[0], ainfo->address.un.ip.un.in6.un.u16[1],
+                ainfo->address.un.ip.un.in6.un.u16[2], ainfo->address.un.ip.un.in6.un.u16[3],
+                ainfo->address.un.ip.un.in6.un.u16[4], ainfo->address.un.ip.un.in6.un.u16[5],
+                ainfo->address.un.ip.un.in6.un.u16[6], ainfo->address.un.ip.un.in6.un.u16[7],
+                ainfo->address.un.ip.port);
+        }
         return er_ok;
     default:
         dbg_assert(0, "Unexpected");
@@ -72,10 +91,14 @@ static int32_t pal_sd_result_printer(
     }
 
     if (!(flags & pal_sd_result_removed) && ctx->recursive)
+    {
+        if (type == pal_sd_result_entry)
+            return pal_sdbrowser_resolve(ctx->browser, res->addr, prx_itf_index_all);
+
         return pal_sdbrowser_browse(ctx->browser, rec->service_name,
             rec->service_type, rec->domain, prx_itf_index_all);
-    else
-        return er_ok;
+    }
+    return er_ok;
 }
 
 //
@@ -98,7 +121,7 @@ int32_t print(
     ctx->browser = NULL;
     do
     {
-        result = pal_sdclient_create(&ctx->client);
+        result = pal_sdclient_create(NULL, NULL, &ctx->client);
         if (result != er_ok)
             break;
 
@@ -126,9 +149,70 @@ int32_t print(
     if (ctx->browser)
         pal_sdbrowser_free(ctx->browser);
     if (ctx->client)
-        pal_sdclient_release(ctx->client);
+        pal_sdclient_free(ctx->client);
     
-    signal_wait(signal, 2000);
+    if (signal)
+        signal_free(signal);
+    return result;
+}
+
+//
+// Resolve address
+//
+int32_t resolve(
+    const char* host,
+    const char* port,
+    sd_ctx_t* ctx
+)
+{
+    int32_t result;
+    signal_t* signal;
+    prx_socket_address_proxy_t addr;
+
+    if (!host)
+        return er_arg;
+
+    result = signal_create(true, false, &signal);
+    if (result != er_ok)
+        return result;
+    ctx->client = NULL;
+    ctx->browser = NULL;
+    ctx->recursive = false;
+    do
+    {
+        result = pal_sdclient_create(NULL, NULL, &ctx->client);
+        if (result != er_ok)
+            break;
+
+        result = pal_sdbrowser_create(ctx->client, pal_sd_result_printer, ctx,
+            &ctx->browser);
+        if (result != er_ok)
+        {
+            log_error(cat, "Failed creating browser %s", prx_err_string(result));
+            break;
+        }
+
+        memset(&addr, 0, sizeof(addr));
+        addr.family = prx_address_family_proxy;
+        if (port) addr.port = (uint16_t)atoi(port);
+        strcpy(addr.host, host);
+
+        result = pal_sdbrowser_resolve(ctx->browser, &addr, prx_itf_index_all);
+        if (result != er_ok)
+        {
+            log_error(cat, "Failed using browser %s", prx_err_string(result));
+            break;
+        }
+
+        signal_wait(signal, 500);
+        result = er_ok;
+        break;
+    } while (0);
+
+    if (ctx->browser)
+        pal_sdbrowser_free(ctx->browser);
+    if (ctx->client)
+        pal_sdclient_free(ctx->client);
 
     if (signal)
         signal_free(signal);
@@ -174,6 +258,43 @@ int main_sd(int argc, char *argv[])
         return result;
 
     result = print(domain, type, name, &ctx);
+
+    pal_deinit();
+    return result;
+}
+
+//
+// Name resolver
+//
+int main_sr(int argc, char *argv[])
+{
+    int32_t result;
+    const char* host = NULL;
+    const char* port = NULL;
+    sd_ctx_t ctx;
+
+    if (argc <= 1)
+        return er_arg;
+
+    cat = log_get("test.sr");
+
+    memset(&ctx, 0, sizeof(sd_ctx_t));
+    while (argc > 1)
+    {
+        argv++;
+        argc--;
+
+        if (!host)
+            host = argv[0];
+        if (!port)
+            port = argv[0];
+    }
+
+    result = pal_init();
+    if (result != er_ok)
+        return result;
+
+    result = resolve(host, port, &ctx);
 
     pal_deinit();
     return result;

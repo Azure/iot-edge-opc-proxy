@@ -24,6 +24,8 @@ struct pal_sdclient
 {
     DNSServiceRef ref;           // Master connection for browsing
     uintptr_t event_handle;
+    pal_sdclient_error_cb_t cb;
+    void* context;
     log_t log;
 };
 
@@ -38,6 +40,7 @@ struct pal_sdbrowser
     pal_sdclient_t* client;          // Reference to client object
     pal_sd_result_cb_t cb;                  // Result callback ...
     void* context;                         // ... and user context
+    uint16_t port;
     log_t log;
 };
 
@@ -128,7 +131,7 @@ static int32_t pal_sd_mdns_error_to_prx_error(
 //
 // Convert flags
 //
-int32_t pal_sd_mdns_flag_to_pal_flags(
+static int32_t pal_sd_mdns_flag_to_pal_flags(
     int plat_flags
 )
 {
@@ -137,10 +140,26 @@ int32_t pal_sd_mdns_flag_to_pal_flags(
     if (0 == (plat_flags & kDNSServiceFlagsAdd))
         pal_flags |= pal_sd_result_removed;
 
-   // if (0 == (plat_flags & kDNSServiceFlagsMoreComing))
-   //     pal_flags |= pal_sd_result_all_for_now;
-
     return pal_flags;
+}
+
+//
+// Release client
+//
+static void pal_sdclient_release(
+    pal_sdclient_t* client
+)
+{
+    if (!client)
+        return;
+    if (DEC_REF(pal_sdclient_t, client) == DEC_RETURN_ZERO)
+    {
+        // Deregister from event port and wait for close complete
+        if (client->event_handle != 0)
+            pal_event_close(client->event_handle, false);
+        else
+            pal_sdclient_free(client);
+    }
 }
 
 //
@@ -161,7 +180,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
 {
     int32_t result;
     pal_sdbrowser_t* browser = (pal_sdbrowser_t*)context;
-    pal_sd_resolve_result_t resolve_result;
+    pal_sd_service_entry_t resolve_result;
     prx_socket_address_proxy_t addr;
     const unsigned char *txt_ptr, *txt_max = txt + txt_len;
 
@@ -227,7 +246,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
     }
 
     result = browser->cb(browser->context, (int32_t)itf_index,
-        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_resolve, 
+        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_entry, 
         &resolve_result, pal_sd_mdns_flag_to_pal_flags(flags | kDNSServiceFlagsAdd));
     if (result != er_ok)
     {
@@ -247,7 +266,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
 //
 // Resolve services, or browse services and domains
 //
-static int32_t pal_sdbrowser_resolve(
+static int32_t pal_sdbrowser_resolve_service(
     pal_sdbrowser_t* browser,
     const char* service_name,
     const char* service_type,
@@ -357,7 +376,6 @@ static int32_t pal_sdbrowser_enumerate_services(
         prx_err_string(result));
     return result;
 }
-
 
 //
 // Callback
@@ -542,9 +560,9 @@ static int32_t pal_sdbrowser_enumerate_domains(
 }
 
 //
-// Free client
+// Finally deallocate client when socket is destroyed.
 //
-static void pal_sdclient_free(
+static void pal_sdclient_on_destroy(
     pal_sdclient_t* client
 )
 {
@@ -552,7 +570,23 @@ static void pal_sdclient_free(
         return;
     if (client->ref)
         DNSServiceRefDeallocate(client->ref);
+
     mem_free_type(pal_sdclient_t, client);
+}
+
+//
+// In case of daemon communication error notify client to reconnect.
+//
+static void pal_sdclient_on_error(
+    pal_sdclient_t* client,
+    int32_t error_code
+)
+{
+    if (client->cb)
+    {
+        client->cb(client->context, error_code);
+        client->cb = NULL; // One shot callback
+    }
 }
 
 //
@@ -572,20 +606,21 @@ static int32_t pal_sdclient_socket_callback(
     {
     case pal_event_type_read:
         error = DNSServiceProcessResult(client->ref);
-        return pal_sd_mdns_error_to_prx_error(error);
+        if (error == kDNSServiceErr_NoError)
+            break;
+        error_code = pal_sd_mdns_error_to_prx_error(error);
+        pal_sdclient_on_error(client, error_code);
+        break;
     case pal_event_type_write:
         break;
     case pal_event_type_error:
-        // TODO:
-        (void)error_code;
-        log_error(client->log, "Error on client socket!");
+        pal_sdclient_on_error(client, error_code);
         break;
     case pal_event_type_close:
-        // TODO:
-        log_error(client->log, "Remote side closed!");
+        pal_sdclient_on_error(client, er_closed);
         break;
     case pal_event_type_destroy:
-        pal_sdclient_free(client);
+        pal_sdclient_on_destroy(client);
         break;
     case pal_event_type_unknown:
     default:
@@ -596,32 +631,135 @@ static int32_t pal_sdclient_socket_callback(
 }
 
 //
+// Callback
+//
+static void DNSSD_API pal_sdbrowser_getaddrinfo_reply(
+    DNSServiceRef ref,
+    DNSServiceFlags flags,
+    uint32_t itf_index,
+    DNSServiceErrorType error,
+    const char *hostname,
+    const struct sockaddr *address,
+    uint32_t ttl,
+    void *context
+)
+{
+    int32_t result;
+    pal_sdbrowser_t* browser = (pal_sdbrowser_t*)context;
+    prx_addrinfo_t addrinfo_result;
+    socklen_t address_len;
+
+    (void)ref;
+    (void)ttl;
+
+    dbg_assert_ptr(browser);
+    dbg_assert(browser->ref == ref, "Unexpected ref not equal");
+
+    memset(&addrinfo_result, 0, sizeof(addrinfo_result));
+    addrinfo_result.name = hostname;
+
+    if (error != 0)
+        result = pal_sd_mdns_error_to_prx_error(error);
+    else
+    {
+        dbg_assert_ptr(address);
+        switch (address->sa_family)
+        {
+        case AF_INET6:
+            address_len = sizeof(struct sockaddr_in6);
+            break;
+        case AF_INET:
+            address_len = sizeof(struct sockaddr_in);
+            break;
+        default:
+            dbg_assert(0, "Bad family returned");
+            address_len = 0;
+            break;
+        }
+        result = pal_os_to_prx_socket_address(address, address_len,
+            &addrinfo_result.address);
+        addrinfo_result.address.un.ip.port = browser->port;
+    }
+    result = browser->cb(browser->context, (int32_t)itf_index,
+        result, pal_sd_result_addrinfo, &addrinfo_result,
+        pal_sd_mdns_flag_to_pal_flags(flags));
+    if (result != er_ok)
+    {
+        if (result != er_aborted)
+        {
+            log_error(browser->log, "getaddrinfo callback returned %s...",
+                prx_err_string(result));
+        }
+        // Cancel ref
+        DNSServiceRefDeallocate(browser->ref);
+        browser->ref = NULL;
+    }
+}
+
+//
+// Resolve service entries into addrinfo objects
+//
+int32_t pal_sdbrowser_resolve(
+    pal_sdbrowser_t* browser,
+    prx_socket_address_proxy_t* addr,
+    int32_t itf_index
+)
+{
+    int32_t result;
+    DNSServiceErrorType error;
+    DNSServiceProtocol plat_proto;
+
+    chk_arg_fault_return(browser);
+    chk_arg_fault_return(addr);
+
+    plat_proto = kDNSServiceProtocol_IPv4 | kDNSServiceProtocol_IPv6;
+
+    if (browser->ref)
+        DNSServiceRefDeallocate(browser->ref);
+    browser->ref = browser->client->ref;
+    browser->port = addr->port;
+    error = DNSServiceGetAddrInfo(&browser->ref, kDNSServiceFlagsShareConnection,
+        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
+        (uint32_t)itf_index, plat_proto, addr->host,
+        pal_sdbrowser_getaddrinfo_reply, browser);
+    if (!error)
+        return er_ok;
+
+    result = pal_sd_mdns_error_to_prx_error(error);
+    log_error(browser->log, "getaddrino call failed with %d (%s).", error,
+        prx_err_string(result));
+    return result;
+}
+
+//
 // Resolve services, or browse services and domains
 //
 int32_t pal_sdbrowser_browse(
     pal_sdbrowser_t* browser,
-    const char* service_name,      // Pass null to browse services
-    const char* service_type, // Pass null to browse service types
-    const char* domain,           // Pass null for domain browsing
+    const char* service_name,       // Pass null to browse services
+    const char* service_type,  // Pass null to browse service types
+    const char* domain,            // Pass null for domain browsing
     int32_t itf_index
 )
 {
+    chk_arg_fault_return(browser);
+
     if (service_name)
         // Resolve service name to host
-        return pal_sdbrowser_resolve(browser,
-            service_name, service_type, domain, itf_index);
+        return pal_sdbrowser_resolve_service(browser,
+                    service_name, service_type, domain, itf_index);
     if (service_type)
         // Browse
         return pal_sdbrowser_enumerate_services(browser,
-                          service_type, domain, itf_index);
+                                  service_type, domain, itf_index);
     if (domain)
         // Enumerate service types in domain
         return pal_sdbrowser_enumerate_service_types(browser,
-                                        domain, itf_index);
+                                                domain, itf_index);
+
 
         // Enumerate domains
-        return pal_sdbrowser_enumerate_domains(browser,
-                                                itf_index);
+        return pal_sdbrowser_enumerate_domains(browser, itf_index);
 }
 
 //
@@ -677,6 +815,7 @@ void pal_sdbrowser_free(
         DNSServiceRefDeallocate(browser->ref);
     if (browser->client)
         pal_sdclient_release(browser->client);
+
     mem_free_type(pal_sdbrowser_t, browser);
 }
 
@@ -684,6 +823,8 @@ void pal_sdbrowser_free(
 // Create client
 //
 int32_t pal_sdclient_create(
+    pal_sdclient_error_cb_t cb,
+    void* context,
     pal_sdclient_t** created
 )
 {
@@ -703,6 +844,8 @@ int32_t pal_sdclient_create(
     do
     {
         client->log = log_get("sd");
+        client->cb = cb;
+        client->context = context;
 
         error = DNSServiceCreateConnection(&client->ref);
         if (error != 0)
@@ -739,22 +882,19 @@ int32_t pal_sdclient_create(
 }
 
 //
-// Release client
+// Free client
 //
-void pal_sdclient_release(
+void pal_sdclient_free(
     pal_sdclient_t* client
 )
 {
     if (!client)
         return;
-    if (DEC_REF(pal_sdclient_t, client) == DEC_RETURN_ZERO)
-    {
-        // Deregister from event port and wait for close complete
-        if (client->event_handle != 0)
-            pal_event_close(client->event_handle, false);
-        else
-            pal_sdclient_free(client);
-    }
+
+    client->cb = NULL;
+    client->context = NULL;
+    
+    pal_sdclient_release(client);
 }
 
 //

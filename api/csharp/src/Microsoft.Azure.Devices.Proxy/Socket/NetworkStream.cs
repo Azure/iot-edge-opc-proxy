@@ -1,7 +1,7 @@
-// ------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-//  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
-// ------------------------------------------------------------
+/// ------------------------------------------------------------
+///  Copyright (c) Microsoft Corporation.  All rights reserved.
+///  Licensed under the MIT License (MIT). See License.txt in the repo root for license information.
+/// ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
@@ -10,17 +10,17 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading;
     using System.Threading.Tasks;
 
-    //
-    // Provides the underlying stream for TCP Client network access
-    //
+    /// <summary>
+    /// Provides the underlying stream for TCP Client network access
+    /// </summary>
     public class NetworkStream : Stream {
 
         private volatile bool _cleanedUp = false;
         private bool _ownsSocket = false;
 
-        //
-        // Create stream with socket, and declare socket ownership
-        //
+        /// <summary>
+        /// Create stream with socket, and declare socket ownership
+        /// </summary>
         public NetworkStream(Socket socket, bool ownsSocket) {
             if (socket == null) {
                 throw new ArgumentNullException(nameof(socket));
@@ -39,89 +39,79 @@ namespace Microsoft.Azure.Devices.Proxy {
             Writeable = true;
         }
 
-        //
-        // Creates a new NetworkStream class
-        //
-        public NetworkStream(Socket socket) : 
-            this(socket, false) {
-        }
+        /// <summary>
+        /// Creates a new NetworkStream class
+        /// </summary>
+        public NetworkStream(Socket socket) : this(socket, false) {}
 
-        //
-        // Returns the underlying socket 
-        //
+        /// <summary>
+        /// Returns the underlying socket 
+        /// </summary>
         public Socket Socket {
             get; private set;
         }
 
-        //
-        // Used by the class to indicate that the stream is readable.
-        //
+        /// <summary>
+        /// Used by the class to indicate that the stream is readable.
+        /// </summary>
         protected bool Readable {
             get; set;
         }
 
-        //
-        // Used by the class to indicate that the stream is writable.
-        //
+        /// <summary>
+        /// Used by the class to indicate that the stream is writable.
+        /// </summary>
         protected bool Writeable {
             get; set;
         }
 
-        //
-        // Indicates that data can be read from the stream.
-        //
+        /// <summary>
+        /// Indicates that data can be read from the stream.
+        /// </summary>
         public override bool CanRead {
-            get { return Readable; }
+            get => Readable; 
         }
 
-        //
-        // Cannot seek
-        //
+        /// <summary>
+        /// Cannot seek
+        /// </summary>
         public override bool CanSeek {
-            get { return false; }
+            get => false; 
         }
 
-        //
-        // Indicates that data can be written to the stream.
-        //
+        /// <summary>
+        /// Indicates that data can be written to the stream.
+        /// </summary>
         public override bool CanWrite {
-            get { return Writeable; }
+            get => Writeable; 
         }
 
-        //
-        // Can always timeout
-        //
+        /// <summary>
+        /// Can always timeout
+        /// </summary>
         public override bool CanTimeout {
-            get { return true; }
+            get => true; 
         }
 
-        // 
-        // Returns the read timeout
-        //
+        /// <summary>
+        /// Returns the read timeout
+        /// </summary>
         public override int ReadTimeout {
-            get {
-                return Socket.ReceiveTimeout;
-            }
-            set {
-                Socket.ReceiveTimeout = value;
-            }
+            get => Socket.ReceiveTimeout;
+            set => Socket.ReceiveTimeout = value;
         }
 
-        // 
-        // Returns the write timeout 
-        //
+        /// <summary>
+        /// Returns the write timeout 
+        /// </summary>
         public override int WriteTimeout {
-            get {
-                return Socket.SendTimeout;
-            }
-            set {
-                Socket.SendTimeout = value;
-            }
+            get => Socket.SendTimeout;
+            set => Socket.SendTimeout = value;
         }
 
-        //
-        // Indicates data is available on the stream to be read.
-        // 
+        /// <summary>
+        /// Indicates data is available on the stream to be read.
+        /// </summary>
         public virtual bool DataAvailable {
             get {
                 if (_cleanedUp) {
@@ -136,9 +126,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        //
-        // Indicates whether the stream is still connected
-        //
+        /// <summary>
+        /// Indicates whether the stream is still connected
+        /// </summary>
         internal bool Connected {
             get {
                 Socket socket = Socket;
@@ -151,9 +141,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        //
-        // Read - provide core Read functionality.
-        //
+        /// <summary>
+        /// Read - provide core Read functionality.
+        /// </summary>
         public override int Read([In, Out] byte[] buffer, int offset, int size) {
             bool canRead = CanRead;  // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -165,7 +155,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -188,9 +178,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        //
-        // Write - provide core Write functionality.
-        // 
+        /// <summary>
+        /// Write - provide core Write functionality.
+        /// </summary>
         public override void Write(byte[] buffer, int offset, int size) {
             bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -202,7 +192,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -225,9 +215,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
 #if NET45 || NET46
-        //
-        // BeginRead - provide async read functionality.
-        // 
+        /// <summary>
+        /// BeginRead - provide async read functionality.
+        /// </summary>
         public override IAsyncResult BeginRead(byte[] buffer, int offset, int size, AsyncCallback callback, Object state) {
             bool canRead = CanRead; // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -239,7 +229,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -263,9 +253,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        //
-        // EndRead - handle the end of an async read.
-        // 
+        /// <summary>
+        /// EndRead - handle the end of an async read.
+        /// </summary>
         public override int EndRead(IAsyncResult asyncResult) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
@@ -290,9 +280,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 #endif
-        //
-        // ReadAsync - provide async read functionality.
-        // 
+        /// <summary>
+        /// ReadAsync - provide async read functionality.
+        /// </summary>
         public override Task<int> ReadAsync(byte[] buffer, int offset, int size, CancellationToken ct) {
             bool canRead = CanRead;  // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -304,7 +294,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -323,16 +313,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             });
         }
 
-        //
-        // ReadAsync - provide async read functionality.
-        // 
+        /// <summary>
+        /// ReadAsync - provide async read functionality.
+        /// </summary>
         public Task<int> ReadAsync(byte[] buffer) =>
             ReadAsync(buffer, 0, buffer.Length, CancellationToken.None);
 
 #if NET45 || NET46
-        //
-        // BeginWrite - provide async write functionality.
-        // 
+        /// <summary>
+        /// BeginWrite - provide async write functionality.
+        /// </summary>
         public override IAsyncResult BeginWrite(byte[] buffer, int offset, int size, AsyncCallback callback, Object state) {
             bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -344,7 +334,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -356,7 +346,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new IOException("connection closed");
             }
             try {
-                // Call BeginSend on the Socket.
+                /// Call BeginSend on the Socket.
                 IAsyncResult asyncResult =
                     chkStreamSocket.BeginSend(buffer, offset, size, callback, state);
 
@@ -370,9 +360,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        // 
-        // Complete write
-        //
+        /// <summary>
+        /// Complete write
+        /// </summary>
         public override void EndWrite(IAsyncResult asyncResult) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
@@ -397,9 +387,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 #endif
 
-        //
-        // WriteAsync - provide async write functionality.
-        //
+        /// <summary>
+        /// WriteAsync - provide async write functionality.
+        /// </summary>
         public override Task WriteAsync(byte[] buffer, int offset, int size, CancellationToken ct) {
             bool canWrite = CanWrite; // Prevent race with Dispose.
             if (_cleanedUp) {
@@ -411,7 +401,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (buffer == null) {
                 throw new ArgumentNullException("buffer");
             }
-            if (offset < 0 || offset > buffer.Length) {
+            if (offset < 0 || offset >= buffer.Length) {
                 throw new ArgumentOutOfRangeException("offset");
             }
             if (size < 0 || size > buffer.Length - offset) {
@@ -430,64 +420,53 @@ namespace Microsoft.Azure.Devices.Proxy {
             });
         }
 
-        //
-        // WriteAsync with just buffer
-        // 
+        /// <summary>
+        /// WriteAsync with just buffer
+        /// </summary>
         public Task WriteAsync(byte[] buffer) =>
             WriteAsync(buffer, 0, buffer.Length, CancellationToken.None);
 
-        //
-        // Flushes data from the stream.
-        //
-        public override void Flush() {
-        }
+        /// <summary>
+        /// Flushes data from the stream.
+        /// </summary>
+        public override void Flush() {}
+        
+        /// <summary>
+        /// Same no op but async
+        /// <summary>
+        public override Task FlushAsync(CancellationToken cancellationToken) =>
+            TaskEx.Completed;
 
-        //
-        // Same no op but async
-        //
-        public override Task FlushAsync(CancellationToken cancellationToken) {
-            return (Task)Task.FromResult(false);
-        }
-
-        //
-        // Always throws NotSupportedException.
-        //
+        /// <summary>
+        /// Always throws NotSupportedException.
+        /// </summary>
         public override long Length {
-            get {
-                throw new NotSupportedException("seek not supported on network streams");
-            }
+            get => throw new NotSupportedException("seek not supported on network streams");
         }
 
-        //
-        // Always throws NotSupportedException
-        //
-        public override void SetLength(long value) {
+        /// <summary>
+        /// Always throws NotSupportedException
+        /// </summary>
+        public override void SetLength(long value) =>
             throw new NotSupportedException("seek not supported on network streams");
-        }
 
-        //
-        // Always throws NotSupportedException.
-        //
+        /// <summary>
+        /// Always throws NotSupportedException.
+        /// </summary>
         public override long Position {
-            get {
-                return Length;
-            }
-            set {
-                SetLength(value);
-            }
+            get => Length;
+            set => SetLength(value);
         }
 
-        //
-        // Always throws NotSupportedException.
-        //
-        public override long Seek(long offset, SeekOrigin origin) {
-            return Length;
-        }
+        /// <summary>
+        /// Always throws NotSupportedException.
+        /// </summary>
+        public override long Seek(long offset, SeekOrigin origin) => Length;
 
         #region internal
-        //
-        // Disposes the Network stream.
-        //
+        /// <summary>
+        /// Disposes the Network stream.
+        /// </summary>
         protected override void Dispose(bool disposing) {
             // Mark this as disposed before changing anything else.
             bool cleanedUp = _cleanedUp;
