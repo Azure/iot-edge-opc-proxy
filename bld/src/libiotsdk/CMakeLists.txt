@@ -61,7 +61,6 @@ else()
         ${_SHARED_ROOT}/adapters/condition_pthreads.c
         ${_SHARED_ROOT}/adapters/threadapi_pthreads.c
         ${_SHARED_ROOT}/adapters/lock_pthreads.c
-        ${_SHARED_ROOT}/adapters/linux_time.c
     )
     if(NOT ${use_wolfssl})
         set(use_openssl 1)
