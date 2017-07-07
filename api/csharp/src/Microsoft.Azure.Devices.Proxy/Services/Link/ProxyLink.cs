@@ -139,7 +139,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return OpenRequest.Create(_streamId, (int)encoding, 
                     _connection.ConnectionString != null ?
                         _connection.ConnectionString.ToString() : "", 0, _connection.IsPolled,
-#if NO_MSG_OVER_8K 
+#if !NO_MSG_OVER_8K 
                     // TODO: Remove this when > 88 k messages are supported
                     800
 #else
