@@ -15,6 +15,28 @@ install to /tmp/azure you could use for example the following: ```make -C <repo-
 install```.  Then run the proxy: ```LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/tmp/azure/usr/local/lib /tmp/azure/usr/local/bin/proxyd 
 --help```
 
+# Linux Cross Build
+
+Debian 9 (stretch) provides tool chains for cross builds of Debian packages, as described in [CrossCompiling](https://wiki.debian.org/CrossCompiling). This tool chain could also used to cross build the proxy gateway:
+
+First modify the script bld/toolchain/create_cross_chroot.sh to your needs. Especially you may want to specify another location for the chroot environment.
+
+Then run the script:
+```
+sudo bld/toolchain/create_cross_chroot.sh
+```
+
+Then you need to make the sources of this gateway proxy available in the chroot. E.g. by mounting your home directory in the chroot, as described in [CrossCompiling](https://wiki.debian.org/CrossCompiling#Making_your_home_dir_available_in_the_chroot).
+
+Finally create a directory for the cross build (e.g. build/armhf_build) and build:
+
+```
+mkdir armhf_build
+cd armhf_build/
+schroot -c stretch-amd64-sbuild -- ../../bld/toolchain/build4armhf.sh
+schroot -c stretch-amd64-sbuild -- make
+```
+
 ## Windows
 The Proxy module was successfully built and tested on Windows 10 with Visual Studio 2017.
 - Install [Visual Studio 2017](https://www.visualstudio.com/downloads/).
