@@ -16,6 +16,7 @@ typedef unsigned long u_long;
 
 // pthread.h
 
+typedef int pthread_t;
 typedef int pthread_rwlock_t;
 typedef int pthread_rwlockattr_t;
 
@@ -477,6 +478,8 @@ enum __H_ERRNO
 // Windows types and defines to get windows os code to compile
 //
 #define _os_win_h_ 1
+
+#define GetCurrentThreadId GetCurrentThreadId_
 
 // Windows
 typedef wchar_t WCHAR, *LPWSTR;

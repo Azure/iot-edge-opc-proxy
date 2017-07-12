@@ -110,7 +110,8 @@ typedef int32_t (*io_connection_cb_t)(
     void* context,
     io_connection_event_t ev,
     io_message_t* message,
-    int32_t last_error
+    int32_t last_error,
+    uint32_t* delay
     );
 
 // 
@@ -153,5 +154,13 @@ decl_inline_7(int32_t, io_transport_create,
     return transport->on_create(transport->context, 
         entry, codec_id, cb, context, scheduler, connection);
 }
+
+//
+// Get transport for transport type
+//
+decl_internal_1(io_transport_t*, io_transport_get,
+    prx_transport_type_t, type
+);
+
 
 #endif // _io_transport_h_

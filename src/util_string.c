@@ -976,28 +976,28 @@ STRING_HANDLE STRING_construct_random(
 {
     int32_t result;
     char* buffer;
-size_t buf_len;
+    size_t buf_len;
 
-if (!len)
-return NULL;
+    if (!len)
+        return NULL;
 
-buf_len = (len + 1) / 2;
-buffer = (char*)crt_alloc(len + 2 + buf_len);
-if (buffer)
-{
-    result = pal_rand_fill(
-        (unsigned char*)&buffer[len + 2], buf_len);
-    if (result == er_ok)
+    buf_len = (len + 1) / 2;
+    buffer = (char*)crt_alloc(len + 2 + buf_len);
+    if (buffer)
     {
-        // Format the buffer as base16 and terminate 
-        string_from_buf((unsigned char*)&buffer[len + 2],
-            buffer, (len + 1), false);
-        buffer[len] = 0;
-        return STRING_new_with_memory(buffer);
+        result = pal_rand_fill(
+            (unsigned char*)&buffer[len + 2], buf_len);
+        if (result == er_ok)
+        {
+            // Format the buffer as base16 and terminate 
+            string_from_buf((unsigned char*)&buffer[len + 2],
+                buffer, (len + 1), false);
+            buffer[len] = 0;
+            return STRING_new_with_memory(buffer);
+        }
+        crt_free(buffer);
     }
-    crt_free(buffer);
-}
-return NULL;
+    return NULL;
 }
 
 //

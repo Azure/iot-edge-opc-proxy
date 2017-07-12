@@ -10,6 +10,7 @@
 // Defined option strings for xio layer
 //
 #define xio_opt_scheduler "scheduler"
+#define xio_opt_flow_ctrl "xon"
 
 //
 // Passed to xio for socket interface

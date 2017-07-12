@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Pro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Simple", "samples\simple\tcp\Simple.csproj", "{09EE653E-A545-4D4A-8291-DC8B1FBBC62F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Opc.Ua.Proxy", "samples\opc-ua\src\Microsoft.Azure.Devices.Opc.Ua.Proxy\Microsoft.Azure.Devices.Opc.Ua.Proxy.csproj", "{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Devices.Proxy.Opc.Ua", "samples\opc-ua\src\Microsoft.Azure.Devices.Proxy.Opc.Ua\Microsoft.Azure.Devices.Proxy.Opc.Ua.csproj", "{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "samples\opc-ua\test\Client\Client.csproj", "{A9E3812C-982C-426F-987F-7882C712F64C}"
 EndProject

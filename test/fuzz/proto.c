@@ -133,7 +133,7 @@ static int32_t io_message_stream_decode_encode(
     dbg_assert_ptr(stream);
     do
     {
-        result = io_message_factory_create(2, 0, 0, NULL, NULL, &factory);
+        result = io_message_factory_create("proto", 2, 0, 0, 0, NULL, NULL, &factory);
         if (result != er_ok)
             break;
 

@@ -59,7 +59,7 @@ typedef void (*prx_buffer_factory_free_t) (
 //
 typedef struct prx_buffer_factory
 {
-    void* context;                     // Buffer buffer_factory implementation 
+    void* context;                      // Buffer buffer_factory implementation 
     prx_buffer_alloc_t on_alloc;                           // Allocate a buffer
     prx_buffer_get_size_t on_get_size;        // Returns the size of the buffer
     prx_buffer_set_size_t on_set_size;           // Resize the buffer to length
@@ -173,11 +173,11 @@ typedef void (*prx_buffer_pool_cb_t)(
 //
 typedef struct prx_pool_config
 {
-    size_t initial_count;                            // 1 == allocate per item
-    size_t max_count;                             // 0 == grows pool on demand
-    size_t low_watermark;                    // if >= high_watermark, set to 0
-    size_t high_watermark;                // if >= max_count, set to max_count
-    prx_buffer_pool_cb_t cb;    // called with true if dip below low_watermark
+    size_t increment_count;                           // 1 == allocate per item
+    size_t max_count;                              // 0 == grows pool on demand
+    size_t low_watermark;                     // if >= high_watermark, set to 0
+    size_t high_watermark;                 // if >= max_count, set to max_count
+    prx_buffer_pool_cb_t cb;     // called with true if dip below low_watermark
     void* context;
 }
 prx_pool_config_t;

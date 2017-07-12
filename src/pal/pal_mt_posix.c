@@ -13,6 +13,27 @@
 #endif
 
 //
+// Returns current thread id
+//
+tid_t tid_self(
+    void
+)
+{
+    return (tid_t)pthread_self();
+}
+
+//
+// Returns whether 2 thread ids are equal
+//
+bool tid_equal(
+    tid_t left,
+    tid_t right
+)
+{
+    return 0 != pthread_equal((pthread_t)left, (pthread_t)right);
+}
+
+//
 // Create reader/writer lock
 //
 int32_t rw_lock_create(

@@ -593,7 +593,8 @@ TEST_FUNCTION(io_encode_prx_socket_address__success_3)
 
     memset(&prx_address_valid, 0xaf, sizeof(prx_address_valid));
     prx_address_valid.un.family = prx_address_family_proxy;
-    strcpy(prx_address_valid.un.proxy.host, k_host_valid);
+    prx_address_valid.un.proxy.host_dyn = NULL;
+    strcpy(prx_address_valid.un.proxy.host_fix, k_host_valid);
 
     // arrange
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
@@ -629,7 +630,8 @@ TEST_FUNCTION(io_encode_prx_socket_address__neg_3)
 
     memset(&prx_address_valid, 0xaf, sizeof(prx_address_valid));
     prx_address_valid.un.family = prx_address_family_proxy;
-    strcpy(prx_address_valid.un.proxy.host, k_host_valid);
+    prx_address_valid.un.proxy.host_dyn = NULL;
+    strcpy(prx_address_valid.un.proxy.host_fix, k_host_valid);
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
@@ -943,7 +945,7 @@ TEST_FUNCTION(io_decode_prx_socket_address__success_3)
     int32_t result;
 
     memset(&prx_address_valid, 0xff, sizeof(prx_address_valid));
-    prx_address_valid.un.proxy.host[0] = 0;
+    prx_address_valid.un.proxy.host_fix[0] = 0;
 
     // arrange
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 5);
@@ -959,7 +961,7 @@ TEST_FUNCTION(io_decode_prx_socket_address__success_3)
     STRICT_EXPECTED_CALL(io_decode_int32(&k_ctx_valid, "itf_index", IGNORED_PTR_ARG))
         .IgnoreArgument(3)
         .SetReturn(er_ok);
-    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(prx_address_valid.un.proxy.host)))
+    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(prx_address_valid.un.proxy.host_fix)))
         .IgnoreArgument(3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
@@ -983,7 +985,7 @@ TEST_FUNCTION(io_decode_prx_socket_address__neg_3)
     int32_t result;
 
     memset(&prx_address_valid, 0xff, sizeof(prx_address_valid));
-    prx_address_valid.un.proxy.host[0] = 0;
+    prx_address_valid.un.proxy.host_fix[0] = 0;
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
@@ -1004,7 +1006,7 @@ TEST_FUNCTION(io_decode_prx_socket_address__neg_3)
         .IgnoreArgument(3)
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
-    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(prx_address_valid.un.proxy.host)))
+    STRICT_EXPECTED_CALL(io_decode_string_fixed(&k_ctx_valid, "host", IGNORED_PTR_ARG, sizeof(prx_address_valid.un.proxy.host_fix)))
         .IgnoreArgument(3)
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);

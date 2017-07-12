@@ -47,7 +47,9 @@ struct io_mqtt_connection
     STRING_HANDLE client_id;
     MQTT_CLIENT_HANDLE client;
     uint16_t pkt_counter;
+#define KEEP_ALIVE_INTERVAL 10 * 1000 
     uint32_t keep_alive_interval;
+    bool disabled;
 
     DLIST_ENTRY send_queue;                       // Send queue (messages)
     DLIST_ENTRY subscriptions;             // Topics subscribed to on conn
@@ -96,6 +98,7 @@ struct io_mqtt_subscription
     io_mqtt_subscription_receiver_t receiver_cb;      // receiver callback
     void* receiver_ctx;                                    // with context
 
+    bool disabled;                                // Flow control handling
     io_mqtt_connection_t* connection;                 // Owning connection
     DLIST_ENTRY link;
     log_t log;
@@ -216,6 +219,7 @@ void io_mqtt_connection_free(
     io_mqtt_connection_t* connection
 )
 {
+    io_mqtt_subscription_t* next;
     dbg_assert_ptr(connection);
 
     io_mqtt_connection_complete_disconnect(connection);
@@ -226,19 +230,23 @@ void io_mqtt_connection_free(
     if (connection->address)
         io_url_free(connection->address);
 
-    if (connection->scheduler)
-        prx_scheduler_release(connection->scheduler, connection);
-
     dbg_assert(DList_IsListEmpty(&connection->send_queue), 
         "Leaking messages");
+
     dbg_assert(DList_IsListEmpty(&connection->subscriptions), 
         "Leaking subscriptions");
+    while (!DList_IsListEmpty(&connection->subscriptions))
+    {
+        next = containingRecord(
+            DList_RemoveHeadList(&connection->subscriptions),
+            io_mqtt_subscription_t, link);
+        next->connection = NULL;
+        dbg_assert_ptr(connection->scheduler);
+        prx_scheduler_clear(connection->scheduler, NULL, next);
+    }
 
-    //   while (!DList_IsListEmpty(&connection->subscriptions))
-    //   {
-    //       io_mqtt_subscription_free(containingRecord(DList_RemoveHeadList(
-    //           &connection->subscriptions), io_mqtt_subscription_t, link));
-    //   }
+    if (connection->scheduler)
+        prx_scheduler_release(connection->scheduler, connection);
 
     log_trace(connection->log, "Connection freed.");
     mem_free_type(io_mqtt_connection_t, connection);
@@ -262,7 +270,7 @@ static void io_mqtt_connection_subscribe_all(
         p != &connection->subscriptions; p = p->Flink)
     {
         next = containingRecord(p, io_mqtt_subscription_t, link);
-        if (__subscription_unsubscribed(next))
+        if (__subscription_unsubscribed(next) && !next->disabled)
             payload_count++;
     }
     if (!payload_count)
@@ -282,7 +290,7 @@ static void io_mqtt_connection_subscribe_all(
             p != &connection->subscriptions; p = p->Flink)
         {
             next = containingRecord(p, io_mqtt_subscription_t, link);
-            if (__subscription_unsubscribed(next))
+            if (__subscription_unsubscribed(next) && !next->disabled)
             {
                 payload[payload_count].qosReturn = DELIVER_AT_MOST_ONCE;
                 payload[payload_count].subscribeTopic = STRING_c_str(next->uri);
@@ -305,7 +313,6 @@ static void io_mqtt_connection_subscribe_all(
             next = containingRecord(p, io_mqtt_subscription_t, link);
             if (__subscription_unsubscribed(next))
             {
-                next->subscribed = true;
                 next->pktid = pkt_id;
             }
         }
@@ -380,7 +387,6 @@ static void io_mqtt_connection_unsubscribe_all(
             next = containingRecord(p, io_mqtt_subscription_t, link);
             if (__subscription_subscribed(next))
             {
-                next->subscribed = false;
                 next->pktid = pkt_id;
             }
         }
@@ -441,6 +447,9 @@ static void io_mqtt_connection_monitor(
 
     now = ticks_get();
 
+    prx_scheduler_clear(connection->scheduler, (prx_task_t)io_mqtt_connection_monitor,
+        connection);
+
     // If connection has expired, reset connection
     if (connection->expiry && connection->expiry < now)
     {
@@ -450,6 +459,12 @@ static void io_mqtt_connection_monitor(
             connection->is_websocket = !connection->is_websocket;
         io_mqtt_connection_clear_failures(connection);
         __do_next(connection, io_mqtt_connection_soft_reset);
+        return;
+    }
+
+    if (connection->disabled)
+    {
+        __do_later(connection, io_mqtt_connection_monitor, KEEP_ALIVE_INTERVAL);
         return;
     }
 
@@ -655,13 +670,15 @@ static int32_t io_mqtt_connection_handle_SUBSCRIBE_ACK(
         subscription = containingRecord(p, io_mqtt_subscription_t, link);
         if (subscription->pktid == suback->packetId)
         {
+            dbg_assert(!subscription->subscribed, "Should not be subscribed");
             subscription->subscribed = true;
             subscription->pktid = 0;
-            log_debug(subscription->log, "Topic %p subscribed!", subscription);
+            log_trace(subscription->log, "Subscribed to %s!",
+                STRING_c_str(subscription->uri));
         }
     }
 
-    // Unsubscribe more...
+    // Subscribe more...
     __do_next(connection, io_mqtt_connection_subscribe_all);
     return er_ok;
 }
@@ -684,9 +701,11 @@ static int32_t io_mqtt_connection_handle_UNSUBSCRIBE_ACK(
         subscription = containingRecord(p, io_mqtt_subscription_t, link);
         if (subscription->pktid == unsuback->packetId)
         {
-            dbg_assert(!subscription->subscribed, "Should not be subscribed");
+            dbg_assert(subscription->subscribed, "Should be subscribed");
+            subscription->subscribed = false;
             subscription->pktid = 0;
-            log_debug(subscription->log, "Topic %p unsubscribed!", subscription);
+            log_trace(subscription->log, "Unsubscribed from %s!",
+                STRING_c_str(subscription->uri));
         }
     }
 
@@ -936,6 +955,7 @@ static void io_mqtt_connection_complete_disconnect(
         subscription = containingRecord(p, io_mqtt_subscription_t, link);
         subscription->pktid = 0;
         subscription->subscribed = false;
+        subscription->disabled = false;
     }
 
     // Clear all connection tasks...
@@ -1023,8 +1043,7 @@ static void io_mqtt_connection_reconnect(
             }
 
             // Set scheduler after the fact - this will push receives back to us
-            if (0 != xio_setoption(connection->socket_io,
-                xio_opt_scheduler, connection->scheduler))
+            if (0 != xio_setoption(connection->socket_io, xio_opt_scheduler, connection->scheduler))
                 break;
 
             //
@@ -1070,6 +1089,7 @@ static void io_mqtt_connection_reconnect(
 
         connection->last_activity = ticks_get(); 
         connection->status = io_mqtt_status_connecting;
+        connection->disabled = false;
         // Kick off activity monitor to montior connect
         __do_later(connection, io_mqtt_connection_monitor, 30000); 
         return;
@@ -1102,15 +1122,25 @@ static void io_mqtt_connection_hard_reset(
     connection->status = io_mqtt_status_reset;
     io_mqtt_connection_complete_disconnect(connection);
 
-    if (connection->reconnect_cb && !connection->reconnect_cb(
-        connection->reconnect_ctx, connection->last_error))
+    if (!connection->reconnect_cb)
+        return;
+    
+    if (!connection->reconnect_cb(connection->reconnect_ctx, 
+        connection->last_error, &connection->back_off_in_seconds))
         return;
 
-    log_info(connection->log, "Reconnecting in %d seconds...",
-        connection->back_off_in_seconds);
-
-    __do_later(connection, io_mqtt_connection_reconnect,
-        connection->back_off_in_seconds * 1000);
+    if (connection->back_off_in_seconds > 0)
+    {
+        log_info(connection->log, "Reconnecting in %d seconds...",
+            connection->back_off_in_seconds);
+        __do_later(connection, io_mqtt_connection_reconnect,
+            connection->back_off_in_seconds * 1000);
+    }
+    else
+    {
+        log_info(connection->log, "Reconnecting...");
+        __do_next(connection, io_mqtt_connection_reconnect);
+    }
 
     if (!connection->back_off_in_seconds)
         connection->back_off_in_seconds = 1;
@@ -1138,38 +1168,133 @@ static void io_mqtt_subscription_free(
     io_mqtt_subscription_t* subscription
 )
 {
-    int32_t result;
-    io_mqtt_connection_t* connection;
     SUBSCRIBE_PAYLOAD payload;
 
     log_trace(subscription->log, "Free subscription for topic %s...",
         STRING_c_str(subscription->uri));
 
     if (subscription->connection)
-        DList_RemoveEntryList(&subscription->link);
-
-    if (__subscription_subscribed(subscription))
     {
-        // Try to unsubscribe
-        connection = subscription->connection;
-        payload.subscribeTopic = STRING_c_str(subscription->uri);
-        subscription->pktid = io_mqtt_connection_next_pkt_id(connection);
-        result = mqtt_client_unsubscribe(connection->client,
-            subscription->pktid, &payload.subscribeTopic, 1);
-
-        // no matter whether we failed, delete the subscription 
-        if (result != 0)
+        if (__subscription_subscribed(subscription))
         {
-            log_error(subscription->log,
-                "Failed to unsubscribe (error %d), remove anyway...",
-                result);
+            //
+            // Unsubscribe, but no matter whether we failed, delete the 
+            // subscription, and also do not wait for any ack.
+            //
+            payload.subscribeTopic = STRING_c_str(subscription->uri);
+            subscription->pktid = io_mqtt_connection_next_pkt_id(
+                subscription->connection);
+            (void)mqtt_client_unsubscribe(subscription->connection->client,
+                subscription->pktid, &payload.subscribeTopic, 1);
         }
+
+        prx_scheduler_clear(subscription->connection->scheduler, 
+            NULL, subscription);
+        DList_RemoveEntryList(&subscription->link);
     }
 
     if (subscription->uri)
         STRING_delete(subscription->uri);
 
     mem_free_type(io_mqtt_subscription_t, subscription);
+}
+
+//
+// (Re-)enable the subscription
+//
+static void io_mqtt_subscription_enable(
+    io_mqtt_subscription_t* subscription
+)
+{
+    dbg_assert_ptr(subscription->connection);
+    dbg_assert_is_task(subscription->connection->scheduler);
+
+    if (!subscription->disabled)
+        return;
+    if (subscription->connection->status != io_mqtt_status_connected)
+        return;
+
+    subscription->disabled = false;
+
+    if (!__subscription_unsubscribing(subscription) &&
+        !__subscription_unsubscribed(subscription))
+        return;
+
+    __do_next_s(subscription->connection->scheduler,
+        io_mqtt_connection_subscribe_all, subscription->connection);
+}
+
+//
+// disable the subscription
+//
+static void io_mqtt_subscription_disable(
+    io_mqtt_subscription_t* subscription
+)
+{
+    int32_t result;
+    SUBSCRIBE_PAYLOAD payload;
+
+    dbg_assert_ptr(subscription->connection);
+    dbg_assert_is_task(subscription->connection->scheduler);
+
+    if (subscription->disabled)
+        return;
+    if (subscription->connection->status != io_mqtt_status_connected)
+        return;
+
+    subscription->disabled = true;
+
+    if (!__subscription_subscribed(subscription) &&
+        !__subscription_subscribing(subscription))
+        return;
+
+    payload.subscribeTopic = STRING_c_str(subscription->uri);
+
+    //
+    // If in progress of being subscribed, but waiting for ack, declare 
+    // the subscription subscribed so we can unsubscribe it.
+    //
+    subscription->subscribed = true;
+    subscription->pktid = io_mqtt_connection_next_pkt_id(
+        subscription->connection);
+
+    result = mqtt_client_unsubscribe(subscription->connection->client,
+        subscription->pktid, &payload.subscribeTopic, 1);
+}
+
+//
+// Enable / Disable receive flow
+//
+int32_t io_mqtt_subscription_receive(
+    io_mqtt_subscription_t* subscription,
+    bool flow_on_off
+)
+{
+    chk_arg_fault_return(subscription);
+
+    //
+    // Cannot flow at tcp layer or else we cause issues with keep alive
+    // handling. So we disable or enable subscription.  That will however
+    // be seen by client as a disconnect, thus messages will come back
+    // with error and need to be retried.
+    //
+    // TODO:
+    // Better might be to ack published packet ids only when handled,
+    // but that would require a change to the mqtt_publish function since
+    // packets get processed asynchronously. 
+    //
+    if (!subscription->connection ||
+        subscription->connection->status != io_mqtt_status_connected)
+        return er_closed;
+
+    if (flow_on_off)
+        __do_next_s(subscription->connection->scheduler,
+            io_mqtt_subscription_enable, subscription);
+    else
+        __do_next_s(subscription->connection->scheduler,
+            io_mqtt_subscription_disable, subscription);
+
+    return er_ok;
 }
 
 //
@@ -1291,6 +1416,7 @@ int32_t io_mqtt_connection_publish(
     io_mqtt_connection_t* connection,
     const char* uri,
     io_mqtt_properties_t* properties,
+    io_mqtt_qos_t qos,
     const uint8_t* buffer,
     size_t buf_len,
     io_mqtt_publish_complete_t cb,
@@ -1301,6 +1427,7 @@ int32_t io_mqtt_connection_publish(
     io_mqtt_message_t* message;
     char* prop_string;
     STRING_HANDLE topic_name = NULL;
+    QOS_VALUE qos_val;
 
     chk_arg_fault_return(connection);
     chk_arg_fault_return(uri);
@@ -1331,9 +1458,22 @@ int32_t io_mqtt_connection_publish(
             STRING_concat(topic_name, prop_string);
         }
 
+        switch (qos)
+        {
+        case io_mqtt_qos_at_least_once:
+            qos_val = DELIVER_AT_LEAST_ONCE;
+            break;
+        case io_mqtt_qos_exactly_once:
+            qos_val = DELIVER_EXACTLY_ONCE;
+            break;
+        case io_mqtt_qos_at_most_once:
+        default:
+            qos_val = DELIVER_AT_MOST_ONCE;
+            break;
+        }
+
         message->msg_handle = mqttmessage_create(message->pkt_id,
-            STRING_c_str(topic_name), DELIVER_AT_LEAST_ONCE,
-            (const uint8_t*)buffer, buf_len);
+            STRING_c_str(topic_name), qos_val, (const uint8_t*)buffer, buf_len);
         if (!message->msg_handle)
         {
             log_error(connection->log, "Could not create mqtt message from buffer");
@@ -1393,6 +1533,7 @@ int32_t io_mqtt_connection_subscribe(
 
         subscription->receiver_cb = cb;
         subscription->receiver_ctx = ctx;
+        subscription->disabled = false;
         subscription->uri = STRING_construct(uri);
         if (!subscription->uri)
         {
@@ -1441,7 +1582,8 @@ int32_t io_mqtt_connection_create(
 
         connection->log = log_get("io_mqtt");
         connection->status = io_mqtt_status_reset;
-        connection->keep_alive_interval = 10 * 1000; // 10 seconds
+        connection->keep_alive_interval = KEEP_ALIVE_INTERVAL;
+        connection->disabled = false;
 
         if (client_id)
             connection->client_id = STRING_construct(client_id);
@@ -1530,7 +1672,6 @@ int32_t io_mqtt_connection_connect(
 )
 {
     chk_arg_fault_return(connection);
-    dbg_assert_is_task(connection->scheduler);
 
     connection->reconnect_cb = reconnect_cb;
     connection->reconnect_ctx = reconnect_ctx;

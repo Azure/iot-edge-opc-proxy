@@ -6,7 +6,6 @@
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
     using System.Linq;
-    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -18,9 +17,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Base enumerator implementation wrapping the browse socket
         /// </summary>
-        abstract class BrowserAsyncEnumerator<T> : IAsyncEnumerator<T>, IDisposable {
+        abstract class BrowserAsyncEnumerator<T> : IAsyncEnumerator<T>, IDisposable 
+            where T : class {
+
             internal BrowseSocket Socket {
-                get; set;
+                get; private set;
             }
 
             internal bool CacheOnly {
@@ -29,6 +30,27 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             internal bool Throw {
                 get; set;
+            }
+
+
+            /// <summary>
+            /// Create socket
+            /// </summary>
+            /// <param name="proxy"></param>
+            /// <param name="ct"></param>
+            /// <returns></returns>
+            protected async Task InitAsync(IProvider provider, SocketAddress proxy, 
+                CancellationToken ct) {
+
+                Socket = new BrowseSocket(provider);
+                try {
+                    await Socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
+                }
+                catch (Exception) {
+                    throw;
+                }
+
+                return;
             }
 
             /// <summary>
@@ -90,6 +112,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             public void Dispose() {
                 if (!_disposed) {
                     _disposed = true;
+
                     try {
                         Socket.CloseAsync(CancellationToken.None).Wait();
                     }
@@ -102,7 +125,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             private T _cur;
             private bool _done;
-            private bool _disposed = false;
+            private bool _disposed;
         }
 
         /// <summary>
@@ -110,9 +133,17 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         class ServiceRecordBrowser : BrowserAsyncEnumerator<DnsServiceRecord>, 
             IDnsServiceBrowser {
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
+                ProxySocketAddress address, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(address, BrowseRequest.Service,
+                    ct).ConfigureAwait(false);
+            }
+
             protected override DnsServiceRecord Yield(BrowseResponse response) =>
-                DnsServiceRecord.FromSocketAddress(response.Item as ProxySocketAddress, 
-                    response.Interface, (response.Flags & BrowseResponse.Removed) != 0);
+               DnsServiceRecord.FromSocketAddress(response.Item as ProxySocketAddress,
+                   response.Interface, (response.Flags & BrowseResponse.Removed) != 0);
         }
 
         /// <summary>
@@ -121,9 +152,18 @@ namespace Microsoft.Azure.Devices.Proxy {
         class ServiceRecordResolver : BrowserAsyncEnumerator<DnsServiceEntry>,
             IDnsServiceResolver {
             private readonly DnsServiceRecord _service;
+
             internal ServiceRecordResolver(DnsServiceRecord service) {
                 _service = service;
             }
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
+                ProxySocketAddress address, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(address, BrowseRequest.Service,
+                    ct).ConfigureAwait(false);
+            }
+
             protected override DnsServiceEntry Yield(BrowseResponse response) =>
                 DnsServiceEntry.Create(
                     new BoundSocketAddress(response.Interface, response.Item),
@@ -145,6 +185,14 @@ namespace Microsoft.Azure.Devices.Proxy {
             internal HostEntryResolver(ProxySocketAddress host) {
                 _host = host;
             }
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy, 
+                ProxySocketAddress address, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(address, BrowseRequest.Resolve,
+                    ct).ConfigureAwait(false);
+            }
+
             protected override DnsHostEntry Yield(BrowseResponse response) =>
                 DnsHostEntry.Create(
                     _host.Host,
@@ -169,6 +217,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                     ((Property<FileInfo>)response.Properties.FirstOrDefault())?.Value,
                     response.Interface
                 );
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy, 
+                ProxySocketAddress proxySocketAddress, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(proxySocketAddress, BrowseRequest.Dirpath,
+                    ct).ConfigureAwait(false);
+            }
         }
 
         /// <summary>
@@ -185,17 +240,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Invalid service, no name, not type or been removed",
                     nameof(record));
             }
-            var socket = new BrowseSocket(Socket.Provider);
-            try { 
-                await socket.ConnectAsync(proxy ?? record.Interface, ct).ConfigureAwait(false);
-                await socket.BrowseBeginAsync(record.ToSocketAddress(), BrowseRequest.Service, 
-                    ct).ConfigureAwait(false);
-                return new ServiceRecordResolver(record) { Socket = socket, CacheOnly = cacheOnly };
-            }
-            catch(Exception) {
-                socket.Dispose();
-                throw;
-            }
+            var resolver = new ServiceRecordResolver(record) { CacheOnly = cacheOnly };
+            await resolver.InitAsync(Socket.Provider, proxy ?? record.Interface, 
+                record.ToSocketAddress(), ct).ConfigureAwait(false);
+            return resolver;
         }
 
         /// <summary>
@@ -211,23 +259,16 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public static async Task<IDnsServiceBrowser> CreateServiceRecordBrowserAsync(
             SocketAddress proxy, string type, string domain, bool cacheOnly, CancellationToken ct) {
-            var socket = new BrowseSocket(Socket.Provider);
-            try {
-                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
-                using (var record = DnsServiceRecord.Create(null,
+            var browser = new ServiceRecordBrowser { CacheOnly = cacheOnly };
+            using (var record = DnsServiceRecord.Create(null,
                     string.IsNullOrEmpty(type) ? null : type,
                     string.IsNullOrEmpty(domain) ? null : domain, null)) {
-                    using (var address = record.ToSocketAddress()) {
-                        await socket.BrowseBeginAsync(address, BrowseRequest.Service, 
-                            ct).ConfigureAwait(false);
-                    }
+                using (var address = record.ToSocketAddress()) {
+                    await browser.InitAsync(Socket.Provider, proxy, address,
+                      ct).ConfigureAwait(false);
                 }
-                return new ServiceRecordBrowser() { Socket = socket, CacheOnly = cacheOnly };
             }
-            catch(Exception) {
-                socket.Dispose();
-                throw;
-            }
+            return browser;
         }
 
         /// <summary>
@@ -241,21 +282,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public static async Task<IDnsHostEntryResolver> CreateHostEntryResolverAsync(
             SocketAddress proxy, SocketAddress host, bool cacheOnly, CancellationToken ct) {
-            var address = host.AsProxySocketAddress();
-            if (address == null) {
-                throw new ArgumentException(nameof(host));
-            }
-            var socket = new BrowseSocket(Socket.Provider);
-            try {
-                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
-                await socket.BrowseBeginAsync(address, BrowseRequest.Resolve,
-                    ct).ConfigureAwait(false);
-                return new HostEntryResolver(address) { Socket = socket, CacheOnly = cacheOnly };
-            }
-            catch (Exception) {
-                socket.Dispose();
-                throw;
-            }
+            var address = host?.AsProxySocketAddress() ?? throw new ArgumentException(nameof(host));
+            var resolver = new HostEntryResolver(address) { CacheOnly = cacheOnly };
+            await resolver.InitAsync(Socket.Provider, proxy, address,
+                ct).ConfigureAwait(false);
+            return resolver;
         }
 
         /// <summary>
@@ -268,17 +299,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public static async Task<IDirectoryBrowser> CreateDirectoryBrowserAsync(
             SocketAddress proxy, string folder, bool cacheOnly, CancellationToken ct) {
-            var socket = new BrowseSocket(Socket.Provider);
-            try {
-                await socket.ConnectAsync(proxy, ct).ConfigureAwait(false);
-                await socket.BrowseBeginAsync(new ProxySocketAddress(folder ?? ""), BrowseRequest.Dirpath, 
-                    ct).ConfigureAwait(false);
-                return new DirectoryBrowser() { Socket = socket, CacheOnly = cacheOnly, Throw = true };
-            }
-            catch(Exception) {
-                socket.Dispose();
-                throw;
-            }
+            var browser = new DirectoryBrowser { CacheOnly = cacheOnly, Throw = true };
+            await browser.InitAsync(Socket.Provider, proxy, new ProxySocketAddress(folder ?? ""),
+                ct).ConfigureAwait(false);
+            return browser;
         }
     }
 }

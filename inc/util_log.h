@@ -6,6 +6,10 @@
 
 #include "common.h"
 
+#if defined(DEBUG)
+#define LOG_VERBOSE 1
+#endif
+
 //
 // Inline logging 
 //
@@ -48,10 +52,6 @@ void xlogging_logger_v(
 );
 #endif // !NO_LOGGING
 
-#define __nolog(a, f, fl, c, cl, n, b, bl) \
-     (void)a; (void)f; (void)fl; (void)c; \
-    (void)cl; (void)n; (void)b; (void)bl;
-
 #else // !NO_LOGGING && !NO_ZLOG 
 
 //
@@ -70,6 +70,9 @@ void xlogging_logger_v(
 
 #endif // !NO_LOGGING && !NO_ZLOG 
 
+#define __nolog(a, f, fl, c, cl, n, b, bl) \
+     (void)a; (void)f; (void)fl; (void)c; (void)cl; (void)n; (void)b; (void)bl;
+
 //
 // Log debug message implementation
 //
@@ -84,7 +87,7 @@ _inl__ void __log_debug(
     ...
 )
 {
-#if defined(NO_LOGGING) || (defined(NO_ZLOG) && !defined(LOG_VERBOSE))
+#if defined(NO_LOGGING) || !defined(LOG_VERBOSE)
     __nolog(log, file, filelen, func, funclen, line, format, 0);
 #else
     va_list va;

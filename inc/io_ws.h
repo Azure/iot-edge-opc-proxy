@@ -34,7 +34,8 @@ decl_public_7(int32_t, io_ws_connection_create,
 //
 typedef bool (*io_ws_connection_reconnect_t)(
     void* context,
-    int32_t last_error
+    int32_t last_error,
+    uint32_t* back_off_in_seconds
 );
 
 //
@@ -63,6 +64,14 @@ decl_public_5(int32_t, io_ws_connection_send,
     void*, sender_ctx,
     io_ws_connection_send_complete_t, complete_cb,
     void*, complete_ctx
+);
+
+//
+// Enable / Disable receive flow
+//
+decl_public_2(int32_t, io_ws_connection_receive,
+    io_ws_connection_t*, connection,
+    bool, flow_on_off
 );
 
 //

@@ -37,7 +37,9 @@ atomic_t _counter;
 // Create protocol message factory (actually a type safe fixed buffer pool)
 //
 int32_t io_message_factory_create(
-    size_t pool_size,
+    const char* name,
+    size_t initial_pool_size,
+    size_t max_pool_size,
     size_t low_watermark,
     size_t high_watermark,
     prx_buffer_pool_cb_t cb,
@@ -55,14 +57,14 @@ int32_t io_message_factory_create(
     do
     {
         memset(&config, 0, sizeof(config));
-        config.initial_count = pool_size;
-        config.max_count = cb ? pool_size : 0;
+        config.increment_count = initial_pool_size;
+        config.max_count = max_pool_size;
         config.low_watermark = low_watermark;
         config.high_watermark = high_watermark;
         config.context = context;
         config.cb = cb;
 
-        result = prx_fixed_pool_create("messages",
+        result = prx_fixed_pool_create(name,
             sizeof(io_message_t), &config, &factory->messages);
         if (result != er_ok)
             break;
@@ -907,7 +909,7 @@ int32_t io_decode_message(
     if (result != er_ok)
         return result;
 
-    if ((version & 0xffff0000) != (MODULE_VER_NUM & 0xffff0000))
+    if ((version >> 24) != MODULE_MAJ_VER) // Major version declares compatibility
     {
         log_error(NULL, "Received message with incompatible version %x.", version);
         return er_invalid_format;

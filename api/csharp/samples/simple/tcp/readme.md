@@ -16,6 +16,4 @@ On Linux, the simple services must be enabled in inetd configuration.
 
 Once installed, start the ```proxyd``` host sample, then run the ```simple``` sample.  
 
-The sample accepts a host name, or defaults to the host name of the machine it is running on.  Though not recommended,
-if you run the proxyd sample on a different machine than the one you installed the services on, then a inbound firewall rule
-needs to be added for ports 7, 13, 17, and 19.  
+The sample defaults to connecting to the host name of the machine it is running on.  

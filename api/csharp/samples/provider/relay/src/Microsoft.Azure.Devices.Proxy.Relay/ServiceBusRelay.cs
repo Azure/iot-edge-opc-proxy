@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     /// pattern than more commonly used by relay, but saves users from standing
     /// up a stateful rendezvous point or scaled out websocket services.
     /// </summary>
-    public partial class ServiceBusRelay : IStreamService, IDisposable {
+    public class ServiceBusRelay : IStreamService, IDisposable {
 
         internal ConcurrentDictionary<Reference, ServiceBusRelayConnection> _connectionMap =
             new ConcurrentDictionary<Reference, ServiceBusRelayConnection>();
@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Constructor to create service bus relay
         /// </summary>
-        /// <param name="hcName">Uri of connection in namespace</param>
+        /// <param name="hcUri">Uri of connection in namespace</param>
         /// <param name="provider">Shared access token provider</param>
         private ServiceBusRelay(Uri hcUri, TokenProvider provider) {
             _tokenProvider = provider;
@@ -199,7 +199,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             try {
                 CloseAsync().GetAwaiter().GetResult();
             }
-            catch (Exception) {
+            catch {
             }
         }
 

@@ -19,8 +19,6 @@
 // Must correspond to libwebsockets max_fds value
 #define MAX_WEBSOCKET_PER_WORKER (getdtablesize() - 1)
 
-// #define LOG_VERBOSE
-
 // 
 // State flags
 // 
@@ -177,7 +175,11 @@ static int32_t pal_wsworker_load_extra_client_verify_certs(
     int32_t result;
     X509_STORE* cert_store;
     BIO* cert_memory_bio = NULL;
+#if (OPENSSL_VERSION_NUMBER >= 0x10100000L) && (OPENSSL_VERSION_NUMBER < 0x20000000L)
+    const BIO_METHOD* bio_method;
+#else
     BIO_METHOD* bio_method;
+#endif
     X509* certificate;
     do
     {

@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             },
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Error (Bind) Id={1}",
-                CancellationToken = _open.Token,
+                CancellationToken = _open.Token
             });
 
             var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {

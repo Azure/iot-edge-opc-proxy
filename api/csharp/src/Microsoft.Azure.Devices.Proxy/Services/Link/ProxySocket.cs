@@ -108,10 +108,6 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentNullException(nameof(options));
             }
             var ct = options.CancellationToken;
-            if (ct == null) {
-                throw new ArgumentNullException(nameof(ct));
-            }
-
             return new TransformManyBlock<DataflowMessage<INameRecord>, IProxyLink>(
             async (input) => {
                 var proxy = input.Arg;
@@ -188,9 +184,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Creates a pinger block that sends a ping and returns 
         /// </summary>
+        /// <param name="error">Error handler block</param>
         /// <param name="address">Address to ping for</param>
-        /// <param name="timeout">Timeout of ping request</param>
-        /// <param name="ct">Cancels the ping step(s)</param>
+        /// <param name="options">Block option</param>
         /// <returns></returns>
         protected IPropagatorBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>> CreatePingBlock(
             ITargetBlock<DataflowMessage<INameRecord>> error, SocketAddress address, ExecutionDataflowBlockOptions options) {
@@ -200,10 +196,6 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentNullException(nameof(options));
             }
             var ct = options.CancellationToken;
-            if (ct == null) {
-                throw new ArgumentNullException(nameof(ct));
-            }
-
             return new TransformManyBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
             async (input) => {
                 var record = input.Arg;
@@ -227,11 +219,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                     ProxyEventSource.Log.PingFailure(this, record, address, response);
                     input.Dispose();
                 }
-                catch (ProxyNotFound) {
-                    // Proxy not found - that is ok during ping as we only care 
-                    // about active ones that can make the connection
-                    ProxyEventSource.Log.PingFailure(this, record, address, response);
-                    input.Dispose();
+                catch (ProxyNotFound pnf) {
+                    // Proxy not found - could occur if our target proxy was down
+                    // for reauth, flow ctrl, etc.
+                    error.Push(input, pnf);
                 }
                 catch (ProxyTimeout pte) {
                     // The proxy request timed out - requeue to increase timeout

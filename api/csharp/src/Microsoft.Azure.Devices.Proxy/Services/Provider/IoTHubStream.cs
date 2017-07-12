@@ -75,10 +75,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 message.Source = _streamId;
                 message.Target = _remoteId;
                 try {
-                    var d = message.Content as DataMessage;
-                    if (d != null && d.Payload == null) {
-                        throw new Exception();
-                    }
                     var response = await _iotHub.TryInvokeDeviceMethodWithRetryAsync(
                         _link, message, TimeSpan.FromMilliseconds(_pollTimeout * 2),
                         _open.Token).ConfigureAwait(false);

@@ -149,7 +149,7 @@ decl_internal_3(int32_t, pal_socket_getsockopt,
 //
 decl_public_2(int32_t, pal_socket_join_multicast_group,
     pal_socket_t*, sock,
-    prx_multicast_option_t*, option
+    const prx_multicast_option_t*, option
 );
 
 //
@@ -157,7 +157,7 @@ decl_public_2(int32_t, pal_socket_join_multicast_group,
 //
 decl_public_2(int32_t, pal_socket_leave_multicast_group,
     pal_socket_t*, sock,
-    prx_multicast_option_t*, option
+    const prx_multicast_option_t*, option
 );
 
 //

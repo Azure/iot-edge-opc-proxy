@@ -8,6 +8,27 @@
 #include "azure_c_shared_utility/lock.h"
 
 //
+// Returns current thread id
+//
+tid_t tid_self(
+    void
+)
+{
+    return (tid_t)GetCurrentThreadId();
+}
+
+//
+// Returns whether 2 thread ids are equal
+//
+bool tid_equal(
+    tid_t left,
+    tid_t right
+)
+{
+    return left == right;
+}
+
+//
 // Create reader/writer lock
 //
 int32_t rw_lock_create(

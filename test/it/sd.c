@@ -58,7 +58,7 @@ static int32_t pal_sd_result_printer(
             itf_index, rec->domain, rec->service_type, rec->service_name);
         break;
     case pal_sd_result_entry:
-        printf("[RES]   ->: %s:%d  I:%x \n", res->addr->host, 
+        printf("[RES]   ->: %s:%d  I:%x \n", prx_socket_address_proxy_get_host(res->addr),
             res->addr->port, itf_index);
         for (size_t i = 0; i < res->records_len; i++)
         {
@@ -195,7 +195,7 @@ int32_t resolve(
         memset(&addr, 0, sizeof(addr));
         addr.family = prx_address_family_proxy;
         if (port) addr.port = (uint16_t)atoi(port);
-        strcpy(addr.host, host);
+        addr.host_dyn = host;
 
         result = pal_sdbrowser_resolve(ctx->browser, &addr, prx_itf_index_all);
         if (result != er_ok)

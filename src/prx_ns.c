@@ -2558,11 +2558,18 @@ int32_t prx_ns_entry_to_prx_socket_address(
             name = prx_ns_entry_get_id(entry);
         dbg_assert_ptr(name);
         if (family == prx_address_family_proxy)
-            name = strncpy(socket_address->un.proxy.host, name, 
-                sizeof(socket_address->un.proxy.host));
+        {
+            dbg_assert(!socket_address->un.proxy.host_dyn, 
+                "host_dyn should be null");
+            socket_address->un.proxy.host_dyn = NULL;
+            name = strncpy(socket_address->un.proxy.host_fix, name,
+                sizeof(socket_address->un.proxy.host_fix));
+        }
         else
-            name = strncpy(socket_address->un.ux.path, name, 
+        {
+            name = strncpy(socket_address->un.ux.path, name,
                 sizeof(socket_address->un.ux.path));
+        }
         dbg_assert_ptr(name);
         result = er_ok;
         break;

@@ -166,18 +166,16 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             var errors = new TransformBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
             async (error) => {
-                ProxyEventSource.Log.LinkFailure(this, error.Arg, Host);
                 Host.RemoveReference(error.Arg.Address);
                 await Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), 
                     ct).ConfigureAwait(false);
+                await Task.Delay(error.Exceptions.Count * _throttleDelayMs).ConfigureAwait(false);
+                ProxyEventSource.Log.LinkFailure(this, error.Arg, Host);
                 return error;
             },
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Error (Connect) Id={1}",
-                CancellationToken = ct,
-                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
-                EnsureOrdered = false
+                CancellationToken = ct
             });
 
             var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {
@@ -433,6 +431,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         private SocketAddress _boundEndpoint;
         private DataMessage _lastData;
         private int _offset;
+        private const int _throttleDelayMs = 1000;
 #if PERF
         private long _transferred;
         private Stopwatch _transferredw = Stopwatch.StartNew();

@@ -89,16 +89,16 @@ namespace Microsoft.Azure.Devices.Proxy {
             get; set;
         }
 
-
+        /// <summary>
+        /// Device id storage
+        /// </summary>
         internal string DeviceId {
             get; set;
         }
 
-
         /// <summary>
         /// Create message with specific buffer
         /// </summary>
-        /// <param name="buf"></param>
         public static Message Create(Reference source, Reference target,
             IMessageContent content) =>
             Create(source, target, Reference.Null, content);
@@ -106,7 +106,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create message with specific buffer
         /// </summary>
-        /// <param name="buf"></param>
         public static Message Create(Reference source, Reference target,
             Reference proxy, IMessageContent content) =>
             Create((uint)Interlocked.Increment(ref _counter), source, target, proxy, content);
@@ -114,7 +113,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create message with specific buffer
         /// </summary>
-        /// <param name="buf"></param>
         protected static Message Create(uint sequenceId, Reference source,
             Reference target, Reference proxy, IMessageContent content, string deviceId = null) {
             var message = Get();
@@ -133,9 +131,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create a clone of the message including the owned content
         /// </summary>
-        /// <param name="message"></param>
-        public Message Clone() => Create(SequenceId, Source, Target,
-            Proxy, Content.Clone(), DeviceId);
+        public Message Clone() => Create(SequenceId, Source, Target, Proxy, Content?.Clone(), DeviceId);
 
         public override void Dispose() {
             var content = Content;
@@ -147,19 +143,19 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Comparison
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="that"></param>
         /// <returns></returns>
-        public override bool IsEqual(Message msg) {
+        public override bool IsEqual(Message that) {
             return
-                IsEqual(Version, msg.Version) &&
-                IsEqual(SequenceId, msg.SequenceId) &&
-                IsEqual(Error, msg.Error) &&
-                IsEqual(IsResponse, msg.IsResponse) &&
-                IsEqual(TypeId, msg.TypeId) &&
-                IsEqual(Target, msg.Target) &&
-                IsEqual(Proxy, msg.Proxy) &&
-                IsEqual(Source, msg.Source) &&
-                IsEqual(Content, msg.Content);
+                IsEqual(Version, that.Version) &&
+                IsEqual(SequenceId, that.SequenceId) &&
+                IsEqual(Error, that.Error) &&
+                IsEqual(IsResponse, that.IsResponse) &&
+                IsEqual(TypeId, that.TypeId) &&
+                IsEqual(Target, that.Target) &&
+                IsEqual(Proxy, that.Proxy) &&
+                IsEqual(Source, that.Source) &&
+                IsEqual(Content, that.Content);
         }
 
         protected override void SetHashCode() {

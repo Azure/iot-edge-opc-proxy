@@ -60,7 +60,7 @@ struct io_ws_connection
     int32_t last_error;
     io_ws_connection_reconnect_t reconnect_cb;   // Call when disconnected
     void* reconnect_ctx;
-    int32_t back_off_in_seconds;       // Delay until next connect attempt
+    uint32_t back_off_in_seconds;      // Delay until next connect attempt
     io_ws_connection_status_t status;
     log_t log;
 };
@@ -73,10 +73,13 @@ static void io_ws_connection_disconnect(
     io_ws_connection_t* connection
 )
 {
+    dbg_assert_ptr(connection);
     dbg_assert_is_task(connection->scheduler);
 
     // Move fragments not delivered back to ready so they are sent again
     io_queue_rollback(connection->outbound.queue);
+
+    prx_scheduler_clear(connection->scheduler, NULL, connection);
 
     if (connection->status == io_ws_connection_status_connected)
     {
@@ -341,11 +344,6 @@ static void io_ws_connection_clear_failures(
     io_ws_connection_t* connection
 )
 {
-    if (connection->back_off_in_seconds)
-    {
-        log_trace(connection->log, "Clearing failures on connection %p...",
-            connection);
-    }
     connection->last_error = er_ok;
     connection->last_success = connection->last_activity = ticks_get();
     connection->back_off_in_seconds = 0;
@@ -371,23 +369,26 @@ static void io_ws_connection_reset(
     // Clear all connection tasks
     prx_scheduler_clear(connection->scheduler, NULL, connection);
 
-    if (connection->reconnect_cb && !connection->reconnect_cb(
-        connection->reconnect_ctx, connection->last_error))
-        return;
-
-    log_info(connection->log, "Reconnecting in %d seconds...",
-        connection->back_off_in_seconds);
-
-    __do_later(connection, io_ws_connection_reconnect,
-        connection->back_off_in_seconds * 1000);
-
-    if (!connection->back_off_in_seconds)
-        connection->back_off_in_seconds = 1;
-    connection->back_off_in_seconds *= 2;
-    if (connection->back_off_in_seconds > 1 * 60 * 60)
-        connection->back_off_in_seconds = 1 * 60 * 60;
-
     connection->status = io_ws_connection_status_disconnected;
+    connection->back_off_in_seconds = 0;
+
+    if (!connection->reconnect_cb)
+        return;
+    if (!connection->reconnect_cb(connection->reconnect_ctx,
+        connection->last_error, &connection->back_off_in_seconds))
+        return;
+    if (connection->back_off_in_seconds > 0)
+    {
+        log_info(connection->log, "Reconnecting in %d seconds...",
+            connection->back_off_in_seconds);
+        __do_later(connection, io_ws_connection_reconnect,
+            connection->back_off_in_seconds * 1000);
+    }
+    else
+    {
+        log_info(connection->log, "Reconnecting...");
+        __do_next(connection, io_ws_connection_reconnect);
+    }
 }
 
 //
@@ -590,11 +591,17 @@ static void io_ws_connection_on_end_receive(
     {
         io_queue_buffer_release(buffer);
 
-        if (result != er_aborted)
+        if (result != er_aborted && connection->last_error != result)
         {
-            log_error(connection->log, "Error during end receive (%s).",
-                prx_err_string(result));
-
+            if (result != er_closed)
+            {
+                log_error(connection->log, "Error during end receive (%s).",
+                    prx_err_string(result));
+            }
+            else
+            {
+                log_info(connection->log, "Remote side closed.");
+            }
             // Disconnect and reset
             connection->last_error = result;
             __do_next(connection, io_ws_connection_disconnect);
@@ -685,10 +692,18 @@ static void io_ws_connection_on_end_send(
         __do_next(connection, io_ws_connection_deliver_send_results);
     }
 
-    else if (result != er_ok && result != er_aborted)
+    else if (result != er_ok && result != er_aborted && 
+        connection->last_error != result)
     {
-        log_error(connection->log, "Error during end send (%s).",
-            prx_err_string(result));
+        if (result != er_closed)
+        {
+            log_error(connection->log, "Error during end send (%s).",
+                prx_err_string(result));
+        }
+        else
+        {
+            log_info(connection->log, "Remote side closed.");
+        }
 
         // Disconnect and reset
         connection->last_error = result;
@@ -724,7 +739,7 @@ static void io_ws_connection_event_handler(
         // Fall through
     case pal_wsclient_event_disconnected:
         dbg_assert(!buffer && !size && !type, "no buffer expected.");
-        log_trace(connection->log, "... disconnected. (%s) (ws-conn:%p)",
+        log_debug(connection->log, "... disconnected. (%s) (ws-conn:%p)",
             prx_err_string(error), connection);
         connection->last_error = error;
           __do_next(connection, io_ws_connection_on_disconnected);
@@ -734,7 +749,7 @@ static void io_ws_connection_event_handler(
         dbg_assert(!buffer && !size && !type, "no buffer expected.");
         dbg_assert_ptr(connection->wsclient);
         connection->wsclient = NULL;
-        log_trace(connection->log, "... destroyed. (ws-conn:%p)",
+        log_debug(connection->log, "... destroyed. (ws-conn:%p)",
             connection);
         __do_next(connection, io_ws_connection_free);
         break;
@@ -1007,6 +1022,18 @@ int32_t io_ws_connection_connect(
 }
 
 //
+// Enable / Disable receive flow
+//
+int32_t io_ws_connection_receive(
+    io_ws_connection_t* connection,
+    bool flow_on_off
+)
+{
+    chk_arg_fault_return(connection);
+    return pal_wsclient_can_recv(connection->wsclient, flow_on_off);
+}
+
+//
 // Get a stream to send one full message with -- must be called from scheduler
 //
 int32_t io_ws_connection_send(
@@ -1045,11 +1072,8 @@ int32_t io_ws_connection_send(
     if (!connection->wsclient)
         return er_ok; // Wait for connect, which will send/receive...
 
-    // Restart sending and receiving...
-    result = pal_wsclient_can_send(connection->wsclient, true);
-    if (result == er_ok)
-        pal_wsclient_can_recv(connection->wsclient, true);
-    return result;
+    // Restart sending if needed...
+    return pal_wsclient_can_send(connection->wsclient, true);
 }
 
 //

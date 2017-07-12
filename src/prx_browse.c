@@ -366,7 +366,7 @@ static void prx_browse_session_handle_unknown_request(
 {
     dbg_assert_ptr(session);
     dbg_assert_ptr(browse_request);
-    dbg_assert_is_task(browser->scheduler);
+    dbg_assert_is_task(session->scheduler);
 
     log_trace(session->log, "Unsupported request received (%d)", browse_request->type);
     prx_browse_session_send_error_response(session, &browse_request->handle,
@@ -405,12 +405,7 @@ int32_t prx_browse_session_handle_dirpath_response(
     }
     else
     {
-        // Copy file name 
-        if (strlen(name) >= sizeof(browse_response.item.un.proxy.host))
-            browse_response.error_code = er_prop_set;
-        else
-            strcpy(browse_response.item.un.proxy.host, name);
-
+        browse_response.item.un.proxy.host_dyn = name;
         if (stat)
         {
             // Append file info
@@ -435,6 +430,7 @@ static void prx_browse_session_handle_dirpath_request(
 {
     int32_t result;
     prx_browse_stream_t* stream = NULL;
+    const char* query;
 
     dbg_assert_ptr(session);
     dbg_assert_ptr(browse_request);
@@ -463,9 +459,9 @@ static void prx_browse_session_handle_dirpath_request(
         if (result != er_ok)
             break;
 
-        log_trace(session->log, "Dir query: %s...", browse_request->item.un.proxy.host);
-        result = pal_read_dir(browse_request->item.un.proxy.host,
-            prx_browse_session_handle_dirpath_response, stream);
+        query = prx_socket_address_proxy_get_host(&browse_request->item.un.proxy);
+        log_trace(session->log, "Dir query: %s...", query);
+        result = pal_read_dir(query, prx_browse_session_handle_dirpath_response, stream);
         if (result != er_ok)
         {
             // Send end of stream
@@ -496,10 +492,12 @@ static int32_t prx_browse_session_handle_service_response(
     int32_t result;
     io_browse_response_t browse_response;
     prx_browse_stream_t* stream = (prx_browse_stream_t*)context;
-    pal_sd_browse_result_t* rec ;
+    pal_sd_browse_result_t* rec;
     pal_sd_service_entry_t* res;
     prx_addrinfo_t* ainfo;
     prx_property_t prop;
+    char* full_name = NULL;
+    size_t full_name_len;
 
     dbg_assert_ptr(stream);
     dbg_assert_ptr(stream->session);
@@ -546,9 +544,21 @@ static int32_t prx_browse_session_handle_service_response(
     else
     {
         rec = (pal_sd_browse_result_t*)browse_result;
-        result = string_copy_service_full_name(rec->service_name, 
-            rec->service_type, rec->domain, browse_response.item.un.proxy.host,
-            sizeof(browse_response.item.un.proxy.host));
+        full_name_len =
+            (rec->service_name ? strlen(rec->service_name) : 0) + 1 +
+            (rec->service_type ? strlen(rec->service_type) : 0) + 1 +
+            (rec->domain ? strlen(rec->domain) : 8) + 1;
+        full_name = (char*)mem_zalloc(full_name_len);
+        if (!full_name)
+            result = er_out_of_memory;
+        else
+        {
+            result = string_copy_service_full_name(rec->service_name,
+                rec->service_type, rec->domain, full_name, full_name_len);
+            browse_response.item.un.proxy.host_dyn = 
+                result == er_ok ? full_name : NULL;
+        }
+
         if (result != er_ok && error == er_ok)
         {
             log_error(stream->session->log,
@@ -566,6 +576,9 @@ static int32_t prx_browse_session_handle_service_response(
 
     browse_response.error_code = error;
     prx_browse_session_send_response(stream->session, &browse_response);
+
+    if (full_name)
+        mem_free(full_name);
 
     // Schedule timeout to send all for now if not already done so...
     if (0 == (flags & pal_sd_result_all_for_now))
@@ -635,7 +648,8 @@ static void prx_browse_session_handle_resolve_request(
         }
 
         // Resolve with specified query
-        log_trace(session->log, "Resolving %s...", browse_request->item.un.proxy.host);
+        log_trace(session->log, "Resolving %s...", 
+            prx_socket_address_proxy_get_host(&browse_request->item.un.proxy));
         result = pal_sdbrowser_resolve(stream->sdbrowser, &browse_request->item.un.proxy, 
             prx_itf_index_all /*browse_request->item.un.proxy.itf_index*/);
         if (result != er_ok)
@@ -667,6 +681,7 @@ static void prx_browse_session_handle_service_request(
     char* service_type;
     char* domain;
     prx_browse_stream_t* stream = NULL;
+    char* query = NULL;
 
     dbg_assert_ptr(session);
     dbg_assert_ptr(browse_request);
@@ -689,12 +704,21 @@ static void prx_browse_session_handle_service_request(
             break;
         }
 
-        result = string_parse_service_full_name(browse_request->item.un.proxy.host,
-            &service_name, &service_type, &domain);
+        result = string_clone(
+            prx_socket_address_proxy_get_host(&browse_request->item.un.proxy), &query);
+        if (result != er_ok)
+        {
+            log_error(session->log, "Failed to clone request host name string (%s)",
+                prx_err_string(result));
+            break;
+        }
+
+        result = string_parse_service_full_name(query, &service_name, &service_type,
+            &domain);
         if (result != er_ok)
         {
             log_error(session->log, "Failed to parse service query string %s (%s)",
-                browse_request->item.un.proxy.host, prx_err_string(result));
+                query, prx_err_string(result));
             break;
         }
 
@@ -718,7 +742,7 @@ static void prx_browse_session_handle_service_request(
         }
 
         // Browse with specified query
-        log_trace(session->log, "Service query: %s...", browse_request->item.un.proxy.host);
+        log_trace(session->log, "Service query: %s...", query);
         result = pal_sdbrowser_browse(stream->sdbrowser, service_name, service_type, 
             domain, prx_itf_index_all /*browse_request->item.un.proxy.itf_index*/);
         if (result != er_ok)
@@ -727,6 +751,7 @@ static void prx_browse_session_handle_service_request(
         // Make sure to send an all for now for this stream after timeout has passed
         __do_later_s(session->scheduler, prx_browse_stream_timeout,
             stream, STREAM_TIMEOUT);
+        mem_free(query);
         return;
     } 
     while (0);
@@ -735,6 +760,8 @@ static void prx_browse_session_handle_service_request(
     prx_browse_session_send_error_response(session, &browse_request->handle, result);
     if (stream)
         prx_browse_session_close_request(session, &stream->handle);
+    if (query)
+        mem_free(query);
 }
 
 //
@@ -1197,6 +1224,7 @@ static void prx_browse_server_sdclient_error(
 {
     prx_browse_server_t* server = (prx_browse_server_t*)context;
     dbg_assert_ptr(server);
+    (void)error;
     log_error(server->log, "Error in sdclient (%s), reset all active sessions... ",
         prx_err_string(error));
     __do_next(server, prx_browse_server_sdclient_reset);
