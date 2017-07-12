@@ -101,8 +101,6 @@ typedef struct prx_server_socket
 #define RECV_POOL_MAX 40             // Maximum number of buffers in pool
 #define RECV_POOL_LWM 1  // Flow off when we hit one message left and ...
 #define RECV_POOL_HWM 2   // ... on when we have all but one back in pool
-    io_message_factory_t* ctrl_pool;  // Pool from which to allocate ctrl
-#define CTRL_POOL_MAX 3              // Maximum number of buffers in pool
     log_t log;
 }
 prx_server_socket_t;
@@ -268,8 +266,6 @@ static void prx_server_socket_free(
         prx_server_socket_empty_transport_queues(server_sock);
     }
 
-    if (server_sock->ctrl_pool)
-        io_message_factory_free(server_sock->ctrl_pool);
     if (server_sock->recv_pool)
         io_message_factory_free(server_sock->recv_pool);
 
@@ -583,7 +579,7 @@ static void prx_server_worker(
                         // Free inbound and outbound socket queues now to make room 
                         prx_server_socket_empty_socket_queues(next);
 
-                        result = io_message_create(next->ctrl_pool,
+                        result = io_message_create(next->recv_pool,
                             io_message_type_close, &next->id, &next->stream_id,
                             &closerequest);
                         if (result == er_ok)
@@ -1640,16 +1636,11 @@ static int32_t prx_server_socket_handle_pollrequest(
     dbg_assert(responder && server_sock->stream == responder,
         "Expected stream to be responder");
 
-    // Create our own poll message reference since it will be around for a while
-    result = io_message_create(server_sock->ctrl_pool,
-        io_message_type_poll, &server_sock->id, &server_sock->stream_id, &copy);
+    result = io_message_clone(message, &copy);
     if (result == er_ok)
     {
         // Make absolute timeout so we can gc this poll request
         copy->content.poll_message.timeout = now + timeout;
-        copy->content.poll_message.sequence_number = 
-            message->content.poll_message.sequence_number;
-        copy->correlation_id = message->correlation_id;
 
         DList_InsertTailList(&server_sock->read_queue, &copy->link);
 
@@ -2024,12 +2015,6 @@ static int32_t prx_server_socket_create(
 
         server_sock->client_itf.context = server_sock;
         server_sock->client_itf.cb = prx_server_socket_event_handler;
-
-        // Create per socket control message pool
-        result = io_message_factory_create("sock-ctrl", 1,
-            CTRL_POOL_MAX, 0, 0, NULL, NULL, &server_sock->ctrl_pool);
-        if (result != er_ok)
-            break;
 
         //
         // Insert ourselves in server and take a reference for it,

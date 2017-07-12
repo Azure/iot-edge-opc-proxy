@@ -847,6 +847,8 @@ void io_message_release(
         return;
     dbg_assert_ptr(message->owner);
     dbg_assert_msg(message);
+    if (!message->owner)
+        return; // Safe 
 
     if (message->buffer)
         prx_buffer_release(message->owner->buffers, message->buffer);
