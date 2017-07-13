@@ -118,10 +118,11 @@ static void prx_buffer_list_trace(
     {
         next = containingRecord(p, prx_buffer_t, link);
         raw = __raw_buffer(next);
-
-        log_trace(pool->log, "Dumping %s buffer %p (len: %zu, refs: %d) :",
+        log_trace(pool->log, "Dumping %s buffer %p (len: %zu, refs: %d)",
             pool->name, raw, next->length, next->refs);
+#if defined(LOG_VERBOSE)
         log_trace_b(pool->log, raw, next->length);
+#endif
     }
 }
 
@@ -321,9 +322,9 @@ static void prx_dynamic_pool_free(
     if (pool->pool.lock)
     {
         lock_enter(pool->pool.lock);
-        prx_buffer_list_trace(&pool->pool, &pool->pool.checked_out);
 
 #if defined(DBG_MEM)
+        prx_buffer_list_trace(&pool->pool, &pool->pool.checked_out);
         // Free all checked_out buffers, and let owner crash
         while (!DList_IsListEmpty(&pool->pool.checked_out))
         {
@@ -335,6 +336,7 @@ static void prx_dynamic_pool_free(
 #else
         dbg_assert(DList_IsListEmpty(&pool->pool.checked_out),
             "Leaking buffer that was not returned to pool!");
+        prx_buffer_list_trace(&pool->pool, &pool->pool.checked_out);
 #endif
         while (!DList_IsListEmpty(&pool->pool.free_list))
         {
@@ -512,9 +514,9 @@ static void prx_fixed_pool_free(
     {
         lock_enter(pool->pool.lock);
 
-        prx_buffer_list_trace(&pool->pool, &pool->pool.checked_out);
         dbg_assert(DList_IsListEmpty(&pool->pool.checked_out),
             "Leaking buffer that was not returned to pool!");
+        prx_buffer_list_trace(&pool->pool, &pool->pool.checked_out);
 
         DList_InitializeListHead(&pool->pool.checked_out);
         DList_InitializeListHead(&pool->pool.free_list);

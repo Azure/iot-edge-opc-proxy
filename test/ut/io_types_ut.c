@@ -1431,7 +1431,7 @@ TEST_FUNCTION(io_decode_prx_socket_properties__success_2)
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
     STRICT_EXPECTED_CALL(io_decode_int32(&k_ctx_valid, "type", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_val(&prx_so_valid1, sizeof(prx_so_valid1))
+        .CopyOutArgumentBuffer_val(&prx_so_valid1, sizeof(int32_t))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_decode_uint64(&k_ctx_valid, "property", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
@@ -1445,7 +1445,7 @@ TEST_FUNCTION(io_decode_prx_socket_properties__success_2)
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
     STRICT_EXPECTED_CALL(io_decode_int32(&k_ctx_valid, "type", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_val(&prx_so_valid2, sizeof(prx_so_valid2))
+        .CopyOutArgumentBuffer_val(&prx_so_valid2, sizeof(int32_t))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_decode_uint64(&k_ctx_valid, "property", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
@@ -1516,7 +1516,7 @@ TEST_FUNCTION(io_decode_prx_socket_properties__neg)
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
     STRICT_EXPECTED_CALL(io_decode_int32(&k_ctx_valid, "type", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_val(&prx_so_valid1, sizeof(prx_so_valid1))
+        .CopyOutArgumentBuffer_val(&prx_so_valid1, sizeof(int32_t))
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
     STRICT_EXPECTED_CALL(io_decode_uint64(&k_ctx_valid, "property", IGNORED_PTR_ARG))
@@ -1533,7 +1533,7 @@ TEST_FUNCTION(io_decode_prx_socket_properties__neg)
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 2);
     STRICT_EXPECTED_CALL(io_decode_int32(&k_ctx_valid, "type", IGNORED_PTR_ARG))
         .ValidateArgumentBuffer(1, &k_ctx_valid, sizeof(io_codec_ctx_t))
-        .CopyOutArgumentBuffer_val(&prx_so_valid2, sizeof(prx_so_valid2))
+        .CopyOutArgumentBuffer_val(&prx_so_valid2, sizeof(int32_t))
         .SetReturn(er_ok)
         .SetFailReturn(er_out_of_memory);
     STRICT_EXPECTED_CALL(io_decode_uint64(&k_ctx_valid, "property", IGNORED_PTR_ARG))
