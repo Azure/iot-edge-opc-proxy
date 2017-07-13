@@ -217,10 +217,6 @@ function(build_ut cur_test folder)
                     NAME ${cur_test}_helgrind COMMAND valgrind --tool=helgrind 
                         --num-callers=50 --error-exitcode=1 
                         $<TARGET_FILE:${cur_test}_exe>)
-                add_test(
-                    NAME ${cur_test}_drd COMMAND valgrind --tool=drd 
-                        --num-callers=50 --error-exitcode=1
-                        $<TARGET_FILE:${cur_test}_exe>)
             endif()
         endif()
     endif()

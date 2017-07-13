@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
     /// Socket facade
     /// </summary>
-    public partial class Socket : IDisposable {
+    public class Socket : IDisposable {
 
         private bool _cleanedUp;
         private IProxySocket _internal;
@@ -98,9 +98,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Create socket for address family 
         //
-        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, uint keepAlive) :
-            this(addressFamily, socketType, protocolType, null) {
-            this._internal = ProxySocket.Create(new SocketInfo {
+        public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, uint keepAlive) {
+            _internal = ProxySocket.Create(new SocketInfo {
                 Family = addressFamily,
                 Protocol = protocolType,
                 Type = socketType,
@@ -118,20 +117,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Create socket for address family 
         //
-        internal Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, IProxySocket internalSocket) {
-            this._internal = internalSocket;
-            this.Connected = false;
-            this.IsBound = false;
-            this.IsListening = false;
+        internal Socket(IProxySocket internalSocket) {
+            _internal = internalSocket;
         }
-
-        //
-        // Called by the class to create a socket to accept an incoming request.
-        //
-        internal Socket(Socket original, IProxySocket internalSocket) :
-            this(original.AddressFamily, original.SocketType, original.ProtocolType, internalSocket) {
-        }
-
 
         /// <summary>
         /// Returns the address of the proxy the socket is connected through
@@ -430,7 +418,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 var result = await _internal.ReceiveAsync(
                     new ArraySegment<byte>(), ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
-                return new Socket(this, result.Link);
+                return new Socket(result.Link);
             }
             catch (OperationCanceledException) {
                 throw;
@@ -1449,6 +1437,11 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             lock (this) {
                 if (!_cleanedUp) {
+
+                    if (Connected) {
+                        Close();
+                    }
+
                     _internal?.Dispose();
                     _internal = null;
 

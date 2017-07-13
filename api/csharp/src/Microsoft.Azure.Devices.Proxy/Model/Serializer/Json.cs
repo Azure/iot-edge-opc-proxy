@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 // Hand this message to the content converter as existing object
                 message.Content = new MessageReferencePlaceHolder { Ref = message };
                 serializer.Populate(reader, message);
-                if ((message.Version >> 16) != (VersionEx.Assembly.ToUInt() >> 16)) {
+                if ((message.Version >> 24) != VersionEx.Assembly.Major) {
                     throw new FormatException($"Bad message version {message.Version}");
                 }
                 return message;

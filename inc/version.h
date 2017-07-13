@@ -5,15 +5,15 @@
 #define _version_h_
 
 #if !defined(MODULE_MAJ_VER)
-#define MODULE_MAJ_VER 0
+#define MODULE_MAJ_VER 1
 #endif
 
 #if !defined(MODULE_MIN_VER)
-#define MODULE_MIN_VER 2
+#define MODULE_MIN_VER 0
 #endif
 
 #if !defined(MODULE_REL_VER)
-#define MODULE_REL_VER 1
+#define MODULE_REL_VER 0
 #endif
 
 #if !defined(SCM_VERSION)
@@ -31,7 +31,7 @@
     "." _TOSTRING(MODULE_REL_VER) \
     "." SCM_VERSION
 
-// Integer version
+// Integer version (0xMMmmrr00 => M=Major,m=Minor,r=Release)
 #define MODULE_VER_NUM \
      ((MODULE_MAJ_VER << 24) | \
       (MODULE_MIN_VER << 16) | \

@@ -486,7 +486,7 @@ static void pal_sdbrowser_service_resolve_callback (
         addr.flags = 0;
         addr.itf_index = itf_index;
         addr.port = port;
-        strncpy(addr.host, host ? host : "", sizeof(addr.host));
+        addr.host_dyn = host ? host : "";
 
         resolve_result.addr = &addr;
         resolve_result.records_len = 0;
@@ -1079,8 +1079,8 @@ int32_t pal_sdbrowser_resolve(
         handle->port = addr->port;
         handle->address = avahi_host_name_resolver_new(browser->client->client,
             itf_index == prx_itf_index_all ? AVAHI_IF_UNSPEC : (uint32_t)itf_index,
-            AVAHI_PROTO_UNSPEC, addr->host, AVAHI_PROTO_UNSPEC, 0,
-            pal_sdbrowser_hostname_resolver_callback, handle);
+            AVAHI_PROTO_UNSPEC, prx_socket_address_proxy_get_host(addr), 
+            AVAHI_PROTO_UNSPEC, 0, pal_sdbrowser_hostname_resolver_callback, handle);
         if (!handle->address)
         {
             result = pal_sdclient_last_avahi_error(browser->client);

@@ -196,8 +196,9 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
     addr.itf_index = itf_index;
     addr.flags = 0;
     addr.port = swap_16(port);
-    strncpy(addr.host, host, sizeof(addr.host));
-    string_trim_back(addr.host, ".");
+    addr.host_dyn = NULL;
+    strncpy(addr.host_fix, host, sizeof(addr.host_fix));
+    string_trim_back(addr.host_fix, ".");
 
     resolve_result.addr = &addr;
     resolve_result.records_len = 0;
@@ -720,7 +721,7 @@ int32_t pal_sdbrowser_resolve(
     browser->port = addr->port;
     error = DNSServiceGetAddrInfo(&browser->ref, kDNSServiceFlagsShareConnection,
         itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
-        (uint32_t)itf_index, plat_proto, addr->host,
+        (uint32_t)itf_index, plat_proto, prx_socket_address_proxy_get_host(addr),
         pal_sdbrowser_getaddrinfo_reply, browser);
     if (!error)
         return er_ok;

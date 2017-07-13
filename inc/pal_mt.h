@@ -106,6 +106,11 @@ typedef volatile int atomic_t;
 
 #endif // !__PAL_ST
 
+// 
+// Thread id
+//
+typedef intptr_t tid_t;
+
 //
 // Reader/Writer locks
 //
@@ -115,6 +120,21 @@ typedef void* rw_lock_t;
 // Simple, non-reentrant mutexes
 //
 typedef void* lock_t;
+
+//
+// Returns current thread id
+//
+decl_internal_0(tid_t, tid_self,
+    void
+);
+
+//
+// Returns whether 2 thread ids are equal
+//
+decl_internal_2(bool, tid_equal,
+    tid_t, left,
+    tid_t, right
+);
 
 //
 // Create mutex lock

@@ -20,7 +20,9 @@ MOCKABLE_FUNCTION(, int, pthread_rwlock_destroy,
     pthread_rwlock_t*, rwlock);
 MOCKABLE_FUNCTION(, int, pthread_rwlock_init,
     pthread_rwlock_t*, rwlock, const pthread_rwlockattr_t*, attr);
-
+MOCKABLE_FUNCTION(, int, pthread_equal,
+    pthread_t, t1, pthread_t, t2);
+MOCKABLE_FUNCTION(, pthread_t, pthread_self);
 
 #include "azure_c_shared_utility/threadapi.h"
 #include "azure_c_shared_utility/condition.h"
@@ -39,6 +41,8 @@ MOCKABLE_FUNCTION(, int, pthread_rwlock_init,
 BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(rwlock_t, void*);
+REGISTER_UMOCK_ALIAS_TYPE(tid_t, long);
+REGISTER_UMOCK_ALIAS_TYPE(pthread_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(LOCK_HANDLE, void*);
 REGISTER_UMOCK_ALIAS_TYPE(LOCK_RESULT, int);
 END_DECLARE_TEST_SUITE()

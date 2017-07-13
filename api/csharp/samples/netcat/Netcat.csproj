@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>0.2.1</VersionPrefix>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <Description>A Netcat like client using Azure Device proxy library</Description>
     <AssemblyTitle>PNetcat sample application</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>

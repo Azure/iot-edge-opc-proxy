@@ -79,6 +79,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         try {
                             _lastMessage = await _send.ReceiveAsync(_timeout,
                                 _open.Token).ConfigureAwait(false);
+                            var data = _lastMessage.Content as DataMessage;
+                            if (data != null) {
+                                data.SequenceNumber = _nextSendSequenceNumber++;
+                            }
                         }
                         catch (TimeoutException) {
                             _lastMessage = Message.Create(StreamId, _remoteId,

@@ -73,6 +73,13 @@ decl_internal_1(void, prx_scheduler_at_exit,
 );
 
 //
+// Checks whether code is running in specified scheduler.
+//
+decl_internal_1(bool, prx_scheduler_runs_me,
+    prx_scheduler_t*, scheduler
+);
+
+//
 // Schedule immediate execution 
 //
 #if !defined(UNIT_TEST)
@@ -114,7 +121,8 @@ decl_internal_1(void, prx_scheduler_at_exit,
 //
 #ifndef dbg_assert_is_task
 #if !defined(UNIT_TEST)
-#define dbg_assert_is_task(s) /* TODO */
+#define dbg_assert_is_task(s) \
+    dbg_assert(prx_scheduler_runs_me(s), "not running on scheduler")
 #else
 #define dbg_assert_is_task(s)
 #endif

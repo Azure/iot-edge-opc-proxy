@@ -217,7 +217,27 @@ namespace Opc.Ua.Bindings.Proxy
         {
             if (disposing)
             {
-                ProxySocket.Dispose();
+                 // get the socket.
+                Socket socket = null;
+
+                lock (m_socketLock)
+                {
+                    socket = ProxySocket;
+                    ProxySocket = null;
+                }
+
+                // shutdown the socket.
+                if (socket != null)
+                {
+                    try
+                    {
+                        socket.Dispose();
+                    }
+                    catch (Exception e)
+                    {
+                        Utils.Trace(e, "Unexpected error closing socket.");
+                    }
+                }
             }
         }
         #endregion
@@ -287,25 +307,11 @@ namespace Opc.Ua.Bindings.Proxy
         public void Close()
         {
             // get the socket.
-            Socket socket = null;
-
-            lock (m_socketLock)
+            if (ProxySocket != null)
             {
-                socket = ProxySocket;
-                ProxySocket = null;
-            }
+                ProxySocket.Close();
 
-            // shutdown the socket.
-            if (socket != null)
-            {
-                try
-                {
-                    socket.Dispose();
-                }
-                catch (Exception e)
-                {
-                    Utils.Trace(e, "Unexpected error closing socket.");
-                }
+                Dispose(true);
             }
         }
         #endregion

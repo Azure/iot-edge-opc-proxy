@@ -255,7 +255,7 @@ static int32_t io_encode_prx_socket_address_proxy(
     __io_encode_value(ctx, uint16, prx_sa, flags);
     __io_encode_value(ctx, int32, prx_sa, itf_index);
     result = io_encode_string(
-        ctx, "host", prx_sa->host);
+        ctx, "host", prx_socket_address_proxy_get_host(prx_sa));
     if (result != er_ok)
         return result;
     __io_encode_type_end(ctx);
@@ -278,8 +278,12 @@ static int32_t io_decode_prx_socket_address_proxy(
     __io_decode_value(ctx, uint16, prx_sa, port);
     __io_decode_value(ctx, uint16, prx_sa, flags);
     __io_decode_value(ctx, int32, prx_sa, itf_index);
+
+    // TODO
+    prx_sa->host_dyn = NULL;
+
     result = io_decode_string_fixed(
-        ctx, "host", prx_sa->host, sizeof(prx_sa->host));
+        ctx, "host", prx_sa->host_fix, sizeof(prx_sa->host_fix));
     if (result != er_ok)
         return result;
     __io_decode_type_end(ctx);

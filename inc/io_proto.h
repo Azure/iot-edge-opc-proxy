@@ -26,8 +26,10 @@ typedef struct io_message io_message_t;
 //
 // Create message factory - a pool of reusable messages
 //
-decl_internal_6(int32_t, io_message_factory_create,
-    size_t, pool_size,
+decl_internal_8(int32_t, io_message_factory_create,
+    const char*, name,
+    size_t, initial_pool_size,
+    size_t, max_pool_size,
     size_t, low_watermark,
     size_t, high_watermark,
     prx_buffer_pool_cb_t, cb,
@@ -43,13 +45,21 @@ decl_internal_1(void, io_message_factory_free,
 );
 
 //
-// Createnew  message
+// Create new  message
 //
 decl_internal_5(int32_t, io_message_create,
     io_message_factory_t*, factory,
     int32_t, type,
     io_ref_t*, source,
     io_ref_t*, target,
+    io_message_t**, message
+);
+
+//
+// Create empty message for decoding
+//
+decl_internal_2(int32_t, io_message_create_empty,
+    io_message_factory_t*, factory,
     io_message_t**, message
 );
 
@@ -67,14 +77,6 @@ decl_internal_2(int32_t, io_message_clone,
 decl_internal_2(int32_t, io_encode_message,
     io_codec_ctx_t*, ctx,
     const io_message_t*, message
-);
-
-//
-// Create empty message for decoding
-//
-decl_internal_2(int32_t, io_message_create_empty,
-    io_message_factory_t*, factory,
-    io_message_t**, message
 );
 
 //
@@ -107,7 +109,6 @@ decl_internal_3(int32_t, io_message_allocate_buffer,
 decl_internal_1(void, io_message_release,
     io_message_t*, message
 );
-
 
 //
 // Proxy protocol, defines content sent to rpc socket communication.

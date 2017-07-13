@@ -161,7 +161,7 @@ static int32_t pal_sd_getaddrinfo(
         host_addr.family = prx_address_family_proxy;
         if (service)
             host_addr.port = (uint16_t)atoi(service);
-        strcpy(host_addr.host, address);
+        host_addr.host_dyn = address;
         result = pal_sdbrowser_resolve(browser, &host_addr, prx_itf_index_all);
         if (result != er_ok)
         {

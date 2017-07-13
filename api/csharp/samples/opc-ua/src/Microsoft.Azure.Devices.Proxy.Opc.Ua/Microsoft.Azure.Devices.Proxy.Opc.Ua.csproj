@@ -3,14 +3,14 @@
   <PropertyGroup>
     <Description>Implements a custom transport for the OPC Foundation reference stack using Microsoft Azure Device Proxy Service API.</Description>
     <AssemblyTitle>Microsoft Azure Devices Opc-UA Reference Stack Proxy Transport</AssemblyTitle>
-    <VersionPrefix>0.2.4</VersionPrefix>
+    <VersionPrefix>1.0.0</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <AssemblyName>Microsoft.Azure.Devices.Opc.Ua.Proxy</AssemblyName>
-    <PackageId>Microsoft.Azure.Devices.Opc.Ua.Proxy</PackageId>
+    <AssemblyName>Microsoft.Azure.Devices.Proxy.Opc.Ua</AssemblyName>
+    <PackageId>Microsoft.Azure.Devices.Proxy.Opc.Ua</PackageId>
     <PackageTags>Azure;IoT;.NET;Opc-UA;Proxy</PackageTags>
     <PackageReleaseNotes>https://github.com/Azure/iot-edge-opc-proxy/releases</PackageReleaseNotes>
     <PackageProjectUrl>https://github.com/Azure/iot-edge-opc-proxy</PackageProjectUrl>

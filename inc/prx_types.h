@@ -128,9 +128,14 @@ typedef struct prx_socket_address_proxy
     uint16_t port;           // In host byte order, not network
     uint16_t flags;
     int32_t itf_index;
-    char host[MAX_HOST_LENGTH];
+    const char* host_dyn;    // if fixed must be null therefore
+    char host_fix[MAX_HOST_LENGTH];   // use macro getter below
 }
 prx_socket_address_proxy_t;
+
+#define prx_socket_address_proxy_get_host(p) \
+    ((p)->host_dyn ? (p)->host_dyn : (p)->host_fix)
+
 
 //
 // Inet socket address type
@@ -440,5 +445,18 @@ typedef struct prx_socket_properties
     prx_property_t* options;        // options to apply on open
 }
 prx_socket_properties_t;
+
+//
+// Transport types
+//
+typedef enum prx_transport_type
+{
+    prx_transport_type_ws = 0,
+    prx_transport_type_mqtt,
+    prx_transport_type_amqp,
+
+    prx_transport_type_unknown = -1
+}
+prx_transport_type_t;
 
 #endif // _prx_types_h_

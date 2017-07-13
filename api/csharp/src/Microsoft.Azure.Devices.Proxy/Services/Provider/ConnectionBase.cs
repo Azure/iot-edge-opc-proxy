@@ -194,6 +194,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         try {
                             _lastMessage = await _send.ReceiveAsync(_timeout, 
                                 _open.Token).ConfigureAwait(false);
+                            var data = _lastMessage.Content as DataMessage;
+                            if (data != null) {
+                                data.SequenceNumber = _nextSendSequenceNumber++;
+                            }
                         }
                         catch (TimeoutException) {
                             _lastMessage = Message.Create(StreamId, _remoteId,
@@ -230,6 +234,13 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     // Read message and send to source block
                     var message = await codec.ReadAsync<Message>(_open.Token).ConfigureAwait(false);
                     if (message != null) {
+                        var data = message.Content as DataMessage;
+                        if (data != null && data.SequenceNumber != _nextReceiveSequenceNumber++) {
+                            // TODO: Implement poll for previous message
+                            System.Diagnostics.Trace.TraceError(
+                                $"{data.SequenceNumber} received, {_nextReceiveSequenceNumber - 1} expected.");
+                            message.Error = (int)SocketError.Comm;
+                        }
                         if (!await _receive.SendAsync(message, _open.Token).ConfigureAwait(false) ||
                                 message.TypeId == MessageContent.Close) {
                             // Pipeline closed, close the connection
@@ -265,6 +276,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         protected readonly BufferBlock<Message> _send;
         protected readonly CodecId _encoding;
         protected readonly Reference _remoteId;
+        protected ulong _nextSendSequenceNumber = 0;
+        protected ulong _nextReceiveSequenceNumber = 0;
 
         /// <summary>
         /// Wrapper that calls dispose on the stream - at a minimum...

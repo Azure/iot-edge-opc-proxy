@@ -15,8 +15,6 @@
 #include "winhttp.h"
 #endif
 
-// #define LOG_VERBOSE
-
 // 
 // State flags
 // 
@@ -279,15 +277,25 @@ static void pal_wsclient_log_winhttp_callback_status(
         "");
     __case(WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE, 
         "");
-    __case(WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE, 
+#if defined(_MSC_VER)
+#define __cased(v, fmt, ...) \
+    case v: log_debug(wsclient->log, #v fmt, __VA_ARGS__); break;
+#elif defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+#define __cased(v, fmt, ...) \
+    case v: log_debug(wsclient->log, #v fmt, ##__VA_ARGS__); break;
+#else
+#define __cased(v, fmt, args...) \
+    case v: log_debug(wsclient->log, #v fmt, ## args); break;
+#endif
+    __cased(WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE,
         "");
-    __case(WINHTTP_CALLBACK_STATUS_READ_COMPLETE, 
+    __cased(WINHTTP_CALLBACK_STATUS_READ_COMPLETE,
         "");
-    __case(WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE, 
+    __cased(WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE,
         "");
-    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CREATED, 
+    __cased(WINHTTP_CALLBACK_STATUS_HANDLE_CREATED,
         "");
-    __case(WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING, 
+    __cased(WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING,
         "");
     default:
         log_error(wsclient->log, 
