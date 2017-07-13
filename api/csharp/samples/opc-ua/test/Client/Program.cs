@@ -28,7 +28,7 @@ namespace NetCoreConsoleClient
         public static void Main(string[] args)
         {
             Console.WriteLine(".Net Core OPC UA Console Client sample");
-#if PERF
+#if !PERF
             Microsoft.Azure.Devices.Proxy.Provider.WebSocketProvider.Create(); 
 #endif
             string endpointURL;
@@ -135,7 +135,7 @@ namespace NetCoreConsoleClient
             Console.WriteLine("    Selected endpoint uses: {0}",
                 selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
-#if PERF
+#if !PERF
         for (int i = 1; ; i++)
         {
 #endif
@@ -175,7 +175,7 @@ namespace NetCoreConsoleClient
             Console.WriteLine(" DisplayName, BrowseName, NodeClass");
             BrowseChildren("", references, session);
             Console.WriteLine($" ....        took {w.ElapsedMilliseconds} ms...");
-#if PERF
+#if !PERF
             session.Close();
         }
 #else

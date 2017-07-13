@@ -738,6 +738,7 @@ static void prx_server_socket_open_complete(
                 prx_err_string(result));
         }
     }
+    io_message_release(message);
 }
 
 //
@@ -1822,6 +1823,9 @@ static int32_t prx_server_socket_stream_handler(
     }
     else if (ev == io_connection_reconnecting)
     {
+        dbg_assert_ptr(delay);
+        *delay = 0;
+
         /**/ if (last_error == er_ok)
         {
             if (server_sock->state == prx_server_socket_opened)
@@ -1833,9 +1837,6 @@ static int32_t prx_server_socket_stream_handler(
             log_error(server_sock->log, "Stream connection with error (%s), closing...",
                 prx_err_string(last_error));
         }
-
-        dbg_assert_ptr(delay);
-        *delay = 0;
 
         if (last_error == er_closed || last_error == er_reset)
         {
@@ -2404,8 +2405,11 @@ static int32_t prx_server_handler(
     }
     else if (ev == io_connection_reconnecting)
     {
-        log_trace(server->log, "Server connection is reconnecting in %d sec.(%s)", 
-            *delay, prx_err_string(last_error));
+        if (*delay)
+        {
+            log_trace(server->log, "Server ctrl is reconnecting in %d sec.(%s)",
+                *delay, prx_err_string(last_error));
+        }
     }
     else if (ev == io_connection_closed)
     {
