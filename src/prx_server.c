@@ -385,7 +385,7 @@ static void prx_server_socket_deliver_results(
         return;
     }
 
-    while (server_sock->polled)
+    while (true)
     {
         message = NULL;
         poll_message = prx_server_socket_pop_sent_message(server_sock);
