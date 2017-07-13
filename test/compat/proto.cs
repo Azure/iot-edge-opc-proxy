@@ -439,7 +439,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             new Random().NextBytes(ab);
             Inet6SocketAddress sap = new Inet6SocketAddress(ab, 443, 1, 0);
 
-            var args = LinkResponse.Create(new Reference(), sal, sap);
+            var args = LinkResponse.Create(new Reference(), sal, sap, 0x18);
             var response = Message.Create(null, null, null, args);
             var stream = new MemoryStream();
 
@@ -859,7 +859,7 @@ namespace Microsoft.Azure.Devices.Proxy.Model {
             new Random().NextBytes(ab);
             var sap = new Inet6SocketAddress(ab, 443, 1, 0);
 
-            var args = LinkResponse.Create(new Reference(), sal, sap);
+            var args = LinkResponse.Create(new Reference(), sal, sap, 0x18);
             var response = Message.Create(null, null, null, args);
             var stream = new MemoryStream();
 

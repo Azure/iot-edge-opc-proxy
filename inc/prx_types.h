@@ -451,9 +451,10 @@ prx_socket_properties_t;
 //
 typedef enum prx_transport_type
 {
-    prx_transport_type_ws = 0,
+    prx_transport_type_wss = 0,
     prx_transport_type_mqtt,
     prx_transport_type_amqp,
+    prx_transport_type_ws,
 
     prx_transport_type_unknown = -1
 }

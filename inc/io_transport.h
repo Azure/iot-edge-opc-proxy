@@ -162,5 +162,11 @@ decl_internal_1(io_transport_t*, io_transport_get,
     prx_transport_type_t, type
 );
 
+//
+// Get transport capabilities bit mask
+//
+decl_internal_0(uint32_t, io_transport_get_caps,
+    void
+);
 
 #endif // _io_transport_h_

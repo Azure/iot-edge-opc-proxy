@@ -239,10 +239,11 @@ static int32_t io_encode_link_response(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, response, 3);
+    __io_encode_type_begin(ctx, response, 4);
     __io_encode_object(ctx, ref, response, link_id);
     __io_encode_object(ctx, prx_socket_address, response, local_address);
     __io_encode_object(ctx, prx_socket_address, response, peer_address);
+    __io_encode_value(ctx, uint32, response, transport_caps);
     __io_encode_type_end(ctx);
     return result;
 }
@@ -256,10 +257,11 @@ static int32_t io_decode_link_response(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, response, 3);
+    __io_decode_type_begin(ctx, response, 4);
     __io_decode_object(ctx, ref, response, link_id);
     __io_decode_object(ctx, prx_socket_address, response, local_address);
     __io_decode_object(ctx, prx_socket_address, response, peer_address);
+    __io_decode_value(ctx, uint32, response, transport_caps);
     __io_decode_type_end(ctx);
     return result;
 }
