@@ -697,16 +697,12 @@ static void prx_server_socket_open_complete(
     dbg_assert_ptr(message);
     dbg_assert_ptr(server_sock->server);
 
+    // Update response
     io_message_as_response(message);
-    do
+    while (result == er_ok)
     {
-        if (result != er_ok)
-            break;
-
-        // Update response
-        memset(&message->content.link_response, 0, 
-            sizeof(message->content.link_response));
-
+        memset(&message->content.link_response, 0, sizeof(io_link_response_t));
+        
         result = pal_socket_getsockname(server_sock->sock,
             &message->content.link_response.local_address);
         if (result != er_ok)
@@ -717,10 +713,10 @@ static void prx_server_socket_open_complete(
         if (result != er_ok)
             break;
 
+        message->content.link_response.transport_caps = io_transport_get_caps();
         io_ref_copy(&server_sock->id, &message->content.link_response.link_id);
         break;
     } 
-    while (0);
 
     if (result != er_ok)
     {

@@ -1129,9 +1129,27 @@ io_transport_t* io_transport_get(
     {
     case prx_transport_type_mqtt:
         return io_iot_hub_mqtt_server_transport();
+    case prx_transport_type_wss:
     case prx_transport_type_ws:
         return io_iot_hub_ws_server_transport();
     default:
         return NULL;
     }
+}
+
+//
+// Return transport capabilities
+//
+uint32_t io_transport_get_caps(
+    void
+)
+{
+    uint32_t caps = (1 << prx_transport_type_mqtt);
+    if (pal_caps() & pal_cap_wsclient)
+    {
+        caps |= (1 << prx_transport_type_wss);
+        if (__prx_config_get_int(prx_config_key_connect_flag, 0) & 0x2)
+            caps |= (1 << prx_transport_type_ws);
+    }
+    return caps;
 }

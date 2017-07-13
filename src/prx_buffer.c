@@ -111,6 +111,10 @@ static void prx_buffer_list_trace(
     PDLIST_ENTRY list
 )
 {
+#if defined(UNIT_TEST) || defined(NO_LOGGING)
+    (void)pool;
+    (void)list;
+#else
     prx_buffer_t* next;
     void* raw;
 
@@ -124,6 +128,7 @@ static void prx_buffer_list_trace(
         log_trace_b(pool->log, raw, next->length);
 #endif
     }
+#endif
 }
 
 //

@@ -39,36 +39,49 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Link transport capabilities
+        /// </summary>
+        [DataMember(Name = "transport_caps", Order = 4)]
+        public uint TransportCaps {
+            get; set;
+        }
+
+        /// <summary>
         /// Create response
         /// </summary>
         /// <param name="linkId"></param>
         /// <param name="localAddress"></param>
         /// <param name="peerAddress"></param>
+        /// <param name="transportCaps"></param>
         /// <returns></returns>
         public static LinkResponse Create(Reference linkId, 
-            SocketAddress localAddress, SocketAddress peerAddress) {
+            SocketAddress localAddress, SocketAddress peerAddress, uint transportCaps) {
             var response = Get();
             response.LinkId = linkId;
             response.LocalAddress = localAddress;
             response.PeerAddress = peerAddress;
+            response.TransportCaps = transportCaps;
             return response;
         }
 
-        public IMessageContent Clone() => Create(LinkId, LocalAddress, PeerAddress);
+        public IMessageContent Clone() => 
+            Create(LinkId, LocalAddress, PeerAddress, TransportCaps);
 
         public override bool IsEqual(LinkResponse that) {
             return IsEqual(LinkId, that.LinkId) &&
                 IsEqual(LocalAddress, that.LocalAddress) &&
-                IsEqual(PeerAddress, that.PeerAddress);
+                IsEqual(PeerAddress, that.PeerAddress) &&
+                IsEqual(TransportCaps, that.TransportCaps);
         }
 
         protected override void SetHashCode() {
             MixToHash(LinkId);
             MixToHash(LocalAddress);
             MixToHash(PeerAddress);
+            MixToHash(TransportCaps);
         }
 
         public override string ToString() =>
-            $"{LinkId} (Local: {LocalAddress}, Peer: {PeerAddress})";
+            $"{LinkId} (Local: {LocalAddress}, Peer: {PeerAddress}, Caps: {TransportCaps})";
     }
 }

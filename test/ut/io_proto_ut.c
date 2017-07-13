@@ -354,10 +354,11 @@ TEST_FUNCTION(io_encode_link_response__success)
     int32_t result;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &response_valid, link_id);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, local_address);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, peer_address);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &response_valid, transport_caps);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -379,10 +380,11 @@ TEST_FUNCTION(io_encode_link_response__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 4);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &response_valid, link_id);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, local_address);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, peer_address);
+    STRICT_EXPECTED_CALL_TO_ENCODE_VALUE(&k_ctx_valid, uint32, &response_valid, transport_caps);
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_END(&k_ctx_valid);
 
     // act
@@ -403,10 +405,11 @@ TEST_FUNCTION(io_decode_link_response__success)
     int32_t result;
 
     // arrange
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &response_valid, link_id);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, local_address);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, peer_address);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &response_valid, transport_caps);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act 
@@ -428,10 +431,11 @@ TEST_FUNCTION(io_decode_link_response__neg)
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 3);
+    STRICT_EXPECTED_CALL_TO_DECODE_TYPE_BEGIN(&k_ctx_valid, 4);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, ref, &response_valid, link_id);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, local_address);
     STRICT_EXPECTED_CALL_TO_DECODE_OBJECT(&k_ctx_valid, prx_socket_address, &response_valid, peer_address);
+    STRICT_EXPECTED_CALL_TO_DECODE_VALUE(&k_ctx_valid, uint32, &response_valid, transport_caps);
     STRICT_EXPECTED_CALL_TO_DECODE_TYPE_END(&k_ctx_valid);
 
     // act

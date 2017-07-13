@@ -192,6 +192,7 @@ typedef struct io_link_response
     io_ref_t link_id;
     prx_socket_address_t local_address;
     prx_socket_address_t peer_address;
+    uint32_t transport_caps;
 }
 io_link_response_t;
 
