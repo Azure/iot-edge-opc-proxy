@@ -125,7 +125,6 @@ static void prx_server_free(
 {
     dbg_assert_ptr(server);
     dbg_assert(server->exit, "Should be exiting");
-    dbg_assert(!server->listener, "Should not have open listener");
 
     if (server->browser)
         prx_browse_server_free(server->browser);
@@ -134,9 +133,12 @@ static void prx_server_free(
         prx_scheduler_release(server->scheduler, server);
 
     dbg_assert(hashtable_count(server->sockets) == 0,
-        "socketlist should now be empty");
+        "socketlist should be empty");
     if (server->sockets)
         hashtable_destroy(server->sockets, 0);
+
+    if (server->listener)
+        io_connection_free(server->listener);
 
     if (server->sockets_lock)
         lock_free(server->sockets_lock);
@@ -2413,10 +2415,7 @@ static int32_t prx_server_handler(
     }
     else if (ev == io_connection_closed)
     {
-        // Listener closed, free and exit
-        io_connection_free(server->listener);
-        server->listener = NULL;
-
+        // close all sockets...
         server->exit = true;
         __do_next(server, prx_server_worker);
     }
@@ -2517,9 +2516,9 @@ void prx_server_release(
     }
     else
     {
+        // If no listener close all sockets right away...
         server->exit = true;
         __do_next(server, prx_server_worker);
     }
-    // Wait for server to exit...
 }
 
