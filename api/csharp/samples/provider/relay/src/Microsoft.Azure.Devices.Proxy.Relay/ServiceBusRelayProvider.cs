@@ -15,9 +15,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     public class ServiceBusRelayProvider : DefaultProvider {
         private IStreamService _relay;
         public override IStreamService StreamService {
-            get {
-                return _relay;
-            }
+            get => _relay;
         }
 
         public static Task<IProvider> CreateAsync() => 

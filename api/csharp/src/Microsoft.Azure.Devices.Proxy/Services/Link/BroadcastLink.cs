@@ -5,6 +5,7 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
+    using System.Linq;
     using System.Threading.Tasks.Dataflow;
 
     /// <summary>
@@ -29,22 +30,59 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Called when error message is received over stream
+        /// Create send block
         /// </summary>
-        /// <param name="message"></param>
-        /// <returns></returns>
-        protected override bool OnReceiveError(Message message) {
-            OnRemoteClose(message);
-            return true; 
+        /// <param name="maxSize"></param>
+        protected override void CreateSendBlock(int maxSize) {
+            if (maxSize == 0) {
+                base.CreateSendBlock(maxSize);
+                return;
+            }
+            _send = new TransformBlock<Message, Message>((message) => {
+                if (maxSize == 0 || message.TypeId != MessageContent.Data ||
+                   ((DataMessage)message.Content).Payload.Length <= maxSize) {
+                    return message;
+                }
+                throw new ProxyException(
+                    $"Cannot send more than {maxSize} bytes as single message");
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Send (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = false,
+                BoundedCapacity = 3
+            });
         }
 
         /// <summary>
-        /// Called when we determine that remote side closed
+        /// Create receive block
         /// </summary>
-        protected override void OnRemoteClose(Message message) {
-            // Reconnect
-            Detach();
-            ((BroadcastSocket)_socket).Reconnect(this);
+        /// <param name="maxSize"></param>
+        protected override void CreateReceiveBlock() {
+            _receive = new TransformManyBlock<Message, Message>((message) => {
+                if (message.Error == (int)SocketError.Closed ||
+                    message.TypeId == MessageContent.Close ||
+                    message.Error != (int)SocketError.Success) {
+                    // Remote side closed - reconnect
+                    Detach();
+                    ((BroadcastSocket)_socket).Reconnect(this);
+                }
+                else if (message.TypeId == MessageContent.Data) {
+                    return message.AsEnumerable();
+                }
+                else {
+                    // Todo: log error?
+                }
+                return Enumerable.Empty<Message>();
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Receive (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = true,
+                BoundedCapacity = 3
+            });
         }
 
         /// <summary>

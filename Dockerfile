@@ -2,7 +2,7 @@ FROM alpine:3.6
 
 RUN set -ex \
         && \
-    apk add --no-cache --virtual .build-deps \
+    apk update && apk add --no-cache --virtual .build-deps \
         bash \
         cmake \
         build-base \
@@ -30,10 +30,11 @@ RUN \
    
 RUN apk del .build-deps \
         && \
-    apk add --no-cache --virtual .run-deps \
+    apk update && apk add --no-cache --virtual .run-deps \
         bash \
         curl \
         libressl \
+        ca-certificates \
         avahi
 
 ENTRYPOINT ["proxyd"]
