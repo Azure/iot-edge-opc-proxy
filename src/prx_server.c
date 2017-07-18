@@ -1627,7 +1627,13 @@ static int32_t prx_server_socket_handle_pollrequest(
     now = ticks_get();
 
     timeout = message->content.poll_message.timeout;
-    server_sock->client_itf.props.timeout = (((uint32_t)timeout) * 3);
+    server_sock->client_itf.props.timeout = timeout;
+    if (!server_sock->client_itf.props.timeout)
+        server_sock->client_itf.props.timeout = DEFAULT_GC_TIMEOUT;
+    else if (server_sock->client_itf.props.timeout < MIN_GC_TIMEOUT)
+        server_sock->client_itf.props.timeout = MIN_GC_TIMEOUT;
+
+    server_sock->client_itf.props.timeout *= 2;
     server_sock->last_activity = now;
     if (!server_sock->polled)
         return er_ok;

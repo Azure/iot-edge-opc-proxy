@@ -31,6 +31,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         /// <summary>
+        /// Returns the maximum size of a buffer that can be sent through
+        /// this connection, which is unbounded = 0.
+        /// </summary>
+        public uint MaxBufferSize {
+            get => 0;
+        }
+
+        /// <summary>
         /// Block to send to
         /// </summary>
         public ITargetBlock<Message> SendBlock {

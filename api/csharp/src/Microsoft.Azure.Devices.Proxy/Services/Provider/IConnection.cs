@@ -36,6 +36,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Returns the maximum size of a buffer that can be sent through
+        /// this connection.  (0 means unbounded).
+        /// </summary>
+        uint MaxBufferSize {
+            get;
+        }
+
+        /// <summary>
         /// Opens the connection and connects the message stream to the 
         /// underlying streaming implementation (e.g. a websocket stream or
         /// http send/recv).  Open might need to wait until the proxy connects

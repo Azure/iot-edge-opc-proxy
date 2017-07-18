@@ -364,7 +364,8 @@ Operations (Mutually exclusive):
             try {
                 int offset = 0;
                 while (offset < buffer.Length) {
-                    offset += await stream.ReadAsync(buffer, offset, buffer.Length - offset);
+                    var rcvbyte = await stream.ReadAsync(buffer, offset, buffer.Length - offset);
+                    offset += rcvbyte;
                 }
 #if TEST
                 if (!buffer.SameAs(msg)) {

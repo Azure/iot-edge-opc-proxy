@@ -84,39 +84,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             RemoteId = remoteId ?? throw new ArgumentNullException(nameof(remoteId));
             LocalAddress = localAddress ?? throw new ArgumentNullException(nameof(localAddress));
             PeerAddress = peerAddress ?? throw new ArgumentNullException(nameof(peerAddress));
-
-            _send = new BufferBlock<Message>(new DataflowBlockOptions {
-                NameFormat = "Send (in Link) Id={1}",
-                EnsureOrdered = true,
-                BoundedCapacity = 3
-            });
-
-            _receive = new TransformManyBlock<Message, Message>((message) => {
-                if (message.Error == (int)SocketError.Closed ||
-                    message.TypeId == MessageContent.Close) {
-                    // Remote side closed
-                    OnRemoteClose(message);
-                }
-                else if (message.Error != (int)SocketError.Success) {
-                    if (!OnReceiveError(message)) {
-                        ProxySocket.ThrowIfFailed(message);
-                    }
-                }
-                else if (message.TypeId == MessageContent.Data) {
-                    return message.AsEnumerable();
-                }
-                else {
-                    // Todo: log error?
-                }
-                return Enumerable.Empty<Message>();
-            },
-            new ExecutionDataflowBlockOptions {
-                NameFormat = "Receive (in Link) Id={1}",
-                EnsureOrdered = true,
-                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
-                SingleProducerConstrained = true,
-                BoundedCapacity = 3
-            });
         }
 
 
@@ -136,20 +103,98 @@ namespace Microsoft.Azure.Devices.Proxy {
                 _connection = await _socket.Provider.StreamService.CreateConnectionAsync(
                     _streamId, RemoteId, Proxy, encoding).ConfigureAwait(false);
 
-                return OpenRequest.Create(_streamId, (int)encoding, 
+                var maxSize = (int)_connection.MaxBufferSize;
+
+                CreateSendBlock(maxSize);
+                CreateReceiveBlock();
+
+                return OpenRequest.Create(_streamId, (int)encoding,
                     _connection.ConnectionString != null ?
                         _connection.ConnectionString.ToString() : "", 0, _connection.IsPolled,
-#if !NO_MSG_OVER_8K 
-                    // TODO: Remove this when > 88 k messages are supported
-                    800
-#else
-                    0
-#endif
-                    );
+                    _connection.MaxBufferSize);
             }
             catch (OperationCanceledException) {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// Create send block
+        /// </summary>
+        /// <param name="maxSize">max buffer size for sending</param>
+        protected virtual void CreateSendBlock(int maxSize) {
+            var options = new ExecutionDataflowBlockOptions {
+                NameFormat = "Send (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = false,
+                BoundedCapacity = 3
+            };
+            if (maxSize == 0) {
+                _send = new BufferBlock<Message>(options);
+                return;
+            }
+
+            _send = new TransformManyBlock<Message, Message>((message) => {
+                if (message.TypeId != MessageContent.Data ||
+                    ((DataMessage)message.Content).Payload.Length <= maxSize) {
+                    return message.AsEnumerable();
+                }
+                // Split messages if needed using max size
+                var data = message.Content as DataMessage;
+                int segmentCount = data.Payload.Length / maxSize;
+                int segmentSize = maxSize;
+
+                if (data.Payload.Length % maxSize != 0) {
+                    // Distribute payload equally across all messages
+                    segmentCount++;
+                    segmentSize = (data.Payload.Length + segmentCount) / segmentCount;
+                }
+
+                // Create segment messages
+                var segmentMessages = new Message[segmentCount];
+                for (int i = 0, offset = 0; i < segmentMessages.Length; i++, offset += segmentSize) {
+                    var segmentLength = Math.Min(data.Payload.Length - offset, segmentSize);
+                    var segment = new ArraySegment<byte>(data.Payload, offset, segmentLength);
+                    segmentMessages[i] = Message.Create(message.Source, message.Target, message.Proxy,
+                        DataMessage.Create(segment, null));
+                }
+                return segmentMessages;
+            }, 
+            options);
+        }
+
+        /// <summary>
+        /// Create receive block
+        /// </summary>
+        /// <param name="maxSize"></param>
+        protected virtual void CreateReceiveBlock() {
+            var options = new ExecutionDataflowBlockOptions {
+                NameFormat = "Receive (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = true,
+                BoundedCapacity = 3
+            };
+
+            _receive = new TransformManyBlock<Message, Message>((message) => {
+                if (message.Error == (int)SocketError.Closed ||
+                    message.TypeId == MessageContent.Close) {
+                    // Remote side closed
+                    throw new SocketException("Remote side closed", null, SocketError.Closed);
+                }
+                else if (message.Error != (int)SocketError.Success) {
+                    ProxySocket.ThrowIfFailed(message);
+                }
+                else if (message.TypeId == MessageContent.Data) {
+                    return message.AsEnumerable();
+                }
+                else {
+                    // Todo: log error?
+                }
+                return Enumerable.Empty<Message>();
+            }, 
+            options);
         }
 
         /// <summary>
@@ -300,22 +345,6 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-
-        /// <summary>
-        /// Called when error message is received over stream
-        /// </summary>
-        /// <param name="message"></param>
-        /// <returns>Whether to continue (true) or fail (false)</returns>
-        protected virtual bool OnReceiveError(Message message) => 
-            false;
-
-        /// <summary>
-        /// Called when we determine that remote side closed
-        /// </summary>
-        protected virtual void OnRemoteClose(Message message) =>
-            throw new SocketException("Remote side closed", null, SocketError.Closed);
-
-
         /// <summary>
         /// Returns a string that represents the current object.
         /// </summary>
@@ -326,12 +355,12 @@ namespace Microsoft.Azure.Devices.Proxy {
               + $"with stream {_streamId} (Socket {_socket})";
         }
 
+        protected IPropagatorBlock<Message, Message> _send;
+        protected IPropagatorBlock<Message, Message> _receive;
         protected readonly ProxySocket _socket;
         private IConnection _connection;
         private IDisposable _streamSend;
         private IDisposable _streamReceive;
-        private readonly IPropagatorBlock<Message, Message> _send;
-        private readonly IPropagatorBlock<Message, Message> _receive;
         private readonly Reference _streamId = new Reference();
     }
 }
