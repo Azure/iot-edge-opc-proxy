@@ -31,7 +31,7 @@ typedef void(*on_status_change_t)(
 );
 
 //
-// Called on termination 
+// Called on termination
 //
 #if _WIN32
 static int32_t signal_handler(
@@ -189,7 +189,7 @@ static void service_status_cb(
         break;
     case service_status_stopping:
         service_status.dwCheckPoint = counter++;
-        service_status.dwCurrentState = SERVICE_STOP_PENDING; 
+        service_status.dwCurrentState = SERVICE_STOP_PENDING;
         break;
     case service_status_error:
         break;

@@ -55,7 +55,7 @@ typedef struct pal_socket_client_itf
 pal_socket_client_itf_t;
 
 //
-// Call before using socket layer 
+// Call before using socket layer
 //
 decl_public_1(int32_t, pal_socket_init,
     uint32_t*, caps
@@ -77,7 +77,7 @@ decl_internal_1(int32_t, pal_socket_open,
 );
 
 //
-// Create an opened / connected pair of local sockets 
+// Create an opened / connected pair of local sockets
 //
 decl_internal_4(int32_t, pal_socket_pair,
     pal_socket_client_itf_t*, itf1,

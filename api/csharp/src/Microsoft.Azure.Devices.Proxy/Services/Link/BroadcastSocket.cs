@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
     /// <summary>
     /// Broadcast socket implementation. Maintains a list of n proxy links that it manages,
-    /// including  keep alive and re-connects. In addition, it provides input and 
+    /// including  keep alive and re-connects. In addition, it provides input and
     /// output transform from binary buffer to actual messages that are serialized/
     /// deserialized at the provider level (next level).
     /// </summary>
@@ -21,19 +21,19 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         /// <summary>
         /// List of proxy links - i.e. open sockets or bound sockets on the remote
-        /// proxy server.  This is a list of links allowing this socket to create 
+        /// proxy server.  This is a list of links allowing this socket to create
         /// aggregate and broadcast type networks across multiple proxies.
         /// </summary>
-        protected List<IProxyLink> Links {
+        internal Dictionary<Reference, BroadcastLink> Links {
             get;
-        } = new List<IProxyLink>();
+        } = new Dictionary<Reference, BroadcastLink>();
 
         /// <summary>
         /// Returns an address representing the proxy address(s)
         /// </summary>
         public override SocketAddress ProxyAddress {
             get => SocketAddressCollection.Create(
-                Links.Where(l => l.ProxyAddress != null).Select(l => l.ProxyAddress));
+                Links.Values.Where(l => l.ProxyAddress != null).Select(l => l.ProxyAddress));
         }
 
         /// <summary>
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         public override SocketAddress LocalAddress {
             get => SocketAddressCollection.Create(
-                Links.Where(l => l.LocalAddress != null).Select(l => l.LocalAddress));
+                Links.Values.Where(l => l.LocalAddress != null).Select(l => l.LocalAddress));
         }
 
         /// <summary>
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         public override SocketAddress PeerAddress {
             get => SocketAddressCollection.Create(
-                Links.Where(l => l.PeerAddress != null).Select(l => l.PeerAddress));
+                Links.Values.Where(l => l.PeerAddress != null).Select(l => l.PeerAddress));
         }
 
         /// <summary>
@@ -67,11 +67,18 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// An underlying link
+        /// </summary>
+        internal BroadcastLink this[Reference index] {
+            get => Links[index];
+        }
+
+        /// <summary>
         /// Constructor - hidden, use Create to create a proxy socket object.
         /// </summary>
         /// <param name="info">Properties that the socket should have</param>
         /// <param name="provider">The provider to use for communication, etc.</param>
-        protected BroadcastSocket(SocketInfo info, IProvider provider) : 
+        protected BroadcastSocket(SocketInfo info, IProvider provider) :
             base (info, provider) {
 
             // Broadcast to all connected links
@@ -91,7 +98,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             });
 
             // Reconnect block for connected links to push themselves for reconnect
-            _reconnect = new TransformBlock<BroadcastLink, INameRecord>(link => link.Proxy, 
+            _reconnect = new TransformBlock<BroadcastLink, INameRecord>(link => link.Proxy,
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Reconnect (in Socket) Id={1}",
                 EnsureOrdered = true,
@@ -105,8 +112,15 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         public override async Task CloseAsync(CancellationToken ct) {
             try {
-                var links = Links.ToArray();
-                await Task.WhenAll(links.Select(l => l.CloseAsync(ct))).ConfigureAwait(false);
+                _pnpListener?.Dispose();
+                _pnpListener = null;
+
+                var links = Links.Values.ToArray();
+                await Task.WhenAll(links.Select(l => l.CloseAsync(ct).ContinueWith(t => {
+                    lock(Links) {
+                        OnRemove(l);
+                    }
+                }))).ConfigureAwait(false);
             }
             catch (Exception e) {
                 throw SocketException.Create("Close failed", e);
@@ -129,7 +143,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return;
             }
             try {
-                await Task.WhenAll(Links.Select(
+                await Task.WhenAll(Links.Values.Select(
                     i => i.SetSocketOptionAsync(option, value, ct))).ConfigureAwait(false);
             }
             catch (Exception e) {
@@ -148,12 +162,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (!Links.Any()) {
                 return _optionCache.ContainsKey(option) ? _optionCache[option] : 0;
             }
-            
+
             var cts = new CancellationTokenSource();
             ct.Register(() => {
                 cts.Cancel();
             });
-            var tasks = Links.Select(
+            var tasks = Links.Values.Select(
                 i => i.GetSocketOptionAsync(option, cts.Token)).ToList();
             Exception e = null;
             while (tasks.Count > 0) {
@@ -172,7 +186,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Bind to provided endpoint(s) - sets up tpl flow network to mimic binding to 
+        /// Bind to provided endpoint(s) - sets up tpl flow network to mimic binding to
         /// a set of endpoints or all endpoints, and handling reconnects until the socket
         /// is closed.  The socket is bound even if there are no endpoints immediately
         /// connected (e.g. if proxies are off).  However, the idea is that the links are
@@ -187,50 +201,56 @@ namespace Microsoft.Azure.Devices.Proxy {
             Info.Options.UnionWith(_optionCache.Select(p => Property<ulong>.Create(
                 (uint)p.Key, p.Value)));
 
-            var input = DataflowMessage<INameRecord>.CreateAdapter(new ExecutionDataflowBlockOptions {
+            var input = DataflowMessage<INameRecord>.CreateAdapter(
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Adapt (Bind) Id={1}",
                 CancellationToken = _open.Token,
                 EnsureOrdered = false,
-                SingleProducerConstrained = true,
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
                 MaxMessagesPerTask = DataflowBlockOptions.Unbounded
             });
 
             // handle errors by throttling and then retry...
-            var errors = new TransformBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
-            async (error) => {
-                await Task.Delay(error.Exceptions.Count * _throttleDelayMs).ConfigureAwait(false);
-                return error;
+            var errors = new TransformManyBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
+            error => {
+                if (error.FaultCount >= 2 || error.LastFault is ProxyNotFound) {
+                    return Enumerable.Empty<DataflowMessage<INameRecord>>();
+                }
+                ProxyEventSource.Log.LinkFailure(this, error.Arg, error.Arg, error.LastFault);
+                return error.AsEnumerable();
             },
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Error (Bind) Id={1}",
                 CancellationToken = _open.Token
             });
 
-            var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {
-                NameFormat = "Lookup (Bind) Id={1}",
+            var query = Provider.NameService.Read(
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Query (Bind) Id={1}",
                 CancellationToken = _open.Token,
-                EnsureOrdered = false,
-                MaxDegreeOfParallelism = 2, // 2 parallel lookups
-                MaxMessagesPerTask = 1
+                EnsureOrdered = true
             });
 
-            var linker = CreateLinkBlock(errors, new ExecutionDataflowBlockOptions {
+            var linker = CreateLinkBlock(errors,
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Link (Bind) Id={1}",
                 CancellationToken = _open.Token,
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
-                EnsureOrdered = false,
-                MaxMessagesPerTask = 1
+                EnsureOrdered = false
             });
 
             // When first connected mark tcs as complete
-            var connected = new ActionBlock<IProxyLink>(l => {
+            var connected = new ActionBlock<IProxyLink>(
+            async l => {
+                l.Proxy.LastActivity = DateTime.Now;
                 lock (Links) {
                     var link = l as BroadcastLink;
                     link.Attach(_send, _receive);
-                    Links.Add(link);
+                    OnAdd(link);
                 }
-            }, new ExecutionDataflowBlockOptions {
+                await Provider.NameService.AddOrUpdateAsync(l.Proxy, ct).ConfigureAwait(false);
+            },
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Connected (Bind) Id={1}",
                 CancellationToken = _open.Token,
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
@@ -245,43 +265,68 @@ namespace Microsoft.Azure.Devices.Proxy {
             linker.ConnectTo(connected);
 
             //
-            // Query generates name records from device registry based on the passed 
-            // proxy information. These are then posted to the linker for linking. 
+            // Query generates name records from device registry based on the passed
+            // proxy information. These are then posted to the linker for linking.
             //
-            var queries = new List<Task<bool>>();
             if (endpoint == null || endpoint is AnySocketAddress) {
-                queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                    Reference.All, NameRecordType.Proxy), ct));
+                await query.SendAsync(r => r.Matches(Reference.All, NameRecordType.Proxy),
+                    ct).ConfigureAwait(false);
             }
             else {
                 while (endpoint.Family == AddressFamily.Bound) {
                     // Unwrap bound address
                     endpoint = ((BoundSocketAddress)endpoint).LocalAddress;
                 }
+                await query.SendAsync(r => r.Matches(endpoint, NameRecordType.Proxy),
+                    ct).ConfigureAwait(false);
+            }
 
-                if (endpoint.Family == AddressFamily.Collection) {
-                    foreach (var item in ((SocketAddressCollection)endpoint).Addresses()) {
-                        queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                            item.ToString(), NameRecordType.Proxy), ct));
+            var pnp = new TransformManyBlock<Tuple<INameRecord, NameServiceEvent>, INameRecord>(
+            ev => {
+                if (ev.Item2 == NameServiceEvent.Connected) {
+                    // Reconnect...
+                    return ev.Item1.AsEnumerable();
+                }
+                if (ev.Item2 == NameServiceEvent.Disconnected ||
+                    ev.Item2 == NameServiceEvent.Removed) {
+                    lock (Links) {
+                        if (Links.TryGetValue(ev.Item1.Address, out BroadcastLink link)) {
+                            OnRemove(link);
+                        }
                     }
                 }
-                else {
-                    queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                        endpoint.ToString(), NameRecordType.Proxy), ct));
-                }
-            }
-            await Task.WhenAll(queries.ToArray()).ConfigureAwait(false);
+                return Enumerable.Empty<INameRecord>();
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "PnP (Bind) Id={1}",
+                CancellationToken = _open.Token,
+                EnsureOrdered = true
+            });
 
-            // Now the network is primed with proxy endpoints
+            // Now listen for pnp events
+            pnp.ConnectTo(input);
+            _pnpListener = Provider.NameService.Write.ConnectTo(pnp);
         }
+
+        /// <summary>
+        /// Called to add link
+        /// </summary>
+        /// <param name="link"></param>
+        internal virtual void OnAdd(BroadcastLink link) => Links.Add(link.Proxy.Address, link);
+
+        /// <summary>
+        /// Called to remove link
+        /// </summary>
+        /// <param name="link"></param>
+        internal virtual void OnRemove(BroadcastLink link) => Links.Remove(link.Proxy.Address);
 
         /// <summary>
         /// Reconnect the broadcast socket by requeing to reconnect block.
         /// </summary>
-        /// <param name="broadcastLink"></param>
+        /// <param name="link"></param>
         internal void Reconnect(BroadcastLink link) {
             lock (Links) {
-                Links.Remove(link);
+                OnRemove(link);
             }
             _reconnect.Post(link);
         }
@@ -301,6 +346,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public override void Dispose() {
+            _pnpListener?.Dispose();
+            _pnpListener = null;
             _open.Cancel(false);
         }
 
@@ -308,6 +355,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         private readonly IPropagatorBlock<Message, Message> _send;
         private readonly IPropagatorBlock<Message, Message> _receive;
         private readonly IPropagatorBlock<BroadcastLink, INameRecord> _reconnect;
-        private const int _throttleDelayMs = 1000;
+        private IDisposable _pnpListener;
     }
 }

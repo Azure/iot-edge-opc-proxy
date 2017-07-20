@@ -47,10 +47,10 @@ typedef long long ticks_t;
 #define SHUT_WR SD_SEND
 #define SHUT_RDWR SD_BOTH
 
-struct sockaddr_un 
+struct sockaddr_un
 {
-    ADDRESS_FAMILY sun_family; 
-    CHAR sun_path[108]; 
+    ADDRESS_FAMILY sun_family;
+    CHAR sun_path[108];
 };
 
 // Implemented in pal_sk_win
@@ -69,6 +69,10 @@ __inline int _fd_nonblock(fd_t fd, int r)
 
 #if !defined(EAI_ADDRFAMILY)
 #define EAI_ADDRFAMILY WSANO_DATA
+#endif
+
+#if !defined (MSG_MORE)
+#define MSG_MORE MSG_PARTIAL
 #endif
 
 #endif // _os_win_h_

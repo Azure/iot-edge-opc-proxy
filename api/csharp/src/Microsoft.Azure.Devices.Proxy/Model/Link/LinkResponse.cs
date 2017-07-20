@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     [DataContract]
     public class LinkResponse : Poco<LinkResponse>, IMessageContent, IResponse {
         /// <summary>
-        /// Remote link address 
+        /// Remote link address
         /// </summary>
         [DataMember(Name = "link_id", Order = 1)]
         public Reference LinkId {
@@ -47,6 +47,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Max buffer to send on this link = 0 means 64k
+        /// </summary>
+        [DataMember(Name = "max_send", Order = 5)]
+        public uint MaxSendBuffer {
+            get; set;
+        }
+
+        /// <summary>
         /// Create response
         /// </summary>
         /// <param name="linkId"></param>
@@ -54,7 +62,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="peerAddress"></param>
         /// <param name="transportCaps"></param>
         /// <returns></returns>
-        public static LinkResponse Create(Reference linkId, 
+        public static LinkResponse Create(Reference linkId,
             SocketAddress localAddress, SocketAddress peerAddress, uint transportCaps) {
             var response = Get();
             response.LinkId = linkId;
@@ -64,7 +72,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             return response;
         }
 
-        public IMessageContent Clone() => 
+        public IMessageContent Clone() =>
             Create(LinkId, LocalAddress, PeerAddress, TransportCaps);
 
         public override bool IsEqual(LinkResponse that) {

@@ -7,13 +7,13 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System;
 
     /// <summary>
-    /// Represents an abstract service record. In the case of dns-sd, this is the 
-    /// record pointed to by PTR. 
+    /// Represents an abstract service record. In the case of dns-sd, this is the
+    /// record pointed to by PTR.
     /// </summary>
     public class DnsServiceRecord : Poco<DnsServiceRecord> {
 
         /// <summary>
-        /// Name of service 
+        /// Name of service
         /// </summary>
         public string Name {
             get; private set;
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="interface"></param>
         /// <param name="removed"></param>
         /// <returns></returns>
-        internal static DnsServiceRecord Create(DnsServiceRecord service, 
+        internal static DnsServiceRecord Create(DnsServiceRecord service,
             SocketAddress @interface, bool removed) {
             var record = Clone(service);
             record.Interface = @interface;
@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="interface"></param>
         /// <param name="removed"></param>
         /// <returns></returns>
-        internal static DnsServiceRecord Create(string name, string type, 
+        internal static DnsServiceRecord Create(string name, string type,
             string domain, SocketAddress @interface, bool removed = false) {
             var record = Get();
             record.Name = name;
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Parses a service string to create a service record
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="fullString"></param>
         /// <returns></returns>
         public static DnsServiceRecord Parse(string fullString) {
             string name = "";
@@ -104,7 +104,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             // Name is everything until service type
             for (; index < labels.Length; index++) {
-                if (labels[index].StartsWith("_")) {
+                if (labels[index].StartsWith("_", StringComparison.Ordinal)) {
                     break;
                 }
                 if (index != 0)
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
             // All components of type start with _
             for (; index < labels.Length; index++) {
-                if (!labels[index].StartsWith("_")) {
+                if (!labels[index].StartsWith("_", StringComparison.Ordinal)) {
                     break;
                 }
                 type += labels[index];
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Converts a record to a socket address item
         /// </summary>
         /// <returns></returns>
-        internal ProxySocketAddress ToSocketAddress() => 
+        internal ProxySocketAddress ToSocketAddress() =>
             new ProxySocketAddress(FullString) {
                 InterfaceIndex = _interfaceIndex,
                 Flags = _flags
@@ -181,7 +181,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="address"></param>
         /// <returns></returns>
-        internal static DnsServiceRecord FromSocketAddress(ProxySocketAddress address, 
+        internal static DnsServiceRecord FromSocketAddress(ProxySocketAddress address,
             SocketAddress @interface = null, bool removed = false) {
             var record = Parse(address.Host);
             record._flags = address.Flags;
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Stringify address
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => 
+        public override string ToString() =>
             $"{FullString} on {Interface}{(Removed ? " REMOVED" : "")}";
 
 

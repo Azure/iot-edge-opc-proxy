@@ -37,7 +37,7 @@ BOOL __stdcall DllMain(
 }
 #endif
 
-// 
+//
 // Runs individual tests
 //
 int tests(const char* arg, int argc, char *argv[])

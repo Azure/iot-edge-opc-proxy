@@ -67,7 +67,7 @@ decl_public_4(int32_t, pal_getifnameinfo,
 );
 
 //
-// Look up host name 
+// Look up host name
 //
 decl_public_6(int32_t, pal_getaddrinfo,
     const char*, host_name,
@@ -98,7 +98,7 @@ decl_public_6(int32_t, pal_getnameinfo,
 );
 
 //
-// Returns a networking stack error 
+// Returns a networking stack error
 //
 decl_public_0(int32_t, pal_os_last_net_error_as_prx_error,
     void

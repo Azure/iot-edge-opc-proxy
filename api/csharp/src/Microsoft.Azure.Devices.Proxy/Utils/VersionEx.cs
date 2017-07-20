@@ -31,10 +31,10 @@ namespace System {
         /// <param name="version"></param>
         /// <returns></returns>
         public static uint ToUInt(this Version version) {
-            return 
-                (uint)((byte)version.Major << 24) | 
-                (uint)((byte)version.Minor << 16) | 
-                (uint)((byte)version.Build << 8) | 
+            return
+                (uint)((byte)version.Major << 24) |
+                (uint)((byte)version.Minor << 16) |
+                (uint)((byte)version.Build << 8) |
                        (byte)version.Revision;
         }
     }

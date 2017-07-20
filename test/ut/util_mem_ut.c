@@ -36,95 +36,95 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test mem_alloc happy path 
-// 
+//
+// Test mem_alloc happy path
+//
 TEST_FUNCTION(mem_alloc__success)
 {
     static const size_t k_size_valid = 16;
     static void* k_ptr_valid = (void*)0x2000;
     void* result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(k_ptr_valid);
 
-    // act 
+    // act
     result = mem_alloc(k_size_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(void_ptr, k_ptr_valid, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test mem_alloc unhappy path 
-// 
+//
+// Test mem_alloc unhappy path
+//
 TEST_FUNCTION(mem_alloc__neg)
 {
     static const size_t k_size_valid = 16;
     static void* k_ptr_valid = (void*)0x2000;
     void* result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(k_ptr_valid)
         .SetFailReturn(NULL);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = mem_alloc(k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);
 }
 
-// 
-// Test mem_zalloc happy path 
-// 
+//
+// Test mem_zalloc happy path
+//
 TEST_FUNCTION(mem_zalloc__success)
 {
     static const size_t k_size_valid = 16;
     static void* k_ptr_valid = (void*)UT_MEM;
     void* result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(k_ptr_valid);
     STRICT_EXPECTED_CALL(my_memset(k_ptr_valid, 0, k_size_valid));
 
-    // act 
+    // act
     result = mem_zalloc(k_size_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(void_ptr, k_ptr_valid, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test mem_zalloc unhappy path 
-// 
+//
+// Test mem_zalloc unhappy path
+//
 TEST_FUNCTION(mem_zalloc__neg_alloc_fails)
 {
     static const size_t k_size_valid = 16;
     void* result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = mem_alloc(k_size_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(void_ptr, NULL, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test mem_realloc happy path 
-// 
+//
+// Test mem_realloc happy path
+//
 TEST_FUNCTION(mem_realloc__success)
 {
     static const size_t k_size_valid = 16;
@@ -132,21 +132,21 @@ TEST_FUNCTION(mem_realloc__success)
     static void* k_ptr2_valid = (void*)0x2000;
     void* result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_realloc(k_ptr1_valid, k_size_valid))
         .SetReturn(k_ptr2_valid);
 
-    // act 
+    // act
     result = mem_realloc(k_ptr1_valid, k_size_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(void_ptr, k_ptr2_valid, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test mem_realloc unhappy path 
-// 
+//
+// Test mem_realloc unhappy path
+//
 TEST_FUNCTION(mem_realloc__neg)
 {
     static const size_t k_size_valid = 16;
@@ -154,73 +154,73 @@ TEST_FUNCTION(mem_realloc__neg)
     static void* k_ptr2_valid = (void*)0x2000;
     void* result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(my_realloc(k_ptr1_valid, k_size_valid))
         .SetReturn(k_ptr2_valid)
         .SetFailReturn(NULL);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         result = mem_realloc(k_ptr1_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);
 }
 
-// 
-// Test mem_free happy path 
-// 
+//
+// Test mem_free happy path
+//
 TEST_FUNCTION(mem_free__success)
 {
     static void* k_ptr_valid = (void*)0x3333;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_free(k_ptr_valid));
 
-    // act 
+    // act
     mem_free(k_ptr_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
-// 
-// Test crt_alloc happy path 
-// 
+//
+// Test crt_alloc happy path
+//
 TEST_FUNCTION(crt_alloc__success)
 {
     static const size_t k_size_valid = 333;
     static void* k_ptr_valid = (void*)0x1;
     void* result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(k_ptr_valid);
 
-    // act 
+    // act
     result = crt_alloc(k_size_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(void_ptr, k_ptr_valid, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test mem_alloc unhappy path 
-// 
+//
+// Test mem_alloc unhappy path
+//
 TEST_FUNCTION(crt_alloc__neg)
 {
     static const size_t k_size_valid = 66;
     static void* k_ptr_valid = (void*)0x666;
     void* result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(my_realloc(NULL, k_size_valid))
         .SetReturn(k_ptr_valid)
         .SetFailReturn(NULL);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         result = crt_alloc(k_size_valid);
 
@@ -228,20 +228,20 @@ TEST_FUNCTION(crt_alloc__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);
 }
 
-// 
-// Test crt_free happy path 
-// 
+//
+// Test crt_free happy path
+//
 TEST_FUNCTION(crt_free__success)
 {
     static void* k_ptr_valid = (void*)0x256;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(my_free(k_ptr_valid));
 
-    // act 
+    // act
     crt_free(k_ptr_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

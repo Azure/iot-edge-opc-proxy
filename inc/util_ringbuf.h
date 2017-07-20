@@ -8,7 +8,7 @@
 
 typedef struct ring_buffer ring_buffer_t;
 
-// 
+//
 // Creates a ring buffer of a certain size
 //
 decl_internal_2(int32_t, ring_buffer_create,
@@ -41,8 +41,8 @@ decl_internal_1(size_t, ring_buffer_capacity,
 // Write len bytes of data to a ring buffer rb
 //
 decl_internal_3(size_t, ring_buffer_write,
-    ring_buffer_t*, rb, 
-    const uint8_t*, b, 
+    ring_buffer_t*, rb,
+    const uint8_t*, b,
     size_t, len
 );
 
@@ -57,14 +57,14 @@ decl_internal_1(size_t, ring_buffer_available,
 // Read len bytes of data from a ring buffer rb
 //
 decl_internal_3(size_t, ring_buffer_read,
-    ring_buffer_t*, rb, 
-    uint8_t*, b, 
+    ring_buffer_t*, rb,
+    uint8_t*, b,
     size_t, len
 );
 
-// 
+//
 // This function frees the ring buffer memory
-// 
+//
 decl_internal_1(void, ring_buffer_free,
     ring_buffer_t*, rb
 );

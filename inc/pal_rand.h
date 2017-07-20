@@ -7,7 +7,7 @@
 #include "common.h"
 
 //
-// Initialize rand 
+// Initialize rand
 //
 decl_public_0(int32_t, pal_rand_init,
     void

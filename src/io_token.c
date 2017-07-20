@@ -14,9 +14,9 @@
 #include "azure_c_shared_utility/buffer_.h"
 
 #if !defined(DEBUG)
-#define DEFAULT_RENEWAL_TIMEOUT_SEC 8 * 60 * 60 
+#define DEFAULT_RENEWAL_TIMEOUT_SEC 8 * 60 * 60
 #else
-#define DEFAULT_RENEWAL_TIMEOUT_SEC     30 * 60 
+#define DEFAULT_RENEWAL_TIMEOUT_SEC     30 * 60
 #endif // !defined(DEBUG)
 
 //
@@ -79,8 +79,8 @@ static int32_t io_sas_token_create(
             0 != STRING_concat_int(hash_string, (int)expiry, 10))
             break;
 
-        result = pal_cred_hmac_sha256(key_or_handle, 
-            STRING_c_str(hash_string), STRING_length(hash_string), 
+        result = pal_cred_hmac_sha256(key_or_handle,
+            STRING_c_str(hash_string), STRING_length(hash_string),
             hmac, sizeof(hmac));
         if (result != er_ok)
             break;
@@ -171,7 +171,7 @@ static const char* io_sas_token_provider_on_get_property(
     switch (id)
     {
 #define CBS_DEFAULT_TOKEN_TYPE "servicebus.windows.net:sastoken"
-    case io_token_property_type:    
+    case io_token_property_type:
         return CBS_DEFAULT_TOKEN_TYPE;
     case io_token_property_scope:
         return STRING_c_str(provider->scope);
@@ -197,8 +197,8 @@ static int32_t io_token_provider_on_new_iothub_token(
 
     dbg_assert_ptr(provider);
     // Create token
-    result = io_sas_token_create(provider->shared_access_key, 
-        STRING_c_str(provider->scope), STRING_c_str(provider->policy), 
+    result = io_sas_token_create(provider->shared_access_key,
+        STRING_c_str(provider->scope), STRING_c_str(provider->policy),
         (int32_t)get_time(NULL) + provider->ttl_in_seconds, token);
     if (result == er_ok)
     {
@@ -313,7 +313,7 @@ bool io_token_provider_is_equivalent(
 }
 
 //
-// Create pass thru token provider 
+// Create pass thru token provider
 //
 int32_t io_passthru_token_provider_create(
     const char* shared_access_token,
@@ -332,9 +332,9 @@ int32_t io_passthru_token_provider_create(
         provider->funcs.context =
             provider;
         provider->funcs.on_new_token = (io_token_provider_on_new_token_t)
-            io_passthru_token_provider_on_new_token; 
+            io_passthru_token_provider_on_new_token;
         provider->funcs.on_clone = (io_token_provider_on_clone_t)
-            io_passthru_token_provider_on_clone; 
+            io_passthru_token_provider_on_clone;
         provider->funcs.on_get_property = (io_token_provider_on_get_property_t)
             io_passthru_token_provider_on_get_property;
         provider->funcs.on_release = (io_token_provider_on_release_t)

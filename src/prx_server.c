@@ -195,7 +195,7 @@ static void prx_server_socket_empty_transport_queues(
 
     // Read queue - only used when polling - all are allocated in connection.
     lock_enter(server_sock->recv_lock);
-    dbg_assert(server_sock->polled || DList_IsListEmpty(&server_sock->read_queue), 
+    dbg_assert(server_sock->polled || DList_IsListEmpty(&server_sock->read_queue),
         "should be empty when not polled");
     while (!DList_IsListEmpty(&server_sock->read_queue))
     {
@@ -253,13 +253,13 @@ static void prx_server_socket_free(
     if (server_sock->link_message)
         io_message_release(server_sock->link_message);
 
-    dbg_assert(DList_IsListEmpty(&server_sock->read_queue), 
+    dbg_assert(DList_IsListEmpty(&server_sock->read_queue),
         "read_queue not empty");
-    dbg_assert(DList_IsListEmpty(&server_sock->recv_queue), 
+    dbg_assert(DList_IsListEmpty(&server_sock->recv_queue),
         "recv_queue not empty");
-    dbg_assert(DList_IsListEmpty(&server_sock->send_queue), 
+    dbg_assert(DList_IsListEmpty(&server_sock->send_queue),
         "send_queue not empty");
-    dbg_assert(DList_IsListEmpty(&server_sock->write_queue), 
+    dbg_assert(DList_IsListEmpty(&server_sock->write_queue),
         "write_queue not empty");
 
     if (server_sock->send_lock && server_sock->recv_lock)
@@ -311,9 +311,9 @@ static void prx_server_socket_manage_read_queue(
             next->error_code = close ? er_closed : er_timeout;
 
             result = io_connection_send(server_sock->stream, next);
-            if (result != er_ok)
+            if (result != er_ok && !close)
             {
-                log_error(server_sock->log, 
+                log_error(server_sock->log,
                     "Failed to send poll response, dropping message... (%s)",
                     prx_err_string(result));
             }
@@ -377,10 +377,10 @@ static void prx_server_socket_deliver_results(
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
 
-    if (server_sock->state != prx_server_socket_opened && 
+    if (server_sock->state != prx_server_socket_opened &&
         server_sock->state != prx_server_socket_collect)
     {
-        log_debug(server_sock->log, "No deliveries for socket %p when in state %d.", 
+        log_debug(server_sock->log, "No deliveries for socket %p when in state %d.",
             server_sock, server_sock->state);
         return;
     }
@@ -395,16 +395,19 @@ static void prx_server_socket_deliver_results(
         DList_InitializeListHead(&poll_message->link);
 
         //
-        // Check if message is a poll response - if it is - see if we can substitute
-        // it for a received data message to utilize the return trip
+        // Check if message is a poll response - i.e. a result of a data send message
+        // if it is - see if we can substitute it for a received data message to
+        // utilize the return trip
         //
-        if (server_sock->polled && 
-            poll_message->type == io_message_type_poll && 
+        if (server_sock->polled &&
+            poll_message->type == io_message_type_poll &&
             poll_message->error_code == er_ok)
         {
             message = prx_server_socket_pop_received_message(server_sock);
             if (message)
             {
+                log_debug(server_sock->log, "Reusing response...");
+
                 message->correlation_id = poll_message->correlation_id;
                 io_ref_copy(&server_sock->server->id, &message->proxy_id);
                 io_ref_copy(&server_sock->stream_id, &message->target_id);
@@ -480,7 +483,7 @@ static void prx_server_socket_deliver_results(
             lock_enter(server_sock->recv_lock);
             DList_InsertHeadList(&server_sock->recv_queue, &message->link);
             lock_exit(server_sock->recv_lock);
-            
+
             if (poll_message)
             {
                 // Also push to front of poll queue if poll message...
@@ -514,9 +517,9 @@ static void prx_server_worker(
     dbg_assert_is_task(server->scheduler);
     now = ticks_get();
 
-    // Schedule again in 5 seconds
+    // Schedule again in 15 seconds
     prx_scheduler_clear(server->scheduler, (prx_task_t)prx_server_worker, server);
-    __do_later(server, prx_server_worker, 10000);
+    __do_later(server, prx_server_worker, 15000);
 
     lock_enter(server->sockets_lock);
     if (hashtable_count(server->sockets) > 0)
@@ -536,7 +539,7 @@ static void prx_server_worker(
                 else
                 {
                     // State timed out - reset timeout to default timeout now
-                    timedout = true;  
+                    timedout = true;
                     next->client_itf.props.timeout = DEFAULT_GC_TIMEOUT;
                 }
 
@@ -578,7 +581,7 @@ static void prx_server_worker(
                         log_info(next->log, "No activity on socket %p, closing...",
                             next);
 
-                        // Free inbound and outbound socket queues now to make room 
+                        // Free inbound and outbound socket queues now to make room
                         prx_server_socket_empty_socket_queues(next);
 
                         result = io_message_create(next->recv_pool,
@@ -636,7 +639,7 @@ static void prx_server_worker(
                     {
                         // ... if so linger...
                         next->client_itf.props.timeout = LINGER_TIMEOUT;
-                        break; 
+                        break;
                     }
 
                     // If not, initiate close - answer all poll requests first.
@@ -647,7 +650,7 @@ static void prx_server_worker(
                     next->client_itf.props.timeout = CLOSING_TIMEOUT;
                     next->last_activity = now;
                     next->state = prx_server_socket_closing;
-                    pal_socket_close(next->sock); 
+                    pal_socket_close(next->sock);
                     // Wait for close complete or timeout
                     break;
                 default:
@@ -664,15 +667,21 @@ static void prx_server_worker(
 
     if (hashtable_count(server->sockets) == 0 && server->exit)
     {
-        lock_exit(server->sockets_lock);
         // Done, this clears the scheduler
-        prx_server_free(server);
-        return;
+        if (server->listener)
+        {
+            lock_exit(server->sockets_lock);
+            io_connection_close(server->listener);
+
+            // Wait for close to complete
+            return;
+        }
+        prx_server_free(server); // Clears and releases scheduler
     }
     lock_exit(server->sockets_lock);
 }
 
-// 
+//
 // Handle link message response on open - on scheduler thread
 //
 static void prx_server_socket_open_complete(
@@ -682,6 +691,7 @@ static void prx_server_socket_open_complete(
     int32_t result;
     io_message_t* message;
     io_connection_t* responder;
+    uint64_t value;
 
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
@@ -702,7 +712,7 @@ static void prx_server_socket_open_complete(
     while (result == er_ok)
     {
         memset(&message->content.link_response, 0, sizeof(io_link_response_t));
-        
+
         result = pal_socket_getsockname(server_sock->sock,
             &message->content.link_response.local_address);
         if (result != er_ok)
@@ -713,10 +723,28 @@ static void prx_server_socket_open_complete(
         if (result != er_ok)
             break;
 
+        // If no buffer size is configured, read recv buffer from socket...
+        result = pal_socket_getsockopt(server_sock->sock, prx_so_sndbuf, &value);
+#define MAX_SND_BUF_SIZE 0x10000
+        if (result != er_ok)
+        {
+            if (result != er_not_supported)
+            {
+                log_error(server_sock->log, "Failed to read send buffer size (%s)"
+                    " using default value.", prx_err_string(result));
+            }
+            message->content.link_response.max_send = MAX_SND_BUF_SIZE;
+            result = er_ok;
+        }
+        else
+        {
+            message->content.link_response.max_send = (uint32_t)value;
+        }
+
         message->content.link_response.transport_caps = io_transport_get_caps();
         io_ref_copy(&server_sock->id, &message->content.link_response.link_id);
         break;
-    } 
+    }
 
     if (result != er_ok)
     {
@@ -772,7 +800,7 @@ static void prx_server_socket_on_begin_receive(
     dbg_assert_ptr(op_context);
     dbg_assert(size != 0, "size");
     dbg_assert(server_sock->state != prx_server_socket_closed, "State");
-    
+
     // Create new message from pool with a 64k buffer
     result = io_message_create(server_sock->recv_pool, io_message_type_data,
         &server_sock->id, &server_sock->stream_id, &message);
@@ -790,7 +818,7 @@ static void prx_server_socket_on_begin_receive(
         *size = 0;
         *op_context = NULL;
     }
-    else 
+    else
     {
         *buffer = message->content.data_message.buffer;
         *size = message->content.data_message.buffer_length;
@@ -850,20 +878,24 @@ static void prx_server_socket_on_end_receive(
             break;
         }
 
-        // TODO: 
+        if (flags)
+            message->content.data_message.flags = *flags;
+        else
+            message->content.data_message.flags = 0;
+
+        // TODO:
         // Add control buffers from buffers if flags specify control buffers
-        // available.  
-        (void)flags;
 
         if (addr)
         {
             memcpy(&message->content.data_message.source_address, addr,
                 sizeof(prx_socket_address_t));
-            break;
         }
-
-        message->content.data_message.source_address.un.family =
-            prx_address_family_unspec;
+        else
+        {
+            message->content.data_message.source_address.un.family =
+                prx_address_family_unspec;
+        }
         break;
     }
     while (0);
@@ -920,7 +952,7 @@ static void prx_server_socket_on_begin_send(
     {
         *buffer = message->content.data_message.buffer;
         *size = message->content.data_message.buffer_length;
-        *flags = 0; // TODO
+        *flags = message->content.data_message.flags;
         *op_context = message;
 
         // Copy target address if datagram
@@ -1010,7 +1042,7 @@ static void prx_server_socket_on_end_send(
     io_message_as_response(message);
     seq = message->content.data_message.sequence_number;
     message->type = io_message_type_poll;
-    
+
     message->content.poll_message.sequence_number = seq;
     message->content.poll_message.timeout = 0;
     message->error_code = result;
@@ -1019,7 +1051,10 @@ static void prx_server_socket_on_end_send(
     DList_InsertTailList(&server_sock->write_queue, &message->link);
     lock_exit(server_sock->send_lock);
 
-    __do_next(server_sock, prx_server_socket_deliver_results);
+    if (result != er_ok)
+        __do_next(server_sock, prx_server_socket_deliver_results);
+    else // Increase the odds that we can return received data as a send response
+        __do_later(server_sock, prx_server_socket_deliver_results, 1);
 
     if (result == er_closed || result == er_reset)
     {
@@ -1057,7 +1092,7 @@ static void prx_server_socket_on_begin_accept(
     dbg_assert_ptr(size);
 
     // Create new socket object
-    result = prx_server_socket_create(server_sock->server, &server_sock->owner, 
+    result = prx_server_socket_create(server_sock->server, &server_sock->owner,
         &accepted_sock);
     if (result == er_ok)
     {
@@ -1114,7 +1149,7 @@ static void prx_server_socket_on_end_accept(
         {
             if (result == er_aborted)  // Abort is returned during close
                 break;
-            
+
             log_error(server_sock->log, "Failed to accept new socket (%s)",
                 prx_err_string(result));
             // TODO: Decide whether to send an error to clients...
@@ -1122,7 +1157,7 @@ static void prx_server_socket_on_end_accept(
             break;
         }
 
-        dbg_assert(*size == sizeof(pal_socket_t*), 
+        dbg_assert(*size == sizeof(pal_socket_t*),
             "Expected size of socket pointer");
         (void)size;
 
@@ -1146,7 +1181,7 @@ static void prx_server_socket_on_end_accept(
         lock_exit(server_sock->recv_lock);
         __do_next(server_sock, prx_server_socket_deliver_results);
         return;
-    } 
+    }
     while (0);
 
     if (message)
@@ -1350,9 +1385,9 @@ static int32_t prx_server_socket_handle_openrequest(
         io_ref_copy(&message->content.open_request.stream_id, &server_sock->stream_id);
         server_sock->polled = message->content.open_request.polled;
 
-#define MAX_BUF_SIZE 0x10000
+#define MAX_RCV_BUF_SIZE 0x10000
         if (message->content.open_request.max_recv > 0 &&
-            message->content.open_request.max_recv < MAX_BUF_SIZE)
+            message->content.open_request.max_recv < MAX_RCV_BUF_SIZE)
         {
             server_sock->buffer_size = (size_t)message->content.open_request.max_recv + 1;
         }
@@ -1367,7 +1402,8 @@ static int32_t prx_server_socket_handle_openrequest(
                     log_error(server_sock->log, "Failed to read receive buffer size (%s)"
                         " using default value.", prx_err_string(result));
                 }
-                server_sock->buffer_size = MAX_BUF_SIZE;
+                server_sock->buffer_size = MAX_RCV_BUF_SIZE;
+                result = er_ok;
             }
             else
             {
@@ -1377,7 +1413,7 @@ static int32_t prx_server_socket_handle_openrequest(
 
         //
         // Create recv pool for streaming receives - this pool has an upper bound
-        // to manage the attached sockets flow control.  For unbounded # messages 
+        // to manage the attached sockets flow control.  For unbounded # messages
         // the control pool of this socket is used.
         //
         pool_size = (RECV_POOL_MAX_TOTAL / server_sock->buffer_size);
@@ -1385,8 +1421,8 @@ static int32_t prx_server_socket_handle_openrequest(
             pool_size = RECV_POOL_MIN;
         if (pool_size > RECV_POOL_MAX)
             pool_size = RECV_POOL_MAX;
-        result = io_message_factory_create("sock-recv", 1, pool_size, RECV_POOL_LWM, 
-            pool_size - RECV_POOL_HWM, prx_server_socket_flow_control, server_sock, 
+        result = io_message_factory_create("sock-recv", 1, pool_size, RECV_POOL_LWM,
+            pool_size - RECV_POOL_HWM, prx_server_socket_flow_control, server_sock,
             &server_sock->recv_pool);
         if (result != er_ok)
             break;
@@ -1430,21 +1466,21 @@ static int32_t prx_server_socket_handle_openrequest(
 
         if (!entry)
         {
-            // If no entry, and previously not errored out, we will be polled on 
+            // If no entry, and previously not errored out, we will be polled on
             // server listener connection which forwards to socket control handler.
             server_sock->stream = server_sock->server->listener;
             server_sock->server_stream = true;
-            result = er_ok; 
+            result = er_ok;
         }
         else if (server_sock->polled)
         {
             // Polled streams assume the server transport posting to control handler
-            result = io_transport_create(server_sock->server->transport, 
-                entry, (io_codec_id_t)message->content.open_request.encoding, 
+            result = io_transport_create(server_sock->server->transport,
+                entry, (io_codec_id_t)message->content.open_request.encoding,
                 prx_server_socket_control_handler, server_sock,
                 server_sock->server->scheduler, &server_sock->stream);
         }
-        else 
+        else
         {
             // Streaming - select transport based on transport type identifier
             transport = io_transport_get(
@@ -1471,7 +1507,7 @@ static int32_t prx_server_socket_handle_openrequest(
         server_sock->time_opened = server_sock->last_activity = ticks_get();
         server_sock->state = prx_server_socket_opened;
         log_info(server_sock->log, "Socket open!");
-    } 
+    }
     while (0);
 
     io_message_as_response(message);
@@ -1479,7 +1515,7 @@ static int32_t prx_server_socket_handle_openrequest(
     {
         message->error_code = er_ok;
         io_ref_copy(&server_sock->stream_id, &message->target_id);
-    } 
+    }
     else
     {
         log_error(server_sock->log, "Failed to handle open message (%s)!",
@@ -1518,54 +1554,74 @@ static int32_t prx_server_socket_handle_datamessage(
     dbg_assert_ptr(message);
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
-
-    if (server_sock->state != prx_server_socket_opened)
+    do
     {
-        log_info(server_sock->log, "Received data after close!");
-
-        // Socket is closed, send error response, or otherwise swallow
-        if (server_sock->polled)
+        if (server_sock->state != prx_server_socket_opened)
         {
-            io_message_as_response(message);
-            message->error_code = er_closed;
-
-            result = io_connection_send(responder, message);
-            if (result != er_ok)
-            {
-                log_error(server_sock->log, "Failed send error response (%s).",
-                    prx_err_string(result));
-                return result;
-            }
+            log_error(server_sock->log, "Received data after close!");
+            result = er_closed;
+            if (server_sock->state == prx_server_socket_collect)
+                break;
+            return result;
         }
-        return er_ok; 
-    }
 
-    dbg_assert(!responder || server_sock->stream == responder,
-        "Expected no responder, or stream to be responder");
+        dbg_assert(!responder || server_sock->stream == responder,
+            "Expected no responder, or stream to be responder");
 
-    // Check sequence number is what we expect
-    if (message->content.data_message.sequence_number != server_sock->send_seq_id)
-    {
-        log_error(server_sock, "Received bad sequence number, got %llu, got %llu.",
-            message->content.data_message.sequence_number, server_sock->send_seq_id);
+        // Check sequence number is what we expect
+        if (message->content.data_message.sequence_number < server_sock->send_seq_id)
+        {
+            log_info(server_sock->log,
+                "Expected %llu, drop duplicate data with sequence number %llu ...",
+                server_sock->send_seq_id, message->content.data_message.sequence_number);
+            result = er_duplicate;
+            break;
+        }
 
-        // Todo : close and clean up 
-    }
-    else
-    {
+        if (message->content.data_message.sequence_number > server_sock->send_seq_id)
+        {
+            log_error(server_sock->log,
+                "Received bad sequence number, got: %llu, expected: %llu.",
+                message->content.data_message.sequence_number, server_sock->send_seq_id);
+
+            // Close and collect socket
+            server_sock->state = prx_server_socket_collect;
+            __do_next(server_sock->server, prx_server_worker);
+            result = er_missing;
+            break;
+        }
+
         server_sock->send_seq_id++;
-    }
 
-    // Clone message rather than taking ownership - assuming that send is fast.
-    result = io_message_clone(message, &message);
-    if (result == er_ok)
-    {
+        // Clone message rather than taking ownership - assuming that send is fast.
+        result = io_message_clone(message, &message);
+        if (result != er_ok)
+            break;
+
         lock_enter(server_sock->send_lock);
         DList_InsertTailList(&server_sock->send_queue, &message->link);
         lock_exit(server_sock->send_lock);
 
         // Flow on
         pal_socket_can_send(server_sock->sock, true);
+        return er_ok;
+
+    } while (0);
+
+    if (!server_sock->polled)
+        result = er_ok;
+    else
+    {
+        io_message_as_response(message);
+        message->error_code = result;
+        message->type = io_message_type_poll;
+
+        result = io_connection_send(responder, message);
+        if (result != er_ok)
+        {
+            log_error(server_sock->log, "Failed send error response (%s).",
+                prx_err_string(result));
+        }
     }
     return result;
 }
@@ -1579,6 +1635,10 @@ static void prx_server_socket_timeout_pollrequest(
 {
     dbg_assert_ptr(server_sock);
     dbg_assert_is_task(server_sock->scheduler);
+
+    if (server_sock->state != prx_server_socket_opened)
+        return;
+
     prx_server_socket_manage_read_queue(server_sock, false);
 }
 
@@ -1620,7 +1680,7 @@ static int32_t prx_server_socket_handle_pollrequest(
     }
 
     //
-    // Reset activity timer and prolong socket gc to make a multiple 
+    // Reset activity timer and prolong socket gc to make a multiple
     // of the timeout.  If not polled, then poll message acts as keep
     // alive for the stream.
     //
@@ -1681,17 +1741,17 @@ static int32_t prx_server_socket_handle_closerequest(
 
     io_message_as_response(message);
 
-    message->content.close_response.time_open = 
+    message->content.close_response.time_open =
         ticks_get() - server_sock->time_opened;
-    message->content.close_response.bytes_received = 
+    message->content.close_response.bytes_received =
         server_sock->bytes_recvd;
-    message->content.close_response.bytes_sent = 
+    message->content.close_response.bytes_sent =
         server_sock->bytes_sent;
 
     if (server_sock->state == prx_server_socket_created ||
         server_sock->state == prx_server_socket_opened)
     {
-        log_debug(server_sock->log, 
+        log_debug(server_sock->log,
             "Server socket asked to close! (%p)", server_sock);
 
         // Collect socket - linger to drain queues
@@ -1738,7 +1798,7 @@ static int32_t prx_server_socket_handle_setoptrequest(
     if (result != er_ok)
         log_error(server_sock->log, "Failed to handle set option message (%s).",
             prx_err_string(result));
-    
+
     if (responder)
     {
         io_message_as_response(message);
@@ -1857,7 +1917,7 @@ static int32_t prx_server_socket_stream_handler(
     else if (ev == io_connection_closed)
     {
         // Stream closed, now free socket and exit
-        log_trace(server_sock->log, "Stream closed, schedule socket %p free", 
+        log_trace(server_sock->log, "Stream closed, schedule socket %p free",
             server_sock);
         // Delay free to debounce hang up race condition
         __do_later(server_sock, prx_server_socket_free, 2000);
@@ -1911,7 +1971,7 @@ static int32_t prx_server_socket_control_handler(
             return er_not_supported;
         }
     }
-    else 
+    else
     {
         dbg_assert(!server_sock->server_stream, "Unexpected - server stream should handle.");
         return prx_server_socket_stream_handler(context, ev, message, last_error, delay);
@@ -1919,7 +1979,7 @@ static int32_t prx_server_socket_control_handler(
 }
 
 //
-// Pal socket event callback 
+// Pal socket event callback
 //
 static void prx_server_socket_event_handler(
     void* context,
@@ -1936,7 +1996,7 @@ static void prx_server_socket_event_handler(
     switch (ev)
     {
     case pal_socket_event_opened:
-        dbg_assert(buffer && size && *size == sizeof(pal_socket_t*) && 
+        dbg_assert(buffer && size && *size == sizeof(pal_socket_t*) &&
             (pal_socket_t*)*buffer == sock->sock, "Socket expected.");
         sock->last_error = error;
         __do_next(sock, prx_server_socket_open_complete);
@@ -1976,7 +2036,7 @@ static void prx_server_socket_event_handler(
 //
 static int32_t prx_server_socket_create(
     prx_server_t* server,
-    io_ref_t* owner_addr,  
+    io_ref_t* owner_addr,
     prx_server_socket_t** created
 )
 {
@@ -2068,7 +2128,7 @@ static void prx_server_free_sockets(
     lock_exit(server->sockets_lock);
 }
 
-// 
+//
 // Server callback to handle link message
 //
 static void prx_server_handle_linkrequest(
@@ -2100,7 +2160,7 @@ static void prx_server_handle_linkrequest(
         if (message->content.link_request.props.address.un.family == prx_address_family_proxy &&
             message->content.link_request.props.address.un.proxy.host_dyn)
         {
-            log_error(server->log, 
+            log_error(server->log,
                 "Variable length proxy host name addresses are not supported.");
             result = er_not_supported;
             break;
@@ -2110,7 +2170,7 @@ static void prx_server_handle_linkrequest(
         result = prx_server_socket_create(server, &message->source_id, &server_sock);
         if (result != er_ok)
         {
-            log_error(server->log, "Failed to make server socket object for link (%s)", 
+            log_error(server->log, "Failed to make server socket object for link (%s)",
                 prx_err_string(result));
             break;
         }
@@ -2120,14 +2180,14 @@ static void prx_server_handle_linkrequest(
             sizeof(server_sock->client_itf.props));
         server_sock->client_itf.props.options = NULL;
         server_sock->client_itf.props.options_len = 0;
-        
+
         if (!server_sock->client_itf.props.timeout)
             server_sock->client_itf.props.timeout = DEFAULT_GC_TIMEOUT;
         else if (server_sock->client_itf.props.timeout < MIN_GC_TIMEOUT)
             server_sock->client_itf.props.timeout = MIN_GC_TIMEOUT;
 
         //
-        // Create socket. If this is an internal socket open a socket pair with 
+        // Create socket. If this is an internal socket open a socket pair with
         // requested server's client interface.  Socket pairs are already open.
         //
         if (!(message->content.link_request.props.flags & prx_socket_flag_internal))
@@ -2162,9 +2222,9 @@ static void prx_server_handle_linkrequest(
                 }
             }
         }
-        else 
+        else
         {
-            // Pick the right internal server based on the provided port. Codec id 
+            // Pick the right internal server based on the provided port. Codec id
             // is sent as part of flags member.
             switch (message->content.link_request.props.address.un.proxy.port)
             {
@@ -2180,7 +2240,7 @@ static void prx_server_handle_linkrequest(
             }
             if (result != er_ok)
             {
-                log_error(server->log, "Failed to accept internal server socket (%s)", 
+                log_error(server->log, "Failed to accept internal server socket (%s)",
                     prx_err_string(result));
                 break;
             }
@@ -2199,7 +2259,7 @@ static void prx_server_handle_linkrequest(
             }
 
             dbg_assert_ptr(internal_sock);
-            internal_sock = NULL; 
+            internal_sock = NULL;
             // Already opened at this point due to callback.
         }
 
@@ -2212,7 +2272,7 @@ static void prx_server_handle_linkrequest(
 
         server_sock->last_activity = ticks_get();
         return; // Now wait for our open callback to complete the connection
-    } 
+    }
     while (0);
 
     io_message_as_response(message);
@@ -2268,7 +2328,7 @@ static void prx_server_handle_pingrequest(
             server, message->content.ping_request.address.un.ip.port);
         if (result != er_ok)
             break;
-        result = string_from_int(message->content.ping_request.address.un.ip.port, 10, 
+        result = string_from_int(message->content.ping_request.address.un.ip.port, 10,
             port, sizeof(port));
         if (result != er_ok)
             break;
@@ -2282,7 +2342,7 @@ static void prx_server_handle_pingrequest(
                 break;
             }
 
-            result = pal_getaddrinfo(host, port, prx_address_family_unspec, 
+            result = pal_getaddrinfo(host, port, prx_address_family_unspec,
                 0, &prx_ai, &prx_ai_count);
             if (result != er_ok)
             {
@@ -2308,7 +2368,7 @@ static void prx_server_handle_pingrequest(
             }
         }
         result = er_ok;
-    } 
+    }
     while (0);
 
     io_message_as_response(message);
@@ -2357,7 +2417,7 @@ static void prx_server_handle_invalid_socket(
 }
 
 //
-// Handles a message 
+// Handles a message
 //
 static int32_t prx_server_handler(
     void* context,
@@ -2402,7 +2462,7 @@ static int32_t prx_server_handler(
 
         else
         {
-            log_error(server->log, "Received unsupported message type %d.", 
+            log_error(server->log, "Received unsupported message type %d.",
                 message->type);
             return er_not_supported;
         }
@@ -2418,8 +2478,8 @@ static int32_t prx_server_handler(
     else if (ev == io_connection_closed)
     {
         // close all sockets...
-        server->exit = true;
-        __do_next(server, prx_server_worker);
+        dbg_assert(server->exit, "should be exiting");
+        __do_next(server, prx_server_free);
     }
     else
     {
@@ -2463,8 +2523,8 @@ int32_t prx_server_create(
         if (result != er_ok)
             break;
 
-        server->sockets = create_hashtable(10, 
-            (unsigned int(*) (void*)) io_ref_hash, 
+        server->sockets = create_hashtable(10,
+            (unsigned int(*) (void*)) io_ref_hash,
             (int (*) (void*, void*))  io_ref_equals);
         if (!server->sockets)
         {
@@ -2482,7 +2542,7 @@ int32_t prx_server_create(
 
         // Create listener and register handler
         result = io_transport_create(server->transport, entry, io_codec_json,
-            prx_server_handler, server, server->scheduler, 
+            prx_server_handler, server, server->scheduler,
             &server->listener);
         if (result != er_ok)
             break;
@@ -2511,16 +2571,8 @@ void prx_server_release(
     if (!server)
         return;
 
-    if (server->listener)
-    {
-        // First close listener, and wait for close to complete
-        io_connection_close(server->listener);
-    }
-    else
-    {
-        // If no listener close all sockets right away...
-        server->exit = true;
-        __do_next(server, prx_server_worker);
-    }
+    // Kick off closing...
+    server->exit = true;
+    __do_next(server, prx_server_worker);
 }
 

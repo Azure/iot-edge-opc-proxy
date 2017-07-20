@@ -13,10 +13,10 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks.Dataflow;
 
     /// <summary>
-    /// Proxy socket implementation, core of System proxy socket and browse socket. 
-    /// 
+    /// Proxy socket implementation, core of System proxy socket and browse socket.
+    ///
     /// Maintains a list of 1 (tcp) to n (udp, browse) proxy links that it manages,
-    /// including  keep alive and re-connects. In addition, it provides input and 
+    /// including  keep alive and re-connects. In addition, it provides input and
     /// output transform from binary buffer to actual messages that are serialized/
     /// deserialized at the provider level (next level).
     /// </summary>
@@ -95,11 +95,11 @@ namespace Microsoft.Azure.Devices.Proxy {
             SocketAddress localAddress, SocketAddress peerAddress);
 
         /// <summary>
-        /// Creates a linker block that for every name record tries to create and open a 
+        /// Creates a linker block that for every name record tries to create and open a
         /// link which is posted to the output.
         /// </summary>
-        /// <param name="parallel">Whether to link one at a time (single) or in parallel (all)</param>
-        /// <param name="ct">Cancels the link step</param>
+        /// <param name="error">Where to post errors</param>
+        /// <param name="options">Options for processing</param>
         /// <returns></returns>
         protected IPropagatorBlock<DataflowMessage<INameRecord>, IProxyLink> CreateLinkBlock(
             ITargetBlock<DataflowMessage<INameRecord>> error, ExecutionDataflowBlockOptions options) {
@@ -182,7 +182,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Creates a pinger block that sends a ping and returns 
+        /// Creates a pinger block that sends a ping and returns
         /// </summary>
         /// <param name="error">Error handler block</param>
         /// <param name="address">Address to ping for</param>
@@ -203,8 +203,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 Message request = Message.Create(Id, Reference.Null, PingRequest.Create(address));
                 try {
                     // Increase timeout up to max timeout based on number of exceptions
-                    var pingTimeout = TimeSpan.FromSeconds(
-                        timeoutInSeconds * (input.Exceptions.Count + 1));
+                    var pingTimeout = TimeSpan.FromSeconds(timeoutInSeconds * (input.FaultCount + 1));
 
                     // Do the call
                     response = await Provider.ControlChannel.CallAsync(record,
@@ -242,7 +241,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     request.Dispose();
                 }
                 return Enumerable.Empty<DataflowMessage<INameRecord>>();
-            }, 
+            },
             options);
         }
 
@@ -373,7 +372,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        protected readonly Dictionary<SocketOption, ulong> _optionCache = 
+        protected readonly Dictionary<SocketOption, ulong> _optionCache =
             new Dictionary<SocketOption, ulong>();
     }
 }

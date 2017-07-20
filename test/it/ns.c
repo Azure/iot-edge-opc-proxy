@@ -21,7 +21,7 @@ int32_t ns_add(
 {
     int32_t result;
     prx_ns_entry_t* entry;
-    
+
     result = prx_ns_entry_create(type, id, name, MODULE_VER_NUM, &entry);
     if (result != er_ok)
         return result;
@@ -49,7 +49,7 @@ int32_t ns_list_by_type(
 
     while ((entry = prx_ns_result_pop(resultset)) != NULL)
     {
-        printf("Entry %d - Id: %s Name: %s Type: %d Index: %d\n", ++index, 
+        printf("Entry %d - Id: %s Name: %s Type: %d Index: %d\n", ++index,
             prx_ns_entry_get_id(entry), prx_ns_entry_get_name(entry),
             prx_ns_entry_get_type(entry), prx_ns_entry_get_index(entry));
         prx_ns_entry_release(entry);

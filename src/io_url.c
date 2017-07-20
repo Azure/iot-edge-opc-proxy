@@ -135,16 +135,16 @@ int32_t io_url_parse(
             // Remainder is path
             path = ptr;
         }
-        result = io_url_create(scheme, host_name, port_str ? 
+        result = io_url_create(scheme, host_name, port_str ?
             (uint16_t)atoi(port_str) : 0, path, user_name, password, created);
-    } 
+    }
     while (0);
     mem_free(copy);
     return result;
 }
 
 //
-// Creates a url 
+// Creates a url
 //
 int32_t io_url_create(
     const char* scheme,
@@ -221,7 +221,7 @@ int32_t io_url_create(
         return er_ok;
 
     } while (0);
-    
+
     io_url_free(url);
     return result;
 }

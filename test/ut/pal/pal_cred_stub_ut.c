@@ -33,9 +33,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_cred_hmac_sha256 happy path 
-// 
+//
+// Test pal_cred_hmac_sha256 happy path
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__success)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -55,7 +55,7 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__success)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -74,18 +74,18 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__success)
     STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(!memcmp(UT_MEM, k_valid_hash, 32));
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf argument an invalid handle
-// 
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_handle_null)
 {
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
@@ -94,19 +94,19 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_handle_null)
     static size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(NULL, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_buf_null)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -115,19 +115,19 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_buf_null)
     static size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, NULL, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf_len 0
-// 
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_buf_len_invalid)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -136,19 +136,19 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_buf_len_invalid)
     static size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, 0, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as sig argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_sig_null)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -157,19 +157,19 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_sig_null)
     static size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, NULL, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as sig_len and invalid value
-// 
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_sig_len_invalid)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -178,19 +178,19 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__arg_sig_len_invalid)
     static void* k_valid_sig = UT_MEM;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, 31);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_0)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -206,7 +206,7 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_0)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -216,17 +216,17 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_0)
         .SetReturn(er_out_of_memory);
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_1)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -245,7 +245,7 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_1)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -260,18 +260,18 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_1)
     STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_2)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -289,7 +289,7 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_2)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle)
@@ -315,18 +315,18 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_2)
     STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory, er_ok, er_out_of_memory, er_invalid_format, er_ok);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_3)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -336,41 +336,41 @@ TEST_FUNCTION(pal_stub_cred_hmac_sha256__neg_3)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
+//
 // Test pal_cred_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_stub_cred_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_cred_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_cred_init happy path 
-// 
+//
+// Test pal_cred_init happy path
+//
 TEST_FUNCTION(pal_stub_cred_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_init();
 
     ASSERT_EXPECTED_CALLS();

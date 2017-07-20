@@ -32,7 +32,7 @@ decl_internal_2(int32_t, io_url_parse,
 );
 
 //
-// Creates a url 
+// Creates a url
 //
 decl_internal_7(int32_t, io_url_create,
     const char*, scheme,

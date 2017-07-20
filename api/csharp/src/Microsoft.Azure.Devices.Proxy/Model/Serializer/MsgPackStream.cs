@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.IO;
 
     /// <summary>
-    /// Facade on top of msg pack reader/writer to read streams of 
+    /// Facade on top of msg pack reader/writer to read streams of
     /// Proxy model objects.
     /// </summary>
     public class MsgPackStream<S> : SerializerContext, ICodecStream<S> where S : Stream {
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="T"></typeparam>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public T Read<T>() => 
+        public T Read<T>() =>
             TaskToSync.Run(() => ReadAsync<T>(CancellationToken.None));
 
         /// <summary>

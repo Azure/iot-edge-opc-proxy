@@ -39,7 +39,7 @@ typedef void (*prx_module_free_t)(
 // Creates a host instance to be managed by edge
 //
 typedef prx_module_t* (*prx_module_create_t)(
-    broker_handle_t* broker, 
+    broker_handle_t* broker,
     const void* configuration
     );
 
@@ -62,7 +62,7 @@ typedef void (*prx_module_destroy_t)(
 //
 typedef void (*prx_module_receive_t)(
     prx_module_t* module,
-    message_handle_t* message 
+    message_handle_t* message
     );
 
 //

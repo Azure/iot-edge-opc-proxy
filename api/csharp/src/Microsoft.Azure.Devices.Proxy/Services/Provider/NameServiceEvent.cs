@@ -6,8 +6,13 @@
 namespace Microsoft.Azure.Devices.Proxy {
 
     /// <summary>
-    /// An opaque query that can be passed to the name service provider's
-    /// lookup target block.
+    /// Operations allowed on the name service.
     /// </summary>
-    public interface IQuery {}
+    public enum NameServiceEvent {
+        Removed,
+        Added,
+        Updated,
+        Disconnected,
+        Connected
+    }
 }

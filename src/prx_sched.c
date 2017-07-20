@@ -117,7 +117,7 @@ static void prx_scheduler_log_queue(
         (void)log;
 #elif defined(DEBUG)
         log_debug(log, "%d [%s(%p)] (%s:%d) due:%u added:%u",
-            index, next->name, next->context, next->func, next->line, 
+            index, next->name, next->context, next->func, next->line,
             next->deadline, next->queued);
 #else
         log_debug(log, "%d [%s(%p)] due:%u added:%u",
@@ -179,7 +179,7 @@ static prx_task_entry_t* prx_scheduler_get_next(
                 // Scheduled item hit deadline, run now
                 DList_RemoveEntryList(&candidate->link);
 
-                log_debug(scheduler->log, "Task %s with skew: %u", 
+                log_debug(scheduler->log, "Task %s with skew: %u",
                     candidate->name, (uint32_t)abs(*idle));
                 *idle = 0;
                 break;
@@ -206,7 +206,7 @@ static prx_task_entry_t* prx_scheduler_get_next(
     return candidate;
 }
 
-// 
+//
 // Runs the scheduler tasks queued
 //
 static int32_t prx_scheduler_work(
@@ -295,7 +295,7 @@ int32_t prx_scheduler_create(
         memset(&config, 0, sizeof(config));
         config.increment_count = INITIAL_POOL_SIZE;
 
-        result = prx_fixed_pool_create("scheduler", sizeof(prx_task_entry_t), 
+        result = prx_fixed_pool_create("scheduler", sizeof(prx_task_entry_t),
             &config, &scheduler->task_pool);
         if (result != er_ok)
             break;
@@ -320,7 +320,7 @@ int32_t prx_scheduler_create(
 
         *created = scheduler;
         return er_ok;
-    } 
+    }
     while (0);
 
     prx_scheduler_release(scheduler, NULL);
@@ -376,7 +376,7 @@ intptr_t prx_scheduler_queue(
         // Insert ordered
         inserted = false;
 
-        for (PDLIST_ENTRY p = scheduler->later.Flink; 
+        for (PDLIST_ENTRY p = scheduler->later.Flink;
             p != &scheduler->later; p = p->Flink)
         {
             next = containingRecord(p, prx_task_entry_t, link);

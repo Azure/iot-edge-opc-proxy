@@ -66,7 +66,7 @@ enum __SOCK
 enum __IPPROTO
 {
     IPPROTO_RANGE_BEGIN = 0,
-    
+
     IPPROTO_UDP,
     IPPROTO_TCP,
     IPPROTO_IP,
@@ -74,7 +74,7 @@ enum __IPPROTO
     IPPROTO_ICMP,
     IPPROTO_ICMPV6,
 
-    IPPROTO_RANGE_END 
+    IPPROTO_RANGE_END
 };
 
 struct sockaddr
@@ -116,14 +116,14 @@ struct sockaddr_un
 
 struct addrinfo
 {
-    int ai_flags; 
+    int ai_flags;
     int ai_family;
     int ai_socktype;
-    int ai_protocol; 
-    size_t ai_addrlen; 
-    char* ai_canonname; 
+    int ai_protocol;
+    size_t ai_addrlen;
+    char* ai_canonname;
     struct sockaddr* ai_addr;
-    struct addrinfo* ai_next; 
+    struct addrinfo* ai_next;
 };
 
 struct linger
@@ -170,6 +170,7 @@ enum __SO
     SO_TYPE,
     SO_UPDATE_ACCEPT_CONTEXT,
     SO_UPDATE_CONNECT_CONTEXT,
+    SO_MAX_MSG_SIZE,
     IP_OPTIONS,
     IP_HDRINCL,
     IP_TOS,
@@ -473,6 +474,7 @@ enum __H_ERRNO
 #define MSG_DONTROUTE 0x4
 #define MSG_TRUNC 0x8
 #define MSG_CTRUNC 0x10
+#define MSG_MORE 0x80
 
 //
 // Windows types and defines to get windows os code to compile
@@ -512,22 +514,22 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *LPSECURITY_ATTRIBUTES;
 #define MAKEWORD(a, b) (WORD)((a << 8) + b)
 #define rsize_t size_t
 
-typedef struct 
+typedef struct
 {
     DWORD dwLowDateTime;
     DWORD dwHighDateTime;
-} 
+}
 FILETIME;
 
-typedef union 
+typedef union
 {
-    struct 
+    struct
     {
         DWORD LowPart;
         DWORD HighPart;
     } u;
     ULONGLONG QuadPart;
-} 
+}
 ULARGE_INTEGER;
 
 enum __ERRORS
@@ -593,7 +595,7 @@ enum __ERRORS
 #define INVALID_FILE_ATTRIBUTES 0xffff
 #define FILE_ATTRIBUTE_DIRECTORY 0x2
 
-typedef struct _WIN32_FIND_DATAA 
+typedef struct _WIN32_FIND_DATAA
 {
     DWORD dwFileAttributes;
     char cFileName[MAX_PATH];
@@ -621,17 +623,17 @@ WIN32_FIND_DATAA, *LPWIN32_FIND_DATAA;
 typedef int SRWLOCK, *PSRWLOCK;
 
 // process.h
-typedef struct _STARTUPINFO 
+typedef struct _STARTUPINFO
 {
     DWORD   cb;
-} 
+}
 STARTUPINFO, *LPSTARTUPINFO;
 
-typedef struct _PROCESS_INFORMATION 
+typedef struct _PROCESS_INFORMATION
 {
     HANDLE hProcess;
     HANDLE hThread;
-} 
+}
 PROCESS_INFORMATION, *LPPROCESS_INFORMATION;
 
 #define CREATE_NEW_CONSOLE 0x10
@@ -704,18 +706,18 @@ typedef struct _SOCKET_ADDRESS
 {
     struct sockaddr* lpSockaddr;
     int iSockaddrLength;
-} 
+}
 SOCKET_ADDRESS, *LPSOCKET_ADDRESS;
 
 #define SIO_GET_EXTENSION_FUNCTION_POINTER 1
 typedef int GUID;
 typedef
-BOOL (*LPFN_ACCEPTEX)(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer, 
+BOOL (*LPFN_ACCEPTEX)(SOCKET sListenSocket, SOCKET sAcceptSocket, PVOID lpOutputBuffer,
     DWORD dwReceiveDataLength, DWORD dwLocalAddressLength, DWORD dwRemoteAddressLength,
     LPDWORD lpdwBytesReceived, LPOVERLAPPED lpOverlapped
     );
 #define WSAID_ACCEPTEX 1
-typedef BOOL (*LPFN_CONNECTEX) (SOCKET s, const struct sockaddr* name, int namelen, 
+typedef BOOL (*LPFN_CONNECTEX) (SOCKET s, const struct sockaddr* name, int namelen,
     PVOID lpSendBuffer, DWORD dwSendDataLength, LPDWORD lpdwBytesSent, LPOVERLAPPED lpOverlapped
     );
 #define WSAID_CONNECTEX 2
@@ -743,11 +745,11 @@ typedef struct _WSAPROTOCOL_INFO
 WSAPROTOCOL_INFO, *LPWSAPROTOCOL_INFO;
 #define WSA_FLAG_OVERLAPPED 102
 
-typedef struct _WSABUF 
+typedef struct _WSABUF
 {
-    ULONG len;     
-    char *buf; 
-} 
+    ULONG len;
+    char *buf;
+}
 WSABUF, *LPWSABUF;
 
 enum __FD_EVENT
@@ -770,9 +772,9 @@ typedef struct _WSANETWORKEVENTS
 }
 WSANETWORKEVENTS, *LPWSANETWORKEVENTS;
 
-struct ip_mreq 
+struct ip_mreq
 {
-    struct in_addr imr_multiaddr; 
+    struct in_addr imr_multiaddr;
     struct in_addr imr_interface;
 };
 
@@ -846,7 +848,7 @@ enum __WSAERRORS
 #define GAA_FLAG_SKIP_ANYCAST 0x8
 #define GAA_FLAG_SKIP_MULTICAST 0x10
 
-typedef struct _IP_ADAPTER_UNICAST_ADDRESS 
+typedef struct _IP_ADAPTER_UNICAST_ADDRESS
 {
     struct _IP_ADAPTER_UNICAST_ADDRESS *Next;
     SOCKET_ADDRESS Address;
@@ -857,10 +859,10 @@ IP_ADAPTER_UNICAST_ADDRESS, *PIP_ADAPTER_UNICAST_ADDRESS;
 typedef enum __IF_OPER_STATUS
 {
     IfOperStatusUp = 1,
-} 
+}
 IF_OPER_STATUS;
 
-typedef struct _IP_ADAPTER_ADDRESSES 
+typedef struct _IP_ADAPTER_ADDRESSES
 {
     ULONG IfIndex;
     struct _IP_ADAPTER_ADDRESSES *Next;
@@ -869,7 +871,7 @@ typedef struct _IP_ADAPTER_ADDRESSES
     DWORD IfType;
     DWORD Flags;
     PIP_ADAPTER_UNICAST_ADDRESS FirstUnicastAddress;
-} 
+}
 IP_ADAPTER_ADDRESSES, *PIP_ADAPTER_ADDRESSES;
 
 #define IF_TYPE_SOFTWARE_LOOPBACK 100
@@ -956,13 +958,13 @@ typedef enum _WINHTTP_WEB_SOCKET_BUFFER_TYPE
     WINHTTP_WEB_SOCKET_UTF8_MESSAGE_BUFFER_TYPE,
     WINHTTP_WEB_SOCKET_UTF8_FRAGMENT_BUFFER_TYPE,
     WINHTTP_WEB_SOCKET_CLOSE_BUFFER_TYPE
-} 
+}
 WINHTTP_WEB_SOCKET_BUFFER_TYPE;
 typedef struct _WINHTTP_WEB_SOCKET_STATUS
 {
     DWORD dwBytesTransferred;
     WINHTTP_WEB_SOCKET_BUFFER_TYPE eBufferType;
-} 
+}
 WINHTTP_WEB_SOCKET_STATUS;
 
 #define WINHTTP_OPTION_CONTEXT_VALUE                    45
@@ -976,16 +978,16 @@ WINHTTP_WEB_SOCKET_STATUS;
 #define WINHTTP_ACCESS_TYPE_NAMED_PROXY                 33
 #define WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY              4
 
-#define WINHTTP_QUERY_STATUS_CODE                       19 
+#define WINHTTP_QUERY_STATUS_CODE                       19
 #define WINHTTP_QUERY_FLAG_NUMBER               0x40000000
 #define WINHTTP_ADDREQ_FLAG_ADD                 0x20000000
 #define WINHTTP_ADDREQ_FLAG_REPLACE             0x80000000
 #define WINHTTP_FLAG_SECURE                     0x00001000
-#define WINHTTP_FLAG_ASYNC                      0x10000000 
+#define WINHTTP_FLAG_ASYNC                      0x10000000
 
 typedef struct _WINHTTP_ASYNC_RESULT
 {
-    DWORD_PTR dwResult;  
+    DWORD_PTR dwResult;
     DWORD dwError;
 }
 WINHTTP_ASYNC_RESULT, *LPWINHTTP_ASYNC_RESULT;
@@ -997,8 +999,8 @@ WINHTTP_ASYNC_RESULT, *LPWINHTTP_ASYNC_RESULT;
 #define _os_linux_h_ 1
 
 // unistd.h
-#define F_SETFL 1 
-#define F_GETFL 1 
+#define F_SETFL 1
+#define F_GETFL 1
 #define O_NONBLOCK 0x1
 
 #define _PC_PATH_MAX 100
@@ -1020,19 +1022,19 @@ typedef int pid_t;
 #define SYS_getrandom 111
 
 // epoll.h
-typedef union epoll_data 
+typedef union epoll_data
 {
     void    *ptr;
     int      fd;
     uint32_t u32;
     uint64_t u64;
-} 
+}
 epoll_data_t;
 
-struct epoll_event 
+struct epoll_event
 {
-    uint32_t     events; 
-    epoll_data_t data; 
+    uint32_t     events;
+    epoll_data_t data;
 };
 
 #define EPOLL_CLOEXEC 1
@@ -1056,14 +1058,14 @@ enum __EPOLLEVENT
 };
 
 // ifaddrs.h
-struct ifaddrs 
+struct ifaddrs
 {
-    struct ifaddrs *ifa_next; 
+    struct ifaddrs *ifa_next;
     char *ifa_name;
-    unsigned int ifa_flags; 
-    struct sockaddr *ifa_addr; 
+    unsigned int ifa_flags;
+    struct sockaddr *ifa_addr;
     struct sockaddr *ifa_netmask;
-    union 
+    union
     {
         struct sockaddr *ifu_broadaddr;
         struct sockaddr *ifu_dstaddr;
@@ -1079,7 +1081,7 @@ struct ifaddrs
 
 
 // in.h
-struct ip_mreqn 
+struct ip_mreqn
 {
     struct in_addr imr_multiaddr;
     struct in_addr imr_address;
@@ -1089,7 +1091,7 @@ struct ip_mreqn
 #define IP_ADD_MEMBERSHIP 20
 
 // in6.h
-struct ipv6_mreq 
+struct ipv6_mreq
 {
     struct in6_addr ipv6mr_multiaddr;
     int ipv6mr_interface;
@@ -1111,14 +1113,14 @@ typedef struct posix_spawnattr posix_spawnattr_t;
 typedef struct posix_spawn_file_actions posix_spawn_file_actions_t;
 
 // sys/event.h
-struct kevent 
+struct kevent
 {
-    uintptr_t ident;  
-    int16_t filter; 
-    uint16_t flags;  
-    uint32_t fflags; 
-    intptr_t data;   
-    void *udata; 
+    uintptr_t ident;
+    int16_t filter;
+    uint16_t flags;
+    uint32_t fflags;
+    intptr_t data;
+    void *udata;
 };
 
 enum EVFILT
@@ -1180,14 +1182,14 @@ enum lws_callback_reasons
     LWS_CALLBACK_UNLOCK_POLL
 };
 
-enum lws_close_status 
+enum lws_close_status
 {
     LWS_CLOSE_STATUS_NOSTATUS,
     LWS_CLOSE_STATUS_NORMAL,
     LWS_CLOSE_STATUS_GOINGAWAY
 };
 
-struct lws_context_creation_info 
+struct lws_context_creation_info
 {
     int port;
     const struct lws_protocols *protocols;
@@ -1206,7 +1208,7 @@ typedef int (callback_function)(struct lws *wsi,
 
 typedef void(*log_emit_function)(int level, const char *line);
 
-struct lws_protocols 
+struct lws_protocols
 {
     const char *name;
     callback_function *callback;
@@ -1215,7 +1217,7 @@ struct lws_protocols
 
 #define LCCSCF_USE_SSL 0x1
 
-struct lws_client_connect_info 
+struct lws_client_connect_info
 {
     struct lws_context *context;
     const char *address;
@@ -1251,22 +1253,37 @@ typedef void X509;
 typedef void SSL_CTX;
 typedef void pem_password_cb;
 
+#define X509_F_X509_STORE_ADD_CERT 0
+
+enum __OPENSSLERR
+{
+    OPENSSLERR_RANGE_BEGIN = 100,
+
+    X509_R_CERT_ALREADY_IN_HASH_TABLE = OPENSSLERR_RANGE_BEGIN,
+
+    OPENSSLERR_RANGE_END
+};
+
+#define ERR_GET_LIB(e) (int)e
+#define ERR_GET_FUNC(e) (int)e
+#define ERR_GET_REASON(e) (int)e
+
 // secret service
 typedef bool gboolean;
 typedef char gchar;
-typedef struct __SecretSchemaAttribute 
+typedef struct __SecretSchemaAttribute
 {
     const gchar* name;
     int type;
-} 
+}
 SecretSchemaAttribute;
-typedef struct __SecretSchema  
+typedef struct __SecretSchema
 {
     const gchar *name;
     int flags;
     SecretSchemaAttribute attributes[32];
-} 
-SecretSchema; 
+}
+SecretSchema;
 typedef struct __GError
 {
     const char* message;
@@ -1306,7 +1323,7 @@ enum __DNSSERVICEERR
     kDNSServiceErr_NoSuchKey,
     kDNSServiceErr_NATTraversal,
     kDNSServiceErr_DoubleNAT,
-    kDNSServiceErr_BadTime, 
+    kDNSServiceErr_BadTime,
     kDNSServiceErr_BadSig,
     kDNSServiceErr_BadKey,
     kDNSServiceErr_Transient,
@@ -1338,7 +1355,7 @@ typedef void* DNSServiceRef;
 typedef void (*DNSServiceResolveReply) (
     DNSServiceRef sdRef, DNSServiceFlags flags,
     uint32_t interfaceIndex, DNSServiceErrorType errorCode,
-    const char* fullname, const char* hosttarget, uint16_t port, 
+    const char* fullname, const char* hosttarget, uint16_t port,
     uint16_t txtLen, const unsigned char* txtRecord, void* context
     );
 typedef void (*DNSServiceBrowseReply) (
@@ -1436,15 +1453,15 @@ typedef int AvahiIfIndex, AvahiProtocol, AvahiBrowserEvent;
 #define AVAHI_PROTO_INET 2
 #define AVAHI_PROTO_INET6 3
 
-typedef struct AvahiIPv4Address 
-{ 
-    uint32_t address; 
-} 
+typedef struct AvahiIPv4Address
+{
+    uint32_t address;
+}
 AvahiIPv4Address;
-typedef struct AvahiIPv6Address 
-{ 
-    uint8_t address[16]; 
-} 
+typedef struct AvahiIPv6Address
+{
+    uint8_t address[16];
+}
 AvahiIPv6Address;
 typedef struct AvahiAddress
 {
@@ -1452,17 +1469,17 @@ typedef struct AvahiAddress
     union {
         AvahiIPv6Address ipv6;
         AvahiIPv4Address ipv4;
-    } 
+    }
     data;
 }
 AvahiAddress;
 
-typedef struct AvahiStringList 
+typedef struct AvahiStringList
 {
     struct AvahiStringList *next;
     size_t size;
     uint8_t* text;
-} 
+}
 AvahiStringList;
 
 #define AVAHI_BROWSER_FAILURE 1
@@ -1507,7 +1524,7 @@ typedef void(*AvahiServiceBrowserCallback) (
 typedef void(*AvahiServiceTypeBrowserCallback) (
     AvahiServiceTypeBrowser *b, AvahiIfIndex interface,
     AvahiProtocol protocol, AvahiBrowserEvent event,
-    const char *type, 
+    const char *type,
     const char *domain, AvahiLookupResultFlags flags, void *userdata);
 typedef void(*AvahiServiceResolverCallback) (
     AvahiServiceResolver *r, AvahiIfIndex interface,

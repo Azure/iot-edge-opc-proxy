@@ -8,7 +8,7 @@
 #include "prx_err.h"
 
 //
-// Initialize err 
+// Initialize err
 //
 decl_public_0(int32_t, pal_err_init,
     void

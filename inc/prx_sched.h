@@ -80,7 +80,7 @@ decl_internal_1(bool, prx_scheduler_runs_me,
 );
 
 //
-// Schedule immediate execution 
+// Schedule immediate execution
 //
 #if !defined(UNIT_TEST)
 #define __do_next_s(s, t, o) \

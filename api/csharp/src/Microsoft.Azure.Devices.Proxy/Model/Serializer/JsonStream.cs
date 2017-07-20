@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.IO;
 
     /// <summary>
-    /// Facade on top of msg pack reader/writer to read streams of 
+    /// Facade on top of msg pack reader/writer to read streams of
     /// Proxy model objects.
     /// </summary>
     public class JsonStream<S> : ICodecStream<S> where S : Stream {
@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <typeparam name="T"></typeparam>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task<T> ReadAsync<T>(CancellationToken ct) => 
+        public Task<T> ReadAsync<T>(CancellationToken ct) =>
             Task.Run(() => Read<T>(), ct);
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="obj"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task WriteAsync<T>(T obj, CancellationToken ct) => 
+        public Task WriteAsync<T>(T obj, CancellationToken ct) =>
             Task.Run(() => Write(obj), ct);
 
         /// <summary>
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public T Read<T>() => 
+        public T Read<T>() =>
             _serializer.Deserialize<T>(_reader);
 
         /// <summary>

@@ -12,7 +12,7 @@
 // os_xxx.h so that they can be used in unit tests, since they are
 // effectively compiler emitted, not operating system dependent.
 //
-#if defined(_WIN32) 
+#if defined(_WIN32)
 typedef volatile long atomic_t;
 
 #include <intrin.h>
@@ -82,7 +82,7 @@ typedef volatile long atomic_t;
 
 #else // UNIT_TEST
 #define __PAL_ST 1
-#endif 
+#endif
 #endif // !__PAL_ST
 
 #if defined(__PAL_ST)
@@ -106,7 +106,7 @@ typedef volatile int atomic_t;
 
 #endif // !__PAL_ST
 
-// 
+//
 // Thread id
 //
 typedef intptr_t tid_t;
@@ -116,7 +116,7 @@ typedef intptr_t tid_t;
 //
 typedef void* rw_lock_t;
 
-// 
+//
 // Simple, non-reentrant mutexes
 //
 typedef void* lock_t;

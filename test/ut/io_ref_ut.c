@@ -35,9 +35,9 @@ END_DECLARE_TEST_SUITE()
 DECLARE_TEST_SETUP()
 
 
-// 
-// Test io_ref_new happy path 
-// 
+//
+// Test io_ref_new happy path
+//
 TEST_FUNCTION(io_ref_new__success)
 {
     io_ref_t ref_valid;
@@ -46,58 +46,58 @@ TEST_FUNCTION(io_ref_new__success)
     ref_valid.un.u64[0] = 11ULL;
     ref_valid.un.u64[1] = 22ULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_rand_fill(ref_valid.un.u8, 16))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_ref_new(&ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_ref_new passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_new passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_new__arg_ref_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_new(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_new unhappy path 
-// 
+//
+// Test io_ref_new unhappy path
+//
 TEST_FUNCTION(io_ref_new__neg)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_rand_fill(ref_valid.un.u8, 16))
         .SetReturn(er_unknown);
 
-    // act 
+    // act
     result = io_ref_new(&ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_unknown, result);
 }
 
-// 
-// Test io_ref_clear happy path 
-// 
+//
+// Test io_ref_clear happy path
+//
 TEST_FUNCTION(io_ref_clear__success)
 {
     io_ref_t ref_valid;
@@ -105,82 +105,82 @@ TEST_FUNCTION(io_ref_clear__success)
     ref_valid.un.u64[0] = 11ULL;
     ref_valid.un.u64[1] = 22ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_clear(&ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(0ULL == ref_valid.un.u64[0]);
     ASSERT_IS_TRUE(0ULL == ref_valid.un.u64[1]);
 }
 
-// 
-// Test io_ref_clear passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_clear passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_clear__arg_ref_invalid)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_clear(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_from_string happy path 
-// 
+//
+// Test io_ref_from_string happy path
+//
 TEST_FUNCTION(io_ref_from_string__success_1)
 {
     static const char* k_string_valid = "some_uuid_without_braces";
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_ref_from_string happy path 
-// 
+//
+// Test io_ref_from_string happy path
+//
 TEST_FUNCTION(io_ref_from_string__success_2)
 {
     static const char* k_string_valid = "{3231F694-589F-48C2-944E-49E36BAC2056}";
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_trim_back(IGNORED_PTR_ARG, "}"))
         .IgnoreArgument(1);
     STRICT_EXPECTED_CALL(string_to_uuid(IGNORED_PTR_ARG, ref_valid.un.u8))
         .IgnoreArgument(1)
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_ref_from_string happy path 
-// 
+//
+// Test io_ref_from_string happy path
+//
 TEST_FUNCTION(io_ref_from_string__success_3)
 {
-    static const char* k_string_valid = 
+    static const char* k_string_valid =
         "00000000000000000000000000000000000000000000000000000000000000";
     io_ref_t ref_valid;
     prx_socket_address_t mock_sa;
@@ -190,44 +190,44 @@ TEST_FUNCTION(io_ref_from_string__success_3)
     mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
     mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
         .SetReturn(er_invalid_format);
     STRICT_EXPECTED_CALL(pal_pton(k_string_valid, IGNORED_PTR_ARG))
         .CopyOutArgumentBuffer_address(&mock_sa, sizeof(mock_sa))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(12345ULL == ref_valid.un.u64[0]);
     ASSERT_IS_TRUE(67890ULL == ref_valid.un.u64[1]);
 }
 
-// 
-// Test io_ref_from_string passing as string argument an invalid const char* value 
-// 
+//
+// Test io_ref_from_string passing as string argument an invalid const char* value
+//
 TEST_FUNCTION(io_ref_from_string__arg_string_invalid_1)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_string(NULL, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_from_string passing as string argument an invalid const char* value 
-// 
+//
+// Test io_ref_from_string passing as string argument an invalid const char* value
+//
 TEST_FUNCTION(io_ref_from_string__arg_string_invalid_2)
 {
     static const char* k_string_invalid =
@@ -235,61 +235,61 @@ TEST_FUNCTION(io_ref_from_string__arg_string_invalid_2)
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_invalid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test io_ref_from_string passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_from_string passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_from_string__arg_ref_invalid)
 {
     static const char* k_string_valid = "some_ipv6ref_without_braces";
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_from_string unhappy path 
-// 
+//
+// Test io_ref_from_string unhappy path
+//
 TEST_FUNCTION(io_ref_from_string__neg)
 {
     static const char* k_string_valid = "some_ipv6ref_without_braces";
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_to_uuid(k_string_valid, ref_valid.un.u8))
         .SetReturn(er_invalid_format);
     STRICT_EXPECTED_CALL(pal_pton(k_string_valid, IGNORED_PTR_ARG))
         .IgnoreArgument(2)
         .SetReturn(er_invalid_format);
 
-    // act 
+    // act
     result = io_ref_from_string(k_string_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
-// 
-// Test io_ref_from_prx_socket_address happy path 
-// 
+//
+// Test io_ref_from_prx_socket_address happy path
+//
 TEST_FUNCTION(io_ref_from_prx_socket_address__success)
 {
     io_ref_t ref_valid;
@@ -300,39 +300,39 @@ TEST_FUNCTION(io_ref_from_prx_socket_address__success)
     mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
     mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_prx_socket_address(&mock_sa, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(12345ULL == ref_valid.un.u64[0]);
     ASSERT_IS_TRUE(67890ULL == ref_valid.un.u64[1]);
 }
 
-// 
-// Test io_ref_from_prx_socket_address passing as sa argument an invalid prx_socket_address_t* value 
-// 
+//
+// Test io_ref_from_prx_socket_address passing as sa argument an invalid prx_socket_address_t* value
+//
 TEST_FUNCTION(io_ref_from_prx_socket_address__arg_sa_invalid)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_prx_socket_address(NULL, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_from_prx_socket_address passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_from_prx_socket_address passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_from_prx_socket_address__arg_ref_invalid)
 {
     prx_socket_address_t mock_sa;
@@ -342,19 +342,19 @@ TEST_FUNCTION(io_ref_from_prx_socket_address__arg_ref_invalid)
     mock_sa.un.ip.un.in6.un.u64[0] = 12345ULL;
     mock_sa.un.ip.un.in6.un.u64[1] = 67890ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_from_prx_socket_address(&mock_sa, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_to_prx_socket_address happy path 
-// 
+//
+// Test io_ref_to_prx_socket_address happy path
+//
 TEST_FUNCTION(io_ref_to_prx_socket_address__success)
 {
     io_ref_t ref_valid;
@@ -364,39 +364,39 @@ TEST_FUNCTION(io_ref_to_prx_socket_address__success)
     ref_valid.un.u64[0] = 1234567890ULL;
     ref_valid.un.u64[1] = 9876543210ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_to_prx_socket_address(&ref_valid, &mock_sa);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(1234567890ULL == mock_sa.un.ip.un.in6.un.u64[0]);
     ASSERT_IS_TRUE(9876543210ULL == mock_sa.un.ip.un.in6.un.u64[1]);
 }
 
-// 
-// Test io_ref_to_prx_socket_address passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_to_prx_socket_address passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_to_prx_socket_address__arg_ref_invalid)
 {
     prx_socket_address_t mock_sa;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_to_prx_socket_address(NULL, &mock_sa);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_to_prx_socket_address passing as sa argument an invalid prx_socket_address_t* value 
-// 
+//
+// Test io_ref_to_prx_socket_address passing as sa argument an invalid prx_socket_address_t* value
+//
 TEST_FUNCTION(io_ref_to_prx_socket_address__arg_sa_invalid)
 {
     io_ref_t ref_valid;
@@ -405,103 +405,103 @@ TEST_FUNCTION(io_ref_to_prx_socket_address__arg_sa_invalid)
     ref_valid.un.u64[0] = 1234567890;
     ref_valid.un.u64[1] = 9876543210;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_to_prx_socket_address(&ref_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_to_string happy path 
-// 
+//
+// Test io_ref_to_string happy path
+//
 TEST_FUNCTION(io_ref_to_string__success)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, UT_MEM, 37))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_ref_to_string(&ref_valid, UT_MEM, 37);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_ref_to_string passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_to_string passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_to_string__arg_ref_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_to_string(NULL, UT_MEM, 37);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_to_string passing as buffer argument an invalid char* value 
-// 
+//
+// Test io_ref_to_string passing as buffer argument an invalid char* value
+//
 TEST_FUNCTION(io_ref_to_string__arg_buffer_invalid)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, NULL, 37))
         .SetReturn(er_fault);
 
-    // act 
+    // act
     result = io_ref_to_string(&ref_valid, NULL, 37);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_to_string passing as buf_len argument an invalid size_t value 
-// 
+//
+// Test io_ref_to_string passing as buf_len argument an invalid size_t value
+//
 TEST_FUNCTION(io_ref_to_string__arg_buf_len_invalid)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, UT_MEM, 36))
         .SetReturn(er_arg);
 
-    // act 
+    // act
     result = io_ref_to_string(&ref_valid, UT_MEM, 36);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test io_ref_to_STRING happy path 
-// 
+//
+// Test io_ref_to_STRING happy path
+//
 TEST_FUNCTION(io_ref_to_STRING__success)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     io_ref_t ref_valid;
     STRING_HANDLE result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_new())
         .SetReturn(k_string_handle_valid);
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, IGNORED_PTR_ARG, 37))
@@ -511,45 +511,45 @@ TEST_FUNCTION(io_ref_to_STRING__success)
         .IgnoreArgument(2)
         .SetReturn(0);
 
-    // act 
+    // act
     result = io_ref_to_STRING(&ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
 }
 
-// 
-// Test io_ref_to_STRING passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_to_STRING passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_to_STRING__arg_ref_invalid)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     STRING_HANDLE result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_new())
         .SetReturn(k_string_handle_valid);
     STRICT_EXPECTED_CALL(STRING_delete(k_string_handle_valid));
 
-    // act 
+    // act
     result = io_ref_to_STRING(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void_ptr, NULL, result);
 }
 
-// 
-// Test io_ref_to_STRING unhappy path 
-// 
+//
+// Test io_ref_to_STRING unhappy path
+//
 TEST_FUNCTION(io_ref_to_STRING__neg)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     io_ref_t ref_valid;
     STRING_HANDLE result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(STRING_new())
         .SetReturn(k_string_handle_valid)
@@ -563,24 +563,24 @@ TEST_FUNCTION(io_ref_to_STRING__neg)
         .SetReturn(0)
         .SetFailReturn(-1);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_ref_to_STRING(&ref_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void_ptr, result, NULL);
 }
 
-// 
-// Test io_ref_append_to_STRING happy path 
-// 
+//
+// Test io_ref_append_to_STRING happy path
+//
 TEST_FUNCTION(io_ref_append_to_STRING__success)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, IGNORED_PTR_ARG, 37))
         .IgnoreArgument(2)
         .SetReturn(er_ok);
@@ -588,60 +588,60 @@ TEST_FUNCTION(io_ref_append_to_STRING__success)
         .IgnoreArgument(2)
         .SetReturn(0);
 
-    // act 
+    // act
     result = io_ref_append_to_STRING(&ref_valid, k_string_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_ref_append_to_STRING passing as address argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_append_to_STRING passing as address argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_append_to_STRING__arg_ref_invalid)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_append_to_STRING(NULL, k_string_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test io_ref_append_to_STRING passing as string argument an invalid STRING_HANDLE value 
-// 
+//
+// Test io_ref_append_to_STRING passing as string argument an invalid STRING_HANDLE value
+//
 TEST_FUNCTION(io_ref_append_to_STRING__arg_string_invalid)
 {
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_append_to_STRING(&ref_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_append_to_STRING unhappy path 
-// 
+//
+// Test io_ref_append_to_STRING unhappy path
+//
 TEST_FUNCTION(io_ref_append_to_STRING__neg)
 {
     static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x824;
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(string_from_uuid(ref_valid.un.u8, IGNORED_PTR_ARG, 37))
         .IgnoreArgument(2)
@@ -652,17 +652,17 @@ TEST_FUNCTION(io_ref_append_to_STRING__neg)
         .SetReturn(0)
         .SetFailReturn(-1);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_ref_append_to_STRING(&ref_valid, k_string_handle_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_fatal, er_out_of_memory);
 }
 
-// 
-// Test io_ref_copy happy path 
-// 
+//
+// Test io_ref_copy happy path
+//
 TEST_FUNCTION(io_ref_copy__success)
 {
     io_ref_t src_valid;
@@ -671,36 +671,36 @@ TEST_FUNCTION(io_ref_copy__success)
     src_valid.un.u64[0] = 1234567890;
     src_valid.un.u64[1] = 9876543210;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_copy(&src_valid, &dst_valid);
 
-    // assert 
+    // assert
     ASSERT_IS_TRUE(1234567890ULL == dst_valid.un.u64[0]);
     ASSERT_IS_TRUE(9876543210ULL == dst_valid.un.u64[1]);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_copy passing as src argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_copy passing as src argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_copy__arg_src_invalid)
 {
     io_ref_t dst_valid;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_copy(NULL, &dst_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_copy passing as dst argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_copy passing as dst argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_copy__arg_dst_invalid)
 {
     io_ref_t src_valid;
@@ -708,18 +708,18 @@ TEST_FUNCTION(io_ref_copy__arg_dst_invalid)
     src_valid.un.u64[0] = 1234567890;
     src_valid.un.u64[1] = 9876543210;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_copy(&src_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_swap happy path 
-// 
+//
+// Test io_ref_swap happy path
+//
 TEST_FUNCTION(io_ref_swap__success)
 {
     io_ref_t ref1_valid;
@@ -731,12 +731,12 @@ TEST_FUNCTION(io_ref_swap__success)
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
     ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_swap(&ref1_valid, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_IS_TRUE(1234567890ULL == ref2_valid.un.u64[0]);
     ASSERT_IS_TRUE(9876543210ULL == ref2_valid.un.u64[1]);
     ASSERT_IS_TRUE(0xaaaaaaaaULL == ref1_valid.un.u64[0]);
@@ -744,9 +744,9 @@ TEST_FUNCTION(io_ref_swap__success)
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_swap passing as ref1 argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_swap passing as ref1 argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_swap__arg_ref1_invalid)
 {
     io_ref_t ref2_valid;
@@ -754,18 +754,18 @@ TEST_FUNCTION(io_ref_swap__arg_ref1_invalid)
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
     ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     io_ref_swap(NULL, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_swap passing as ref2 argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_swap passing as ref2 argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_swap__arg_ref2_invalid)
 {
     io_ref_t ref1_valid;
@@ -774,16 +774,16 @@ TEST_FUNCTION(io_ref_swap__arg_ref2_invalid)
     ref1_valid.un.u64[1] = 9876543210ULL;
 
 
-    // act 
+    // act
     io_ref_swap(&ref1_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_1)
 {
     io_ref_t ref1_valid;
@@ -796,36 +796,36 @@ TEST_FUNCTION(io_ref_equals__success_1)
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
     ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(result);
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_2)
 {
     bool result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(NULL, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(result);
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_3)
 {
     io_ref_t ref1_valid;
@@ -834,19 +834,19 @@ TEST_FUNCTION(io_ref_equals__success_3)
     ref1_valid.un.u64[0] = ~0ULL;
     ref1_valid.un.u64[1] = ~0ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, &io_ref_bcast);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(result);
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_4)
 {
     io_ref_t ref1_valid;
@@ -855,19 +855,19 @@ TEST_FUNCTION(io_ref_equals__success_4)
     ref1_valid.un.u64[0] = 0;
     ref1_valid.un.u64[1] = 0;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, &io_ref_null);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(result);
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_not_equal_1)
 {
     io_ref_t ref1_valid;
@@ -880,19 +880,19 @@ TEST_FUNCTION(io_ref_equals__success_not_equal_1)
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
     ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test io_ref_equals happy path 
-// 
+//
+// Test io_ref_equals happy path
+//
 TEST_FUNCTION(io_ref_equals__success_not_equal_2)
 {
     io_ref_t ref1_valid;
@@ -905,19 +905,19 @@ TEST_FUNCTION(io_ref_equals__success_not_equal_2)
     ref2_valid.un.u64[0] = 0xaaaaaaaaULL;
     ref2_valid.un.u64[1] = 0xbbbbbbbbULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test io_ref_equals passing as ref1 argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_equals passing as ref1 argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_equals__arg_ref1_invalid)
 {
     io_ref_t ref2_valid;
@@ -926,19 +926,19 @@ TEST_FUNCTION(io_ref_equals__arg_ref1_invalid)
     ref2_valid.un.u64[0] = 0;
     ref2_valid.un.u64[1] = 0;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(NULL, &ref2_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test io_ref_equals passing as ref2 argument an invalid io_ref_t* value 
-// 
+//
+// Test io_ref_equals passing as ref2 argument an invalid io_ref_t* value
+//
 TEST_FUNCTION(io_ref_equals__arg_ref2_invalid)
 {
     io_ref_t ref1_valid;
@@ -947,19 +947,19 @@ TEST_FUNCTION(io_ref_equals__arg_ref2_invalid)
     ref1_valid.un.u64[0] = 1ULL;
     ref1_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = io_ref_equals(&ref1_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test io_encode_ref happy path 
-// 
+//
+// Test io_encode_ref happy path
+//
 TEST_FUNCTION(io_encode_ref__success_1)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -969,7 +969,7 @@ TEST_FUNCTION(io_encode_ref__success_1)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_codec_ctx_get_codec_id(k_ctx_valid))
@@ -979,17 +979,17 @@ TEST_FUNCTION(io_encode_ref__success_1)
     STRICT_EXPECTED_CALL(io_encode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_encode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_encode_ref happy path 
-// 
+//
+// Test io_encode_ref happy path
+//
 TEST_FUNCTION(io_encode_ref__success_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1000,7 +1000,7 @@ TEST_FUNCTION(io_encode_ref__success_2)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_codec_ctx_get_codec_id(k_ctx_valid))
@@ -1019,17 +1019,17 @@ TEST_FUNCTION(io_encode_ref__success_2)
     STRICT_EXPECTED_CALL(io_encode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_encode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_encode_ref unhappy path 
-// 
+//
+// Test io_encode_ref unhappy path
+//
 TEST_FUNCTION(io_encode_ref__neg_1)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1039,7 +1039,7 @@ TEST_FUNCTION(io_encode_ref__neg_1)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok)
@@ -1054,18 +1054,18 @@ TEST_FUNCTION(io_encode_ref__neg_1)
         .SetReturn(er_ok)
         .SetFailReturn(er_writing);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+    // assert
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_writing, er_ok, er_writing);
 }
 
-// 
-// Test io_encode_ref unhappy path 
-// 
+//
+// Test io_encode_ref unhappy path
+//
 TEST_FUNCTION(io_encode_ref__neg_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1076,7 +1076,7 @@ TEST_FUNCTION(io_encode_ref__neg_2)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok)
@@ -1103,19 +1103,19 @@ TEST_FUNCTION(io_encode_ref__neg_2)
         .SetReturn(er_ok)
         .SetFailReturn(er_writing);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+    // assert
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_writing, er_ok, er_out_of_memory, er_ok, er_out_of_memory,
         er_writing, er_ok, er_writing);
 }
 
-// 
-// Test io_decode_ref happy path 
-// 
+//
+// Test io_decode_ref happy path
+//
 TEST_FUNCTION(io_decode_ref__success_1)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1126,7 +1126,7 @@ TEST_FUNCTION(io_decode_ref__success_1)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_codec_ctx_get_codec_id(k_ctx_valid))
@@ -1138,19 +1138,19 @@ TEST_FUNCTION(io_decode_ref__success_1)
     STRICT_EXPECTED_CALL(io_decode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_decode_ref(k_ctx_valid, &ref_out);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(ref_valid.un.u64[0] == ref_out.un.u64[0]);
     ASSERT_IS_TRUE(ref_valid.un.u64[1] == ref_out.un.u64[1]);
 }
 
-// 
-// Test io_decode_ref happy path 
-// 
+//
+// Test io_decode_ref happy path
+//
 TEST_FUNCTION(io_decode_ref__success_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1162,7 +1162,7 @@ TEST_FUNCTION(io_decode_ref__success_2)
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_codec_ctx_get_codec_id(k_ctx_valid))
@@ -1178,17 +1178,17 @@ TEST_FUNCTION(io_decode_ref__success_2)
     STRICT_EXPECTED_CALL(io_decode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_decode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_decode_ref unhappy path 
-// 
+//
+// Test io_decode_ref unhappy path
+//
 TEST_FUNCTION(io_decode_ref__neg_1)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1199,7 +1199,7 @@ TEST_FUNCTION(io_decode_ref__neg_1)
     ref_valid.un.u64[0] = 1ULL;
     ref_valid.un.u64[1] = 2ULL;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok)
@@ -1216,18 +1216,18 @@ TEST_FUNCTION(io_decode_ref__neg_1)
         .SetReturn(er_ok)
         .SetFailReturn(er_invalid_format);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_invalid_format, er_ok, er_invalid_format);
 }
 
-// 
-// Test io_decode_ref unhappy path 
-// 
+//
+// Test io_decode_ref unhappy path
+//
 TEST_FUNCTION(io_decode_ref__neg_2)
 {
     static io_codec_ctx_t* k_ctx_valid = (io_codec_ctx_t*)0x823423;
@@ -1239,7 +1239,7 @@ TEST_FUNCTION(io_decode_ref__neg_2)
     io_ref_t ref_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok)
@@ -1262,11 +1262,11 @@ TEST_FUNCTION(io_decode_ref__neg_2)
         .SetReturn(er_ok)
         .SetFailReturn(er_invalid_format);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_ref(k_ctx_valid, &ref_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_invalid_format, er_ok, er_invalid_format, er_ok, er_ok,
         er_ok, er_invalid_format);

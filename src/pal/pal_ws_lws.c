@@ -19,9 +19,9 @@
 // Must correspond to libwebsockets max_fds value
 #define MAX_WEBSOCKET_PER_WORKER (getdtablesize() - 1)
 
-// 
+//
 // State flags
-// 
+//
 typedef enum pal_wsclient_flag
 {
     pal_wsclient_connecting_bit,
@@ -44,12 +44,12 @@ typedef struct pal_wsworker_pool
 pal_wsworker_pool_t;
 
 //
-// Represents a websocket worker handler.  
+// Represents a websocket worker handler.
 //
 typedef struct pal_wsworker
 {
     int id;                                             // Worker id
-    char* proxy_address;                            // Proxy address 
+    char* proxy_address;                            // Proxy address
     uint16_t proxy_port;    // + port are per context not connection
     struct lws_protocols* protocols;    // The worker object for lws
     struct lws_context* context;       // set of pollfd's to service
@@ -78,7 +78,7 @@ struct pal_wsclient
     atomic_t state;                           // State of the client
     uint8_t* send_buffer;  // to do async submits with worker insitu
     size_t send_buffer_size;                      // Bytes to submit
-    size_t send_buffer_offset;                 // For partial writes 
+    size_t send_buffer_offset;                 // For partial writes
     int send_flags;                         // Flags to use for send
     bool can_send;                     // Whether sending is enabled
     uint8_t* recv_buffer;                  // Any left over receives
@@ -98,7 +98,7 @@ struct pal_wsclient
 
 static pal_wsworker_pool_t* global_wsworker_pool;
 
-// 
+//
 // Logger hook into lws
 //
 static void pal_wsclient_lws_log(
@@ -111,50 +111,101 @@ static void pal_wsclient_lws_log(
 #if !defined(UNIT_TEST)
     /**/ if (level & LLL_ERR)
     {
-        log_error(global_wsworker_pool->log, "%s", msg);
+        log_error(global_wsworker_pool->log, "%.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_WARN)
     {
-        log_info(global_wsworker_pool->log, " -- WARNING -- %s", msg);
+        log_info(global_wsworker_pool->log, " -- WARNING -- %.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_NOTICE)
     {
-        log_info(global_wsworker_pool->log, "%s", msg);
+        log_trace(global_wsworker_pool->log, "%.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_INFO)
     {
-        log_debug(global_wsworker_pool->log, "%s", msg);
+        log_debug(global_wsworker_pool->log, "%.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_CLIENT)
     {
-        log_debug(global_wsworker_pool->log, "CLIENT: %s", msg);
+        log_debug(global_wsworker_pool->log, "CLIENT: %.*s",
+            (int)strlen(msg) - 1, msg);
     }
 #ifdef LOG_VERBOSE
     else if (level & LLL_DEBUG)
     {
-        log_debug(global_wsworker_pool->log, "%s", msg);
+        log_debug(global_wsworker_pool->log, "%.*s",
+            (int)strlen(msg) - 1, msg);
     }
-    else if (level & LLL_PARSER) 
+    else if (level & LLL_PARSER)
     {
-        log_debug(global_wsworker_pool->log, "PARSE: %s", msg);
+        log_debug(global_wsworker_pool->log, "PARSE: %.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_HEADER)
     {
-        log_debug(global_wsworker_pool->log, "HEADER: %s", msg);
+        log_debug(global_wsworker_pool->log, "HEADER: %.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_EXT)
     {
-        log_debug(global_wsworker_pool->log, "EXT: %s", msg);
+        log_debug(global_wsworker_pool->log, "EXT: %.*s",
+            (int)strlen(msg) - 1, msg);
     }
     else if (level & LLL_LATENCY)
     {
-        log_debug(global_wsworker_pool->log, "LATENCY: %s", msg);
+        log_debug(global_wsworker_pool->log, "LATENCY: %.*s",
+            (int)strlen(msg) - 1, msg);
     }
 #endif
 #else
     (void)level;
     (void)msg;
 #endif
+}
+
+//
+// Returns last error
+//
+static int32_t pal_wsworker_last_openssl_error_as_prx_error(
+    void
+)
+{
+    int32_t result;
+    unsigned long error = 0;
+#if !defined(UNIT_TEST)
+    char buf[128];
+    error = ERR_get_error();
+#endif
+    if (error == 0)
+        return er_ok;
+    //
+    // Convert error in function to prx error. A list of error number macros is at
+    // https://raw.githubusercontent.com/openssl/openssl/master/crypto/err/openssl.txt
+    //
+    switch (ERR_GET_REASON(error))
+    {
+    case X509_R_CERT_ALREADY_IN_HASH_TABLE:
+        return er_already_exists;
+    default:
+        result = er_fatal;
+        break;
+    }
+#if !defined(UNIT_TEST)
+    for (int i = 0; 0 != error; i++)
+    {
+        log_info(NULL, "  [%d] %ul (%d.%d.%d) - %s", i, error,
+            ERR_GET_LIB(error), ERR_GET_FUNC(error), ERR_GET_REASON(error),
+            ERR_error_string(error, buf));
+
+        // Dump more errors...
+        error = ERR_get_error();
+    }
+#endif
+    return result;
 }
 
 //
@@ -186,7 +237,9 @@ static int32_t pal_wsworker_load_extra_client_verify_certs(
         cert_store = SSL_CTX_get_cert_store(user);
         if (!cert_store)
         {
-            result = er_fatal;
+            result = pal_wsworker_last_openssl_error_as_prx_error();
+            log_error(NULL, "Could not get cert store for %p context (%s)", user,
+                prx_err_string(result));
             break;
         }
 
@@ -200,7 +253,9 @@ static int32_t pal_wsworker_load_extra_client_verify_certs(
         result = BIO_puts(cert_memory_bio, trusted_ca);
         if (result < 0 || (size_t)result != strlen(trusted_ca))
         {
-            result = er_fatal;
+            result = pal_wsworker_last_openssl_error_as_prx_error();
+            log_error(NULL, "Failed to read trusted certs into bio (%s).",
+                prx_err_string(result));
             break;
         }
 
@@ -213,11 +268,18 @@ static int32_t pal_wsworker_load_extra_client_verify_certs(
                 break;
             if (!X509_STORE_add_cert(cert_store, certificate))
             {
-                result = er_fatal;
                 X509_free(certificate);
-                break;
+                result = pal_wsworker_last_openssl_error_as_prx_error();
+                if (result == er_already_exists)
+                    result = er_ok;  // Continue...
+                else
+                {
+                    log_error(NULL, "Failed to add trusted cert to cert store (%s).",
+                        prx_err_string(result));
+                    break;
+                }
             }
-        } 
+        }
         if (result != er_ok)
             break;
 
@@ -229,7 +291,7 @@ static int32_t pal_wsworker_load_extra_client_verify_certs(
 }
 
 //
-// Free client 
+// Free client
 //
 static void pal_wsclient_free(
     pal_wsclient_t* wsclient
@@ -307,12 +369,12 @@ static enum lws_write_protocol pal_wsclient_buffer_type_to_lws_flags(
         case pal_wsclient_buffer_type_binary_msg:
         case pal_wsclient_buffer_type_utf8_msg:
             // Final fragment
-            flags = LWS_WRITE_CONTINUATION; 
+            flags = LWS_WRITE_CONTINUATION;
             break;
         case pal_wsclient_buffer_type_binary_fragment:
         case pal_wsclient_buffer_type_utf8_fragment:
             // Continuation fragment
-            flags = LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN;  
+            flags = LWS_WRITE_CONTINUATION | LWS_WRITE_NO_FIN;
             break;
         }
     }
@@ -359,7 +421,7 @@ static int pal_wsworker_lws_on_verify_certs(
         result = pal_wsworker_load_extra_client_verify_certs(user, trusted_ca);
         if (result != er_ok)
         {
-            log_error(worker->log, "Failed loading certs (%s)", 
+            log_error(worker->log, "Failed loading certs (%s)",
                 prx_err_string(result));
             return -1;
         }
@@ -405,8 +467,8 @@ static void pal_wsworker_lws_copy_in(
 
     dbg_assert_ptr(wsclient);
 
-    dbg_assert(wsclient->send_buffer_offset == wsclient->send_buffer_size, 
-        "Expected entire buffer to be sent by wsclient! (offset %d != size %d)", 
+    dbg_assert(wsclient->send_buffer_offset == wsclient->send_buffer_size,
+        "Expected entire buffer to be sent by wsclient! (offset %d != size %d)",
             wsclient->send_buffer_offset, wsclient->send_buffer_size);
 
     wsclient->cb(wsclient->context, pal_wsclient_event_begin_send,
@@ -423,7 +485,7 @@ static void pal_wsworker_lws_copy_in(
     {
         result = er_ok;
 #define LWS_BUFFER_PADDING (LWS_SEND_BUFFER_PRE_PADDING + LWS_SEND_BUFFER_POST_PADDING)
-        buf = mem_realloc(wsclient->send_buffer, 
+        buf = mem_realloc(wsclient->send_buffer,
             wsclient->send_buffer_size + LWS_BUFFER_PADDING);
         if (!buf)
         {
@@ -437,7 +499,7 @@ static void pal_wsworker_lws_copy_in(
         wsclient->send_flags = pal_wsclient_buffer_type_to_lws_flags(
             wsclient->send_flags, type);
 
-        memcpy(&wsclient->send_buffer[LWS_SEND_BUFFER_PRE_PADDING], 
+        memcpy(&wsclient->send_buffer[LWS_SEND_BUFFER_PRE_PADDING],
             out, wsclient->send_buffer_size);
 
         log_debug(wsclient->log, "Sending %zu bytes...", wsclient->send_buffer_size);
@@ -467,7 +529,7 @@ static int pal_wsworker_lws_on_send(
         {
             // Write close and indicate stack should close
 #if (LWS_LIBRARY_VERSION_MAJOR > 1)
-            lws_close_reason(wsi, 
+            lws_close_reason(wsi,
                 (enum lws_close_status)wsclient->disconnect_reason, NULL, 0);
 #endif
             wsclient->disconnect_reason = LWS_CLOSE_STATUS_NOSTATUS;
@@ -894,8 +956,10 @@ static int32_t pal_wsworker_thread(
                 if (atomic_bit_clear(next->state, pal_wsclient_connecting_bit))
                 {
                     // If we were asked to connect, connect and wait
-                    log_debug(next->log, "Connecting %p ...", next);
-#if (LWS_LIBRARY_VERSION_MAJOR > 1)
+                    log_trace(next->log, "Connecting %p to %s:%d (%s) ...", next,
+                        next->host, next->port, next->secure ? "ssl" : "no ssl");
+
+#if (LWS_LIBRARY_VERSION_MAJOR >= 2)
                     memset(&connect_info, 0, sizeof(connect_info));
                     connect_info.context = worker->context;
                     connect_info.address = next->host;
@@ -910,9 +974,9 @@ static int32_t pal_wsworker_thread(
                     connect_info.userdata = next;
                     next->wsi = lws_client_connect_via_info(&connect_info);
 #else
-                    next->wsi = lws_client_connect_extended(worker->context, 
+                    next->wsi = lws_client_connect_extended(worker->context,
                         next->host, next->port, next->secure ? 1 : 0,
-                        next->relative_path, next->host, next->host, 
+                        next->relative_path, next->host, next->host,
                         worker->protocols->name, -1 /* ietf_latest */, next);
 #endif
                     if (!next->wsi)
@@ -986,7 +1050,7 @@ static int32_t pal_wsworker_thread(
                         log_error(next->log, "Failed to enable sending for %p", next);
                     }
                 }
-                
+
                 // Modify pollfd for receive side
                 if (-1 == lws_rx_flow_control(next->wsi, next->can_recv))
                 {
@@ -1052,12 +1116,12 @@ static int32_t pal_wsworker_get_proxy_info(
     user = __prx_config_get(prx_config_key_proxy_user, NULL);
     pwd = __prx_config_get(prx_config_key_proxy_pwd, NULL);
 
-    buf_len = 
-          strlen(proxy) 
+    buf_len =
+          strlen(proxy)
         + (user ? strlen(user) + 1 : 0) // user sep @
         + (pwd ? strlen(pwd) + 1 : 0) // add pwd sep :
         + 1;  // plus null term
-    
+
     // Use malloc for lws to free
     *proxy_address = (char*)mem_zalloc(buf_len);
     if (!*proxy_address)
@@ -1153,7 +1217,7 @@ static int32_t pal_wsworker_pool_attach(
         worker->protocols->callback = pal_wsworker_lws_callback;
         worker->protocols->user = worker;
 
-        // Create context. 
+        // Create context.
         memset(&info, 0, sizeof(info));
         info.port = CONTEXT_PORT_NO_LISTEN;
         info.protocols = worker->protocols;
@@ -1201,7 +1265,7 @@ static int32_t pal_wsworker_pool_attach(
 
         DList_InsertTailList(&pool->workers, &worker->link);
         result = er_ok; // success
-    } 
+    }
     while (0);
     lock_exit(pool->pool_lock);
 
@@ -1318,9 +1382,9 @@ int32_t pal_wsclient_create(
 
         *created = wsclient;
         return er_ok;
-    } 
+    }
     while (0);
-    
+
     pal_wsclient_free(wsclient);
     return result;
 }
@@ -1375,7 +1439,7 @@ int32_t pal_wsclient_connect(
         atomic_bit_set(wsclient->state, pal_wsclient_connecting_bit);
         return er_ok;
     }
-    
+
     // Insert into a worker which will start connect
     return pal_wsworker_pool_attach(global_wsworker_pool, wsclient);
 }
@@ -1452,7 +1516,7 @@ int32_t pal_wsclient_disconnect(
 }
 
 //
-// Close websocket client 
+// Close websocket client
 //
 void pal_wsclient_close(
     pal_wsclient_t* wsclient
@@ -1470,7 +1534,7 @@ void pal_wsclient_close(
     wsclient->disconnect_reason = LWS_CLOSE_STATUS_GOINGAWAY;
     atomic_bit_set(wsclient->state, pal_wsclient_disconnecting_bit);
     atomic_bit_set(wsclient->state, pal_wsclient_closing_bit);
-    // Interrupt worker to close 
+    // Interrupt worker to close
     lws_cancel_service(wsclient->worker->context);
     // Wait for close to complete
 }

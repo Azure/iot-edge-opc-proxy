@@ -139,8 +139,8 @@ static int32_t prx_host_uninstall_server(
     for (int local = 0; local < 2; local++)
     {
         //
-        // First round remove from remote and local, next remove remaining 
-        // matching entries from local database.  If remote removal fails, 
+        // First round remove from remote and local, next remove remaining
+        // matching entries from local database.  If remote removal fails,
         // re-add to local, and exit.
         //
         if (name)
@@ -177,7 +177,7 @@ static int32_t prx_host_uninstall_server(
         }
         if (result != er_ok)
             break;
-    } 
+    }
 
     if (result == er_not_found)
         result = er_ok;
@@ -269,7 +269,7 @@ static int32_t prx_host_init_from_command_line(
                     break;
                 }
                 tmp = __prx_config_get_int(prx_config_key_connect_flag, 0);
-                __prx_config_set_int(prx_config_key_connect_flag, 
+                __prx_config_set_int(prx_config_key_connect_flag,
                     tmp | (c == 'w' ? 0x1 : 0x2));
                 break;
             case 'p':
@@ -342,7 +342,7 @@ static int32_t prx_host_init_from_command_line(
                 }
                 if (cs)
                 {
-                    printf("ERROR: Multiple connection string arguments" 
+                    printf("ERROR: Multiple connection string arguments"
                         " encountered...\n\n");
                     result = er_arg;
                     break;
@@ -492,7 +492,7 @@ static int32_t prx_host_init_from_command_line(
                 break;
             }
 
-            if (should_exit) 
+            if (should_exit)
                 break; // Exit now, a user might have just wanted to import the string
 
             // If connection string is proxy connection string add to local registry
@@ -524,7 +524,7 @@ static int32_t prx_host_init_from_command_line(
                     break;
                 }
             }
-            else 
+            else
             {
                 result = prx_ns_iot_hub_create_from_cs(cs, &host->remote);
                 if (result != er_ok)
@@ -542,7 +542,7 @@ static int32_t prx_host_init_from_command_line(
                 break;
 
             // If we should not exit, we must try to install a proxy to run
-            is_install = true; 
+            is_install = true;
             if (!host->remote)
             {
                 // Empty local registry and no remote, nothing to do...
@@ -597,7 +597,7 @@ static int32_t prx_host_init_from_command_line(
                         prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                     break;
                 }
-                printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ? 
+                printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ?
                     "installed" : "uninstalled");
                 server_name = NULL;
             }
@@ -660,12 +660,12 @@ static int32_t prx_host_init_from_command_line(
     }
     printf(" -T, --log-to-iothub                Send raw log output to IoT Hub on the   \n");
     printf("                                    proxy telemetry endpoint.               \n");
-#if !defined(NO_ZLOG)                                                              
+#if !defined(NO_ZLOG)
     printf(" -l, --log-file file                File to log to using simple formatting. \n");
     printf(" -L, --log-config-file file         For more advanced settings, the zlog    \n");
     printf("                                    configuration file to use. Defaults to  \n");
     printf("                                    ./log.config.                           \n");
-#endif                                                                             
+#endif
     printf(" -i, --install                      Installs a proxy server in the IoT Hub  \n");
     printf("                                    device registry, then exits.            \n");
     printf(" -u, --uninstall                    Uninstalls proxy server on Iot Hub then \n");
@@ -685,7 +685,7 @@ static int32_t prx_host_init_from_command_line(
     printf(" -t, --token-ttl int                Time to live in seconds for all shared  \n");
     printf("                                    access tokens provided to IoT Hub if you\n");
     printf("                                    prefer a value different from default.  \n");
-#if defined(EXPERIMENTAL)                                                         
+#if defined(EXPERIMENTAL)
     printf(" -d, --hidden                       Runs the proxy as a service/daemon,     \n");
     printf("                                    otherwise runs proxy host process as    \n");
     printf("                                    console process.                        \n");
@@ -705,7 +705,7 @@ static void prx_host_modules_stop(
     int32_t result;
     dbg_assert_ptr(host);
     prx_host_module_t* next;
-    
+
     while (!DList_IsListEmpty(&host->modules))
     {
         next = containingRecord(
@@ -733,7 +733,7 @@ static void prx_host_modules_stop(
 }
 
 //
-// Load all startup modules/servers 
+// Load all startup modules/servers
 //
 static int32_t prx_host_modules_start(
     prx_host_t* host
@@ -743,17 +743,17 @@ static int32_t prx_host_modules_start(
     prx_ns_result_t* startup;
     prx_ns_entry_t* proxy_entry;
     prx_host_module_t* module;
-    
+
     dbg_assert_ptr(host);
     dbg_assert_ptr(host->local);
 
-    result = prx_ns_get_entry_by_type(host->local, 
+    result = prx_ns_get_entry_by_type(host->local,
         prx_ns_entry_type_startup, &startup);
     if (result == er_not_found)
         return er_ok;
     if (result != er_ok)
         return result;
-    do 
+    do
     {
         proxy_entry = prx_ns_result_pop(startup);
         if (!proxy_entry)
@@ -779,7 +779,7 @@ static int32_t prx_host_modules_start(
         }
     }
     while (result == er_ok);
-    
+
     if (startup)
         prx_ns_result_release(startup);
     return result;
@@ -853,7 +853,7 @@ int32_t prx_host_sig_break(
     return signal_set(host->exit_signal);
 }
 
-// 
+//
 // Returns a reference to the host
 //
 int32_t prx_host_get(
@@ -889,7 +889,7 @@ io_ref_t* prx_host_get_id(
 }
 
 //
-// returns the name service 
+// returns the name service
 //
 prx_ns_t* prx_host_get_ns(
     prx_host_t* host
@@ -1029,7 +1029,7 @@ int32_t prx_host_init(
         log_trace(process_host->log, "Proxy host created!");
         DEC_REF(prx_host_t, process_host); // weak reference
         return er_ok;
-            
+
     } while (0);
 
     prx_host_release(process_host);

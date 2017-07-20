@@ -49,7 +49,7 @@ static int32_t io_queue_buffer_stream_writer(
     write = min(queue_buffer->length - queue_buffer->write_offset, len);
     if (write > 0)
     {
-        memcpy(io_queue_buffer_to_ptr(queue_buffer) + 
+        memcpy(io_queue_buffer_to_ptr(queue_buffer) +
             queue_buffer->write_offset, buf, write);
         queue_buffer->write_offset += write;
         dbg_assert_buf(queue_buffer);
@@ -77,7 +77,7 @@ static int32_t io_queue_buffer_stream_reader(
     *read = min(available, len);
     if (*read > 0)
     {
-        memcpy(buf, io_queue_buffer_to_ptr(queue_buffer) + 
+        memcpy(buf, io_queue_buffer_to_ptr(queue_buffer) +
             queue_buffer->read_offset, *read);
         queue_buffer->read_offset += *read;
         dbg_assert_buf(queue_buffer);
@@ -197,7 +197,7 @@ static io_queue_buffer_t* io_queue_state_pop(
 {
     io_queue_buffer_t* queue_buffer = NULL;
     dbg_assert_ptr(queue);
-    
+
     lock_enter(queue->queue_lock);
     if (!DList_IsListEmpty(list))
     {
@@ -230,7 +230,7 @@ static void io_queue_state_release_no_lock(
 }
 
 //
-// Remove and free all queue_buffers 
+// Remove and free all queue_buffers
 //
 void io_queue_release_all_buffers(
     io_queue_t* queue
@@ -413,7 +413,7 @@ void io_queue_buffer_set_done(
 }
 
 //
-// Frees a queue that was allocated 
+// Frees a queue that was allocated
 //
 void io_queue_free(
     io_queue_t* queue
@@ -427,14 +427,14 @@ void io_queue_free(
         io_queue_release_all_buffers(queue);
         lock_free(queue->queue_lock);
     }
-    
+
     if (queue->factory)
         prx_buffer_factory_free(queue->factory);
 
     mem_free_type(io_queue_t, queue);
 }
 
-// 
+//
 // Helper to allocate a queue of payload buffers
 //
 int32_t io_queue_create(
@@ -448,7 +448,7 @@ int32_t io_queue_create(
     chk_arg_fault_return(created);
 
     queue = mem_zalloc_type(io_queue_t);
-    if (!queue) 
+    if (!queue)
         return er_out_of_memory;
     do
     {
@@ -552,7 +552,7 @@ void io_queue_rollback(
     lock_enter(queue->queue_lock);
     DList_AppendTailList(queue->ready.Flink, &queue->inprogress);
     DList_RemoveEntryList(&queue->inprogress);
-    DList_InitializeListHead(&queue->inprogress); 
+    DList_InitializeListHead(&queue->inprogress);
     lock_exit(queue->queue_lock);
 }
 

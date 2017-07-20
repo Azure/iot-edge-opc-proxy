@@ -52,7 +52,7 @@ void xio_socket_free(
 )
 {
     dbg_assert_ptr(sk);
-    
+
     sk->destroy = true;
     if (!sk->closed)
     {
@@ -90,7 +90,7 @@ static void xio_socket_deliver_open_result(
         sk->recv_enabled = true;
         sk->on_io_open_complete(sk->on_io_open_complete_context,
             sk->last_error != er_ok ? IO_OPEN_ERROR : IO_OPEN_OK);
-        
+
         // Start receiving and sending...
         pal_socket_can_recv(sk->sock, true);
         pal_socket_can_send(sk->sock, true);
@@ -142,7 +142,7 @@ static void xio_socket_deliver_inbound_results(
 }
 
 //
-// Scheduler task that delivers all send results 
+// Scheduler task that delivers all send results
 //
 static void xio_socket_deliver_outbound_results(
     xio_socket_t* sk
@@ -366,7 +366,7 @@ static void xio_socket_on_end_send(
         return;
     }
 
-    dbg_assert(buffer->write_offset == *length || result != er_ok, 
+    dbg_assert(buffer->write_offset == *length || result != er_ok,
         "Not all sent (%zu != %zu)", buffer->write_offset, *length);
 
     if (buffer->cb_ptr && !sk->closed)
@@ -374,7 +374,7 @@ static void xio_socket_on_end_send(
         // Set done and deliver
         buffer->code = result;
         buffer->read_offset = *length;
-        
+
         io_queue_buffer_set_done(buffer);
         __do_next(sk, xio_socket_deliver_outbound_results);
     }
@@ -386,15 +386,15 @@ static void xio_socket_on_end_send(
 }
 
 //
-// Pal event callback 
+// Pal event callback
 //
 static void xio_socket_event_handler(
     void* context,
     pal_socket_event_t ev,
     uint8_t** buffer,
     size_t* size,
-    prx_socket_address_t* addr,  
-    int32_t* flags,           
+    prx_socket_address_t* addr,
+    int32_t* flags,
     int32_t error,
     void** op_context
 )
@@ -465,7 +465,7 @@ static int32_t xio_socket_send(
     io_queue_buffer_set_ready(buffer);
 
     pal_socket_can_send(sk->sock, true);
-    
+
     if (sk->recv_enabled)
     {
         pal_socket_can_recv(sk->sock, true);
@@ -572,7 +572,7 @@ static void xio_socket_destroy(
         xio_socket_free(sk);
         return;
     }
- 
+
     // Stop any queued actions to ensure controlled free
     if (sk->scheduler)
         prx_scheduler_clear(sk->scheduler, NULL, sk);
@@ -613,7 +613,7 @@ CONCRETE_IO_HANDLE xio_socket_create(
         client.props.sock_type = prx_socket_type_stream;
         client.props.proto_type = prx_protocol_type_tcp;
 
-        strncpy(client.props.address.un.proxy.host_fix, config->hostname, 
+        strncpy(client.props.address.un.proxy.host_fix, config->hostname,
             sizeof(client.props.address.un.proxy.host_fix));
         client.props.address.un.proxy.family = prx_address_family_proxy;
         client.props.address.un.proxy.port = (int16_t)config->port;
@@ -665,7 +665,7 @@ static OPTIONHANDLER_HANDLE xio_socket_retrieve_option(
 //
 int xio_socket_setoption(
     CONCRETE_IO_HANDLE handle,
-    const char* option_name, 
+    const char* option_name,
     const void* buffer
 )
 {

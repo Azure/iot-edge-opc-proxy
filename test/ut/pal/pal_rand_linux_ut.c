@@ -15,7 +15,7 @@
 MOCKABLE_FUNCTION(, int*, errno_mock);
 #define errno (*errno_mock())
 
-MOCKABLE_FUNCTION(, long, syscall, 
+MOCKABLE_FUNCTION(, long, syscall,
     long, number, void*, buf, size_t, buflen, unsigned int, flags);
 
 //
@@ -38,55 +38,55 @@ END_DECLARE_TEST_SUITE()
 DECLARE_TEST_SETUP()
 
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_linux_rand_fill__success_1)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM, 100, 0))
         .SetReturn(100);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_linux_rand_fill__success_2)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM, 100, 0))
         .SetReturn(40);
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM + 40, 60, 0))
         .SetReturn(60);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_linux_rand_fill__success_3)
 {
     static int errno_intr = EINTR;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM, 100, 0))
         .SetReturn(-1);
     STRICT_EXPECTED_CALL(errno_mock())
@@ -94,23 +94,23 @@ TEST_FUNCTION(pal_linux_rand_fill__success_3)
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM, 100, 0))
         .SetReturn(100);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_linux_rand_fill__success_4)
 {
     static int errno_again = EAGAIN;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM, 100, 0))
         .SetReturn(-1);
     STRICT_EXPECTED_CALL(errno_mock())
@@ -120,23 +120,23 @@ TEST_FUNCTION(pal_linux_rand_fill__success_4)
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, UT_MEM + 40, 60, 0))
         .SetReturn(60);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
+//
 // Test pal_rand_fill passing as buf argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_linux_rand_fill__arg_buf_null)
 {
     static int errno_valid = EFAULT;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(syscall(SYS_getrandom, NULL, 100, 0))
         .SetReturn(-1);
     STRICT_EXPECTED_CALL(errno_mock())
@@ -144,37 +144,37 @@ TEST_FUNCTION(pal_linux_rand_fill__arg_buf_null)
     STRICT_EXPECTED_CALL(pal_os_to_prx_error(EFAULT))
         .SetReturn(er_fault);
 
-    // act 
+    // act
     result = pal_rand_fill(NULL, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_rand_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_linux_rand_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_rand_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_rand_init happy path 
-// 
+//
+// Test pal_rand_init happy path
+//
 TEST_FUNCTION(pal_linux_rand_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_rand_init();
 
     ASSERT_EXPECTED_CALLS();

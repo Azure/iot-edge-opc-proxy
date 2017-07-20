@@ -137,15 +137,14 @@ Options:
      -h      Prints out this help.
 
 Operations (Mutually exclusive):
-    --all    Do async and sync tests (default).
-     -s 
-    --sync   
-             Run sync tests
-     -a
-    --async  Run async tests
-     -p 
-    --perf 
-             Run performance tests.
+    --all
+             Run async and sync tests (default).
+    --sync
+     -s      Run sync tests
+    --async
+     -a      Run async tests
+    --perf
+     -p      Run performance tests.
 "
                     );
                 return;
@@ -159,10 +158,10 @@ Operations (Mutually exclusive):
                 Console.Clear();
                 try {
                     if (bypass) {
-                        PerfLoopComparedAsync(bufferSize).Wait();
+                        PerfLoopComparedAsync(bufferSize, CancellationToken.None).Wait();
                     }
                     else {
-                        PerfLoopAsync(bufferSize).Wait();
+                        PerfLoopAsync(bufferSize, CancellationToken.None).Wait();
                     }
                 }
                 catch (Exception e) {
@@ -288,7 +287,7 @@ Operations (Mutually exclusive):
             Console.Out.WriteLine($"EchoLoopAsync #{index}.  Done!");
         }
 
-        public static async Task PerfLoopAsync(int bufferSize) {
+        public static async Task PerfLoopAsync(int bufferSize, CancellationToken ct) {
             int port = 5000;
             var cts = new CancellationTokenSource();
             var server = PerfEchoServer(port, cts.Token);
@@ -300,7 +299,7 @@ Operations (Mutually exclusive):
                     _rand.NextBytes(buffer);
                     long _received = 0;
                     Stopwatch _receivedw = Stopwatch.StartNew();
-                    for (int i = 0; ; i++) {
+                    for (int i = 0; !ct.IsCancellationRequested; i++) {
                         _received += await EchoLoopAsync2(client.GetStream(), buffer);
                         Console.CursorLeft = 0; Console.CursorTop = 0;
                         Console.Out.WriteLine($"{i} { (_received / _receivedw.ElapsedMilliseconds) } kB/sec");
@@ -313,7 +312,7 @@ Operations (Mutually exclusive):
             }
         }
 
-        public static async Task PerfLoopComparedAsync(int bufferSize) {
+        public static async Task PerfLoopComparedAsync(int bufferSize, CancellationToken ct) {
             int port = 5000;
             var cts = new CancellationTokenSource();
             var server = PerfEchoServer(port, cts.Token);
@@ -325,7 +324,7 @@ Operations (Mutually exclusive):
                     _rand.NextBytes(buffer);
                     long _received = 0;
                     Stopwatch _receivedw = Stopwatch.StartNew();
-                    for (int i = 0; ; i++) {
+                    for (int i = 0; !ct.IsCancellationRequested; i++) {
                         _received += await EchoLoopAsync2(client.GetStream(), buffer);
                         Console.CursorLeft = 0; Console.CursorTop = 0;
                         Console.Out.WriteLine($"{i} { (_received / _receivedw.ElapsedMilliseconds) } kB/sec");

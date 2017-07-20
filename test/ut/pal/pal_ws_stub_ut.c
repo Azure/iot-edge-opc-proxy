@@ -33,9 +33,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_wsclient_create happy path 
-// 
+//
+// Test pal_wsclient_create happy path
+//
 TEST_FUNCTION(pal_stub_wsclient_create__neg)
 {
     static const char* k_protocol_name_valid = "rpotadf";
@@ -46,10 +46,10 @@ TEST_FUNCTION(pal_stub_wsclient_create__neg)
     pal_wsclient_t* wsclient_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
-    result = pal_wsclient_create(k_protocol_name_valid, k_host_valid, 
+    // act
+    result = pal_wsclient_create(k_protocol_name_valid, k_host_valid,
         k_port_valid, k_path_valid, true, pal_wsclient_event_handler_mock, k_callback_context_valid, &wsclient_valid);
 
     // assert
@@ -57,28 +57,28 @@ TEST_FUNCTION(pal_stub_wsclient_create__neg)
     ASSERT_ARE_EQUAL(int32_t, er_not_supported, result);
 }
 
-// 
-// Test pal_wsclient_deinit happy path 
-// 
+//
+// Test pal_wsclient_deinit happy path
+//
 TEST_FUNCTION(pal_win_wsclient_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_wsclient_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_wsclient_init happy path 
-// 
+//
+// Test pal_wsclient_init happy path
+//
 TEST_FUNCTION(pal_win_wsclient_init__success)
 {
     int32_t result;
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_wsclient_init();
 
     ASSERT_EXPECTED_CALLS();

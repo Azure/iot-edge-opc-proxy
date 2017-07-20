@@ -8,7 +8,7 @@
 #include "prx_types.h"
 
 //
-// Platform specific websocket client 
+// Platform specific websocket client
 //
 typedef struct pal_wsclient pal_wsclient_t;
 
@@ -42,7 +42,7 @@ typedef enum pal_wsclient_buffer_type
 pal_wsclient_buffer_type_t;
 
 //
-// Called by when event on websocket occurred to service protocol  
+// Called by when event on websocket occurred to service protocol
 //
 typedef void (*pal_wsclient_event_handler_t)(
     void* context,

@@ -75,7 +75,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Returns id for type
         /// </summary>
-        /// <param name="content"></param>
+        /// <param name="type"></param>
+        /// <param name="isResponse"></param>
         /// <returns></returns>
         public static Type TypeOf(uint type, bool isResponse) {
             if (type == Ping)

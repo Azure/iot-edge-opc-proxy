@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new SocketException(
                     "Cannot double bind already bound socket. Use collection address.");
             }
-            _boundEndpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint)); 
+            _boundEndpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
 
             while (_boundEndpoint.Family == AddressFamily.Bound) {
                 // Unwrap bound address
@@ -70,12 +70,12 @@ namespace Microsoft.Azure.Devices.Proxy {
             throw new NotSupportedException("Cannot call connect on server socket");
         }
 
-        public override Task<int> SendAsync(ArraySegment<byte> buffer, SocketAddress endpoint, 
+        public override Task<int> SendAsync(ArraySegment<byte> buffer, SocketAddress endpoint,
             CancellationToken ct) {
             throw new NotSupportedException("Cannot call send on server socket");
         }
 
-        public override Task<ProxyAsyncResult> ReceiveAsync(ArraySegment<byte> buffer, 
+        public override Task<ProxyAsyncResult> ReceiveAsync(ArraySegment<byte> buffer,
             CancellationToken ct) {
             throw new NotSupportedException("Cannot call receive on server socket");
         }

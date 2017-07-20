@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
     /// <summary>
     /// Buffered Websocket stream. Wraps a Websocket and provides read and write
-    /// buffering through fragments and end messages.  Only Binary format is 
+    /// buffering through fragments and end messages.  Only Binary format is
     /// used.
     /// </summary>
     public class WebSocketStream : Stream {
@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Constructor
         /// </summary>
         /// <param name="websocket"></param>
-        public WebSocketStream(WebSocket websocket) : 
+        public WebSocketStream(WebSocket websocket) :
             this(websocket, DefaultBufferSize) { }
 
         /// <summary>
@@ -82,12 +82,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <param name="websocket"></param>
         public WebSocketStream(WebSocket websocket, int bufferSize) {
-            if (websocket == null)
-                throw new ArgumentNullException("websocket");
             if (bufferSize <= 0)
-                throw new ArgumentOutOfRangeException("bufferSize");
+                throw new ArgumentOutOfRangeException(nameof(bufferSize));
 
-            _websocket = websocket;
+            _websocket = websocket ?? throw new ArgumentNullException(nameof(websocket));
             _bufferSize = bufferSize;
 
             _readbuffer = new byte[_bufferSize];
@@ -169,7 +167,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 while (!_readEnd) {
                     // Read until we hit the end
                     var result = await _websocket.ReceiveAsync(
-                        new ArraySegment<byte>(_readbuffer, 0, _bufferSize), 
+                        new ArraySegment<byte>(_readbuffer, 0, _bufferSize),
                             ct).ConfigureAwait(false);
                     _readEnd = result.EndOfMessage;
                     _readPos = _readLen = 0;
@@ -183,23 +181,23 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Read from buffer
         /// </summary>
-        /// <param name="array"></param>
+        /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        public override int Read(byte[] array, int offset, int count) {
-            if (array == null)
-                throw new ArgumentNullException("array");
+        public override int Read(byte[] buffer, int offset, int count) {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
-            if (array.Length - offset < count)
+                throw new ArgumentOutOfRangeException(nameof(count));
+            if (buffer.Length - offset < count)
                 throw new ArgumentException("invalid offset and length");
             if (IsClosed)
                 throw new IOException("Stream closed");
 
-            int readByNow = ReadBuffer(array, offset, count);
+            int readByNow = ReadBuffer(buffer, offset, count);
             if (readByNow == count)
                 return readByNow;
             else if (_readEnd) {
@@ -219,7 +217,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             _readLen = result.Count;
             _readEnd = result.EndOfMessage;
             _readPos = 0;
-            return ReadBuffer(array, offset, count) + readByNow;
+            return ReadBuffer(buffer, offset, count) + readByNow;
         }
 
         /// <summary>
@@ -253,11 +251,11 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public override Task<int> ReadAsync(byte[] buffer, int offset,
             int count, CancellationToken ct) {
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             if (buffer.Length - offset < count)
                 throw new ArgumentException("invalid offset and length");
 
@@ -267,7 +265,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 throw new IOException("Stream closed");
 
             int readByNow = 0;
-            // lock to avoid race with other async tasks 
+            // lock to avoid race with other async tasks
             Task semaphoreLockTask = _asyncRead.WaitAsync();
             if (semaphoreLockTask.Status == TaskStatus.RanToCompletion) {
                 bool completeSynchronously = true;
@@ -278,7 +276,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     if (completeSynchronously) {
                         if (ex == null) {
                             //
-                            // Speed up sync reads by caching last read task 
+                            // Speed up sync reads by caching last read task
                             // if it has the same value as previous read task
                             //
                             Task<int> t = _lastRead;
@@ -301,7 +299,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
             }
             // Delegate to the async implementation.
-            return ReadAsync(buffer, offset + readByNow, count - readByNow, ct, 
+            return ReadAsync(buffer, offset + readByNow, count - readByNow, ct,
                 readByNow, semaphoreLockTask);
         }
 
@@ -334,7 +332,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
                 // Ok. We can fill the buffer:
                 var result = await _websocket.ReceiveAsync(
-                    new ArraySegment<byte>(_readbuffer, 0, _bufferSize), 
+                    new ArraySegment<byte>(_readbuffer, 0, _bufferSize),
                         ct).ConfigureAwait(false);
                 _readLen = result.Count;
                 _readEnd = result.EndOfMessage;
@@ -390,29 +388,29 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Write array to stream
         /// </summary>
-        /// <param name="array"></param>
+        /// <param name="buffer"></param>
         /// <param name="offset"></param>
         /// <param name="count"></param>
-        public override void Write(byte[] array, int offset, int count) {
+        public override void Write(byte[] buffer, int offset, int count) {
 
-            if (array == null)
-                throw new ArgumentNullException("array");
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
-            if (array.Length - offset < count)
+                throw new ArgumentOutOfRangeException(nameof(count));
+            if (buffer.Length - offset < count)
                 throw new ArgumentException("Invalid offset and length");
             if (IsClosed)
                 throw new IOException("Stream closed");
             // Fill buffer, if full, write fragment...
-            while (true) { 
-                WriteBuffer(array, ref offset, ref count);
+            while (true) {
+                WriteBuffer(buffer, ref offset, ref count);
                 if (_writePos < _bufferSize) {
                     return;
                 }
                 // Write out fragment
-                _websocket.SendAsync(new ArraySegment<byte>(_writebuffer, 0, _writePos), 
+                _websocket.SendAsync(new ArraySegment<byte>(_writebuffer, 0, _writePos),
                     WebSocketMessageType.Binary, false,  CancellationToken.None).Wait();
                 _writePos = 0;
             }
@@ -442,14 +440,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="count"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override Task WriteAsync(byte[] buffer, int offset, int count, 
+        public override Task WriteAsync(byte[] buffer, int offset, int count,
             CancellationToken ct) {
             if (buffer == null)
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             if (offset < 0)
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0)
-                throw new ArgumentOutOfRangeException("count");
+                throw new ArgumentOutOfRangeException(nameof(count));
             if (buffer.Length - offset < count)
                 throw new ArgumentException("Invalid offset and length");
             if (ct.IsCancellationRequested)
@@ -466,7 +464,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     if (synchronous) {
                         Exception ex;
                         TryWriteBuffer(buffer, ref offset, ref count, out ex);
-                        if (ex == null) { 
+                        if (ex == null) {
                             return Task.CompletedTask;
                         }
                         return Task.FromException(ex);
@@ -581,7 +579,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         private int _writePos;
         private bool _needsFlush;
         private Task<int> _lastRead;
-
     }
 }
 

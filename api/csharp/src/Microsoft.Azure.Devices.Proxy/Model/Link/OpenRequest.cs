@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="isPolled"></param>
         /// <param name="maxReceiveBuffer"></param>
         /// <returns></returns>
-        public static OpenRequest Create(Reference streamId, int encoding, 
+        public static OpenRequest Create(Reference streamId, int encoding,
             string connectionString, int type, bool isPolled, uint maxReceiveBuffer = 0) {
             var request = Get();
             request.StreamId = streamId;
@@ -83,7 +83,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             return request;
         }
 
-        public IMessageContent Clone() => 
+        public IMessageContent Clone() =>
             Create(StreamId, Encoding, ConnectionString, Type, IsPolled, MaxReceiveBuffer);
 
         public override bool IsEqual(OpenRequest that) {

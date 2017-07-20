@@ -14,7 +14,7 @@ namespace System.Threading.Tasks {
         /// <param name="task">Task<T> method to execute</param>
         public static void Run(Func<Task> task) =>
             Task.Run(task).GetAwaiter().GetResult();
-        
+
 
         /// <summary>
         /// Execute's an async Task<T> method which has a T return type synchronously

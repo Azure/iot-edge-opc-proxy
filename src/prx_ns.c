@@ -202,7 +202,7 @@ int32_t prx_ns_generic_resultset_create(
 }
 
 //
-// Get a clone of the entry connection string 
+// Get a clone of the entry connection string
 //
 static int32_t prx_ns_generic_entry_get_cs(
     prx_ns_generic_entry_t* entry,
@@ -309,7 +309,7 @@ static int32_t prx_ns_generic_entry_clone(
     prx_ns_generic_entry_t *created;
     dbg_assert_ptr(entry);
 
-    result = prx_ns_generic_entry_create(entry->type, &entry->id, entry->name ? 
+    result = prx_ns_generic_entry_create(entry->type, &entry->id, entry->name ?
         STRING_c_str(entry->name) : NULL, entry->version, entry->cs, &created);
     if (result != er_ok)
         return result;
@@ -344,7 +344,7 @@ static int32_t prx_ns_generic_entry_get_links(
         prx_ns_generic_resultset_add(links, (prx_ns_generic_entry_t*)clone->context);
         *created = &links->itf;
         return er_ok;
-    } 
+    }
     while (0);
     prx_ns_generic_resultset_free(links);
     return result;
@@ -401,7 +401,7 @@ static int32_t prx_ns_generic_entry_create(
         }
 
         if (name)
-        { 
+        {
             entry->name = STRING_construct(name);
             if (!entry->name)
             {
@@ -460,7 +460,7 @@ static int32_t prx_ns_generic_entry_encode(
 
     if (io_codec_json == io_codec_ctx_get_codec_id(ctx))
     {
-        __io_encode_type_begin(ctx, entry, 
+        __io_encode_type_begin(ctx, entry,
             entry->type != prx_ns_entry_type_gw ? 5 : 4);
 
         __io_encode_value(ctx, STRING_HANDLE, entry, name);
@@ -779,7 +779,7 @@ static int32_t prx_ns_generic_registry_entry_create(
         if (type & prx_ns_entry_type_proxy)
             type |= prx_ns_entry_type_gw;
 
-        result = prx_ns_generic_entry_create(type, &id, prx_ns_entry_get_name(entry), 
+        result = prx_ns_generic_entry_create(type, &id, prx_ns_entry_get_name(entry),
             prx_ns_entry_get_version(entry), cs, &next);
         if (result != er_ok)
             break;
@@ -834,7 +834,7 @@ static int32_t prx_ns_generic_registry_entry_update(
         result = prx_ns_entry_get_cs(entry, &cs);
         if (result != er_ok)
             break;
-        result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &id, 
+        result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &id,
             prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry), cs, &update);
         if (result != er_ok)
             break;
@@ -1076,7 +1076,7 @@ static int32_t prx_ns_iot_hub_rest_call_configure_proxy(
     proxy_options.username = __prx_config_get(prx_config_key_proxy_user, NULL);
     proxy_options.password = __prx_config_get(prx_config_key_proxy_pwd, NULL);
 
-    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY, 
+    if (HTTPAPIEX_OK != HTTPAPIEX_SetOption(http_handle, OPTION_HTTP_PROXY,
         &proxy_options))
     {
         log_trace(NULL, "Failed to configure proxy settings using httpapi option."
@@ -1206,7 +1206,7 @@ static int32_t prx_ns_iot_hub_rest_call(
             }
             result = er_ok;
             break;
-        } 
+        }
         while (0);
 
         if (token)
@@ -1228,11 +1228,11 @@ static int32_t prx_ns_iot_hub_rest_call(
 
         if (result != er_ok || *status_code != 429)
             break; // Done...
-        
+
         // Auto retry 429...
         log_info(NULL, "Retrying REST request (attempt: %d) ....", retry + 1);
     }
-    
+
     return result;
 }
 
@@ -1266,7 +1266,7 @@ static int32_t prx_ns_iot_hub_twin_entry_get_cs(
         if (!uri || STRING_concat(uri, prx_ns_entry_get_id(&entry->itf)))
             break;
 
-        result = prx_ns_iot_hub_rest_call(entry->registry->hub_entry->cs, 
+        result = prx_ns_iot_hub_rest_call(entry->registry->hub_entry->cs,
             HTTPAPI_REQUEST_GET, false, STRING_c_str(uri), NULL, NULL,
             response, NULL, &status_code);
         if (result != er_ok)
@@ -1299,7 +1299,7 @@ static int32_t prx_ns_iot_hub_twin_entry_get_cs(
         if (!key)
             break;
 
-        result = io_cs_create(io_cs_get_host_name(entry->registry->hub_entry->cs), 
+        result = io_cs_create(io_cs_get_host_name(entry->registry->hub_entry->cs),
             prx_ns_entry_get_id(&entry->itf), NULL, key, created);
     } while (0);
 
@@ -1416,7 +1416,7 @@ static int32_t prx_ns_iot_hub_twin_entry_get_links(
     prx_ns_generic_resultset_t* links;
     prx_ns_entry_t* clone;
 
-    if (0 == (prx_ns_iot_hub_twin_entry_get_type(entry) & 
+    if (0 == (prx_ns_iot_hub_twin_entry_get_type(entry) &
         (prx_ns_entry_type_proxy | prx_ns_entry_type_host)))
         return er_not_found;
 
@@ -1429,14 +1429,14 @@ static int32_t prx_ns_iot_hub_twin_entry_get_links(
         if (result != er_ok)
             break;
         // Set the entries device id
-        result = io_cs_set_device_id(((prx_ns_generic_entry_t*)clone->context)->cs, 
+        result = io_cs_set_device_id(((prx_ns_generic_entry_t*)clone->context)->cs,
             prx_ns_iot_hub_twin_entry_get_id(entry));
         if (result != er_ok)
             break;
         prx_ns_generic_resultset_add(links, (prx_ns_generic_entry_t*)clone->context);
         *created = &links->itf;
         return er_ok;
-    } 
+    }
     while (0);
     prx_ns_generic_resultset_free(links);
     return result;
@@ -1624,7 +1624,7 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
             break;
 
         type = prx_ns_entry_get_type(entry);
-        if (0 != json_object_dotset_number(obj, "tags.type", 
+        if (0 != json_object_dotset_number(obj, "tags.type",
                 (type & ~prx_ns_entry_type_startup)))
             break;
 
@@ -1657,10 +1657,10 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
 
         // Patch existing document
         if (0 != BUFFER_enlarge(request, json_serialization_size(json) + 1) ||
-            0 != json_serialize_to_buffer(json, (char*)BUFFER_u_char(request), 
+            0 != json_serialize_to_buffer(json, (char*)BUFFER_u_char(request),
                 BUFFER_length(request)))
             break;
-        result = prx_ns_iot_hub_rest_call(registry->hub_entry->cs, HTTPAPI_REQUEST_PATCH, 
+        result = prx_ns_iot_hub_rest_call(registry->hub_entry->cs, HTTPAPI_REQUEST_PATCH,
             "*", STRING_c_str(uri), request, NULL, NULL, NULL, &status_code);
         if (result != er_ok)
             break;
@@ -1710,11 +1710,11 @@ static int32_t prx_ns_iot_hub_registry_entry_create(
         if (!json)
             break;
         obj = json_value_get_object(json);
-        if (!obj || 
+        if (!obj ||
             0 != json_object_set_string(obj, "deviceId", prx_ns_entry_get_id(entry)))
             break;
         if (0 != BUFFER_enlarge(request, json_serialization_size(json) + 1) ||
-            0 != json_serialize_to_buffer(json, 
+            0 != json_serialize_to_buffer(json,
                 (char*)BUFFER_u_char(request), BUFFER_length(request)))
             break;
         result = prx_ns_iot_hub_rest_call(registry->hub_entry->cs, HTTPAPI_REQUEST_PUT,
@@ -1788,7 +1788,7 @@ static int32_t prx_ns_iot_hub_registry_entry_query(
                     "\" }"))
                 break;
 
-            if (continuation && 0 != HTTPHeaders_AddHeaderNameValuePair(request_headers, 
+            if (continuation && 0 != HTTPHeaders_AddHeaderNameValuePair(request_headers,
                 CONTINUATION_KEY, continuation))
                 break;
 
@@ -1832,7 +1832,7 @@ static int32_t prx_ns_iot_hub_registry_entry_query(
             if (!query_result)
                 break;
 
-            // Add items to list 
+            // Add items to list
             result = er_not_found;
             for (size_t i = 0; i < json_array_get_count(query_result); i++)
             {
@@ -1925,7 +1925,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_addr(
 
         *created = prx_ns_generic_resultset_pop(results);
         break;
-    } 
+    }
     while (0);
 
     if (results)
@@ -1972,7 +1972,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_name(
 
         *created = &results->itf;
         break;
-    } 
+    }
     while (0);
 
     STRING_delete(sql_query_string);
@@ -2022,7 +2022,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_type(
         if (type & prx_ns_entry_type_link)
         {
             if ((logic_concat &&
-                0 != STRING_concat(sql_query_string, " OR ")) || 
+                0 != STRING_concat(sql_query_string, " OR ")) ||
                 0 != STRING_concat(sql_query_string, "tags.link=1"))
                 break;
             logic_concat = true;
@@ -2042,7 +2042,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_type(
 
         *created = &results->itf;
         break;
-    } 
+    }
     while (0);
 
     STRING_delete(sql_query_string);
@@ -2209,7 +2209,7 @@ static int32_t prx_ns_iot_hub_composite_entry_by_name(
 
     if (!resultset)
         return result;
-    
+
     if (result != er_ok)
         prx_ns_generic_resultset_free(resultset);
     else
@@ -2247,7 +2247,7 @@ static int32_t prx_ns_iot_hub_composite_entry_by_type(
 
     if (!resultset)
         return result;
-    
+
     if (result != er_ok)
         prx_ns_generic_resultset_free(resultset);
     else
@@ -2306,7 +2306,7 @@ static int32_t prx_ns_iot_hub_composite_decode(
             io_cs_free(cs);
             if (result != er_ok)
                 break;
-            DList_InsertTailList(&registry->hubs, 
+            DList_InsertTailList(&registry->hubs,
                 &((prx_ns_iot_hub_registry_t*)next->context)->link);
         }
         if (result != er_ok)
@@ -2559,7 +2559,7 @@ int32_t prx_ns_entry_to_prx_socket_address(
         dbg_assert_ptr(name);
         if (family == prx_address_family_proxy)
         {
-            dbg_assert(!socket_address->un.proxy.host_dyn, 
+            dbg_assert(!socket_address->un.proxy.host_dyn,
                 "host_dyn should be null");
             socket_address->un.proxy.host_dyn = NULL;
             name = strncpy(socket_address->un.proxy.host_fix, name,
@@ -2602,7 +2602,7 @@ int32_t prx_ns_entry_create_from_cs(
 {
     int32_t result;
     prx_ns_generic_entry_t* entry;
-        
+
     chk_arg_fault_return(cs);
     chk_arg_fault_return(created);
 
@@ -2615,7 +2615,7 @@ int32_t prx_ns_entry_create_from_cs(
 }
 
 //
-// Create in memory entry 
+// Create in memory entry
 //
 int32_t prx_ns_entry_create(
     uint32_t type,
@@ -2682,7 +2682,7 @@ int32_t prx_ns_entry_create_from_string(
         *entry = &generic_entry->itf;
         generic_entry = NULL;
         break;
-    } 
+    }
     while (0);
 
     (void)io_codec_ctx_fini(&ctx, codec_stream, false);
@@ -2725,7 +2725,7 @@ int32_t prx_ns_entry_to_STRING(
         if (result != er_ok)
             break;
         result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &addr,
-            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry), 
+            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry),
             cs, &generic_entry);
         if (result != er_ok)
             break;
@@ -2753,7 +2753,7 @@ int32_t prx_ns_entry_to_STRING(
             break;
         }
         break;
-    } 
+    }
     while (0);
 
     if (cs)

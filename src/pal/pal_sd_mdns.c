@@ -166,15 +166,15 @@ static void pal_sdclient_release(
 // Callback
 //
 static void DNSSD_API pal_sdbrowser_resolve_reply(
-    DNSServiceRef ref, 
-    const DNSServiceFlags flags, 
+    DNSServiceRef ref,
+    const DNSServiceFlags flags,
     uint32_t itf_index,
     DNSServiceErrorType error,
-    const char *fullname, 
-    const char *host, 
-    uint16_t port, 
-    uint16_t txt_len, 
-    const unsigned char *txt, 
+    const char *fullname,
+    const char *host,
+    uint16_t port,
+    uint16_t txt_len,
+    const unsigned char *txt,
     void *context
 )
 {
@@ -233,9 +233,9 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
             txt_ptr = txt;
             for (size_t i = 0; i < resolve_result.records_len; i++)
             {
-                resolve_result.records[i].type = 
+                resolve_result.records[i].type =
                     prx_record_type_txt;
-                resolve_result.records[i].property.bin.size = 
+                resolve_result.records[i].property.bin.size =
                     (size_t)txt_ptr[0];
                 resolve_result.records[i].property.bin.value =
                     (uint8_t*)txt_ptr + 1;
@@ -247,7 +247,7 @@ static void DNSSD_API pal_sdbrowser_resolve_reply(
     }
 
     result = browser->cb(browser->context, (int32_t)itf_index,
-        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_entry, 
+        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_entry,
         &resolve_result, pal_sd_mdns_flag_to_pal_flags(flags | kDNSServiceFlagsAdd));
     if (result != er_ok)
     {
@@ -289,9 +289,9 @@ static int32_t pal_sdbrowser_resolve_service(
     if (browser->ref)
         DNSServiceRefDeallocate(browser->ref);
     browser->ref = browser->client->ref;
-    error = DNSServiceResolve(&browser->ref, kDNSServiceFlagsShareConnection, 
-        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny : 
-        (uint32_t)itf_index, service_name, service_type, domain, 
+    error = DNSServiceResolve(&browser->ref, kDNSServiceFlagsShareConnection,
+        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
+        (uint32_t)itf_index, service_name, service_type, domain,
         pal_sdbrowser_resolve_reply, browser);
     if (!error)
         return er_ok;
@@ -330,8 +330,8 @@ static void DNSSD_API pal_sdbrowser_enumerate_services_reply(
     browse_result.service_name = service_name;
     browse_result.service_type = service_type;
 
-    result = browser->cb(browser->context, (int32_t)itf_index, 
-        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_service, 
+    result = browser->cb(browser->context, (int32_t)itf_index,
+        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_service,
         &browse_result, pal_sd_mdns_flag_to_pal_flags(flags));
     if (result != er_ok)
     {
@@ -365,8 +365,8 @@ static int32_t pal_sdbrowser_enumerate_services(
     if (browser->ref)
         DNSServiceRefDeallocate(browser->ref);
     browser->ref = browser->client->ref;
-    error = DNSServiceBrowse(&browser->ref, kDNSServiceFlagsShareConnection, 
-        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny : 
+    error = DNSServiceBrowse(&browser->ref, kDNSServiceFlagsShareConnection,
+        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
         (uint32_t)itf_index, service_type, domain,
         pal_sdbrowser_enumerate_services_reply, browser);
     if (!error)
@@ -430,7 +430,7 @@ static void DNSSD_API pal_sdbrowser_enumerate_service_types_reply(
             strcat(buf, service_type);
             // Parse resulting string.
             result = string_parse_service_full_name(buf,
-                (char**)&browse_result.service_name, 
+                (char**)&browse_result.service_name,
                 (char**)&browse_result.service_type,
                 (char**)&browse_result.domain);
 
@@ -440,7 +440,7 @@ static void DNSSD_API pal_sdbrowser_enumerate_service_types_reply(
     }
 
     result = browser->cb(browser->context, (int32_t)itf_index,
-        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_type, 
+        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_type,
         &browse_result, pal_sd_mdns_flag_to_pal_flags(flags));
     if (result != er_ok)
     {
@@ -477,8 +477,8 @@ static int32_t pal_sdbrowser_enumerate_service_types(
         DNSServiceRefDeallocate(browser->ref);
     browser->ref = browser->client->ref;
     error = DNSServiceBrowse(&browser->ref, kDNSServiceFlagsShareConnection,
-        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny : 
-        (uint32_t)itf_index, "_services._dns-sd._udp", domain, 
+        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
+        (uint32_t)itf_index, "_services._dns-sd._udp", domain,
         pal_sdbrowser_enumerate_service_types_reply, browser);
     if (!error)
         return er_ok;
@@ -493,10 +493,10 @@ static int32_t pal_sdbrowser_enumerate_service_types(
 // Callback
 //
 static void DNSSD_API pal_sdbrowser_enumerate_domains_reply(
-    DNSServiceRef ref, 
-    const DNSServiceFlags flags, 
+    DNSServiceRef ref,
+    const DNSServiceFlags flags,
     uint32_t itf_index,
-    DNSServiceErrorType error, 
+    DNSServiceErrorType error,
     const char *domain,
     void *context
 )
@@ -516,7 +516,7 @@ static void DNSSD_API pal_sdbrowser_enumerate_domains_reply(
     browse_result.service_type = NULL;
 
     result = browser->cb(browser->context, (int32_t)itf_index,
-        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_domain, 
+        pal_sd_mdns_error_to_prx_error(error), pal_sd_result_domain,
         &browse_result, pal_sd_mdns_flag_to_pal_flags(flags));
     if (result != er_ok)
     {
@@ -548,8 +548,8 @@ static int32_t pal_sdbrowser_enumerate_domains(
         DNSServiceRefDeallocate(browser->ref);
     browser->ref = browser->client->ref;
     error = DNSServiceEnumerateDomains(&browser->ref,
-        kDNSServiceFlagsShareConnection | kDNSServiceFlagsBrowseDomains, 
-        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny : 
+        kDNSServiceFlagsShareConnection | kDNSServiceFlagsBrowseDomains,
+        itf_index == prx_itf_index_all ? kDNSServiceInterfaceIndexAny :
         (uint32_t)itf_index, pal_sdbrowser_enumerate_domains_reply, browser);
     if (!error)
         return er_ok;
@@ -595,7 +595,7 @@ static void pal_sdclient_on_error(
 //
 static int32_t pal_sdclient_socket_callback(
     void* context,
-    pal_event_type event_type,
+    pal_event_type_t event_type,
     int32_t error_code
 )
 {
@@ -894,7 +894,7 @@ void pal_sdclient_free(
 
     client->cb = NULL;
     client->context = NULL;
-    
+
     pal_sdclient_release(client);
 }
 

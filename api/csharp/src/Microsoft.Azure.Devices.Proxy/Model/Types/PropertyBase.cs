@@ -6,7 +6,7 @@
 namespace Microsoft.Azure.Devices.Proxy {
 
     /// <summary>
-    /// Property interface - wrapper for serveral property types, 
+    /// Property interface - wrapper for serveral property types,
     /// including socket option values and dns records. Describes
     /// properties of a remote item (e.g. socket, file, etc.)
     /// </summary>

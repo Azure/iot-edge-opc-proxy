@@ -46,9 +46,16 @@ namespace Microsoft.Azure.Devices.Proxy {
         IEnumerable<Reference> References {
             get;
         }
-        
+
         /// <summary>
-        /// Add a address to another record 
+        /// Time the item behind the record had activity
+        /// </summary>
+        DateTime LastActivity {
+            get; set;
+        }
+
+        /// <summary>
+        /// Add a address to another record
         /// </summary>
         /// <param name="address"></param>
         void AddReference(Reference address);

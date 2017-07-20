@@ -57,11 +57,11 @@ static int32_t io_cs_validate_host_name(
     end = strchr(host_name, '.');
     if (!end)
         return er_invalid_format;
-    
+
     count = (size_t)(end - host_name);
     end++;
 
-    // Hub name must be between 3-50 chars long 
+    // Hub name must be between 3-50 chars long
     if (count < 3 || count > 50)
         return er_invalid_format;
 
@@ -193,7 +193,7 @@ static int32_t io_cs_get_unique_key_name(
     io_cs_t* cs,
     STRING_HANDLE* created
 )
-{   
+{
     // The format is <policy>|device:<device>@<hostname>
     int32_t result;
     const char* id;
@@ -231,12 +231,12 @@ static int32_t io_cs_get_unique_key_name(
             (0 != STRING_concat(key_name, "@") ||
                 0 != STRING_concat(key_name, id)))
             break;
-        
+
         *created = key_name;
         return er_ok;
-    } 
+    }
     while (0);
-    
+
     STRING_delete(key_name);
     return result;
 }
@@ -265,7 +265,7 @@ static int32_t io_cs_import_key(
     if (result != er_ok)
         return result;
 
-    // base 64 decode the key then import into credential store  
+    // base 64 decode the key then import into credential store
     // TODO: see if we need utf8!
     do
     {
@@ -288,11 +288,11 @@ static int32_t io_cs_import_key(
         else // No need to keep it - it is a unique well known key-name
             STRING_delete(key_handle);
 
-        // Clear key value. 
+        // Clear key value.
         // memset((void*)STRING_c_str(key_val), 0, STRING_length(key_val));
         cs->entries[io_cs_entry_shared_access_key] = NULL;
         STRING_delete(key_val);
-    } 
+    }
     while (0);
     if (key)
         mem_free(key);
@@ -421,7 +421,7 @@ int32_t io_cs_append_to_STRING(
 
     chk_arg_fault_return(cs);
     chk_arg_fault_return(c_string);
-    
+
     result = io_cs_append_entry_to_STRING(
         cs, io_cs_entry_host_name, "HostName=", c_string);
     if (result != er_ok)
@@ -581,7 +581,7 @@ int32_t io_cs_create_from_raw_file(
         string_trim_back(buf, "\r\n ");
         result = io_cs_create_from_string(buf, created);
         break;
-    } 
+    }
     while (0);
     if (stream)
         io_stream_close(stream);
@@ -614,14 +614,14 @@ int32_t io_cs_create(
     do
     {
         result = er_out_of_memory;
-        cs->entries[io_cs_entry_host_name] = 
+        cs->entries[io_cs_entry_host_name] =
             STRING_construct(host_name);
         if (!cs->entries[io_cs_entry_host_name])
             break;
 
         if (device_id)
         {
-            cs->entries[io_cs_entry_device_id] = 
+            cs->entries[io_cs_entry_device_id] =
                 STRING_construct(device_id);
             if (!cs->entries[io_cs_entry_device_id])
                 break;
@@ -629,7 +629,7 @@ int32_t io_cs_create(
 
         if (shared_access_key_name)
         {
-            cs->entries[io_cs_entry_shared_access_key_name] = 
+            cs->entries[io_cs_entry_shared_access_key_name] =
                 STRING_construct(shared_access_key_name);
             if (!cs->entries[io_cs_entry_shared_access_key_name])
                 break;
@@ -681,7 +681,7 @@ int32_t io_cs_clone(
     {
         if (!orig->entries[i])
             continue;
-            
+
         cs->entries[i] = STRING_clone(orig->entries[i]);
         if (!cs->entries[i])
         {
@@ -745,7 +745,7 @@ const char* io_cs_get_host_name(
         return NULL;
     if (!cs->entries[io_cs_entry_host_name])
     {
-        val = io_cs_get_endpoint(cs);  
+        val = io_cs_get_endpoint(cs);
         if (!val)
             return NULL;
 
@@ -1041,7 +1041,7 @@ int32_t io_cs_create_token_provider(
     const char *val, *delim = "/";
     STRING_HANDLE scope = NULL;
     STRING_HANDLE key;
-  
+
     chk_arg_fault_return(cs);
     key = cs->entries[io_cs_entry_shared_access_token];
     if (key)
@@ -1096,7 +1096,7 @@ int32_t io_cs_create_token_provider(
             STRING_c_str(scope), provider);
         if (result != er_ok)
             break;
-    } 
+    }
     while (0);
 
     if (scope)

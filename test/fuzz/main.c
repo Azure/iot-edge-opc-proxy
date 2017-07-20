@@ -86,7 +86,7 @@ int32_t main(
         if (debug)
         {
             // Open each file one by one from input folder
-            result = pal_read_dir(input, 
+            result = pal_read_dir(input,
                 main_for_each, (void*)output);
         }
         else

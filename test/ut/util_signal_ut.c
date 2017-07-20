@@ -20,8 +20,8 @@
 // Helper to modify signal state to set during wait
 //
 static COND_RESULT Condition_Wait__set_hook(
-    COND_HANDLE handle, 
-    LOCK_HANDLE lock, 
+    COND_HANDLE handle,
+    LOCK_HANDLE lock,
     int timeout_milliseconds
 )
 {
@@ -63,9 +63,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test signal_create happy path 
-// 
+//
+// Test signal_create happy path
+//
 TEST_FUNCTION(signal_create__success)
 {
     static const bool k_manual_valid = true;
@@ -77,7 +77,7 @@ TEST_FUNCTION(signal_create__success)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(signal_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
@@ -86,10 +86,10 @@ TEST_FUNCTION(signal_create__success)
     STRICT_EXPECTED_CALL(Lock_Init())
         .SetReturn(k_lock_handle_valid);
 
-    // act 
+    // act
     result = signal_create(k_manual_valid, k_signalled_valid, &signal_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, (void*)signal_valid, (void*)UT_MEM);
     ASSERT_ARE_EQUAL(void_ptr, signal_valid->lock, k_lock_handle_valid);
@@ -99,9 +99,9 @@ TEST_FUNCTION(signal_create__success)
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_create unhappy path 
-// 
+//
+// Test signal_create unhappy path
+//
 TEST_FUNCTION(signal_create__neg)
 {
     static const bool k_manual_valid = false;
@@ -113,7 +113,7 @@ TEST_FUNCTION(signal_create__neg)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(h_realloc(sizeof(signal_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
@@ -126,21 +126,21 @@ TEST_FUNCTION(signal_create__neg)
         .SetReturn(k_lock_handle_valid)
         .SetFailReturn((LOCK_HANDLE)0);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         result = signal_create(k_manual_valid, k_signalled_valid, &signal_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory);
 }
 
-// 
-// Test signal_wait happy path 
-// 
+//
+// Test signal_wait happy path
+//
 TEST_FUNCTION(signal_wait__success_10000_ms)
 {
     const int32_t k_timeout_ms_valid = 10000;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x4321; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x4321;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t result;
@@ -153,7 +153,7 @@ TEST_FUNCTION(signal_wait__success_10000_ms)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__set_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)100);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -164,17 +164,17 @@ TEST_FUNCTION(signal_wait__success_10000_ms)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait(&signal_valid, k_timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait happy path 
-// 
+//
+// Test signal_wait happy path
+//
 TEST_FUNCTION(signal_wait__success_infinite_ms)
 {
     const int32_t k_timeout_ms_valid = -1;
@@ -191,7 +191,7 @@ TEST_FUNCTION(signal_wait__success_infinite_ms)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__set_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)2222);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -202,21 +202,21 @@ TEST_FUNCTION(signal_wait__success_infinite_ms)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait(&signal_valid, k_timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait happy path 
-// 
+//
+// Test signal_wait happy path
+//
 TEST_FUNCTION(signal_wait__success_0_ms)
 {
     const int32_t k_timeout_ms_valid = 0;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x8321; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x8321;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t result;
@@ -229,7 +229,7 @@ TEST_FUNCTION(signal_wait__success_0_ms)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__set_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)2222);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -240,21 +240,21 @@ TEST_FUNCTION(signal_wait__success_0_ms)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait(&signal_valid, k_timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait happy path 
-// 
+//
+// Test signal_wait happy path
+//
 TEST_FUNCTION(signal_wait__success_10_ms_timeout)
 {
     const int32_t k_timeout_ms_valid = 10;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1321;  
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1321;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t result;
@@ -267,7 +267,7 @@ TEST_FUNCTION(signal_wait__success_10_ms_timeout)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__clear_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)2222);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -279,38 +279,38 @@ TEST_FUNCTION(signal_wait__success_10_ms_timeout)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait(&signal_valid, k_timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_timeout, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait passing as signal argument an invalid signal_t* value 
-// 
+//
+// Test signal_wait passing as signal argument an invalid signal_t* value
+//
 TEST_FUNCTION(signal_wait__arg_signal_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = signal_wait(NULL, 1000);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait unhappy path 
-// 
+//
+// Test signal_wait unhappy path
+//
 TEST_FUNCTION(signal_wait__neg)
 {
     const int32_t k_timeout_ms_valid = 10;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x9999; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x9999;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t result;
@@ -323,7 +323,7 @@ TEST_FUNCTION(signal_wait__neg)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__set_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)2222)
@@ -339,21 +339,21 @@ TEST_FUNCTION(signal_wait__neg)
         .SetReturn(LOCK_OK)
         .SetFailReturn(LOCK_ERROR);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         result = signal_wait(&signal_valid, k_timeout_ms_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok, er_ok, er_fatal, er_ok);
 }
 
-// 
-// Test signal_wait_ex happy path 
-// 
+//
+// Test signal_wait_ex happy path
+//
 TEST_FUNCTION(signal_wait_ex__success_400_ms)
 {
     const int32_t k_timeout_ms_valid = 400;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x585858; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x585858;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t timeout_ms_valid = k_timeout_ms_valid;
@@ -367,7 +367,7 @@ TEST_FUNCTION(signal_wait_ex__success_400_ms)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__set_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_OK, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)100);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -378,22 +378,22 @@ TEST_FUNCTION(signal_wait_ex__success_400_ms)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait_ex(&signal_valid, &timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(int32_t, 200, timeout_ms_valid);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait_ex happy path 
-// 
+//
+// Test signal_wait_ex happy path
+//
 TEST_FUNCTION(signal_wait_ex__success_200_ms_timeout)
 {
     const int32_t k_timeout_ms_valid = 400;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1222; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1222;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t timeout_ms_valid = k_timeout_ms_valid;
@@ -407,7 +407,7 @@ TEST_FUNCTION(signal_wait_ex__success_200_ms_timeout)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__clear_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_TIMEOUT, COND_ERROR);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)100);
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
@@ -418,35 +418,35 @@ TEST_FUNCTION(signal_wait_ex__success_200_ms_timeout)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_wait_ex(&signal_valid, &timeout_ms_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_timeout, result);
     ASSERT_ARE_EQUAL(int32_t, 0, timeout_ms_valid);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait_ex passing as signal argument an invalid signal_t* value 
-// 
+//
+// Test signal_wait_ex passing as signal argument an invalid signal_t* value
+//
 TEST_FUNCTION(signal_wait_ex__arg_signal_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = signal_wait(NULL, 1000);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait_ex passing as timeout_ms argument an invalid int32_t* value 
-// 
+//
+// Test signal_wait_ex passing as timeout_ms argument an invalid int32_t* value
+//
 TEST_FUNCTION(signal_wait_ex__arg_timeout_ms_invalid)
 {
     static const COND_HANDLE k_condition_handle_valid = (COND_HANDLE)0xbeef;
@@ -459,23 +459,23 @@ TEST_FUNCTION(signal_wait_ex__arg_timeout_ms_invalid)
     signal_valid.state = signal_state_clear;
     signal_valid.manual = false;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = signal_wait_ex(&signal_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_wait_ex unhappy path 
-// 
+//
+// Test signal_wait_ex unhappy path
+//
 TEST_FUNCTION(signal_wait_ex__neg)
 {
     const int32_t k_timeout_ms_valid = 10;
-    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1110; 
+    static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x1110;
     signal_t signal_valid;
     COND_HANDLE condition_handle_valid = (COND_HANDLE)&signal_valid;
     int32_t timeout_ms_valid;
@@ -489,7 +489,7 @@ TEST_FUNCTION(signal_wait_ex__neg)
     REGISTER_GLOBAL_MOCK_HOOK(Condition_Wait, Condition_Wait__clear_hook);
     REGISTER_GLOBAL_MOCK_RETURNS(Condition_Wait, COND_TIMEOUT, COND_ERROR);
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(ticks_get())
         .SetReturn((ticks_t)2222)
@@ -505,18 +505,18 @@ TEST_FUNCTION(signal_wait_ex__neg)
         .SetReturn(LOCK_OK)
         .SetFailReturn(LOCK_ERROR);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         timeout_ms_valid = k_timeout_ms_valid;
     result = signal_wait_ex(&signal_valid, &timeout_ms_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_timeout, er_timeout, er_fatal, er_timeout);
 }
 
-// 
-// Test signal_set happy path 
-// 
+//
+// Test signal_set happy path
+//
 TEST_FUNCTION(signal_set__success)
 {
     static const COND_HANDLE k_condition_handle_valid = (COND_HANDLE)0x27;
@@ -529,7 +529,7 @@ TEST_FUNCTION(signal_set__success)
     signal_valid.state = signal_state_clear;
     signal_valid.manual = false;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
     STRICT_EXPECTED_CALL(Condition_Post(k_condition_handle_valid))
@@ -537,35 +537,35 @@ TEST_FUNCTION(signal_set__success)
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_set(&signal_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, result, er_ok);
     ASSERT_IS_TRUE(signal_valid.state == signal_state_set);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_set passing as signal argument an invalid signal_t* value 
-// 
+//
+// Test signal_set passing as signal argument an invalid signal_t* value
+//
 TEST_FUNCTION(signal_set__arg_signal_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = signal_set(NULL);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, result, er_fault);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_set unhappy path 
-// 
+//
+// Test signal_set unhappy path
+//
 TEST_FUNCTION(signal_set__neg)
 {
     static const COND_HANDLE k_condition_handle_valid = (COND_HANDLE)0xffffff;
@@ -578,7 +578,7 @@ TEST_FUNCTION(signal_set__neg)
     signal_valid.state = signal_state_clear;
     signal_valid.manual = false;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
         .SetReturn(LOCK_OK)
@@ -590,17 +590,17 @@ TEST_FUNCTION(signal_set__neg)
         .SetReturn(LOCK_OK)
         .SetFailReturn(LOCK_ERROR);
 
-    // act 
+    // act
         UMOCK_C_NEGATIVE_TESTS_ACT();
         result = signal_set(&signal_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-// 
-// Test signal_clear happy path 
-// 
+//
+// Test signal_clear happy path
+//
 TEST_FUNCTION(signal_clear__success)
 {
     static const COND_HANDLE k_condition_handle_valid = (COND_HANDLE)0x28;
@@ -613,41 +613,41 @@ TEST_FUNCTION(signal_clear__success)
     signal_valid.state = signal_state_set;
     signal_valid.manual = false;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     result = signal_clear(&signal_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, result, er_ok);
     ASSERT_IS_TRUE(signal_valid.state == signal_state_clear);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_clear passing as signal argument an invalid signal_t* value 
-// 
+//
+// Test signal_clear passing as signal argument an invalid signal_t* value
+//
 TEST_FUNCTION(signal_clear__arg_signal_invalid)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = signal_clear(NULL);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(int32_t, result, er_fault);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_free happy path 
-// 
+//
+// Test signal_free happy path
+//
 TEST_FUNCTION(signal_free__success)
 {
     static const COND_HANDLE k_condition_handle_valid = (COND_HANDLE)0xfee;
@@ -659,7 +659,7 @@ TEST_FUNCTION(signal_free__success)
     signal_valid.state = signal_state_set;
     signal_valid.manual = false;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock(k_lock_handle_valid))
         .SetReturn(LOCK_OK);
     STRICT_EXPECTED_CALL(Unlock(k_lock_handle_valid))
@@ -676,25 +676,25 @@ TEST_FUNCTION(signal_free__success)
     STRICT_EXPECTED_CALL(h_free((void*)&signal_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     signal_free(&signal_valid);
 
-    // assert 
+    // assert
     ASSERT_IS_TRUE(signal_valid.state == signal_state_destroyed);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test signal_free passing as signal argument an invalid signal_t* value 
-// 
+//
+// Test signal_free passing as signal argument an invalid signal_t* value
+//
 TEST_FUNCTION(signal_free__arg_signal_invalid)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     signal_free(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

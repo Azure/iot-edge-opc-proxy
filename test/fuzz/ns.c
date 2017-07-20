@@ -24,7 +24,7 @@ int32_t fuzz(
         result = prx_ns_generic_create(input_file, &ns);
     else
         return er_arg;
-        
+
     if (result == er_ok)
         prx_ns_close(ns);
     return result;

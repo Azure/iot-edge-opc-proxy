@@ -20,7 +20,7 @@ namespace MsgPack {
         /// <param name="context"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public abstract Task<T> ReadAsync(Reader reader, 
+        public abstract Task<T> ReadAsync(Reader reader,
             SerializerContext context, CancellationToken ct);
 
         /// <summary>
@@ -31,7 +31,7 @@ namespace MsgPack {
         /// <param name="context"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public abstract Task WriteAsync(Writer writer, T obj, 
+        public abstract Task WriteAsync(Writer writer, T obj,
             SerializerContext context, CancellationToken ct);
 
         public async Task<object> GetAsync(Reader reader,

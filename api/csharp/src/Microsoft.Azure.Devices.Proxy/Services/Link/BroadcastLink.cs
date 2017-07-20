@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
     /// Proxy link represents a 1:1 link with a remote socket. Proxy
     /// Link is created via LinkRequest, and OpenRequest Handshake.
-    /// This is a specialization for bound broadcast sockets, in that 
+    /// This is a specialization for bound broadcast sockets, in that
     /// the broadcast link reconnects automatically until closed.
     /// </summary>
     internal class BroadcastLink : ProxyLink {
@@ -24,8 +24,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="remoteId"></param>
         /// <param name="localAddress"></param>
         /// <param name="peerAddress"></param>
-        internal BroadcastLink(BroadcastSocket socket, INameRecord proxy, 
-            Reference remoteId, SocketAddress localAddress, SocketAddress peerAddress) : 
+        internal BroadcastLink(BroadcastSocket socket, INameRecord proxy,
+            Reference remoteId, SocketAddress localAddress, SocketAddress peerAddress) :
             base(socket, proxy, remoteId, localAddress, peerAddress) {
         }
 
@@ -58,21 +58,29 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create receive block
         /// </summary>
-        /// <param name="maxSize"></param>
         protected override void CreateReceiveBlock() {
             _receive = new TransformManyBlock<Message, Message>((message) => {
-                if (message.Error == (int)SocketError.Closed ||
-                    message.TypeId == MessageContent.Close ||
+                if (message.TypeId == MessageContent.Data) {
+                    if (message.Error == (int)SocketError.Duplicate) {
+                        // Drop message
+                        return Enumerable.Empty<Message>();
+                    }
+
+                    if (message.Error == (int)SocketError.Success) {
+                        return message.AsEnumerable();
+                    }
+                }
+
+                if (message.TypeId == MessageContent.Close ||
                     message.Error != (int)SocketError.Success) {
-                    // Remote side closed - reconnect
+
+                    if (message.Error != (int)SocketError.Success) {
+                        // Todo: log error
+                    }
+                    
+                    // Remote side closed or error occurred - reconnect
                     Detach();
                     ((BroadcastSocket)_socket).Reconnect(this);
-                }
-                else if (message.TypeId == MessageContent.Data) {
-                    return message.AsEnumerable();
-                }
-                else {
-                    // Todo: log error?
                 }
                 return Enumerable.Empty<Message>();
             },

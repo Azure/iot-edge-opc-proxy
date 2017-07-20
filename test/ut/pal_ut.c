@@ -31,16 +31,16 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_init happy path 
-// 
+//
+// Test pal_init happy path
+//
 TEST_FUNCTION(pal_init__success_1)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -60,46 +60,46 @@ TEST_FUNCTION(pal_init__success_1)
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(capabilities == 
+    ASSERT_IS_TRUE(capabilities ==
         (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file | pal_cap_wsclient));
 }
 
-// 
-// Test pal_init happy path 
-// 
+//
+// Test pal_init happy path
+//
 TEST_FUNCTION(pal_init__success_2)
 {
     int32_t result;
 
     capabilities = pal_cap_sockets;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities == pal_cap_sockets);
 }
 
-// 
-// Test pal_init happy path 
-// 
+//
+// Test pal_init happy path
+//
 TEST_FUNCTION(pal_init__success_3)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -119,26 +119,26 @@ TEST_FUNCTION(pal_init__success_3)
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_not_supported);
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(capabilities == 
+    ASSERT_IS_TRUE(capabilities ==
         (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file));
 }
 
-// 
-// Test pal_init happy path 
-// 
+//
+// Test pal_init happy path
+//
 TEST_FUNCTION(pal_init__success_4)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -158,25 +158,25 @@ TEST_FUNCTION(pal_init__success_4)
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_not_supported);
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities == (pal_cap_sockets | pal_cap_net | pal_cap_dnssd | pal_cap_file));
 }
 
-// 
-// Test pal_init unhappy path 
-// 
+//
+// Test pal_init unhappy path
+//
 TEST_FUNCTION(pal_init__neg_1)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -192,25 +192,25 @@ TEST_FUNCTION(pal_init__neg_1)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_init unhappy path 
-// 
+//
+// Test pal_init unhappy path
+//
 TEST_FUNCTION(pal_init__neg_2)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -235,25 +235,25 @@ TEST_FUNCTION(pal_init__neg_2)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_not_supported, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_init unhappy path 
-// 
+//
+// Test pal_init unhappy path
+//
 TEST_FUNCTION(pal_init__neg_3)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -281,25 +281,25 @@ TEST_FUNCTION(pal_init__neg_3)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_init unhappy path 
-// 
+//
+// Test pal_init unhappy path
+//
 TEST_FUNCTION(pal_init__neg_4)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -312,25 +312,25 @@ TEST_FUNCTION(pal_init__neg_4)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_init unhappy path 
-// 
+//
+// Test pal_init unhappy path
+//
 TEST_FUNCTION(pal_init__neg_5)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_err_init())
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_time_init())
@@ -340,25 +340,25 @@ TEST_FUNCTION(pal_init__neg_5)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_deinit happy path 
-// 
+//
+// Test pal_deinit happy path
+//
 TEST_FUNCTION(pal_deinit__success_1)
 {
     int32_t result;
 
     capabilities = pal_cap_all;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_wsclient_deinit());
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_sd_deinit());
@@ -369,54 +369,54 @@ TEST_FUNCTION(pal_deinit__success_1)
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_deinit();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_deinit happy path 
-// 
+//
+// Test pal_deinit happy path
+//
 TEST_FUNCTION(pal_deinit__success_2)
 {
     int32_t result;
 
     capabilities = pal_cap_sockets;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_rand_deinit());
     STRICT_EXPECTED_CALL(pal_time_deinit());
     STRICT_EXPECTED_CALL(pal_err_deinit());
 
-    // act 
+    // act
     result = pal_deinit();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities == pal_not_init);
 }
 
-// 
-// Test pal_deinit happy path 
-// 
+//
+// Test pal_deinit happy path
+//
 TEST_FUNCTION(pal_deinit__neg)
 {
     int32_t result;
 
     capabilities = pal_not_init;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_deinit();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_bad_state, result);
 }

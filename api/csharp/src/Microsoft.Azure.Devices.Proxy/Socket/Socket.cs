@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Create socket for address family 
+        // Create socket for address family
         //
         public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType, uint keepAlive) {
             _internal = ProxySocket.Create(new SocketInfo {
@@ -108,14 +108,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Create socket for address family 
+        // Create socket for address family
         //
         public Socket(AddressFamily addressFamily, SocketType socketType, ProtocolType protocolType) :
             this(addressFamily, socketType, protocolType, RemoteTimeout) {
         }
 
         //
-        // Create socket for address family 
+        // Create socket for address family
         //
         internal Socket(IProxySocket internalSocket) {
             _internal = internalSocket;
@@ -157,7 +157,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (endpoint == null) {
-                throw new ArgumentNullException("endpoint");
+                throw new ArgumentNullException(nameof(endpoint));
             }
             if (IsListening) {
                 throw new InvalidOperationException("Socket is listening");
@@ -255,7 +255,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (endpoint == null) {
-                throw new ArgumentNullException("endpoint");
+                throw new ArgumentNullException(nameof(endpoint));
             }
             if (IsListening) {
                 throw new InvalidOperationException("Socket is listening");
@@ -452,7 +452,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         public bool AcceptAsync(SocketAsyncEventArgs e) {
             AcceptAsync().ContinueWith(t => {
-                try { 
+                try {
                     e.AcceptSocket = t.Result;
                     e.SocketError = SocketError.Success;
                 }
@@ -489,14 +489,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         public int SendTimeout { get; set; } = 20 * 1000;
 
         //
-        // Send array segment 
+        // Send array segment
         //
         public async Task<int> SendAsync(ArraySegment<byte> buffer, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
-            }
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
             }
             try {
                 var result = await _internal.SendAsync(buffer, null, ct).ConfigureAwait(false);
@@ -546,7 +543,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Same, without offset
         //
-        public Task<int> SendAsync(byte[] buffer) => 
+        public Task<int> SendAsync(byte[] buffer) =>
             SendAsync(buffer, buffer != null ? buffer.Length : 0);
 
         //
@@ -557,7 +554,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (buffers == null) {
-                throw new ArgumentNullException("buffers");
+                throw new ArgumentNullException(nameof(buffers));
             }
             if (!Connected) {
                 throw new SocketException("Not connected");
@@ -598,7 +595,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                try { 
+                try {
                     e.BytesTransferred = t.Result;
                     e.SocketError = SocketError.Success;
                 }
@@ -657,7 +654,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         public int EndSend(IAsyncResult asyncResult) =>
             TaskToApm.End<int>(asyncResult);
-       
+
 
         #endregion
 
@@ -670,17 +667,14 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
-            }
             if (endpoint == null) {
-                throw new ArgumentNullException("endpoint");
+                throw new ArgumentNullException(nameof(endpoint));
             }
             if (!IsBound) {
                 throw new SocketException("Not bound");
             }
             try {
-                var result = await _internal.SendAsync(buffer, endpoint, ct).ConfigureAwait(false); 
+                var result = await _internal.SendAsync(buffer, endpoint, ct).ConfigureAwait(false);
                 ct.ThrowIfCancellationRequested();
                 return result;
             }
@@ -738,7 +732,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (buffers == null) {
-                throw new ArgumentNullException("buffers");
+                throw new ArgumentNullException(nameof(buffers));
             }
 
             int sent = 0;
@@ -777,7 +771,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                try { 
+                try {
                     e.BytesTransferred = t.Result;
                     e.SocketError = SocketError.Success;
                 }
@@ -871,14 +865,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Begin send call
         //
-        public IAsyncResult BeginSendTo(byte[] buffer, int offset, int size, 
+        public IAsyncResult BeginSendTo(byte[] buffer, int offset, int size,
             SocketAddress endpoint, AsyncCallback callback, object state) =>
             TaskToApm.Begin(SendToAsync(buffer, offset, size, endpoint), callback, state);
 
         //
         // Begin send to operation
         //
-        public IAsyncResult BeginSendTo(byte[] buffer, int offset, int size, 
+        public IAsyncResult BeginSendTo(byte[] buffer, int offset, int size,
             string host, int port, AsyncCallback callback, object state) {
             return TaskToApm.Begin(SendToAsync(buffer, offset, size, host, port), callback, state);
         }
@@ -908,14 +902,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         public int ReceiveTimeout { get; set; } = 20 * 1000;
 
         //
-        // Receives data from a connected socket 
+        // Receives data from a connected socket
         //
         public async Task<int> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
-            }
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
             }
             try {
                 var result = await _internal.ReceiveAsync(buffer, ct).ConfigureAwait(false);
@@ -952,7 +943,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ObjectDisposedException(this.GetType().FullName);
             }
             if (buffers == null) {
-                throw new ArgumentNullException("buffers");
+                throw new ArgumentNullException(nameof(buffers));
             }
             if (!Connected) {
                 throw new SocketException("Not connected");
@@ -1017,7 +1008,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Buffer");
             }
             Task t2 = t1.ContinueWith(t => {
-                try { 
+                try {
                     e.BytesTransferred = t.Result;
                     e.SocketError = SocketError.Success;
                 }
@@ -1030,13 +1021,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Receives data from a connected socket 
+        // Receives data from a connected socket
         //
         public int Receive(ArraySegment<byte> buffer) =>
             TaskToSync.Run(() => ReceiveAsync(buffer));
 
         //
-        // Receives data from a connected socket 
+        // Receives data from a connected socket
         //
         public int Receive(byte[] buffer, int offset, int size) =>
             Receive(CreateArraySegment(buffer, offset, size));
@@ -1085,14 +1076,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         #region ReceiveFrom
 
         //
-        // Receives data from an unconnected socket 
+        // Receives data from an unconnected socket
         //
         public async Task<Tuple<SocketAddress, int>> ReceiveFromAsync(ArraySegment<byte> buffer, CancellationToken ct) {
             if (_cleanedUp) {
                 throw new ObjectDisposedException(this.GetType().FullName);
-            }
-            if (buffer == null) {
-                throw new ArgumentNullException("buffer");
             }
             if (!IsBound) {
                 throw new SocketException("Not bound");
@@ -1177,7 +1165,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Receives data from an unconnected socket 
+        // Receives data from an unconnected socket
         //
         public int ReceiveFrom(ArraySegment<byte> buffer, ref SocketAddress address) {
             var result = TaskToSync.Run(() => ReceiveFromAsync(buffer));
@@ -1462,13 +1450,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         private static ArraySegment<byte> CreateArraySegment(byte[] buffer, int offset, int size) {
             if (buffer == null) {
-                throw new ArgumentNullException("buffer");
+                throw new ArgumentNullException(nameof(buffer));
             }
             if (offset < 0 || offset > buffer.Length) {
-                throw new ArgumentOutOfRangeException("offset");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             }
             if (size < 0 || size > buffer.Length - offset) {
-                throw new ArgumentOutOfRangeException("size");
+                throw new ArgumentOutOfRangeException(nameof(size));
             }
             return new ArraySegment<byte>(buffer, offset, size);
         }

@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create info
         /// </summary>
-        public static AddressInfo Create(SocketAddress socketAddress, 
+        public static AddressInfo Create(SocketAddress socketAddress,
             string canonicalName = "") {
             var info = Get();
             info.SocketAddress = socketAddress;

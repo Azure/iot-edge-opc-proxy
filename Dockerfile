@@ -2,7 +2,7 @@ FROM alpine:3.6
 
 RUN set -ex \
         && \
-    apk update && apk add --no-cache --virtual .build-deps \
+    apk add --update --no-cache --virtual .build-deps \
         bash \
         cmake \
         build-base \
@@ -17,7 +17,8 @@ RUN set -ex \
 
 ADD / /proxy_build
         
-RUN \
+RUN set -ex \
+        && \
 	bash /proxy_build/bld/build.sh -C Release --skip-unittests --use-zlog --use-dnssd embedded \
         && \
     mv /proxy_build/build/cmake/Release/bin/* /usr/bin \
@@ -28,9 +29,11 @@ RUN \
         && \
     rm -rf /proxy_build
    
-RUN apk del .build-deps \
+RUN set -ex \
         && \
-    apk update && apk add --no-cache --virtual .run-deps \
+    apk del .build-deps \
+        && \
+    apk add --update --no-cache --virtual .run-deps \
         bash \
         curl \
         libressl \

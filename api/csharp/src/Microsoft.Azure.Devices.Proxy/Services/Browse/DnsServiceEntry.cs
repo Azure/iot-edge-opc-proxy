@@ -11,8 +11,8 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Text;
 
     /// <summary>
-    /// Represents a browsed service. In the case of dns-sd, this is the 
-    /// record pointed to by PTR. To ensure we are not too chatty it is 
+    /// Represents a browsed service. In the case of dns-sd, this is the
+    /// record pointed to by PTR. To ensure we are not too chatty it is
     /// expected that all entries contain server and server meta data if
     /// available.
     /// </summary>
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// In case of dns-sd, TXT records associated with the SRV 
+        /// In case of dns-sd, TXT records associated with the SRV
         /// record. Use these to look up additional properties of
         /// the service, e.g. uri, configuration parameters, etc.
         /// </summary>
@@ -48,10 +48,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create entry
         /// </summary>
-        /// <param name="hostName"></param>
-        /// <param name="aliases"></param>
-        /// <param name="addressList"></param>
-        /// <param name="interface"></param>
+        /// <param name="address"></param>
+        /// <param name="service"></param>
+        /// <param name="txtRecords"></param>
         /// <returns></returns>
         internal static DnsServiceEntry Create(SocketAddress address,
             DnsServiceRecord service, DnsTxtRecord[] txtRecords) {
@@ -63,7 +62,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Returns a value for a key in the text records 
+        /// Returns a value for a key in the text records
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>

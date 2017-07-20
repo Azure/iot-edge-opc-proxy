@@ -160,7 +160,7 @@ decl_public_7(int32_t, prx_client_recv,
 );
 
 //
-// Receive from 
+// Receive from
 //
 decl_public_8(int32_t, prx_client_recvfrom,
     prx_fd_t, fd,

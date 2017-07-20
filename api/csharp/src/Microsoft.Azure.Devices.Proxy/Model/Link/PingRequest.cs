@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Create request
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="socketAddress"></param>
         public static PingRequest Create(SocketAddress socketAddress) {
             var request = Get();
             request.SocketAddress = socketAddress;
@@ -40,7 +40,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         protected override void SetHashCode() =>
             MixToHash(SocketAddress);
 
-        public override string ToString() => 
+        public override string ToString() =>
             $"{SocketAddress}";
     }
 }

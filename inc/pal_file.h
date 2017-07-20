@@ -56,7 +56,7 @@ decl_public_1(void, pal_free_path,
 );
 
 //
-// Deinit pal 
+// Deinit pal
 //
 decl_public_0(void, pal_file_deinit,
     void

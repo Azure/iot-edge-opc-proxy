@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// </summary>
     [DataContract]
     public class CloseResponse : Poco<CloseResponse>, IMessageContent, IResponse  {
-        
+
         /// <summary>
         /// How long the link was open
         /// </summary>

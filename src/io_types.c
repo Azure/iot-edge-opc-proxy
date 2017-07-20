@@ -452,7 +452,7 @@ int32_t io_decode_prx_socket_properties(
     int32_t result;
     io_codec_ctx_t arr;
     size_t allocated;
-    
+
     dbg_assert_ptr(ctx);
     dbg_assert_ptr(prx_sp);
 
@@ -594,7 +594,7 @@ int32_t io_encode_prx_multicast_option(
     dbg_assert_ptr(ctx);
     dbg_assert_ptr(prx_mo);
 
-    __io_encode_type_begin(ctx, prx_mo, 3); 
+    __io_encode_type_begin(ctx, prx_mo, 3);
     __io_encode_value(ctx, int32, prx_mo, family);
     __io_encode_value(ctx, int32, prx_mo, itf_index);
     switch (prx_mo->family)
@@ -698,7 +698,7 @@ int32_t io_encode_prx_property(
     else if (prx_prop->type >= prx_record_type_default &&
              prx_prop->type < __prx_record_max)
     {
-        result = io_encode_bin(ctx, "property", prx_prop->property.bin.value, 
+        result = io_encode_bin(ctx, "property", prx_prop->property.bin.value,
             prx_prop->property.bin.size);
     }
     else if (prx_prop->type > prx_so_unknown &&
@@ -758,10 +758,10 @@ int32_t io_decode_prx_property(
             break;
         }
     }
-    else if (prx_prop->type >= prx_record_type_default && 
+    else if (prx_prop->type >= prx_record_type_default &&
              prx_prop->type < __prx_record_max)
     {
-        result = io_decode_bin_default(ctx, "property", 
+        result = io_decode_bin_default(ctx, "property",
             (void**)&prx_prop->property.bin.value, &prx_prop->property.bin.size);
     }
     else if (prx_prop->type > prx_so_unknown &&

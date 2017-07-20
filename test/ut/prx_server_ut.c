@@ -53,8 +53,8 @@ DECLARE_TEST_SETUP()
 #ifdef prx_server_create
 
 //
-//Test prx_server_create happy path 
-// 
+//Test prx_server_create happy path
+//
 TEST_FUNCTION(prx_server_create__success)
 {
     static const io_transport_t* k_transport_valid;
@@ -63,100 +63,100 @@ TEST_FUNCTION(prx_server_create__success)
     static const prx_server_t** k_server_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = prx_server_create(k_transport_valid, k_entry_valid, k_scheduler_valid, k_server_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_create passing as transport argument an invalid io_transport_t* value 
-// 
+//
+// Test prx_server_create passing as transport argument an invalid io_transport_t* value
+//
 TEST_FUNCTION(prx_server_create__arg_transport_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = prx_server_create();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_create passing as entry argument an invalid prx_ns_entry_t* value 
-// 
+//
+// Test prx_server_create passing as entry argument an invalid prx_ns_entry_t* value
+//
 TEST_FUNCTION(prx_server_create__arg_entry_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = prx_server_create();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_create passing as scheduler argument an invalid prx_scheduler_t* value 
-// 
+//
+// Test prx_server_create passing as scheduler argument an invalid prx_scheduler_t* value
+//
 TEST_FUNCTION(prx_server_create__arg_scheduler_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = prx_server_create();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_create passing as server argument an invalid prx_server_t** value 
-// 
+//
+// Test prx_server_create passing as server argument an invalid prx_server_t** value
+//
 TEST_FUNCTION(prx_server_create__arg_server_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = prx_server_create();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_create unhappy path 
-// 
+//
+// Test prx_server_create unhappy path
+//
 TEST_FUNCTION(prx_server_create__neg)
 {
     static const io_transport_t* k_transport_valid;
@@ -167,15 +167,15 @@ TEST_FUNCTION(prx_server_create__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = prx_server_create(k_transport_valid, k_entry_valid, k_scheduler_valid, k_server_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
@@ -184,47 +184,47 @@ TEST_FUNCTION(prx_server_create__neg)
 #ifdef prx_server_release
 
 //
-//Test prx_server_release happy path 
-// 
+//Test prx_server_release happy path
+//
 TEST_FUNCTION(prx_server_release__success)
 {
     static const prx_server_t* k_server_valid;
     void result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = prx_server_release(k_server_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(void, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_release passing as server argument an invalid prx_server_t* value 
-// 
+//
+// Test prx_server_release passing as server argument an invalid prx_server_t* value
+//
 TEST_FUNCTION(prx_server_release__arg_server_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = prx_server_release();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test prx_server_release unhappy path 
-// 
+//
+// Test prx_server_release unhappy path
+//
 TEST_FUNCTION(prx_server_release__neg)
 {
     static const prx_server_t* k_server_valid;
@@ -232,15 +232,15 @@ TEST_FUNCTION(prx_server_release__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = prx_server_release(k_server_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(void, result, er_ok);
 }
 

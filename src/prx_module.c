@@ -109,7 +109,7 @@ static prx_module_t* prx_module_create(
             entry, prx_host_get_scheduler(module->host), &module->server);
         if (result != er_ok)
         {
-            log_error(module->log, "Failed to create server (%s)!", 
+            log_error(module->log, "Failed to create server (%s)!",
                 prx_err_string(result));
             break;
         }
@@ -135,7 +135,7 @@ static void prx_module_start(
 }
 
 //
-// Callback when edge received message 
+// Callback when edge received message
 //
 static void prx_module_receive(
     prx_module_t* module,

@@ -126,13 +126,14 @@ static void io_iot_hub_umqtt_connection_on_close(
 
     connection->alive = false;
 
+    if (connection->scheduler)
+        prx_scheduler_clear(connection->scheduler, NULL, connection);
     if (connection->subscription)
         io_mqtt_subscription_release(connection->subscription);
     connection->subscription = NULL;
     if (connection->mqtt_connection)
         io_mqtt_connection_close(connection->mqtt_connection);
     connection->mqtt_connection = NULL;
-
     if (connection->scheduler)
         prx_scheduler_release(connection->scheduler, connection);
     connection->scheduler = NULL;
@@ -141,7 +142,7 @@ static void io_iot_hub_umqtt_connection_on_close(
     // For now, close returns all messages, and then closes on the scheduler thread...
     // Same with retries and errors...
 
-    (void)connection->handler_cb(connection->handler_cb_ctx, 
+    (void)connection->handler_cb(connection->handler_cb_ctx,
         io_connection_closed, NULL, er_ok, NULL);
     connection->handler_cb = NULL;
 }
@@ -184,24 +185,24 @@ static void io_iot_hub_umqtt_connection_send_log_telemetry(
         if (!buffer)
             break;
 
-        result = io_stream_read(connection->log_stream, buffer, 
+        result = io_stream_read(connection->log_stream, buffer,
             prx_buffer_get_size(connection->buffer_pool, buffer), &read);
         if (result != er_ok || read == 0)
             break;
 
         result = io_mqtt_connection_publish(connection->mqtt_connection,
-            STRING_c_str(connection->event_uri), NULL, io_mqtt_qos_at_most_once, 
+            STRING_c_str(connection->event_uri), NULL, io_mqtt_qos_at_most_once,
             buffer, read, NULL, NULL);
         if (result != er_ok)
             break;
-    } 
+    }
     while (0);
 
     if (buffer)
         prx_buffer_release(connection->buffer_pool, buffer);
 
     // Reschedule...
-    __do_later(connection, io_iot_hub_umqtt_connection_send_log_telemetry, 
+    __do_later(connection, io_iot_hub_umqtt_connection_send_log_telemetry,
         LOG_PUBLISH_INTERVAL);
 }
 
@@ -221,12 +222,12 @@ static void io_iot_hub_umqtt_connection_send_alive_property(
          "\"alive\": 1 "
         "}";
     result = io_mqtt_connection_publish(connection->mqtt_connection,
-        "$iothub/twin/PATCH/properties/reported/?$rid=1", NULL, 
-        io_mqtt_qos_at_least_once, (const uint8_t*)publish, 
+        "$iothub/twin/PATCH/properties/reported/?$rid=1", NULL,
+        io_mqtt_qos_at_least_once, (const uint8_t*)publish,
         strlen(publish) + 1, NULL, NULL);
     if (result != er_ok)
     {
-        log_error(connection->log, "Failed to publish %s (%s)", 
+        log_error(connection->log, "Failed to publish %s (%s)",
             publish, prx_err_string(result));
     }
     // Reschedule...
@@ -248,7 +249,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
     io_stream_t* codec_stream;
     STRING_HANDLE response_uri = NULL;
 
-    codec_stream = io_dynamic_buffer_stream_init(&stream, 
+    codec_stream = io_dynamic_buffer_stream_init(&stream,
         connection->buffer_pool, 0x400);
     if (!codec_stream)
     {
@@ -286,7 +287,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
             break;
         }
 
-        // Convert protocol message 
+        // Convert protocol message
         result = io_encode_object(&ctx, NULL, false, &obj);
         if (result != er_ok)
         {
@@ -330,13 +331,13 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
 
         // Buffer now contains encoded response, send through transport
         result = io_mqtt_connection_publish(connection->mqtt_connection,
-            response_uri ? STRING_c_str(response_uri) : STRING_c_str(connection->event_uri), 
-            NULL, io_mqtt_qos_at_least_once, stream.out, stream.out_len, 
+            response_uri ? STRING_c_str(response_uri) : STRING_c_str(connection->event_uri),
+            NULL, io_mqtt_qos_at_least_once, stream.out, stream.out_len,
             io_iot_hub_umqtt_connection_on_send_complete, message);
 
         //
         // This is called from proxy server scheduler.  Since it is the same scheduler
-        // as used by mqtt transport, it does not need to be decoupled.  However, should  
+        // as used by mqtt transport, it does not need to be decoupled.  However, should
         // we decide to run the server on a different scheduler, e.g. thread pool, this
         // needs to posted to mqtt scheduler. (TODO)
         //
@@ -346,7 +347,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
                 prx_err_string(result));
         }
         break;
-    } 
+    }
     while (0);
 
     if (response_uri)
@@ -356,7 +357,7 @@ static int32_t io_iot_hub_umqtt_connection_on_send(
     return result;
 }
 
-// 
+//
 // Receive message - converts buffer to protocol message
 //
 static void io_iot_hub_umqtt_connection_on_receive(
@@ -441,25 +442,25 @@ static void io_iot_hub_umqtt_connection_on_receive(
         if (message->type == io_message_type_data ||
             message->type == io_message_type_poll)
         {
-            log_trace(connection->log, "IN: [%s#%u]", 
+            log_trace(connection->log, "IN: [%s#%u]",
                 io_message_type_as_string(message->type), message->seq_id);
         }
         else
         {
-            log_info(connection->log, "IN: [%s#%u]", 
+            log_info(connection->log, "IN: [%s#%u]",
                 io_message_type_as_string(message->type), message->seq_id);
         }
 
-        result = connection->handler_cb(connection->handler_cb_ctx, 
+        result = connection->handler_cb(connection->handler_cb_ctx,
             io_connection_received, message, result, NULL);
         //
         // This is called from mqtt scheduler thread.  Since it is the same scheduler
-        // as used by server, it does not need to be decoupled.  However, should we 
+        // as used by server, it does not need to be decoupled.  However, should we
         // decide to run the server on a different scheduler, e.g. thread pool, this
         // needs to post to server scheduler instead.  (TODO)
         //
         break;
-    } 
+    }
     while (0);
 
     (void)io_codec_ctx_fini(&ctx, codec_stream, false);
@@ -486,7 +487,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
     io_url_t* url = NULL;
     STRING_HANDLE path = NULL;
     io_cs_t* cs = NULL;
-    
+
     chk_arg_fault_return(scheduler);
     chk_arg_fault_return(handler_cb);
     chk_arg_fault_return(entry);
@@ -505,7 +506,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         connection->handler_cb = handler_cb;
         connection->handler_cb_ctx = handler_cb_ctx;
         connection->codec_id = codec;
-        
+
         result = io_message_factory_create(connection->name,
             0, 0, 0, 0, NULL, NULL, &connection->message_pool);
         if (result != er_ok)
@@ -543,7 +544,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
             0 != STRING_concat(path, "/") ||
             0 != STRING_concat(path, io_cs_get_device_id(cs)) ||
             0 != STRING_concat(path,
-                "/api-version=" API_VERSION 
+                "/api-version=" API_VERSION
                 "&DeviceClientType=" MODULE_NAME "%2F" MODULE_VERSION))
         {
             result = er_out_of_memory;
@@ -553,17 +554,17 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
         // NULL scheme ensures best scheme is chosen
         result = io_url_create(
             __prx_config_get_int(prx_config_key_connect_flag, 0) & 0x1 ? "wss" : NULL,
-            io_cs_get_host_name(cs), 0, "/$iothub/websocket", STRING_c_str(path), NULL, 
+            io_cs_get_host_name(cs), 0, "/$iothub/websocket", STRING_c_str(path), NULL,
             &url);
         if (result != er_ok)
             break;
-        // Add token provider to address 
+        // Add token provider to address
         result = io_cs_create_token_provider(cs, &url->token_provider);
         if (result != er_ok)
             break;
 
         // Create connection
-        result = io_mqtt_connection_create(url, io_cs_get_device_id(cs), scheduler, 
+        result = io_mqtt_connection_create(url, io_cs_get_device_id(cs), scheduler,
             &connection->mqtt_connection);
         if (result != er_ok)
             break;
@@ -578,7 +579,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
             break;
 
         // Start connection
-        result = io_mqtt_connection_connect(connection->mqtt_connection, 
+        result = io_mqtt_connection_connect(connection->mqtt_connection,
             io_iot_hub_umqtt_connection_reconnect_handler, connection);
         if (result != er_ok)
             break;
@@ -602,7 +603,7 @@ static int32_t io_iot_hub_umqtt_server_transport_create_connection(
 
         STRING_delete(path);
         path = NULL;
-        
+
         connection->funcs.context =
             connection;
         connection->funcs.on_send = (io_connection_send_t)
@@ -668,7 +669,7 @@ static void io_iot_hub_ws_connection_on_close(
     // For now, close returns all messages, and then closes on the scheduler thread...
     // Same with retries and errors...
 
-    (void)connection->handler_cb(connection->handler_cb_ctx, 
+    (void)connection->handler_cb(connection->handler_cb_ctx,
         io_connection_closed, NULL, er_ok, NULL);
     connection->handler_cb = NULL;
 }
@@ -725,7 +726,7 @@ static bool io_iot_hub_ws_connection_reconnect_handler(
     return result == er_ok;
 }
 
-// 
+//
 // Writes protocol message to send stream
 //
 static int32_t io_iot_hub_ws_connection_send_handler(
@@ -752,7 +753,7 @@ static int32_t io_iot_hub_ws_connection_send_handler(
             break;
         }
 
-        // Convert protocol message 
+        // Convert protocol message
         result = io_encode_object(&ctx, NULL, false, &obj);
         if (result == er_ok)
             result = io_encode_message(&obj, connection->message);
@@ -771,7 +772,7 @@ static int32_t io_iot_hub_ws_connection_send_handler(
                 prx_err_string(result));
             break;
         }
-    } 
+    }
     while (0);
 
     if (result != er_ok)
@@ -819,8 +820,8 @@ static int32_t io_iot_hub_ws_connection_on_send(
             io_message_type_as_string(message->type), message->seq_id);
     }
 
-    result = io_ws_connection_send(connection->ws_connection, 
-        io_iot_hub_ws_connection_send_handler, connection, 
+    result = io_ws_connection_send(connection->ws_connection,
+        io_iot_hub_ws_connection_send_handler, connection,
         io_iot_hub_ws_connection_on_send_complete, connection->message);
 
     connection->message = NULL; // We will always get a send complete callback...
@@ -833,7 +834,7 @@ static int32_t io_iot_hub_ws_connection_on_send(
     return result;
 }
 
-// 
+//
 // Reads protocol message from receive stream
 //
 static int32_t io_iot_hub_ws_connection_receive_handler(
@@ -852,7 +853,7 @@ static int32_t io_iot_hub_ws_connection_receive_handler(
     dbg_assert_ptr(stream);
 
     // Convert body into protocol message
-    result = io_codec_ctx_init(io_codec_by_id(connection->codec_id), 
+    result = io_codec_ctx_init(io_codec_by_id(connection->codec_id),
         &ctx, stream, true, connection->log);
     if (result != er_ok)
     {
@@ -899,16 +900,16 @@ static int32_t io_iot_hub_ws_connection_receive_handler(
                 io_message_type_as_string(message->type), message->seq_id);
         }
 
-        result = connection->handler_cb(connection->handler_cb_ctx, 
+        result = connection->handler_cb(connection->handler_cb_ctx,
             io_connection_received, message, result, NULL);
         //
         // This is called from ws scheduler thread.  Since it is the same scheduler
-        // as used by server, it does not need to be decoupled.  However, should we 
+        // as used by server, it does not need to be decoupled.  However, should we
         // decide to run the server on a different scheduler, e.g. thread pool, this
         // needs to post to server scheduler instead.  (TODO)
         //
         break;
-    } 
+    }
     while (0);
 
     (void)io_codec_ctx_fini(&ctx, stream, false);
@@ -984,7 +985,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
 
         /**/ if (io_cs_get_endpoint_name(cs))
         {
-            // Connection string refers to a service bus relay connection 
+            // Connection string refers to a service bus relay connection
             // wss://{{HostName}}:443/$hc/{{EndpointName}}?
             //                  sb-hc-action=connect&sb-hc-id={client_id}
             path = STRING_construct("/$hc/");
@@ -1003,7 +1004,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
             // and client id in x-id header field
             user_header = "x-Id";
             pwd_header = "ServiceBusAuthorization";
-            
+
             result = io_url_create("wss", io_cs_get_host_name(cs), 443,
                 STRING_c_str(path), STRING_c_str(client_id), NULL, &url);
         }
@@ -1033,7 +1034,7 @@ static int32_t io_iot_hub_ws_server_transport_create_connection(
 
         if (result != er_ok)
         {
-            log_error(connection->log, "Invalid websocket connection string (%s)!", 
+            log_error(connection->log, "Invalid websocket connection string (%s)!",
                 prx_err_string(result));
             break;
         }

@@ -26,13 +26,12 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
         internal ConcurrentDictionary<Reference, WebSocketConnection> _connectionMap =
             new ConcurrentDictionary<Reference, WebSocketConnection>();
-        
+
         /// <summary>
         /// Constructor
         /// </summary>
         /// <param name="next"></param>
-        /// <param name="uri"></param>
-        /// <param name="iothub"></param>
+        /// <param name="options"></param>
         public WebSocketMiddleware(RequestDelegate next, IOptions<WebSocketOptions> options) :
             base(options.Value.IoTHubOwnerConnectionString) {
             _uri = options.Value.PublicEndpoint;
@@ -84,7 +83,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             var uri = new UriBuilder(_uri);
             uri.Scheme = _secure ? "wss" : "ws";
             uri.Path = streamId.ToString();
-            var connection = new WebSocketConnection(this, streamId, remoteId, encoding, 
+            var connection = new WebSocketConnection(this, streamId, remoteId, encoding,
                 ConnectionString.Create(uri.Uri, "proxy", "secret"));
             _connectionMap.AddOrUpdate(streamId, connection, (r, s) => connection);
             return Task.FromResult((IConnection)connection);

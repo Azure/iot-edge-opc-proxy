@@ -8,6 +8,6 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
     /// Service browser interface - enumerate service records
     /// </summary>
-    public interface IDnsServiceBrowser : 
+    public interface IDnsServiceBrowser :
         IAsyncEnumerator<DnsServiceRecord>, IDisposable { }
 }

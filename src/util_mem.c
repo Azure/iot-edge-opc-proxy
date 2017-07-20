@@ -62,11 +62,11 @@ void* h_realloc(
     result = realloc(ptr, size);
     if (!result)
     {
-        log_error(NULL, "h_realloc (%d) at %s:%d failed.", 
+        log_error(NULL, "h_realloc (%d) at %s:%d failed.",
             size, file, line_number);
         return NULL;
     }
-        
+
     if (!zero_mem)
         return result;
     memset(result, 0, size);

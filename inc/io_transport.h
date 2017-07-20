@@ -94,7 +94,7 @@ decl_inline_1(void, io_connection_free,
 
 //
 // Connection events
-// 
+//
 typedef enum io_connection_event_t
 {
     io_connection_received,               // Send when message received
@@ -114,7 +114,7 @@ typedef int32_t (*io_connection_cb_t)(
     uint32_t* delay
     );
 
-// 
+//
 // Create connection on transport
 //
 typedef int32_t (*io_transport_create_connection_t)(
@@ -151,7 +151,7 @@ decl_inline_7(int32_t, io_transport_create,
 {
     chk_arg_fault_return(transport);
     dbg_assert_ptr(transport->on_create);
-    return transport->on_create(transport->context, 
+    return transport->on_create(transport->context,
         entry, codec_id, cb, context, scheduler, connection);
 }
 

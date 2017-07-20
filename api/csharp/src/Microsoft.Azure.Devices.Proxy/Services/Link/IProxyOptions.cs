@@ -8,14 +8,14 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Proxy link interface represents a virtual link to an activated socket 
+    /// Proxy link interface represents a virtual link to an activated socket
     /// instance on a remote proxy.  It can be made up of many endpoints, which
     /// are themselves links.
     /// </summary>
     public interface IProxyOptions {
 
         /// <summary>
-        /// Proxy the socket is bound on.  
+        /// Proxy the socket is bound on.
         /// </summary>
         SocketAddress ProxyAddress { get; }
 
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         SocketAddress LocalAddress { get; }
 
         /// <summary>
-        /// Peer address the socket is connected to on the proxy side. 
+        /// Peer address the socket is connected to on the proxy side.
         /// </summary>
         SocketAddress PeerAddress { get; }
 

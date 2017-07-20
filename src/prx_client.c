@@ -24,7 +24,7 @@ typedef struct prx_client_socket
     io_ref_t c_addr;                    // Address sock is bound to
     io_ref_t r_addr;                         // Remote target address
 
-    int32_t sock_fd;             
+    int32_t sock_fd;
     prx_socket_properties_t props;          // Properties of the socket
     prx_socket_address_t r_name;         // Remote bound socket address
     prx_socket_address_t r_peer;          // Remote peer socket address
@@ -73,7 +73,7 @@ global_state = { 0 };
         IO_REF_PRINT(&s->r_addr), NULL/*s->stream*/, IO_REF_PRINT(&s->c_addr), __VA_ARGS__ );
 
 //
-// Release the socket 
+// Release the socket
 //
 static void prx_client_socket_release(
     prx_client_socket_t* sock
@@ -176,14 +176,14 @@ static prx_client_socket_t* prx_client_socket_get_by_id(
     sock = (prx_client_socket_t*)handle_map_get_pointer(id);
     if (!sock)
     {
-        log_error(NULL, 
+        log_error(NULL,
             "Virtual socket handle %d is not valid, it was likely closed.", id);
         return NULL;
     }
 
     if (check_open && !sock->connected)
     {
-        prx_client_socket_log_error(sock, 
+        prx_client_socket_log_error(sock,
             "Attempt to operate on closed sock (id:%d).", id);
         return NULL;
     }
@@ -235,7 +235,7 @@ static int32_t prx_client_socket_create_channel(
 )
 {
     int32_t result;
-    
+
     // Assign a new channel/session id per created channel
     result = io_channel_create(NULL, &sock->r_addr, &sock->l_addr,
         message_type, channel);
@@ -311,7 +311,7 @@ static void prx_client_socket_unlink(
         __io_proto_pack(message, void_request, sock->log);
         if (result != er_ok)
         {
-            (void)io_channel_abort_write(control, message); 
+            (void)io_channel_abort_write(control, message);
             break;
         }
         // Just wait for it to be sent, then we are done...
@@ -344,12 +344,12 @@ static int32_t prx_client_socket_link(
 
     dbg_assert_ptr(host);
     dbg_assert_ptr(sock);
-    dbg_assert(sock->itf && !io_ref_equals(&sock->c_addr, &io_ref_null), 
+    dbg_assert(sock->itf && !io_ref_equals(&sock->c_addr, &io_ref_null),
         "No interface selected");
     dbg_assert(!sock->connected && io_ref_equals(&sock->r_addr, &io_ref_null),
         "Connected or remote address already set");
     do
-    {   
+    {
         result = prx_client_socket_create_channel(sock, io_message_type_link, &control);
         if (result != er_ok)
             break;
@@ -357,8 +357,8 @@ static int32_t prx_client_socket_link(
         memset(&link_request, 0, sizeof(link_request));
 
         //
-        // The handshake includes sending the sock's properties which 
-        // include requested address and flags, and receiving back the real 
+        // The handshake includes sending the sock's properties which
+        // include requested address and flags, and receiving back the real
         // addresses as response.
         //
         memcpy(&link_request.props, &sock->props, sizeof(link_request.props));
@@ -431,7 +431,7 @@ static int32_t prx_client_socket_open(
         result = io_ref_new(&open_request.stream_id);
         if (result != er_ok)
             break;
-        result = io_channel_create(&sock->r_addr, &open_request.stream_id, 
+        result = io_channel_create(&sock->r_addr, &open_request.stream_id,
             &sock->l_addr, io_message_type_data, &sock->stream);
         if (result != er_ok)
         {
@@ -456,7 +456,7 @@ static int32_t prx_client_socket_open(
 
     if (result != er_ok)
     {
-        prx_client_socket_log_error(sock, 
+        prx_client_socket_log_error(sock,
             "Failed to send/receive open request/response (%s).",
             prx_err_string(result));
 
@@ -488,7 +488,7 @@ static int32_t prx_client_socket_connect_bound(
     dbg_assert_ptr(sock);
     dbg_assert_ptr(sock->host);
     dbg_assert_ptr(!sock->stream);
-    dbg_assert(!io_ref_equals(&sock->c_addr, &io_ref_null), 
+    dbg_assert(!io_ref_equals(&sock->c_addr, &io_ref_null),
         "No interface selected");
     dbg_assert_ptr(!sock->itf);
     do
@@ -515,7 +515,7 @@ static int32_t prx_client_socket_connect_bound(
             break;
 
         return er_ok;
-    } 
+    }
     while (0);
 
     if (host)
@@ -553,7 +553,7 @@ static int32_t prx_client_socket_connect_local(
 
         io_ref_copy(r_addr, &sock->r_addr);
 
-        // Bind the socket to a stream channel 
+        // Bind the socket to a stream channel
         result = prx_client_socket_create_channel(
             sock, io_message_type_data, &sock->stream);
 
@@ -599,7 +599,7 @@ static int32_t prx_client_socket_connect_unbound(
         // If no routes configured, use all interfaces
         result = prx_ns_entry_get_routes(host, &routes);
         if (result == er_not_found)
-            result = prx_ns_get_entry_by_type(prx_host_get_ns(sock->host), 
+            result = prx_ns_get_entry_by_type(prx_host_get_ns(sock->host),
                 prx_ns_entry_type_proxy, &routes);
         if (result != er_ok)
             break;
@@ -650,7 +650,7 @@ static int32_t prx_client_socket_connect_unbound(
         while (true)
         {
             // Ping responses are only sent in case of successfully pinging a remote peer
-            if (er_ok != io_channel_begin_read(control, 
+            if (er_ok != io_channel_begin_read(control,
                 num_response == 0 ? sock->control_timeout : 0, &message))
             {
                 if (num_response == 0)
@@ -683,7 +683,7 @@ static int32_t prx_client_socket_connect_unbound(
 
     if (result != er_ok)
     {
-        prx_client_socket_log_error(sock, "Failed to connect on unbound sock (%s).", 
+        prx_client_socket_log_error(sock, "Failed to connect on unbound sock (%s).",
             prx_err_string(result));
     }
 
@@ -970,7 +970,7 @@ static int32_t prx_client_socket_recv(
         {
             if (sock->recv_buffer_size > sock->recv_buffer_offset)
             {
-                *received = min(len, 
+                *received = min(len,
                     sock->recv_buffer_size - sock->recv_buffer_offset);
                 memcpy(&buf[off], &sock->recv_buffer[sock->recv_buffer_offset], *received);
                 sock->recv_buffer_offset += *received;
@@ -996,7 +996,7 @@ static int32_t prx_client_socket_recv(
         if (result == er_timeout && sock->recv_count > 0)
         {
             //
-            // If we time out having received some messages, we might have lost one, 
+            // If we time out having received some messages, we might have lost one,
             // assign more recv credit and try again...
             //
             sock->recv_count = sock->recv_credit;
@@ -1049,7 +1049,7 @@ static int32_t prx_client_socket_recv(
             *received = data.buffer_length;
             break;
         }
-        
+
         sock->recv_buffer_size = data.buffer_length;
         sock->recv_buffer_offset = 0;
 
@@ -1258,7 +1258,7 @@ int32_t prx_client_getaddrinfo(
             prx_ns_entry_release(host);
             host = NULL;
         }
-    } 
+    }
     while (0);
 
     if (result != er_ok && *prx_ai)
@@ -1319,7 +1319,7 @@ int32_t prx_client_getnameinfo(
             result = er_arg;
             break;
         }
-        
+
         result = string_from_int(
             address->un.ip.port, 10, buf, sizeof(buf));
         if (result != er_ok)
@@ -1327,7 +1327,7 @@ int32_t prx_client_getnameinfo(
             result = er_arg;
             break;
         }
-        
+
         if (service && !strncpy(service, buf, service_length))
         {
             result = er_arg;
@@ -1419,7 +1419,7 @@ int32_t prx_client_getifaddrinfo(
             prx_ns_entry_release(itf);
             itf = NULL;
         }
-    } 
+    }
     while (0);
 
     if (result != er_ok && *prx_ifa)
@@ -1480,7 +1480,7 @@ int32_t prx_client_getifnameinfo(
 
         if (if_index)
             *if_index = prx_ns_entry_get_index(itf);
-    } 
+    }
     while (0);
 
     if (itf)
@@ -1491,7 +1491,7 @@ int32_t prx_client_getifnameinfo(
 
 // Use pal layer directly
 decl_internal_2(int32_t, pal_pton,
-    const char*, addr_string, 
+    const char*, addr_string,
     prx_socket_address_t*, sa
 );
 
@@ -1508,8 +1508,8 @@ int32_t prx_client_pton(
 
 // Use pal layer directly
 decl_internal_3(int32_t, pal_ntop,
-    prx_socket_address_t*, sa, 
-    char*, string, 
+    prx_socket_address_t*, sa,
+    char*, string,
     size_t, size
 );
 
@@ -1543,7 +1543,7 @@ int32_t prx_gethostname(
     result = prx_client_socket_get_prx_host_ref(&host);
     if (result != er_ok)
         return (result);
-    
+
     id = io_ref_to_STRING(prx_host_get_id(host));
     prx_host_release(host);
 
@@ -1631,7 +1631,7 @@ int32_t prx_client_poll(
         return result;
 
     timer = ticks_get();
-    
+
     (void)io_cm_wait(
         prx_host_get_cm(host), *timeout_ms < 0 ? -1 : (int32_t)*timeout_ms);
 
@@ -1688,7 +1688,7 @@ int32_t prx_client_connect(
         if (sock->props.sock_type != prx_socket_type_stream)
         {
             result = er_bad_state;
-            prx_client_socket_log_error(sock, 
+            prx_client_socket_log_error(sock,
                 "Connect can only be called on stream sockets (%s)",
                 prx_err_string(result));
             break;
@@ -1777,13 +1777,13 @@ int32_t prx_client_accept(
         if (result != er_ok)
             break;
 
-        dbg_assert(link_request.props.sock_type == prx_socket_type_stream, 
+        dbg_assert(link_request.props.sock_type == prx_socket_type_stream,
             "Accept only streams");
 
         // Open new sock with the received properties
-        result = prx_client_socket_create(sock->host, 
-            link_request.props.family, 
-            link_request.props.sock_type, 
+        result = prx_client_socket_create(sock->host,
+            link_request.props.family,
+            link_request.props.sock_type,
             link_request.props.proto_type, &remote);
         if (result != er_ok)
             break;
@@ -2047,16 +2047,16 @@ int32_t prx_client_close(
         // Remote error code
         result = close_response.error_code;
 
-        prx_client_socket_log_info(sock, 
+        prx_client_socket_log_info(sock,
             "closed (was open for %lld ms, %lld bytes sent, %lld bytes received",
-            close_response.time_open, close_response.bytes_sent, 
+            close_response.time_open, close_response.bytes_sent,
             close_response.bytes_received);
-    } 
+    }
     while (0);
 
     if (result != er_ok && result != er_closed)
     {
-        prx_client_socket_log_error(sock, "Failed to close remote socket (%s)", 
+        prx_client_socket_log_error(sock, "Failed to close remote socket (%s)",
             prx_err_string(result));
     }
 
@@ -2101,7 +2101,7 @@ int32_t prx_client_listen(
 }
 
 //
-// Returns socket options 
+// Returns socket options
 //
 int32_t prx_client_getsockopt(
     prx_fd_t s,
@@ -2193,7 +2193,7 @@ int32_t prx_client_getsockopt(
         memset(&getopt_response, 0, sizeof(getopt_response));
         __prx_client_socket_invoke(
             getopt_request, getopt_response, sock->control_timeout, sock->log);
-        dbg_assert(getopt_response.so_val.option == option, 
+        dbg_assert(getopt_response.so_val.option == option,
             "Option type different in response");
         *value = getopt_response.so_val.value;
         break;
@@ -2321,7 +2321,7 @@ int32_t prx_client_setsockopt(
 
         __prx_client_socket_invoke(
             setopt_request, void_response, sock->control_timeout, sock->log);
-    } 
+    }
     while (0);
 
     if (control)

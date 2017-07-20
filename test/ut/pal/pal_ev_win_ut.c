@@ -14,7 +14,7 @@
 MOCKABLE_FUNCTION(WINBASEAPI, BOOL, RegisterWaitForSingleObject,
     HANDLE*, phNewWaitObject, HANDLE, hObject, WAITORTIMERCALLBACK, Callback,
     PVOID, Context, ULONG, dwMilliseconds, ULONG, dwFlags);
-MOCKABLE_FUNCTION(WINBASEAPI, BOOL, UnregisterWaitEx, 
+MOCKABLE_FUNCTION(WINBASEAPI, BOOL, UnregisterWaitEx,
     HANDLE, WaitHandle, HANDLE, CompletionEvent);
 // winsock.h
 MOCKABLE_FUNCTION(WSAAPI, BOOL, WSACloseEvent,
@@ -39,14 +39,14 @@ MOCKABLE_FUNCTION(WSAAPI, int, closesocket,
 #include UNIT_C
 
 MOCKABLE_FUNCTION(, int32_t, pal_event_handler_cb_mock,
-    void*, context, pal_event_type, event_type, int32_t, error_code);
+    void*, context, pal_event_type_t, event_type, int32_t, error_code);
 
 //
 // 3. Setup test suite
 //
 BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
-REGISTER_UMOCK_ALIAS_TYPE(pal_event_type, int);
+REGISTER_UMOCK_ALIAS_TYPE(pal_event_type_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(uintptr_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(ULONG, unsigned long);
 REGISTER_UMOCK_ALIAS_TYPE(DWORD, unsigned int);
@@ -65,75 +65,75 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_event_port_create happy path 
-// 
+//
+// Test pal_event_port_create happy path
+//
 TEST_FUNCTION(pal_win_event_port_create__success)
 {
     uintptr_t port_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_port_create(&port_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(EVENT_PORT_HANDLE == port_valid);
 }
 
-// 
-// Test pal_event_port_create passing as port argument an invalid uintptr_t* value 
-// 
+//
+// Test pal_event_port_create passing as port argument an invalid uintptr_t* value
+//
 TEST_FUNCTION(pal_win_event_port_create__arg_port_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_port_create(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_event_port_close happy path 
-// 
+//
+// Test pal_event_port_close happy path
+//
 TEST_FUNCTION(pal_win_event_port_close__success)
 {
     static const uintptr_t k_port_valid = (uintptr_t)EVENT_PORT_HANDLE;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_event_port_close(k_port_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_event_port_close passing as port argument an invalid uintptr_t value 
-// 
+//
+// Test pal_event_port_close passing as port argument an invalid uintptr_t value
+//
 TEST_FUNCTION(pal_win_event_port_close__arg_port_invalid)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_event_port_close(0);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_event_port_register happy path 
-// 
+//
+// Test pal_event_port_register happy path
+//
 TEST_FUNCTION(pal_win_event_port_register__success)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -147,7 +147,7 @@ TEST_FUNCTION(pal_win_event_port_register__success)
     uintptr_t event_handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pal_event_data_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)&event_data_valid);
@@ -164,18 +164,18 @@ TEST_FUNCTION(pal_win_event_port_register__success)
         .IgnoreArgument(3)
         .SetReturn(TRUE);
 
-    // act 
+    // act
     result = pal_event_port_register(
         k_port_valid, k_socket_valid, pal_event_handler_cb_mock, k_context_valid, &event_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_port_register passing as socket argument an invalid intptr_t value 
-// 
+//
+// Test pal_event_port_register passing as socket argument an invalid intptr_t value
+//
 TEST_FUNCTION(pal_win_event_port_register__arg_socket_invalid)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -183,20 +183,20 @@ TEST_FUNCTION(pal_win_event_port_register__arg_socket_invalid)
     uintptr_t event_handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_port_register(
         k_port_valid, _invalid_fd, pal_event_handler_cb_mock, k_context_valid, &event_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test pal_event_port_register passing as cb argument an invalid pal_event_handler_t value 
-// 
+//
+// Test pal_event_port_register passing as cb argument an invalid pal_event_handler_t value
+//
 TEST_FUNCTION(pal_win_event_port_register__arg_cb_invalid)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -205,20 +205,20 @@ TEST_FUNCTION(pal_win_event_port_register__arg_cb_invalid)
     uintptr_t event_handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_port_register(
         k_port_valid, k_socket_valid, NULL, k_context_valid, &event_handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_event_port_register passing as event_handle argument an invalid uintptr_t* value 
-// 
+//
+// Test pal_event_port_register passing as event_handle argument an invalid uintptr_t* value
+//
 TEST_FUNCTION(pal_win_event_port_register__arg_event_handle_invalid)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -226,20 +226,20 @@ TEST_FUNCTION(pal_win_event_port_register__arg_event_handle_invalid)
     static void* k_context_valid = (void*)0x12;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_port_register(
         k_port_valid, k_socket_valid, pal_event_handler_cb_mock, k_context_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_event_port_register unhappy path 
-// 
+//
+// Test pal_event_port_register unhappy path
+//
 TEST_FUNCTION(pal_win_event_port_register__neg)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -254,7 +254,7 @@ TEST_FUNCTION(pal_win_event_port_register__neg)
     uintptr_t event_handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pal_event_data_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
@@ -308,26 +308,26 @@ TEST_FUNCTION(pal_win_event_port_register__neg)
     STRICT_EXPECTED_CALL(h_free((void*)&event_data_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(&event_data_valid, 0, sizeof(event_data_valid));
     result = pal_event_port_register(
         k_port_valid, k_socket_valid, pal_event_handler_cb_mock, k_context_valid, &event_handle_valid);
 
-    // assert    
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+    // assert
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_fatal, er_ok);
 }
 
-// 
-// Test pal_event_select happy path 
-// 
+//
+// Test pal_event_select happy path
+//
 TEST_FUNCTION(pal_win_event_select__success_1)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
     static void* k_context_valid = (void*)0x12;
-    const pal_event_type k_event_type_valid = pal_event_type_write;
+    const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -338,7 +338,7 @@ TEST_FUNCTION(pal_win_event_select__success_1)
     ev_data_valid.cb = pal_event_handler_cb_mock;
     ev_data_valid.context = k_context_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, (FD_READ | FD_ACCEPT | FD_CLOSE | FD_WRITE)))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(pal_event_handler_cb_mock(k_context_valid, pal_event_type_write, er_ok))
@@ -346,23 +346,23 @@ TEST_FUNCTION(pal_win_event_select__success_1)
     STRICT_EXPECTED_CALL(pal_event_handler_cb_mock(k_context_valid, pal_event_type_write, er_ok))
         .SetReturn(er_retry);
 
-    // act 
+    // act
     result = pal_event_select(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_select happy path 
-// 
+//
+// Test pal_event_select happy path
+//
 TEST_FUNCTION(pal_win_event_select__success_2)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
     static void* k_context_valid = (void*)0x12;
-    const pal_event_type k_event_type_valid = pal_event_type_read;
+    const pal_event_type_t k_event_type_valid = pal_event_type_read;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -373,69 +373,69 @@ TEST_FUNCTION(pal_win_event_select__success_2)
     ev_data_valid.cb = pal_event_handler_cb_mock;
     ev_data_valid.context = k_context_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, (FD_READ | FD_ACCEPT | FD_CLOSE | FD_WRITE)))
         .SetReturn(0);
 
-    // act 
+    // act
     result = pal_event_select(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 
-// 
-// Test pal_event_select passing as event_handle argument an invalid uintptr_t value 
-// 
+//
+// Test pal_event_select passing as event_handle argument an invalid uintptr_t value
+//
 TEST_FUNCTION(pal_win_event_select__arg_event_handle_null)
 {
-    const pal_event_type k_event_type_valid = pal_event_type_read;
+    const pal_event_type_t k_event_type_valid = pal_event_type_read;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_select(0, k_event_type_valid);
 
-    // assert 
-    // ... 
+    // assert
+    // ...
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_event_select passing as event_type argument an invalid pal_event_type value 
-// 
+//
+// Test pal_event_select passing as event_type argument an invalid pal_event_type_t value
+//
 TEST_FUNCTION(pal_win_event_select__arg_event_type_invalid)
 {
-    const pal_event_type k_event_type_invalid = (pal_event_type)0x44444;
+    const pal_event_type_t k_event_type_invalid = (pal_event_type_t)0x44444;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
 
     ev_data_valid.events = (FD_READ | FD_ACCEPT | FD_CLOSE | FD_WRITE);
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_select(event_handle_valid, k_event_type_invalid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_select unhappy path 
-// 
+//
+// Test pal_event_select unhappy path
+//
 TEST_FUNCTION(pal_win_event_select__neg)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
     static void* k_context_valid = (void*)0x12;
-    const pal_event_type k_event_type_valid = pal_event_type_write;
+    const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -446,7 +446,7 @@ TEST_FUNCTION(pal_win_event_select__neg)
     ev_data_valid.cb = pal_event_handler_cb_mock;
     ev_data_valid.context = k_context_valid;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(WSAEventSelect((SOCKET)k_socket_valid, k_handle1_valid, (FD_READ | FD_ACCEPT | FD_CLOSE | FD_WRITE)))
         .SetReturn(0)
@@ -461,7 +461,7 @@ TEST_FUNCTION(pal_win_event_select__neg)
         .SetReturn(er_retry)
         .SetFailReturn(er_fatal);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = pal_event_select(event_handle_valid, k_event_type_valid);
 
@@ -469,14 +469,14 @@ TEST_FUNCTION(pal_win_event_select__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_fatal, er_ok);
 }
 
-// 
-// Test pal_event_clear happy path 
-// 
+//
+// Test pal_event_clear happy path
+//
 TEST_FUNCTION(pal_win_event_clear__success_1)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
-    const pal_event_type k_event_type_valid = pal_event_type_write;
+    const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -485,26 +485,26 @@ TEST_FUNCTION(pal_win_event_clear__success_1)
     ev_data_valid.net_event = k_handle1_valid;
     ev_data_valid.sock = k_socket_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, (FD_READ | FD_ACCEPT | FD_CLOSE)))
         .SetReturn(0);
 
-    // act 
+    // act
     result = pal_event_clear(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_clear happy path 
-// 
+//
+// Test pal_event_clear happy path
+//
 TEST_FUNCTION(pal_win_event_clear__success_2)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
-    const pal_event_type k_event_type_valid = pal_event_type_read;
+    const pal_event_type_t k_event_type_valid = pal_event_type_read;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -513,26 +513,26 @@ TEST_FUNCTION(pal_win_event_clear__success_2)
     ev_data_valid.net_event = k_handle1_valid;
     ev_data_valid.sock = k_socket_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, FD_WRITE))
         .SetReturn(0);
 
-    // act 
+    // act
     result = pal_event_clear(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_clear happy path 
-// 
+//
+// Test pal_event_clear happy path
+//
 TEST_FUNCTION(pal_win_event_clear__success_3)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
-    const pal_event_type k_event_type_valid = pal_event_type_read;
+    const pal_event_type_t k_event_type_valid = pal_event_type_read;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -541,64 +541,64 @@ TEST_FUNCTION(pal_win_event_clear__success_3)
     ev_data_valid.net_event = k_handle1_valid;
     ev_data_valid.sock = k_socket_valid;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_clear(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_clear passing as event_handle argument an invalid uintptr_t value 
-// 
+//
+// Test pal_event_clear passing as event_handle argument an invalid uintptr_t value
+//
 TEST_FUNCTION(pal_win_event_clear__arg_event_handle_null)
 {
-    const pal_event_type k_event_type_valid = pal_event_type_read;
+    const pal_event_type_t k_event_type_valid = pal_event_type_read;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_clear(0, k_event_type_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_event_clear passing as event_type argument an invalid pal_event_type value 
-// 
+//
+// Test pal_event_clear passing as event_type argument an invalid pal_event_type_t value
+//
 TEST_FUNCTION(pal_win_event_clear__arg_event_type_invalid)
 {
-    const pal_event_type k_event_type_invalid = (pal_event_type)0x245;
+    const pal_event_type_t k_event_type_invalid = (pal_event_type_t)0x245;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
 
     ev_data_valid.events = (FD_READ | FD_ACCEPT | FD_CLOSE | FD_WRITE);
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_event_clear(event_handle_valid, k_event_type_invalid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_event_clear unhappy path 
-// 
+//
+// Test pal_event_clear unhappy path
+//
 TEST_FUNCTION(pal_win_event_clear__neg)
 {
     static const WSAEVENT k_handle1_valid = (WSAEVENT)0x3;
     static const intptr_t k_socket_valid = (intptr_t)0xbaba;
-    const pal_event_type k_event_type_valid = pal_event_type_write;
+    const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_event_data_t ev_data_valid;
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
     int32_t result;
@@ -607,7 +607,7 @@ TEST_FUNCTION(pal_win_event_clear__neg)
     ev_data_valid.net_event = k_handle1_valid;
     ev_data_valid.sock = k_socket_valid;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, (FD_READ | FD_ACCEPT | FD_CLOSE)))
         .SetReturn(0)
@@ -616,17 +616,17 @@ TEST_FUNCTION(pal_win_event_clear__neg)
         .SetReturn(er_fatal)
         .SetFailReturn(er_fatal);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = pal_event_clear(event_handle_valid, k_event_type_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_fatal, er_ok);
 }
 
-// 
-// Test pal_event_close happy path 
-// 
+//
+// Test pal_event_close happy path
+//
 TEST_FUNCTION(pal_win_event_close__success_1)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -649,7 +649,7 @@ TEST_FUNCTION(pal_win_event_close__success_1)
     ev_data_valid.read_lock = k_lock1_valid;
     ev_data_valid.write_lock = k_lock2_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, 0))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(WSACreateEvent())
@@ -670,16 +670,16 @@ TEST_FUNCTION(pal_win_event_close__success_1)
     STRICT_EXPECTED_CALL(h_free((void*)&ev_data_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     pal_event_close(event_handle_valid, false);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_event_close happy path 
-// 
+//
+// Test pal_event_close happy path
+//
 TEST_FUNCTION(pal_win_event_close__success_2)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -700,7 +700,7 @@ TEST_FUNCTION(pal_win_event_close__success_2)
     ev_data_valid.read_lock = k_lock1_valid;
     ev_data_valid.write_lock = k_lock2_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSAEventSelect(k_socket_valid, k_handle1_valid, 0))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(WSACloseEvent(k_handle1_valid))
@@ -712,16 +712,16 @@ TEST_FUNCTION(pal_win_event_close__success_2)
     STRICT_EXPECTED_CALL(h_free((void*)&ev_data_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     pal_event_close(event_handle_valid, false);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_event_close happy path 
-// 
+//
+// Test pal_event_close happy path
+//
 TEST_FUNCTION(pal_win_event_close__success_3)
 {
     static const uintptr_t k_port_valid = (uintptr_t)0x2345;
@@ -743,7 +743,7 @@ TEST_FUNCTION(pal_win_event_close__success_3)
     ev_data_valid.read_lock = k_lock1_valid;
     ev_data_valid.write_lock = k_lock2_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(WSACreateEvent())
         .SetReturn(k_handle3_valid);
     STRICT_EXPECTED_CALL(UnregisterWaitEx(k_handle2_valid, k_handle3_valid))
@@ -760,23 +760,23 @@ TEST_FUNCTION(pal_win_event_close__success_3)
     STRICT_EXPECTED_CALL(h_free((void*)&ev_data_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     pal_event_close(event_handle_valid, false);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
-// 
-// Test pal_event_close passing as event_handle argument an invalid uintptr_t value 
-// 
+//
+// Test pal_event_close passing as event_handle argument an invalid uintptr_t value
+//
 TEST_FUNCTION(pal_win_event_close__arg_event_handle_null)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_event_close(0, false);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

@@ -234,7 +234,7 @@ int32_t pal_event_port_register(
 //
 int32_t pal_event_select(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     pal_event_data_t* ev_data = (pal_event_data_t*)event_handle;
@@ -275,7 +275,7 @@ int32_t pal_event_select(
 //
 int32_t pal_event_clear(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     pal_event_data_t* ev_data = (pal_event_data_t*)event_handle;

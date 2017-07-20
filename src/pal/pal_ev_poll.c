@@ -85,7 +85,7 @@ static int32_t pal_poll_event_loop(
         DList_InitializeListHead(&pal_port->event_data_list);
         while (!DList_IsListEmpty(&events))
         {
-            next = containingRecord(DList_RemoveHeadList(&events), 
+            next = containingRecord(DList_RemoveHeadList(&events),
                 pal_poll_event_t, link);
             if (next->port)
             {
@@ -137,7 +137,7 @@ static int32_t pal_poll_event_loop(
             break;
         }
         pal_port->poll_buffer = poll_copy;
-        
+
         poll_copy->events = POLLRDNORM;
         poll_copy->fd = pal_port->control_fd[1];
         poll_copy->revents = 0;
@@ -177,7 +177,7 @@ static int32_t pal_poll_event_loop(
         // Copy back revents
         index = 1;
         for (PDLIST_ENTRY p = pal_port->event_data_list.Flink;
-            p != &pal_port->event_data_list && index < poll_len; 
+            p != &pal_port->event_data_list && index < poll_len;
             p = p->Flink, index++)
         {
             next = containingRecord(p, pal_poll_event_t, link);
@@ -256,7 +256,7 @@ int32_t pal_event_port_register(
     int32_t result;
     pal_poll_event_t* ev_data;
     pal_poll_port_t* pal_port = (pal_poll_port_t*)port;
-    
+
     chk_arg_fault_return(pal_port);
     chk_arg_fault_return(cb);
     chk_arg_fault_return(event_handle);
@@ -283,7 +283,7 @@ int32_t pal_event_port_register(
 
     *event_handle = (uintptr_t)ev_data;
 
-    log_debug(pal_port->log, "Added event port for %x.", 
+    log_debug(pal_port->log, "Added event port for %x.",
         (int32_t)sock);
     return er_ok;
 }
@@ -292,7 +292,7 @@ int32_t pal_event_port_register(
 // Convert a poll event type to socket event type
 //
 static uint32_t pal_event_type_to_poll_event(
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     switch (event_type)
@@ -325,7 +325,7 @@ static uint32_t pal_event_type_to_poll_event(
 //
 int32_t pal_event_select(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result;
@@ -352,13 +352,13 @@ int32_t pal_event_select(
 //
 int32_t pal_event_clear(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result;
     pal_poll_event_t* ev_data;
     uint32_t plat_event;
-    
+
     ev_data = (pal_poll_event_t*)event_handle;
     chk_arg_fault_return(ev_data);
     plat_event = pal_event_type_to_poll_event(event_type);
@@ -452,7 +452,7 @@ int32_t pal_event_port_create(
 
         *port = (uintptr_t)pal_port;
         return er_ok;
-    } 
+    }
     while (0);
 
     pal_event_port_close((uintptr_t)pal_port);
@@ -486,7 +486,7 @@ void pal_event_port_close(
     if (pal_port->poll_buffer)
         mem_free(pal_port->poll_buffer);
 
-    dbg_assert(DList_IsListEmpty(&pal_port->event_data_list), 
+    dbg_assert(DList_IsListEmpty(&pal_port->event_data_list),
         "Leaking events registered when closing event port!");
     if (pal_port->lock)
         lock_free(pal_port->lock);

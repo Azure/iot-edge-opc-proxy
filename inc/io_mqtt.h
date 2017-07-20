@@ -10,7 +10,7 @@
 #include "prx_sched.h"
 
 //
-// Mqtt quality of service 
+// Mqtt quality of service
 //
 typedef enum io_mqtt_qos
 {
@@ -26,7 +26,7 @@ io_mqtt_qos_t;
 typedef struct io_mqtt_connection io_mqtt_connection_t;
 
 //
-// Mqtt subscription 
+// Mqtt subscription
 //
 typedef struct io_mqtt_subscription io_mqtt_subscription_t;
 
@@ -76,7 +76,7 @@ typedef bool (*io_mqtt_connection_reconnect_t)(
     );
 
 //
-// and call connect on the connection 
+// and call connect on the connection
 //
 decl_internal_3(int32_t, io_mqtt_connection_connect,
     io_mqtt_connection_t*, connection,
@@ -148,7 +148,7 @@ decl_public_2(int32_t, io_mqtt_subscription_receive,
 );
 
 //
-// Unsubscribe subscription when done with it 
+// Unsubscribe subscription when done with it
 //
 decl_internal_1(void, io_mqtt_subscription_release,
     io_mqtt_subscription_t*, subscription

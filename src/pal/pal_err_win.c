@@ -124,7 +124,7 @@ void pal_os_set_error_as_prx_error(
 }
 
 //
-// Initialize err 
+// Initialize err
 //
 int32_t pal_err_init(
     void

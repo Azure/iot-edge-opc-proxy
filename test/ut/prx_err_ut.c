@@ -29,37 +29,37 @@ END_DECLARE_TEST_SUITE()
 DECLARE_TEST_SETUP()
 
 
-// 
-// Test prx_err_string happy path 
-// 
+//
+// Test prx_err_string happy path
+//
 TEST_FUNCTION(prx_err_string__success)
 {
     const int32_t k_error_valid = er_arg;
     const char* result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_err_string(k_error_valid);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(char_ptr, "er_arg", result);
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test prx_err_string passing as error argument an invalid int32_t value 
-// 
+//
+// Test prx_err_string passing as error argument an invalid int32_t value
+//
 TEST_FUNCTION(prx_err_string__arg_error_invalid)
 {
     const char* result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_err_string(-1);
 
-    // assert 
+    // assert
     ASSERT_ARE_EQUAL(char_ptr, "<unknown>", result);
     ASSERT_EXPECTED_CALLS();
 }

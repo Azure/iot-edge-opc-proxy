@@ -190,7 +190,7 @@ int32_t pal_event_port_register(
 // Convert socket event type to kqueue event type 
 //
 static uint32_t pal_event_type_to_kqueue_event(
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     switch (event_type)
@@ -216,7 +216,7 @@ static uint32_t pal_event_type_to_kqueue_event(
 //
 int32_t pal_event_select(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result;
@@ -249,7 +249,7 @@ int32_t pal_event_select(
 //
 int32_t pal_event_clear(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result = er_ok;

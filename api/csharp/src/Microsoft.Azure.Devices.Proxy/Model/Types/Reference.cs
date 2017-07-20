@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Comparison
         /// </summary>
-        /// <param name="obj"></param>
+        /// <param name="address"></param>
         /// <returns></returns>
         public override bool IsEqual(Reference address) =>
             IsEqual(storage, address.storage);

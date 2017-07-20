@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         //
         // Initializes a new instance of the TcpListener class that listens on proxy
-        // 
+        //
         public TcpListener(SocketAddress endpoint) {
             Endpoint = endpoint;
             Active = false;
@@ -19,13 +19,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Proxy Endpoint 
+        // Proxy Endpoint
         //
         public SocketAddress Endpoint {
             get; private set;
         }
 
-        // 
+        //
         // Server socket
         //
         public Socket Server {
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         //
         // True when the listener's socket has been bound to a port and is listening
-        // 
+        //
         protected bool Active {
             get; private set;
         }
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         public Task<TcpClient> AcceptTcpClientAsync() =>
             Server.AcceptAsync().ContinueWith(t => new TcpClient(t.Result));
-        
+
         //
         // Begin accept
         //

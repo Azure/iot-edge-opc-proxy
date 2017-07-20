@@ -47,7 +47,7 @@ struct pal_socket_async
     bool pending;
     pal_socket_t* sock;
     pal_socket_async_begin_t begin;               // Begin operation
-    pal_socket_async_complete_t complete;      // Complete operation 
+    pal_socket_async_complete_t complete;      // Complete operation
     uint8_t* buffer;
     size_t buf_len;                          // Buffer length in/out
     int32_t result;                        // Result set or returned
@@ -70,7 +70,7 @@ struct pal_socket
     size_t prx_ai_count;           // Size of the resolved addresses
     size_t prx_ai_cur;                 // Current address to connect
     char* ai_name;                 // For unix path, store pipe name
-
+    bool retry_connect;                  // Whether to retry connect
     pal_socket_async_t open_op;           // Async connect operation
 
     pal_socket_async_t send_op;              // Async send operation
@@ -111,14 +111,14 @@ static int32_t pal_socket_from_os_error(
             log_info(NULL, "Unknown socket error 0x%x.", error);
         }
     }
-    else 
+    else
     {
         log_debug(NULL, "Operation Cancelled");
     }
     return pal_os_to_prx_error(error);
 }
 
-// 
+//
 // Close underlying socket handle
 //
 static void pal_socket_close_handle(
@@ -240,10 +240,10 @@ static bool pal_socket_async_has_close_completed(
         error = GetLastError();
         memset(&async_op->ov, 0, sizeof(OVERLAPPED));
     }
-    
+
     if (async_op->buffer)
         return false;  // Wait for buffer to complete
-    
+
     prx_scheduler_clear(async_op->sock->scheduler, NULL, async_op);
     return true;
 }
@@ -271,7 +271,7 @@ static void pal_socket_try_close(
 
         // No more operations are pending, close
         size = sizeof(pal_socket_t*);
-        sock->itf.cb(sock->itf.context, pal_socket_event_closed, 
+        sock->itf.cb(sock->itf.context, pal_socket_event_closed,
             (uint8_t**)&sock, &size, NULL, NULL, er_ok, NULL);
     }
     else
@@ -279,6 +279,17 @@ static void pal_socket_try_close(
         // Try again in 1 second
         __do_later(sock, pal_socket_try_close, 1000);
     }
+}
+
+//
+// Reset connect 
+//
+static int32_t pal_socket_async_connect_reset(
+    pal_socket_async_t* async_op
+)
+{
+    pal_socket_async_op_init(async_op);
+    return er_waiting; 
 }
 
 //
@@ -294,7 +305,7 @@ static void pal_socket_open_complete(
 
     // Complete open
     size = sizeof(pal_socket_t*);
-    sock->itf.cb(sock->itf.context, pal_socket_event_opened, 
+    sock->itf.cb(sock->itf.context, pal_socket_event_opened,
         (uint8_t**)&sock, &size, NULL, NULL, result, NULL);
 
     if (!sock->prx_ai)
@@ -304,6 +315,7 @@ static void pal_socket_open_complete(
     sock->prx_ai = NULL;
     sock->prx_ai_count = 0;
     sock->prx_ai_cur = 0;
+    sock->retry_connect = false;
 }
 
 //
@@ -322,7 +334,7 @@ static int32_t pal_socket_connect_complete(
     while(result == er_ok)
     {
         // Update the connect context.
-        error = setsockopt(async_op->sock->sock_fd, 
+        error = setsockopt(async_op->sock->sock_fd,
             SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT, NULL, 0);
         if (error != 0)
         {
@@ -406,7 +418,7 @@ static void pal_socket_async_complete(
     dbg_assert_ptr(async_op);
     dbg_assert_is_task(async_op->sock->scheduler);
 
-    // No more pending 
+    // No more pending
     dbg_assert(async_op->pending, "Op should be pending when completing...");
     async_op->pending = false;
 
@@ -434,11 +446,14 @@ static void CALLBACK pal_socket_async_complete_from_OVERLAPPED(
     pal_socket_async_t* async_op = (pal_socket_async_t*)ov;
 
     dbg_assert_ptr(async_op);
+    dbg_assert_ptr(async_op->sock);
+    if (!async_op->sock)
+        return; // Safety
 
     async_op->result = pal_socket_from_os_error(error);
     async_op->buf_len = (size_t)bytes;
 
-    while (true)
+    for (int i = 0; ; i++)
     {
         // Complete operation
         dbg_assert(async_op->pending, "Op should be pending");
@@ -473,10 +488,13 @@ static void pal_socket_async_begin(
 {
     int32_t result;
     dbg_assert_ptr(async_op);
+    dbg_assert_ptr(async_op->sock);
     dbg_assert_is_task(async_op->sock->scheduler);
-    
+
     // Kick off operation, but only once if not already in progress
     if (async_op->pending)
+        return;
+    if (async_op->sock->closing)
         return;
 
     async_op->pending = true;
@@ -497,12 +515,12 @@ static void pal_socket_async_begin(
         async_op->complete(async_op);
         if (result != er_ok)
             break;
-    } 
+    }
     pal_socket_async_complete(async_op);
 }
 
 //
-// Enables op operation loop 
+// Enables op operation loop
 //
 static void pal_socket_async_enable(
     pal_socket_async_t* async_op
@@ -518,7 +536,7 @@ static void pal_socket_async_enable(
 }
 
 //
-// Disables op operation loop 
+// Disables op operation loop
 //
 static void pal_socket_async_disable(
     pal_socket_async_t* async_op
@@ -549,7 +567,7 @@ static void pal_socket_async_connect_complete(
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
     dbg_assert_is_task(async_op->sock->scheduler);
-    
+
     // Complete connection
     result = pal_socket_connect_complete(async_op);
     if (result == er_ok)
@@ -558,10 +576,10 @@ static void pal_socket_async_connect_complete(
 
         // Success!
         log_trace(async_op->sock->log, "Socket connected asynchronously!");
-    } 
+    }
     else
     {
-        log_error(async_op->sock->log, 
+        log_error(async_op->sock->log,
             "Failed to connect socket, continue... (%s)",
             prx_err_string(result));
 
@@ -571,6 +589,7 @@ static void pal_socket_async_connect_complete(
     }
 
     pal_socket_async_op_init(async_op);
+    async_op->result = er_ok;
 }
 
 //
@@ -623,7 +642,7 @@ static void pal_socket_async_accept_complete(
         }
 
         // Update props
-        memcpy(&accepted->itf.props.address, &accepted->peer, 
+        memcpy(&accepted->itf.props.address, &accepted->peer,
             sizeof(prx_socket_address_t));
         accepted->itf.props.family = accepted->peer.un.family;
 
@@ -634,7 +653,7 @@ static void pal_socket_async_accept_complete(
             result = pal_os_last_net_error_as_prx_error();
             break;
         }
-    } 
+    }
     while (0);
 
     // Complete accept with the new socket as the argument.
@@ -725,7 +744,7 @@ static void pal_socket_async_recv_complete(
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
     dbg_assert(!async_op->addr_len, "Expected no adddress on WSARecv");
-    
+
     if (result == er_ok)
     {
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
@@ -754,7 +773,7 @@ static void pal_socket_async_sendto_complete(
 
     // Complete sendto
     async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_end_send,
-        &async_op->buffer, &async_op->buf_len, NULL, NULL, async_op->result, 
+        &async_op->buffer, &async_op->buf_len, NULL, NULL, async_op->result,
         &async_op->context);
     pal_socket_async_op_init(async_op);
 }
@@ -777,7 +796,7 @@ static void pal_socket_async_recvfrom_complete(
         if (result != er_ok)
             break;
 
-        // Process received flags and address... 
+        // Process received flags and address...
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
         if (result != er_ok)
         {
@@ -796,7 +815,7 @@ static void pal_socket_async_recvfrom_complete(
         }
         addr_ptr = &addr;
         break;
-    } 
+    }
     while (0);
 
     async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_end_recv,
@@ -870,7 +889,7 @@ static int32_t pal_socket_properties_to_fd(
     if (*sock_fd == INVALID_SOCKET)
         return pal_os_last_net_error_as_prx_error();
 
-    if (!BindIoCompletionCallback((HANDLE)*sock_fd, 
+    if (!BindIoCompletionCallback((HANDLE)*sock_fd,
         pal_socket_async_complete_from_OVERLAPPED, 0))
     {
         closesocket(*sock_fd);
@@ -897,7 +916,7 @@ static int32_t pal_socket_async_accept_begin(
     dbg_assert_is_task(async_op->sock->scheduler);
 
     // Call receive and get a client socket option
-    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_accept, 
+    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_accept,
         &async_op->buffer, &async_op->buf_len, NULL, NULL, er_ok, &async_op->context);
     if (!async_op->buffer || async_op->buf_len != sizeof(pal_socket_client_itf_t))
     {
@@ -906,8 +925,6 @@ static int32_t pal_socket_async_accept_begin(
     }
     do
     {
-        async_op->pending = true;
-
         accepted_itf = (pal_socket_client_itf_t*)async_op->buffer;
         if (accepted_itf->props.family == prx_address_family_unix)
         {
@@ -949,9 +966,9 @@ static int32_t pal_socket_async_accept_begin(
             // Wait for callback
             return er_waiting;
         }
-    } 
+    }
     while (0);
-    
+
     // Complete now
     async_op->buf_len = received;
     async_op->result = result;
@@ -985,8 +1002,6 @@ static int32_t pal_socket_async_connectpipe_begin(
     }
     do
     {
-        async_op->pending = true;
-
         accepted_itf = (pal_socket_client_itf_t*)async_op->buffer;
         if (accepted_itf->props.family != prx_address_family_unix)
         {
@@ -1010,9 +1025,9 @@ static int32_t pal_socket_async_connectpipe_begin(
             os_type = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE;
         else
             os_type = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE;
-        
+
         accepted->sock_fd = (SOCKET)CreateNamedPipeA(async_op->sock->ai_name,
-            PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, os_type, PIPE_UNLIMITED_INSTANCES, 
+            PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, os_type, PIPE_UNLIMITED_INSTANCES,
             0x10000, 0x10000, 0, NULL);
         if ((HANDLE)accepted->sock_fd == INVALID_HANDLE_VALUE)
         {
@@ -1022,7 +1037,7 @@ static int32_t pal_socket_async_connectpipe_begin(
             break;
         }
 
-        if (!BindIoCompletionCallback((HANDLE)accepted->sock_fd, 
+        if (!BindIoCompletionCallback((HANDLE)accepted->sock_fd,
             pal_socket_async_complete_from_OVERLAPPED, 0))
         {
             result = pal_os_last_error_as_prx_error();
@@ -1044,9 +1059,9 @@ static int32_t pal_socket_async_connectpipe_begin(
             // Wait for callback
             return er_waiting;
         }
-    } 
+    }
     while (0);
-    
+
     // Complete now
     async_op->buf_len = received;
     async_op->result = result;
@@ -1069,7 +1084,7 @@ static int32_t pal_socket_async_send_begin(
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
 
-    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_send, 
+    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_send,
         &async_op->buffer, &async_op->buf_len, NULL, &flags, er_ok, &async_op->context);
     if (!async_op->buffer)
     {
@@ -1078,7 +1093,6 @@ static int32_t pal_socket_async_send_begin(
     }
     do
     {
-        async_op->pending = true;
         result = pal_os_from_prx_message_flags(flags, &os_flags);
         if (result != er_ok)
         {
@@ -1101,7 +1115,7 @@ static int32_t pal_socket_async_send_begin(
             // Wait for callback
             return er_waiting;
         }
-    } 
+    }
     while (0);
 
     // Complete now
@@ -1125,7 +1139,7 @@ static int32_t pal_socket_async_recv_begin(
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
 
-    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_recv, 
+    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_recv,
         &async_op->buffer, &async_op->buf_len, NULL, NULL, er_ok, &async_op->context);
     if (!async_op->buffer)
     {
@@ -1134,7 +1148,6 @@ static int32_t pal_socket_async_recv_begin(
     }
     do
     {
-        async_op->pending = true;
         buf.buf = (char*)async_op->buffer;
         buf.len = (u_long)async_op->buf_len;
         error = WSARecv(async_op->sock->sock_fd, &buf, 1, &received,
@@ -1185,7 +1198,6 @@ static int32_t pal_socket_async_sendto_begin(
     }
     do
     {
-        async_op->pending = true;
         async_op->addr_len = sizeof(async_op->addr_buf);
         result = pal_os_from_prx_socket_address(&addr,
             (struct sockaddr*)async_op->addr_buf, &async_op->addr_len);
@@ -1208,7 +1220,7 @@ static int32_t pal_socket_async_sendto_begin(
         buf.len = (u_long)async_op->buf_len;
 
         error = WSASendTo(async_op->sock->sock_fd, &buf, 1, &sent, async_op->flags,
-            (struct sockaddr*)async_op->addr_buf, async_op->addr_len, &async_op->ov, 
+            (struct sockaddr*)async_op->addr_buf, async_op->addr_len, &async_op->ov,
             NULL);
         if (error != 0)
         {
@@ -1245,7 +1257,7 @@ static int32_t pal_socket_async_recvfrom_begin(
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
 
-    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_recv, 
+    async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_begin_recv,
         &async_op->buffer, &async_op->buf_len, NULL, NULL, er_ok, &async_op->context);
     if (!async_op->buffer)
     {
@@ -1254,7 +1266,6 @@ static int32_t pal_socket_async_recvfrom_begin(
     }
     do
     {
-        async_op->pending = true;
         buf.buf = (char*)async_op->buffer;
         buf.len = (u_long)async_op->buf_len;
 
@@ -1305,10 +1316,9 @@ static int32_t pal_socket_async_writefile_begin(
     }
     do
     {
-        async_op->pending = true;
         dbg_assert(!flags, "Not supported");
 
-        if (!WriteFile((HANDLE)async_op->sock->sock_fd, async_op->buffer, 
+        if (!WriteFile((HANDLE)async_op->sock->sock_fd, async_op->buffer,
             (DWORD)async_op->buf_len, &sent, &async_op->ov))
         {
             result = pal_os_last_error_as_prx_error();
@@ -1320,7 +1330,7 @@ static int32_t pal_socket_async_writefile_begin(
             // Wait for callback
             return er_waiting;
         }
-    } 
+    }
     while (0);
 
     // Complete now
@@ -1351,7 +1361,6 @@ static int32_t pal_socket_async_readfile_begin(
     }
     do
     {
-        async_op->pending = true;
         if (!ReadFile((HANDLE)async_op->sock->sock_fd, async_op->buffer,
             (DWORD)async_op->buf_len, &received, &async_op->ov))
         {
@@ -1364,7 +1373,7 @@ static int32_t pal_socket_async_readfile_begin(
             // Wait for callback
             return er_waiting;
         }
-    } 
+    }
     while (0);
 
     // Complete now
@@ -1405,7 +1414,7 @@ static int32_t pal_socket_async_connect_begin(
                 prx_err_string(result));
             break;
         }
-        
+
         if (!_ConnectEx(async_op->sock->sock_fd,
             (const struct sockaddr*)async_op->addr_buf, (int)async_op->addr_len,
             NULL, 0, &tmp, &async_op->ov))
@@ -1418,14 +1427,14 @@ static int32_t pal_socket_async_connect_begin(
         }
         else
         {
-          //  log_trace(async_op->sock->log, "Socket connected synchronously!");
-          //  result = er_ok;
+            log_trace(async_op->sock->log, "Waiting for socket to connect...");
             return er_waiting;
         }
-    } 
+    }
     while (0);
 
     // Finish connect
+    async_op->pending = false;
     async_op->buf_len = 0;
     async_op->result = result;
     result = pal_socket_connect_complete(async_op);
@@ -1453,15 +1462,15 @@ static int32_t pal_socket_async_createfile_begin(
         dbg_assert(async_op->addr_len == sizeof(struct sockaddr_un), "Address size");
         dbg_assert_ptr(async_op->sock->ai_name);
 
-        h_file = CreateFileA(async_op->sock->ai_name, GENERIC_READ | GENERIC_WRITE, 
+        h_file = CreateFileA(async_op->sock->ai_name, GENERIC_READ | GENERIC_WRITE,
             0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
         if (h_file == INVALID_HANDLE_VALUE)
         {
             result = pal_os_last_error_as_prx_error();
             if (result == er_busy)
             {
-                // There is no overlapped connect - the server needs to have its named 
-                // pipe loop started and enough instances available.  Then we should  
+                // There is no overlapped connect - the server needs to have its named
+                // pipe loop started and enough instances available.  Then we should
                 // be fine, otherwise, for now, fail fast...
 
                 // TODO: Consider retry for timeout time on the scheduler.
@@ -1484,7 +1493,7 @@ static int32_t pal_socket_async_createfile_begin(
 
         async_op->sock->sock_fd = (SOCKET)h_file;
         result = er_ok;
-    } 
+    }
     while (0);
 
     // Finish connect
@@ -1528,7 +1537,7 @@ static int32_t pal_socket_bind(
         if (sock->itf.props.sock_type == prx_socket_type_dgram ||
             sock->itf.props.sock_type == prx_socket_type_raw)
             break;
-        
+
         dbg_assert(0 != (sock->itf.props.flags & prx_socket_flag_passive),
             "should be passive");
 
@@ -1541,7 +1550,7 @@ static int32_t pal_socket_bind(
                 prx_err_string(result));
             break;
         }
- 
+
         log_trace(sock->log, "Socket listening...");
         result = er_ok;
     }
@@ -1549,7 +1558,7 @@ static int32_t pal_socket_bind(
     return result;
 }
 
-// 
+//
 // Try opening socket based on address in connect op
 //
 static int32_t pal_socket_open_begin(
@@ -1563,7 +1572,7 @@ static int32_t pal_socket_open_begin(
     if (sock->itf.props.family == prx_address_family_unix)
     {
         // Create a name that is compatible with windows named pipes
-        result = pal_socket_make_pipe_name(sock->itf.props.address.un.ux.path, 
+        result = pal_socket_make_pipe_name(sock->itf.props.address.un.ux.path,
             &sock->ai_name);
         if (result != er_ok)
         {
@@ -1610,7 +1619,7 @@ static int32_t pal_socket_open_begin(
     }
 
     // Failed synchronously, close socket...
-    if (result != er_ok && 
+    if (result != er_ok &&
         result != er_waiting)
         pal_socket_close_handle(sock);
     return result;
@@ -1631,9 +1640,14 @@ static void pal_socket_open_next_begin(
     {
         if (sock->prx_ai_cur >= sock->prx_ai_count)
         {
-            log_error(sock->log, "No other candidate addresses to open...");
-            result = er_connecting;
-            break;
+            if (!sock->retry_connect)
+            {
+                log_error(sock->log, "No other candidate addresses to open...");
+                result = er_connecting;
+                break;
+            }
+            sock->retry_connect = false;
+            sock->prx_ai_cur = 0;
         }
 
         // Setup async operation structure for open operation
@@ -1708,10 +1722,10 @@ static void pal_socket_open_by_name_begin(
         // Now we have a list of addresses, try to open one by one...
         __do_next(sock, pal_socket_open_next_begin);
         return;
-    } 
+    }
     while (0);
 
-    // Complete open 
+    // Complete open
     pal_socket_open_complete(sock, result);
 }
 
@@ -1746,10 +1760,10 @@ static void pal_socket_open_by_addr_begin(
         result = pal_socket_open_begin(sock);
         if (result == er_waiting)
             return; // Wait for callback
-    } 
+    }
     while (0);
 
-    // Complete open 
+    // Complete open
     pal_socket_open_complete(sock, result);
 }
 
@@ -1767,6 +1781,7 @@ int32_t pal_socket_open(
     dbg_assert(sock->sock_fd == INVALID_SOCKET, "Socket open");
 
     sock->open_op.enabled = true;
+    sock->retry_connect = true;
 
     /**/ if (sock->itf.props.address.un.family == prx_address_family_proxy)
         __do_next(sock, pal_socket_open_by_name_begin);
@@ -1776,7 +1791,7 @@ int32_t pal_socket_open(
 }
 
 //
-// Enables send operation loop 
+// Enables send operation loop
 //
 int32_t pal_socket_can_send(
     pal_socket_t* sock,
@@ -1795,7 +1810,7 @@ int32_t pal_socket_can_send(
 }
 
 //
-// Enables receive operation loop 
+// Enables receive operation loop
 //
 int32_t pal_socket_can_recv(
     pal_socket_t* sock,
@@ -1852,9 +1867,9 @@ int32_t pal_socket_create(
         if (sock->itf.props.family == prx_address_family_unix)
         {
             // Named pipe to mimic unix domain socket behavior
-            
+
             sock->open_op.begin =
-                pal_socket_async_op_init;
+                pal_socket_async_connect_reset;
             sock->open_op.complete =
                 pal_socket_async_connect_complete;
 
@@ -1883,12 +1898,12 @@ int32_t pal_socket_create(
                     pal_socket_async_readfile_complete;
             }
         }
-        else 
+        else
         {
             // Regular socket
 
             sock->open_op.begin =
-                pal_socket_async_op_init;
+                pal_socket_async_connect_reset;
             sock->open_op.complete =
                 pal_socket_async_connect_complete;
 
@@ -1956,7 +1971,7 @@ int32_t pal_socket_pair(
     DWORD tmp;
     STRING_HANDLE rand;
     pal_socket_t* sock1 = NULL, *sock2 = NULL;
-    
+
     chk_arg_fault_return(itf1);
     chk_arg_fault_return(itf1->cb);
     chk_arg_fault_return(created1);
@@ -1967,7 +1982,7 @@ int32_t pal_socket_pair(
     if (itf1->props.sock_type != itf2->props.sock_type ||
         itf1->props.proto_type != itf2->props.proto_type)
         return er_arg;
-    
+
     fds[0] = INVALID_HANDLE_VALUE;
     fds[1] = INVALID_HANDLE_VALUE;
     memset(&ov, 0, sizeof(ov));
@@ -1997,7 +2012,7 @@ int32_t pal_socket_pair(
             tmp = PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE;
         else
             tmp = PIPE_TYPE_BYTE | PIPE_READMODE_BYTE;
-        fds[0] = CreateNamedPipeA(pipe_name, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED, 
+        fds[0] = CreateNamedPipeA(pipe_name, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
             tmp, 1, 0x10000, 0x10000, 0, NULL);
         if (fds[0] == INVALID_HANDLE_VALUE)
         {
@@ -2018,7 +2033,7 @@ int32_t pal_socket_pair(
             }
         }
 
-        fds[1] = CreateFileA(pipe_name, GENERIC_READ | GENERIC_WRITE, 0, NULL, 
+        fds[1] = CreateFileA(pipe_name, GENERIC_READ | GENERIC_WRITE, 0, NULL,
             OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
         if (fds[1] == INVALID_HANDLE_VALUE)
         {
@@ -2075,7 +2090,7 @@ int32_t pal_socket_pair(
         *created1 = sock1;
         *created2 = sock2;
         break;
-    } 
+    }
     while (0);
 
     // To avoid leaking resources complete open with error notifying callback
@@ -2101,7 +2116,7 @@ int32_t pal_socket_pair(
     return er_ok;
 }
 
-// 
+//
 // Close and disconnect socket
 //
 void pal_socket_close(
@@ -2154,7 +2169,7 @@ int32_t pal_socket_getsockopt(
         }
         return er_ok;
     }
-    
+
     if (sock->itf.props.family == prx_address_family_unix)
         return er_not_supported;
 
@@ -2162,11 +2177,23 @@ int32_t pal_socket_getsockopt(
     {
         struct linger opt;
         opt_len = sizeof(opt);
-        result = getsockopt(sock->sock_fd, SOL_SOCKET, SO_LINGER, 
+        result = getsockopt(sock->sock_fd, SOL_SOCKET, SO_LINGER,
             (char*)&opt, &opt_len);
         if (result != 0)
             return pal_os_last_net_error_as_prx_error();
         *value = opt.l_onoff ? opt.l_linger : 0;
+        return er_ok;
+    }
+
+    if (socket_option == prx_so_sndbuf &&
+        sock->itf.props.sock_type != prx_socket_type_stream)
+    {
+        opt_len = sizeof(int32_t);
+        result = getsockopt(sock->sock_fd, SOL_SOCKET, SO_MAX_MSG_SIZE,
+            (char*)&opt_val, &opt_len);
+        if (result != 0)
+            return pal_os_last_net_error_as_prx_error();
+        *value = opt_val;
         return er_ok;
     }
 
@@ -2175,7 +2202,7 @@ int32_t pal_socket_getsockopt(
         return result;
 
     opt_len = sizeof(int32_t);
-    result = getsockopt(sock->sock_fd, opt_lvl, opt_name, 
+    result = getsockopt(sock->sock_fd, opt_lvl, opt_name,
         (char*)&opt_val, &opt_len);
     if (result != 0)
         return pal_os_last_net_error_as_prx_error();
@@ -2243,7 +2270,7 @@ int32_t pal_socket_setsockopt(
         if (result != er_ok)
             return result;
 
-        result = setsockopt(sock->sock_fd, opt_lvl, opt_name, 
+        result = setsockopt(sock->sock_fd, opt_lvl, opt_name,
             (const char*)&opt_val, (socklen_t)sizeof(opt_val));
     }
     return result == 0 ? er_ok : pal_os_last_net_error_as_prx_error();
@@ -2392,8 +2419,8 @@ void pal_socket_free(
 // Socket pair abstraction to support controling event loops
 //
 int socketpair(
-    int domain, 
-    int type, 
+    int domain,
+    int type,
     int protocol,
     fd_t socks[2]
 )
@@ -2448,7 +2475,7 @@ int socketpair(
         }
 
         // Connect
-        socks[0] = (fd_t)WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, 
+        socks[0] = (fd_t)WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP,
             NULL, 0, 0);
         if (socks[0] == INVALID_SOCKET)
             break;
@@ -2467,7 +2494,7 @@ int socketpair(
         }
         closesocket(listener);
         return 0;
-    } 
+    }
     while (0);
 
     error = WSAGetLastError();
@@ -2557,7 +2584,7 @@ int32_t pal_socket_init(
             &cb, NULL, NULL);
         if (error != 0)
             break;
-    } 
+    }
     while (0);
 
     if (s != INVALID_SOCKET)

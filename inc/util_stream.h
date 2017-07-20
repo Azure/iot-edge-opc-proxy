@@ -30,7 +30,7 @@ typedef struct io_dynamic_buffer_stream
     prx_buffer_factory_t* pool;                // dynamic pool
     size_t increment;   // Grow buffer by this number of bytes
     uint8_t* out;                           // != null on fini
-    size_t out_len;                                    // Size 
+    size_t out_len;                                    // Size
 }
 io_dynamic_buffer_stream_t;
 
@@ -46,7 +46,7 @@ typedef struct io_file_stream
 io_file_stream_t;
 
 //
-// Initialize a fixed in/out buffer memory stream 
+// Initialize a fixed in/out buffer memory stream
 //
 decl_internal_5(io_stream_t*, io_fixed_buffer_stream_init,
     io_fixed_buffer_stream_t*, mem,
@@ -57,7 +57,7 @@ decl_internal_5(io_stream_t*, io_fixed_buffer_stream_init,
 );
 
 //
-// Initialize a dynamic out buffer memory stream 
+// Initialize a dynamic out buffer memory stream
 //
 decl_internal_3(io_stream_t*, io_dynamic_buffer_stream_init,
     io_dynamic_buffer_stream_t*, mem,
@@ -66,7 +66,7 @@ decl_internal_3(io_stream_t*, io_dynamic_buffer_stream_init,
 );
 
 //
-// Initialize a file stream 
+// Initialize a file stream
 //
 decl_internal_3(io_stream_t*, io_file_stream_init,
     io_file_stream_t*, fs,

@@ -20,11 +20,11 @@ typedef size_t (*io_stream_available_t)(
     );
 
 //
-// Read encoded data 
+// Read encoded data
 //
 typedef int32_t (*io_stream_reader_t)(
     void* ctx,
-    void* buf, 
+    void* buf,
     size_t len,
     size_t* read
     );
@@ -40,7 +40,7 @@ typedef int32_t(*io_stream_reset_t)(
 // Write encoded data
 //
 typedef int32_t (*io_stream_writer_t)(
-    void* ctx, 
+    void* ctx,
     const void *buf,
     size_t len
     );

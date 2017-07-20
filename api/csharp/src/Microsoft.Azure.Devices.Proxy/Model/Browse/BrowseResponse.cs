@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class BrowseResponse : Poco<BrowseResponse> {
 
         /// <summary>
-        /// Original request handle 
+        /// Original request handle
         /// </summary>
         [DataMember(Name = "handle", Order = 1)]
         public Reference Handle {
@@ -94,4 +94,4 @@ namespace Microsoft.Azure.Devices.Proxy {
             MixToHash(Properties);
         }
     }
-} 
+}

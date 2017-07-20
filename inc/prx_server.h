@@ -24,7 +24,7 @@ decl_public_4(int32_t, prx_server_create,
 );
 
 //
-// Free socket server 
+// Free socket server
 //
 decl_public_1(void, prx_server_release,
     prx_server_t*, server

@@ -67,7 +67,7 @@ typedef int32_t (*io_token_provider_on_clone_t)(
     );
 
 //
-// Token provider interface 
+// Token provider interface
 //
 struct io_token_provider
 {
@@ -140,7 +140,7 @@ decl_inline_1(void, io_token_provider_release,
 }
 
 //
-// Create pass thru token provider 
+// Create pass thru token provider
 //
 decl_internal_2(int32_t, io_passthru_token_provider_create,
     const char*, shared_access_token,

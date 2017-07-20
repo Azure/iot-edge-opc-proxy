@@ -33,7 +33,7 @@ endif()
     add_library(dnssd SHARED ${source_c_files})
     set_property(TARGET dnssd PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_include_directories(dnssd PUBLIC ${_DNSSD_ROOT}/src)
-    
+
 if(WIN32)
     target_compile_definitions(dnssd
         PRIVATE _WINDOWS=1
@@ -47,10 +47,10 @@ if(WIN32)
         PRIVATE mdns_EXPORTS=1
     )
     target_link_libraries(dnssd
-        PRIVATE ws2_32 
+        PRIVATE ws2_32
         PRIVATE iphlpapi
-        PRIVATE secur32 
-        PRIVATE crypt32 
+        PRIVATE secur32
+        PRIVATE crypt32
         PRIVATE schannel
     )
 else()

@@ -54,9 +54,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_cred_import happy path 
-// 
+//
+// Test pal_cred_import happy path
+//
 TEST_FUNCTION(pal_gnome_cred_import__success_0)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -71,7 +71,7 @@ TEST_FUNCTION(pal_gnome_cred_import__success_0)
 
     memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
         .SetReturn(k_handle_valid);
     STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
@@ -87,16 +87,16 @@ TEST_FUNCTION(pal_gnome_cred_import__success_0)
         .SetReturn(strlen(k_key_encoded_valid));
     STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_cred_import happy path 
-// 
+//
+// Test pal_cred_import happy path
+//
 TEST_FUNCTION(pal_gnome_cred_import__success_1)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -111,7 +111,7 @@ TEST_FUNCTION(pal_gnome_cred_import__success_1)
 
     memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
         .SetReturn(k_handle_valid);
     STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
@@ -127,16 +127,16 @@ TEST_FUNCTION(pal_gnome_cred_import__success_1)
         .SetReturn(strlen(k_key_encoded_valid));
     STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_cred_import passing as key_val argument an invalid void* value 
-// 
+//
+// Test pal_cred_import passing as key_val argument an invalid void* value
+//
 TEST_FUNCTION(pal_gnome_cred_import__arg_key_val_invalid)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -145,19 +145,19 @@ TEST_FUNCTION(pal_gnome_cred_import__arg_key_val_invalid)
     STRING_HANDLE handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, NULL, k_key_len_valid, k_persist_valid, &handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_cred_import passing as key_len argument an invalid size_t value 
-// 
+//
+// Test pal_cred_import passing as key_len argument an invalid size_t value
+//
 TEST_FUNCTION(pal_gnome_cred_import__arg_key_len_invalid)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -166,19 +166,19 @@ TEST_FUNCTION(pal_gnome_cred_import__arg_key_len_invalid)
     STRING_HANDLE handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, 0, k_persist_valid, &handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test pal_cred_import passing as handle argument an invalid STRING_HANDLE* value 
-// 
+//
+// Test pal_cred_import passing as handle argument an invalid STRING_HANDLE* value
+//
 TEST_FUNCTION(pal_gnome_cred_import__arg_handle_invalid)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -187,19 +187,19 @@ TEST_FUNCTION(pal_gnome_cred_import__arg_handle_invalid)
     static const bool k_persist_valid = false;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_cred_import unhappy path 
-// 
+//
+// Test pal_cred_import unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_import__neg_0)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -209,21 +209,21 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_0)
     STRING_HANDLE handle_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_cred_import unhappy path 
-// 
+//
+// Test pal_cred_import unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_import__neg_1)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -238,23 +238,23 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_1)
 
     memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
         .SetReturn(k_handle_valid);
     STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
         .SetReturn(NULL);
     STRICT_EXPECTED_CALL(STRING_delete(k_handle_valid));
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_cred_import unhappy path 
-// 
+//
+// Test pal_cred_import unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_import__neg_2)
 {
     static const char* k_key_name_valid = "testkeyname";
@@ -271,7 +271,7 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_2)
     memcpy(UT_MEM, k_key_encoded_valid, strlen(k_key_encoded_valid) + 1);
     error_valid.message = "Error";
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_key_name_valid))
         .SetReturn(k_handle_valid);
     STRICT_EXPECTED_CALL(STRING_construct_base16((uint8_t*)k_key_val_valid, k_key_len_valid))
@@ -290,16 +290,16 @@ TEST_FUNCTION(pal_gnome_cred_import__neg_2)
         .SetReturn(strlen(k_key_encoded_valid));
     STRICT_EXPECTED_CALL(STRING_delete(k_encoded_string));
 
-    // act 
+    // act
     result = pal_cred_import(k_key_name_valid, k_key_val_valid, k_key_len_valid, k_persist_valid, &handle_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 happy path 
-// 
+//
+// Test pal_cred_hmac_sha256 happy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -315,7 +315,7 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -341,18 +341,18 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__success)
     STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(!memcmp(k_valid_sig, k_valid_hash, k_valid_sig_len));
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf argument an invalid handle
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_handle_null)
 {
     static unsigned char* k_valid_buf = (unsigned char*)"0x2355";
@@ -361,19 +361,19 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_handle_null)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(NULL, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_buf_null)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -382,19 +382,19 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_buf_null)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, NULL, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as buf_len 0
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_buf_len_invalid)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -403,19 +403,19 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_buf_len_invalid)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, 0, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as sig argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_sig_null)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -424,19 +424,19 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_sig_null)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, NULL, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_cred_hmac_sha256 passing as sig_len and invalid value
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_sig_len_invalid)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -445,19 +445,19 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__arg_sig_len_invalid)
     static void* k_valid_sig = UT_MEM;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, 31);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_0)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -469,7 +469,7 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_0)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -479,17 +479,17 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_0)
         .SetReturn(NULL);
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_1)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -504,7 +504,7 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_1)
 
     error_valid.message = "Error";
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -516,17 +516,17 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_1)
     STRICT_EXPECTED_CALL(g_error_free(k_error_valid_ptr));
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -539,7 +539,7 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -553,17 +553,17 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_2)
     STRICT_EXPECTED_CALL(BUFFER_delete(k_valid_buffer_handle));
     STRICT_EXPECTED_CALL(secret_password_free((gchar*)k_protected_key));
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -578,7 +578,7 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
     static BUFFER_HANDLE k_valid_buffer_handle = (BUFFER_HANDLE)0x53535;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(k_valid_buffer_handle);
     STRICT_EXPECTED_CALL(STRING_c_str(k_valid_handle))
@@ -600,17 +600,17 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_3)
     STRICT_EXPECTED_CALL(h_free((void*)k_valid_key, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_invalid_format, result);
 }
 
-// 
-// Test pal_cred_hmac_sha256 unhappy path 
-// 
+//
+// Test pal_cred_hmac_sha256 unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_4)
 {
     static STRING_HANDLE k_valid_handle = (STRING_HANDLE)0x234;
@@ -620,57 +620,57 @@ TEST_FUNCTION(pal_gnome_cred_hmac_sha256__neg_4)
     static const size_t k_valid_sig_len = 32;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(BUFFER_new())
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_cred_hmac_sha256(k_valid_handle, k_valid_buf, k_valid_buf_len, k_valid_sig, k_valid_sig_len);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_cred_remove happy path 
-// 
+//
+// Test pal_cred_remove happy path
+//
 TEST_FUNCTION(pal_gnome_cred_remove__success)
 {
     static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x23423;
     static const char* k_valid_target = "abcdefg";
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_c_str(k_handle_valid))
         .SetReturn(k_valid_target);
     STRICT_EXPECTED_CALL(secret_password_clear_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
         .IgnoreAllArguments()
         .SetReturn(true);
 
-    // act 
+    // act
     pal_cred_remove(k_handle_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_cred_remove passing as handle argument an invalid STRING_HANDLE value 
-// 
+//
+// Test pal_cred_remove passing as handle argument an invalid STRING_HANDLE value
+//
 TEST_FUNCTION(pal_gnome_cred_remove__arg_handle_invalid)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_cred_remove(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_cred_remove unhappy path 
-// 
+//
+// Test pal_cred_remove unhappy path
+//
 TEST_FUNCTION(pal_gnome_cred_remove__neg)
 {
     static STRING_HANDLE k_handle_valid = (STRING_HANDLE)0x23423;
@@ -679,7 +679,7 @@ TEST_FUNCTION(pal_gnome_cred_remove__neg)
 
     error_valid.message = "Error";
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_c_str(k_handle_valid))
         .SetReturn(k_valid_target);
     STRICT_EXPECTED_CALL(secret_password_clear_sync(IGNORED_PTR_ARG, NULL, IGNORED_PTR_ARG, PASSWORD_TARGET, k_valid_target, NULL))
@@ -688,36 +688,36 @@ TEST_FUNCTION(pal_gnome_cred_remove__neg)
         .SetReturn(false);
     STRICT_EXPECTED_CALL(g_error_free(k_error_valid_ptr));
 
-    // act 
+    // act
     pal_cred_remove(k_handle_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
+//
 // Test pal_cred_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_gnome_cred_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_cred_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_cred_init happy path 
-// 
+//
+// Test pal_cred_init happy path
+//
 TEST_FUNCTION(pal_gnome_cred_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_cred_init();
 
     ASSERT_EXPECTED_CALLS();

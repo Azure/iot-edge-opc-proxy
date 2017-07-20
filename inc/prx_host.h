@@ -10,7 +10,7 @@ typedef struct prx_host prx_host_t;
 
 typedef enum prx_host_type
 {
-    proxy_type_custom = 0,  
+    proxy_type_custom = 0,
     proxy_type_server,
     proxy_type_client
 }

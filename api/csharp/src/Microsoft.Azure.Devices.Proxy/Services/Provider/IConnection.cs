@@ -20,14 +20,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Connection string for this connection that allows the proxy to
         /// open up a connection to us.  This can be null, in which case the
         /// proxy is assumed to use the existing device methods interface
-        /// to connect up. 
+        /// to connect up.
         /// </summary>
         ConnectionString ConnectionString {
             get;
         }
 
         /// <summary>
-        /// Whether this stream must be polled for receiving. This option 
+        /// Whether this stream must be polled for receiving. This option
         /// must be communicated to the proxy to allow it to set up the right
         /// send code path.
         /// </summary>
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Opens the connection and connects the message stream to the 
+        /// Opens the connection and connects the message stream to the
         /// underlying streaming implementation (e.g. a websocket stream or
         /// http send/recv).  Open might need to wait until the proxy connects
         /// before it returns hence it should be possible to cancel.

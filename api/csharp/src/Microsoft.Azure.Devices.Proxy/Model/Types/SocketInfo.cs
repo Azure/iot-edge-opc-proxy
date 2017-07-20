@@ -91,7 +91,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Comparison
         /// </summary>
-        /// <param name="that"></param>
         /// <returns></returns>
         protected override void SetHashCode() {
             MixToHash(Family);

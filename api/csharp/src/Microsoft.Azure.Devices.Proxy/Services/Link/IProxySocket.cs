@@ -9,8 +9,8 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Proxy socket represents a virtual socket that once activated can 
-    /// be used to communicate to one or more proxy endpoint instances 
+    /// Proxy socket represents a virtual socket that once activated can
+    /// be used to communicate to one or more proxy endpoint instances
     /// (e.g. to support udp multicast send receive across proxies).
     /// </summary>
     public interface IProxySocket : IProxyOptions, IProxyStream, IDisposable {
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Connects a socket to an endpoint
         /// </summary>
-        /// <param name="endpoint"></param>
+        /// <param name="address"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task ConnectAsync(SocketAddress address, CancellationToken ct);
@@ -45,14 +45,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Creates a listening link
         /// </summary>
         /// <param name="backlog"></param>
-        /// <param name="none"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
         Task ListenAsync(int backlog, CancellationToken ct);
 
         /// <summary>
         /// Close (close)
         /// </summary>
-        /// <param name="connectTimeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task CloseAsync(CancellationToken ct);

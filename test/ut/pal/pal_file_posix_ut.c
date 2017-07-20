@@ -49,86 +49,86 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_file_init happy path 
-// 
+//
+// Test pal_file_init happy path
+//
 TEST_FUNCTION(pal_posix_file_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_file_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
 
-// 
-// Test pal_file_exists happy path 
-// 
+//
+// Test pal_file_exists happy path
+//
 TEST_FUNCTION(pal_posix_file_exists__success_1)
 {
     static const char* k_file_valid = "fileexists";
     bool result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(access(k_file_valid, F_OK))
         .SetReturn(0);
 
-    // act 
+    // act
     result = pal_file_exists(k_file_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE(result);
 }
 
-// 
-// Test pal_file_exists happy path 
-// 
+//
+// Test pal_file_exists happy path
+//
 TEST_FUNCTION(pal_posix_file_exists__success_2)
 {
     static const char* k_file_valid = "/test/notexist";
     bool result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(access(k_file_valid, F_OK))
         .SetReturn(-1);
 
-    // act 
+    // act
     result = pal_file_exists(k_file_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test pal_file_exists passing as file_name argument an invalid const char* value 
-// 
+//
+// Test pal_file_exists passing as file_name argument an invalid const char* value
+//
 TEST_FUNCTION(pal_posix_file_exists__arg_file_name_invalid)
 {
     bool result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(access(NULL, F_OK))
         .SetReturn(-1);
 
-    // act 
+    // act
     result = pal_file_exists(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_FALSE(result);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_1)
 {
     static const char* k_file_name_valid = "/home/../foo.txt";
@@ -137,7 +137,7 @@ TEST_FUNCTION(pal_posix_get_real_path__success_1)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(MAX_PATH);
     STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -147,18 +147,18 @@ TEST_FUNCTION(pal_posix_get_real_path__success_1)
         .CopyOutArgumentBuffer(2, k_full_path_valid, strlen(k_full_path_valid) + 1)
         .SetReturn((char*)k_full_path_valid);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, full_path_buffer, full_path);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_2)
 {
     static const char* k_file_name_valid = "foo.txt";
@@ -166,24 +166,24 @@ TEST_FUNCTION(pal_posix_get_real_path__success_2)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
         .SetReturn((char*)k_full_path_valid);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_3)
 {
     static const char* k_file_name_valid = "foo.txt";
@@ -193,7 +193,7 @@ TEST_FUNCTION(pal_posix_get_real_path__success_3)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(MAX_PATH);
     STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -205,18 +205,18 @@ TEST_FUNCTION(pal_posix_get_real_path__success_3)
         .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid) + 1)
         .SetReturn(full_path_buffer);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_4)
 {
     static const char* k_file_name_valid = "./foo.txt";
@@ -226,7 +226,7 @@ TEST_FUNCTION(pal_posix_get_real_path__success_4)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(MAX_PATH);
     STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -238,18 +238,18 @@ TEST_FUNCTION(pal_posix_get_real_path__success_4)
         .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid)+1)
         .SetReturn(full_path_buffer);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_5)
 {
     static const char* k_file_name_valid = "/working/dir/foo.txt";
@@ -257,7 +257,7 @@ TEST_FUNCTION(pal_posix_get_real_path__success_5)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
@@ -266,18 +266,18 @@ TEST_FUNCTION(pal_posix_get_real_path__success_5)
         .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn((void*)full_path_buffer);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_file_name_valid, full_path);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__success_6)
 {
     static const char* k_file_name_valid = "./working/dir/foo.txt";
@@ -290,7 +290,7 @@ TEST_FUNCTION(pal_posix_get_real_path__success_6)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(16);
     STRICT_EXPECTED_CALL(c_realloc(16 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -311,61 +311,61 @@ TEST_FUNCTION(pal_posix_get_real_path__success_6)
         .CopyOutArgumentBuffer_buf(k_cwd_path_valid, strlen(k_cwd_path_valid) + 1)
         .SetReturn(full_path_buffer);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(char_ptr, k_full_path_valid, full_path);
 }
 
-// 
-// Test pal_get_real_path passing as file_name argument an invalid const char* value 
-// 
+//
+// Test pal_get_real_path passing as file_name argument an invalid const char* value
+//
 TEST_FUNCTION(pal_posix_get_real_path__arg_file_name_invalid)
 {
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_get_real_path(NULL, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_get_real_path passing as real_path argument an invalid const char* value 
-// 
+//
+// Test pal_get_real_path passing as real_path argument an invalid const char* value
+//
 TEST_FUNCTION(pal_posix_get_real_path__arg_real_path_invalid)
 {
     static const char* k_file_name_valid = "test.conf";
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_get_real_path unhappy path 
-// 
+//
+// Test pal_get_real_path unhappy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__neg_1)
 {
     static const char* k_file_name_valid = "/home/../foo.txt";
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(MAX_PATH);
     STRICT_EXPECTED_CALL(c_realloc(MAX_PATH + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -377,17 +377,17 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_1)
         .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_get_real_path unhappy path 
-// 
+//
+// Test pal_get_real_path unhappy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__neg_2)
 {
     static const char* k_file_name_valid = "./foo.txt";
@@ -395,7 +395,7 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_2)
     const char* full_path;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(realpath(k_file_name_valid, NULL))
@@ -404,17 +404,17 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_2)
         .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_get_real_path happy path 
-// 
+//
+// Test pal_get_real_path happy path
+//
 TEST_FUNCTION(pal_posix_get_real_path__neg_3)
 {
     static const char* k_file_name_valid = "./working/dir/foo.txt";
@@ -426,7 +426,7 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_3)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pathconf(".", _PC_PATH_MAX))
         .SetReturn(16);
     STRICT_EXPECTED_CALL(c_realloc(16 + 1, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
@@ -446,17 +446,17 @@ TEST_FUNCTION(pal_posix_get_real_path__neg_3)
     STRICT_EXPECTED_CALL(c_free(full_path_buffer, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     result = pal_get_real_path(k_file_name_valid, &full_path);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test pal_read_dir happy path 
-// 
+//
+// Test pal_read_dir happy path
+//
 TEST_FUNCTION(pal_posix_read_dir__success_0)
 {
     static const char* k_dir_name_valid = "valid/dir";
@@ -475,7 +475,7 @@ TEST_FUNCTION(pal_posix_read_dir__success_0)
     memset(&stat_valid, 0, sizeof(stat_valid));
     stat_valid.st_mode = 0;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir(k_dir_name_valid))
         .SetReturn(k_dir_valid);
     STRICT_EXPECTED_CALL(readdir(k_dir_valid))
@@ -489,17 +489,17 @@ TEST_FUNCTION(pal_posix_read_dir__success_0)
     STRICT_EXPECTED_CALL(closedir(k_dir_valid))
         .SetReturn(0);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_read_dir happy path 
-// 
+//
+// Test pal_read_dir happy path
+//
 TEST_FUNCTION(pal_posix_read_dir__success_1)
 {
     static const char* k_dir_name_valid = "";
@@ -518,7 +518,7 @@ TEST_FUNCTION(pal_posix_read_dir__success_1)
     memset(&stat_valid, 0, sizeof(stat_valid));
     stat_valid.st_mode = S_IFDIR;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir("/"))
         .SetReturn(k_dir_valid);
     STRICT_EXPECTED_CALL(readdir(k_dir_valid))
@@ -538,54 +538,54 @@ TEST_FUNCTION(pal_posix_read_dir__success_1)
     STRICT_EXPECTED_CALL(pal_posix_read_dir_callback_mock(k_context_valid, er_nomore, NULL, NULL))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_read_dir passing as dir_name argument an invalid const char* value 
-// 
+//
+// Test pal_read_dir passing as dir_name argument an invalid const char* value
+//
 TEST_FUNCTION(pal_posix_read_dir__arg_dir_name_invalid)
 {
     static const pal_dir_cb_t k_cb_valid = (pal_dir_cb_t)0x235234;
     static void* k_context_valid = (void*)0x2354;
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_read_dir(NULL, k_cb_valid, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_read_dir passing as cb argument an invalid pal_dir_cb_t value 
-// 
+//
+// Test pal_read_dir passing as cb argument an invalid pal_dir_cb_t value
+//
 TEST_FUNCTION(pal_posix_read_dir__arg_cb_invalid)
 {
     static const char* k_dir_name_valid = "valid/dir";
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, NULL, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_read_dir unhappy path 
-// 
+//
+// Test pal_read_dir unhappy path
+//
 TEST_FUNCTION(pal_posix_read_dir__neg_0)
 {
     static const char* k_dir_name_valid = "valid/dir";
@@ -597,7 +597,7 @@ TEST_FUNCTION(pal_posix_read_dir__neg_0)
 
     dp_valid.d_name = (char*)k_file_name_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir(k_dir_name_valid))
         .SetReturn(k_dir_valid);
     STRICT_EXPECTED_CALL(readdir(k_dir_valid))
@@ -612,40 +612,40 @@ TEST_FUNCTION(pal_posix_read_dir__neg_0)
     STRICT_EXPECTED_CALL(pal_posix_read_dir_callback_mock(k_context_valid, er_disk_io, NULL, NULL))
         .SetReturn(er_disk_io);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_disk_io, result);
 }
 
-// 
-// Test pal_read_dir unhappy path 
-// 
+//
+// Test pal_read_dir unhappy path
+//
 TEST_FUNCTION(pal_posix_read_dir__neg_1)
 {
     static const char* k_dir_name_valid = "valid/dir";
     static void* k_context_valid = (void*)0x2354;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir(k_dir_name_valid))
         .SetReturn(NULL);
     STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
         .SetReturn(er_not_found);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
 }
 
-// 
-// Test pal_read_dir unhappy path 
-// 
+//
+// Test pal_read_dir unhappy path
+//
 TEST_FUNCTION(pal_posix_read_dir__neg_2)
 {
     static const char* k_dir_name_valid = "valid/dir";
@@ -659,7 +659,7 @@ TEST_FUNCTION(pal_posix_read_dir__neg_2)
     dp_valid.d_name = (char*)k_file_name_valid;
     stat_valid.st_mode = 0;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir(k_dir_name_valid))
         .SetReturn(k_dir_valid)
         .SetFailReturn(NULL);
@@ -672,17 +672,17 @@ TEST_FUNCTION(pal_posix_read_dir__neg_2)
     STRICT_EXPECTED_CALL(pal_posix_read_dir_callback_mock(k_context_valid, er_permission, NULL, NULL))
         .SetReturn(er_permission);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_permission, result);
 }
 
-// 
-// Test pal_read_dir unhappy path 
-// 
+//
+// Test pal_read_dir unhappy path
+//
 TEST_FUNCTION(pal_posix_read_dir__neg_3)
 {
     static const char* k_dir_name_valid = "valid/dir";
@@ -696,7 +696,7 @@ TEST_FUNCTION(pal_posix_read_dir__neg_3)
     dp_valid.d_name = (char*)k_file_name_valid;
     stat_valid.st_mode = 0;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(opendir(k_dir_name_valid))
         .SetReturn(k_dir_valid)
         .SetFailReturn(NULL);
@@ -713,57 +713,57 @@ TEST_FUNCTION(pal_posix_read_dir__neg_3)
     STRICT_EXPECTED_CALL(pal_posix_read_dir_callback_mock(k_context_valid, er_permission, NULL, NULL))
         .SetReturn(er_not_found);
 
-    // act 
+    // act
     result = pal_read_dir(k_dir_name_valid, pal_posix_read_dir_callback_mock, k_context_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
 }
 
-// 
-// Test pal_file_deinit happy path 
-// 
+//
+// Test pal_file_deinit happy path
+//
 TEST_FUNCTION(pal_posix_file_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_file_deinit();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_posix_free happy path 
-// 
+//
+// Test pal_posix_free happy path
+//
 TEST_FUNCTION(pal_posix_free_path__success)
 {
     static const char* k_file_name_valid = "test.conf";
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(c_free((void*)k_file_name_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     pal_free_path(k_file_name_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_free_path passing as path argument an invalid const char* value 
-// 
+//
+// Test pal_free_path passing as path argument an invalid const char* value
+//
 TEST_FUNCTION(pal_posix_free_path__arg_path_null)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_free_path(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

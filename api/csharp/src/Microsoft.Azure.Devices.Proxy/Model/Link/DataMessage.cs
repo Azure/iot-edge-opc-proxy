@@ -7,7 +7,6 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
-    using System.Linq;
     using System.Runtime.Serialization;
     using System.Text;
 
@@ -18,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class DataMessage : Poco<DataMessage>, IMessageContent {
 
         /// <summary>
-        /// Sequence number of the data message 
+        /// Sequence number of the data message
         /// </summary>
         [DataMember(Name = "sequence_number", Order = 1)]
         public ulong SequenceNumber {
@@ -50,6 +49,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Send/receive flags for this message
+        /// </summary>
+        [DataMember(Name = "flags", Order = 5)]
+        public int Flags {
+            get; set;
+        }
+
+        /// <summary>
         /// Create data message
         /// </summary>
         /// <param name="payload"></param>
@@ -65,7 +72,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="buffer"></param>
         /// <param name="endpoint"></param>
-        public static DataMessage Create(ArraySegment<byte> buffer, SocketAddress endpoint, 
+        public static DataMessage Create(ArraySegment<byte> buffer, SocketAddress endpoint,
             ulong sequenceNumber = 0) {
             var payload = new byte[buffer.Count];
             Buffer.BlockCopy(buffer.Array, buffer.Offset, payload, 0, buffer.Count);

@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         Ipv6Only,
         TcpNodelay,
 
-        IpMulticastJoin, 
+        IpMulticastJoin,
         IpMulticastLeave,
 
         // ...

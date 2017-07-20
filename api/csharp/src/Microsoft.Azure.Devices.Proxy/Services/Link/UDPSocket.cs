@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override Task BindAsync(SocketAddress endpoint, CancellationToken ct) =>
             LinkAsync(endpoint, ct);
-       
+
         /// <summary>
         /// Send buffer
         /// </summary>
@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public async override Task<ProxyAsyncResult> ReceiveAsync(
             ArraySegment<byte> buffer, CancellationToken ct) {
             Message message = null;
-            try { 
+            try {
                 message = await ReceiveBlock.ReceiveAsync(ct).ConfigureAwait(false);
                 var data = message.Content as DataMessage;
                 int copy = Math.Min(data.Payload.Length, buffer.Count);

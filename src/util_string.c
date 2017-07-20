@@ -234,8 +234,8 @@ const char* string_trim_scheme(
 
     for (size_t i = 0; i < *name_len - sizeof(delim); i++)
     {
-        if (host_name[i]   == delim[0] && 
-            host_name[i+1] == delim[1] && 
+        if (host_name[i]   == delim[0] &&
+            host_name[i+1] == delim[1] &&
             host_name[i+2] == delim[2])
         {
             i += 3;
@@ -299,7 +299,7 @@ int32_t string_compare_nocase(
         return -1;
     if (!to)
         return 1;
-    return 
+    return
 #ifdef _WIN32
         _stricmp(val, to)
 #else
@@ -368,7 +368,7 @@ int32_t string_to_int(
     chk_arg_fault_return(value);
     if (radix != 10 && radix != 16)
         return er_arg;
-    
+
     *value = strtol(string, &end_ptr, radix);
     if (!*end_ptr)
         return er_ok;
@@ -427,7 +427,7 @@ int32_t STRING_compare_nocase(
     return STRING_compare_c_str_nocase(string, STRING_c_str(compare_to));
 }
 
-// 
+//
 // Removes all characters in trim_chars from the start
 //
 const char* string_trim_front(
@@ -450,7 +450,7 @@ const char* string_trim_front(
     return val;
 }
 
-// 
+//
 // Removes all characters in trim_chars in the back
 //
 void string_trim_back(
@@ -469,7 +469,7 @@ void string_trim_back(
     val[len] = 0;
 }
 
-// 
+//
 // Removes all characters in trim_chars from the start and end
 //
 const char* string_trim(
@@ -528,7 +528,7 @@ STRING_HANDLE STRING_safe_construct_n(
 
     memcpy(copy, buffer, len);
     copy[len] = 0;
-    
+
     result = STRING_new_with_memory(copy);
     if (result)
         return result;
@@ -557,7 +557,7 @@ int32_t STRING_concat_n(
 
     if (0 != STRING_concat_with_STRING(string, tmp))
         result = er_out_of_memory;
-    
+
     STRING_delete(tmp);
     return result;
 }
@@ -581,7 +581,7 @@ int32_t STRING_concat_int(
 }
 
 //
-// Find STRING in STRING 
+// Find STRING in STRING
 //
 const char* STRING_find(
     STRING_HANDLE string,
@@ -607,7 +607,7 @@ const char* STRING_find_nocase(
 }
 
 //
-// Find c string in STRING 
+// Find c string in STRING
 //
 const char* STRING_find_c_str(
     STRING_HANDLE string,
@@ -663,13 +663,13 @@ STRING_HANDLE STRING_construct_utf8(
     char* string_buf;
     uint8_t* s;
     size_t alloc;
-    
+
     if (!buf || buf_len <= 0)
         return NULL;
     alloc = buf_len;
     for (size_t i = 0; i < buf_len; i++)
     {
-        if (buf[i] > 0x7f) 
+        if (buf[i] > 0x7f)
             alloc++;
     }
     s = (uint8_t*)crt_alloc(alloc + 1);
@@ -728,7 +728,7 @@ void string_from_buf(
 //
 int32_t string_to_buf(
     const char* string,
-    uint8_t* buf,  
+    uint8_t* buf,
     size_t len,        // must be at least half the size of string len
     bool swap
 )
@@ -829,7 +829,7 @@ int32_t string_base64_to_byte_array(
         memcpy(*buffer, BUFFER_u_char(handle), *len);
         result = er_ok;
         break;
-    } 
+    }
     while (0);
     BUFFER_delete(handle);
     return result;
@@ -897,7 +897,7 @@ int32_t string_from_uuid(
     *string++ = '-';
     }
     string_from_buf(uuid, string, 12, false);
-    string += 12; 
+    string += 12;
     *string++ = '\0';
     return er_ok;
 }
@@ -967,9 +967,9 @@ STRING_HANDLE STRING_construct_base16(
     return STRING_new_with_memory(buffer);
 }
 
-// 
-// Construct a random ascii string 
-// 
+//
+// Construct a random ascii string
+//
 STRING_HANDLE STRING_construct_random(
     size_t len
 )
@@ -989,7 +989,7 @@ STRING_HANDLE STRING_construct_random(
             (unsigned char*)&buffer[len + 2], buf_len);
         if (result == er_ok)
         {
-            // Format the buffer as base16 and terminate 
+            // Format the buffer as base16 and terminate
             string_from_buf((unsigned char*)&buffer[len + 2],
                 buffer, (len + 1), false);
             buffer[len] = 0;
@@ -1025,7 +1025,7 @@ int32_t string_copy_service_full_name(
     if (service_name && *service_name)
     {
         // Service name is assumed to be free form, so it
-        // might end with a . and contain spaces, etc. 
+        // might end with a . and contain spaces, etc.
         while (*service_name)
         {
             if (!--full_size) return er_fault;
@@ -1090,7 +1090,7 @@ int32_t string_parse_range_list(
     // This is not efficient, but makes the code shorter. This
     // is only called twice, so it should be fine.
     //
-    while(true) 
+    while(true)
     {
         // Validate range list and count items for alloc
         index = 0;
@@ -1116,9 +1116,9 @@ int32_t string_parse_range_list(
             if (!*ptr)
                 break;  // reached end
             else if (*ptr == ' ')
-            { 
+            {
                 // Skip trailing while space
-                while (*ptr == ' ') 
+                while (*ptr == ' ')
                     ptr++;
                 // But inside its not allowed...
                 if (!*ptr)
@@ -1203,10 +1203,10 @@ int32_t string_parse_service_full_name(
         if (!*service_type)
         {
        //
-       // The following would parse host.domain, but this 
-       // is not a valid service full name, which must 
-       // always have a service type.  
-       // 
+       // The following would parse host.domain, but this
+       // is not a valid service full name, which must
+       // always have a service type.
+       //
        //     full_name = *domain;
        //     if (full_name)
        //     {
@@ -1222,9 +1222,9 @@ int32_t string_parse_service_full_name(
         }
     }
     //
-    // full_name now points to service type - find the 
-    // first "." that is not followed by "_" and use 
-    // the string that follows as domain. If we cannot 
+    // full_name now points to service type - find the
+    // first "." that is not followed by "_" and use
+    // the string that follows as domain. If we cannot
     // find one, assume domain is "local"
     //
     while (*++full_name)

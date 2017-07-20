@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
                 parsed = null;
             }
-            return parsed != null; ;
+            return parsed != null;
         }
 
         /// <summary>

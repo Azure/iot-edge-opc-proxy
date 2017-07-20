@@ -17,4 +17,4 @@ namespace Microsoft.Azure.Devices.Proxy {
         // ...
         __prx_record_max
     };
-} 
+}

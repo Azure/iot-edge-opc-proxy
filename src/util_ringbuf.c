@@ -15,7 +15,7 @@ struct ring_buffer
     uint8_t* write_pos;   // Points to the last item in the ring
 };
 
-//          
+//
 // Create ring buffer
 //
 int32_t ring_buffer_create(
@@ -25,7 +25,7 @@ int32_t ring_buffer_create(
 {
     int32_t result;
     ring_buffer_t *rb;
-    
+
     rb = mem_zalloc_type(ring_buffer_t);
     if (!rb)
          return er_out_of_memory;
@@ -44,7 +44,7 @@ int32_t ring_buffer_create(
 
         *created = rb;
         return er_ok;
-    } 
+    }
     while (0);
 
     ring_buffer_free(rb);
@@ -71,8 +71,8 @@ void ring_buffer_free(
 // Write to ring buffer
 //
 size_t ring_buffer_write(
-    ring_buffer_t* rb, 
-    const uint8_t* buf, 
+    ring_buffer_t* rb,
+    const uint8_t* buf,
     size_t len
 )
 {
@@ -82,13 +82,13 @@ size_t ring_buffer_write(
 
     if (rb->write_pos >= read_pos)
     {
-        // The write pointer is either at or ahead of the read 
+        // The write pointer is either at or ahead of the read
         // pointer.  If they are equal, the buffer is empty.
         avail = rb->end - rb->write_pos;
-        
+
         // Edge case: Do not catch up to the read pointer
         // or we are empty again
-        if (read_pos == rb->start) 
+        if (read_pos == rb->start)
         {
             --avail;
             if (len > avail)
@@ -111,10 +111,10 @@ size_t ring_buffer_write(
         if (rb->write_pos == rb->end)
             rb->write_pos = rb->start;
     }
-    
+
     if (len > 0)
     {
-        // Make sure not to catch up with the read pointer, 
+        // Make sure not to catch up with the read pointer,
         // or else we are empty
         avail = read_pos - rb->write_pos - 1;
         if (len < avail)
@@ -141,10 +141,10 @@ bool ring_buffer_is_empty(
 {
     //
     // Rather than tracking full or empty state in the struct
-    // end expose us to race conditions, the buffer is full if 
-    // the write pointer is 1 behind the read pointer.  
+    // end expose us to race conditions, the buffer is full if
+    // the write pointer is 1 behind the read pointer.
     //
-    // Consequently the buffer is empty if write pointer and  
+    // Consequently the buffer is empty if write pointer and
     // read pointer are the same.
     //
     return rb->write_pos == rb->read_pos;

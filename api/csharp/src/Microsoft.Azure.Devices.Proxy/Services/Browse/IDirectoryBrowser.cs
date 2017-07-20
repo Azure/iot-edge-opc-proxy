@@ -10,4 +10,4 @@ namespace Microsoft.Azure.Devices.Proxy {
     /// </summary>
     public interface IDirectoryBrowser :
         IAsyncEnumerator<FileEntry>, IDisposable { }
-} 
+}

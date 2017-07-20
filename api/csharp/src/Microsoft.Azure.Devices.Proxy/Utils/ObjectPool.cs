@@ -17,7 +17,7 @@ namespace System.Collections.Concurrent {
         /// Initializes an instance of the ObjectPool class.
         /// </summary>
         /// <param name="generator">The function used to create items </param>
-        public ObjectPool(Func<T> generator) : 
+        public ObjectPool(Func<T> generator) :
             this(generator, new ConcurrentQueue<T>()) {
         }
 
@@ -27,8 +27,8 @@ namespace System.Collections.Concurrent {
         /// <param name="generator">The function used to create items </param>
         /// <param name="container">The collection used to store elements </param>
         public ObjectPool(Func<T> generator, IProducerConsumerCollection<T> container) {
-            _generator = generator ?? throw new ArgumentNullException("generator");
-            _container = container ?? throw new ArgumentNullException("container");
+            _generator = generator ?? throw new ArgumentNullException(nameof(generator));
+            _container = container ?? throw new ArgumentNullException(nameof(container));
         }
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace System.Collections.Concurrent {
         }
 
         /// <summary>
-        /// Gets an item from the pool. If the pool is empty, a new item will 
+        /// Gets an item from the pool. If the pool is empty, a new item will
         /// be created and returned.
         /// </summary>
         /// <returns>The removed or created item.</returns>

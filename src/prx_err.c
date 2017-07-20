@@ -69,16 +69,16 @@ const char* prx_err_string(
         return "er_host_unknown";
     case er_address_family:
         return "er_address_family";
-    case er_reserved2:
-        return "er_reserved2";
+    case er_duplicate:
+        return "er_duplicate";
     case er_bad_flags:
         return "er_bad_flags";
     case er_invalid_format:
         return "er_invalid_format";
     case er_disk_io:
         return "er_disk_io";
-    case er_reserved1:
-        return "er_reserved1";
+    case er_missing:
+        return "er_missing";
     case er_prop_get:
         return "er_prop_get";
     case er_prop_set:

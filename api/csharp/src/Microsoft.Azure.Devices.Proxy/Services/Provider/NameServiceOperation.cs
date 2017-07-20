@@ -4,10 +4,15 @@
 // ------------------------------------------------------------
 
 namespace Microsoft.Azure.Devices.Proxy {
-    using System;
+
     /// <summary>
-    /// Dns host name resolver interface - resolve host names or addresses
+    /// Operations allowed on the name service.
     /// </summary>
-    public interface IDnsHostEntryResolver :
-        IAsyncEnumerator<DnsHostEntry>, IDisposable { }
+    public enum NameServiceOperation {
+        Remove,
+        Add,
+        Update,
+        Disconnected,
+        Connected
+    }
 }

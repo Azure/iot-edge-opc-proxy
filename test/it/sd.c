@@ -63,7 +63,7 @@ static int32_t pal_sd_result_printer(
         for (size_t i = 0; i < res->records_len; i++)
         {
             printf("[RES]        TXT[%zu]: %.*s \n", i,
-               (int)res->records[i].property.bin.size, 
+               (int)res->records[i].property.bin.size,
                     res->records[i].property.bin.value);
         }
         break;
@@ -125,7 +125,7 @@ int32_t print(
         if (result != er_ok)
             break;
 
-        result = pal_sdbrowser_create(ctx->client, pal_sd_result_printer, ctx, 
+        result = pal_sdbrowser_create(ctx->client, pal_sd_result_printer, ctx,
             &ctx->browser);
         if (result != er_ok)
         {
@@ -133,7 +133,7 @@ int32_t print(
             break;
         }
 
-        result = pal_sdbrowser_browse(ctx->browser, name, type, domain, 
+        result = pal_sdbrowser_browse(ctx->browser, name, type, domain,
             prx_itf_index_all);
         if (result != er_ok)
         {
@@ -150,7 +150,7 @@ int32_t print(
         pal_sdbrowser_free(ctx->browser);
     if (ctx->client)
         pal_sdclient_free(ctx->client);
-    
+
     if (signal)
         signal_free(signal);
     return result;
@@ -243,15 +243,15 @@ int main_sd(int argc, char *argv[])
             type = "_opcua-tcp._tcp.";
         else if (!strcmp(argv[0], "--recursive"))
             ctx.recursive = true;
-        
-        
+
+
         else if (!domain)
             domain = argv[0];
         else if (!type)
             type = argv[0];
         else if (!name)
             name = argv[0];
-    } 
+    }
 
     result = pal_init();
     if (result != er_ok)

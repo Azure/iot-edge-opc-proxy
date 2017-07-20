@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     public interface IStreamService {
 
         /// <summary>
-        /// Creates a new endpoint and returns a connection string to be brokered to 
+        /// Creates a new endpoint and returns a connection string to be brokered to
         /// remote side to open the remote endpoint. The returned connection object
         /// is then opened attaching a message stream interface.
         /// </summary>
@@ -21,10 +21,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="proxy">The proxy server</param>
         /// <param name="encoding">The encoding to use for messages on the stream</param>
         /// <returns>
-        /// A connection string to be brokered to remote side to open the remote end 
-        /// of the stream.  
+        /// A connection string to be brokered to remote side to open the remote end
+        /// of the stream.
         /// </returns>
-        Task<IConnection> CreateConnectionAsync(Reference streamId, 
+        Task<IConnection> CreateConnectionAsync(Reference streamId,
             Reference remoteId, INameRecord proxy, CodecId encoding);
     }
 }
