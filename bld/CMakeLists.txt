@@ -129,6 +129,24 @@ else()
     if ("${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         add_definitions(-D_DEBUG)
     endif()
+    
+    #
+    # Try to define the version from the closest parent git tag and
+    # the current Git hash.
+    #
+    find_package(Git)
+    if(GIT_EXECUTABLE)
+        execute_process(
+            WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+            COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
+            OUTPUT_VARIABLE GIT_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+    endif()
+endif()
+
+if (NOT GIT_VERSION)
+    add_definitions(-DSCM_VERSION="${GIT_VERSION}")
 endif()
 
 #
