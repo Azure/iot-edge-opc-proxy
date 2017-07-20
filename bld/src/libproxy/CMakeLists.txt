@@ -223,7 +223,7 @@ endif()
 
 if(use_openssl)
     include(FindOpenSSL)
-    message(STATUS "linking with openssl")
+    message(STATUS "  linking with openssl")
 endif()
 
 compileAsC99()
@@ -374,21 +374,6 @@ if(use_openssl)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
     target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
-
-#
-# Try to define the version from the closest parent git tag and
-# the current Git hash.
-#
-find_package(Git)
-if(GIT_EXECUTABLE)
-    execute_process(
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
-        OUTPUT_VARIABLE GIT_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    target_compile_definitions(libproxy PRIVATE SCM_VERSION="${GIT_VERSION}")
-endif()
 
 if(WIN32)
   # Place here the install rule for win32
