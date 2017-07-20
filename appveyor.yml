@@ -5,8 +5,6 @@ environment:
       build_args: -p Win32 --skip-unittests --skip-dotnet 
     - proxy: no_zlog_x64
       build_args: -p x64 --skip-unittests --skip-dotnet 
-    - proxy: with_libwebsockets
-      build_args: -p Win32 --skip-unittests --skip-dotnet --use-libwebsockets
     - proxy: default
       build_args: -p Win32 --use-zlog
     - proxy: default_x64
