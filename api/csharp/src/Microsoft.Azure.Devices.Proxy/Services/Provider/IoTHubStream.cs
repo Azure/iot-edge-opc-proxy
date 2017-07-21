@@ -21,13 +21,13 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Control buffer and payload buffer combined must respect this size restriction.
         /// Currently max buffer is whatever can be added as b64 encoded string to the
         /// payload entry in the json data message.  This is currently up to 8 kb.
-        /// We assume that the framing portion for a data message is consistently 1.25kb.
-        /// Assuming a 1/4 increase for base 64, this would mean something like 5.5k.
+        /// We assume that the framing portion for a data message is consistently 2kb.
+        /// Assuming a 1/4 increase for base 64, this would mean something like 4-5k.
         /// </summary>
         public uint MaxBufferSize {
 #if !SUPPORT_MSG_OVER_8K
             // TODO: Remove this when > 88 k messages are supported
-            get => 5600;
+            get => 5000;
 #else
             get => 0;
 #endif
