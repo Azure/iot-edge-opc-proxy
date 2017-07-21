@@ -25,19 +25,19 @@
 #define crt_realloc             gballoc_realloc
 #define crt_free                gballoc_free
 
-#define mem_zalloc(size)        gballoc_calloc(1, size) 
-#define mem_zalloc_type(type)   gballoc_calloc(1, sizeof(type)) 
+#define mem_zalloc(size)        gballoc_calloc(1, size)
+#define mem_zalloc_type(type)   gballoc_calloc(1, sizeof(type))
 #define mem_free_type(type, p)  gballoc_free(p)
 
 #define REFCOUNT_TYPE_FREE(type, p) free(p)
 
 #elif defined(_MSC_VER)
 //
-// On windows, set up leak detection in CRT.  
+// On windows, set up leak detection in CRT.
 //
 #if !defined(_CRTDBG_MAP_ALLOC)
 #define _CRTDBG_MAP_ALLOC 1
-#endif // !_CRTDBG_MAP_ALLOC 
+#endif // !_CRTDBG_MAP_ALLOC
 
 #include <crtdbg.h>
 
@@ -45,17 +45,17 @@
 #define _CRTDBG_FLAGS                         \
     _CRTDBG_ALLOC_MEM_DF |                    \
     _CRTDBG_LEAK_CHECK_DF |                   \
-    _CRTDBG_CHECK_ALWAYS_DF                 
-#elif defined(MEM_CHECK) 
+    _CRTDBG_CHECK_ALWAYS_DF
+#elif defined(MEM_CHECK)
 #if defined(DEBUG)
 #define _CRTDBG_FLAGS                         \
     _CRTDBG_ALLOC_MEM_DF |                    \
     _CRTDBG_DELAY_FREE_MEM_DF
 #else
 #define _CRTDBG_FLAGS                         \
-    _CRTDBG_ALLOC_MEM_DF 
+    _CRTDBG_ALLOC_MEM_DF
 #endif
-#else                                         
+#else
 #define _CRTDBG_FLAGS                         \
     _CRTDBG_ALLOC_MEM_DF |                    \
     _CRTDBG_CHECK_CRT_DF |                    \
@@ -78,7 +78,7 @@
 #define mem_check()             (void)0
 #endif
 
-#define mem_zalloc(size)        calloc(1, size) 
+#define mem_zalloc(size)        calloc(1, size)
 
 #define mem_zalloc_type(type) \
     (type*)calloc(1, sizeof(type))
@@ -92,14 +92,14 @@
 
 #include <mcheck.h>
 //
-// export MALLOC_TRACE=<file> before running <executable> to 
-// write trace file. Then Run mtrace <executable> <file> to 
+// export MALLOC_TRACE=<file> before running <executable> to
+// write trace file. Then Run mtrace <executable> <file> to
 // analyze any leaks.
 //
 
 #if defined(LEAK_DETECT) && defined (MEM_CHECK)
 #define mem_init()              mcheck(NULL); mtrace()
-#elif defined(MEM_CHECK)  
+#elif defined(MEM_CHECK)
 #if defined(DEBUG)
 #define mem_init()              mcheck_pedantic(NULL)
 #else
@@ -123,7 +123,7 @@
 #define mem_check()             (void)0
 #endif
 
-#define mem_zalloc(size)        calloc(1, size) 
+#define mem_zalloc(size)        calloc(1, size)
 
 #define mem_zalloc_type(type) \
     (type*)calloc(1, sizeof(type))
@@ -186,15 +186,15 @@ inline int fuzzing_memcmp(
 //
 #if !defined(mem_alloc)
 #define mem_alloc(size) \
-    h_realloc(size, NULL, false, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    h_realloc(size, NULL, false, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
-// Re-allocate memory 
+// Re-allocate memory
 //
 #if !defined(mem_realloc)
 #define mem_realloc(p, size) \
-    h_realloc(size, p, false, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    h_realloc(size, p, false, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -202,7 +202,7 @@ inline int fuzzing_memcmp(
 //
 #if !defined(mem_zalloc)
 #define mem_zalloc(size) \
-    h_realloc(size, NULL, true, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    h_realloc(size, NULL, true, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -210,7 +210,7 @@ inline int fuzzing_memcmp(
 //
 #if !defined(mem_free)
 #define mem_free(p) \
-    h_free(p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    h_free(p, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -218,7 +218,7 @@ inline int fuzzing_memcmp(
 //
 #if !defined(mem_zalloc_type)
 #define mem_zalloc_type(type) \
-    (type*)h_realloc(sizeof(type), NULL, true, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    (type*)h_realloc(sizeof(type), NULL, true, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -233,7 +233,7 @@ inline int fuzzing_memcmp(
     } while(0)
 #else
 #define mem_free_type(type, p) \
-    h_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    h_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 #endif
 
@@ -242,15 +242,15 @@ inline int fuzzing_memcmp(
 //
 #if !defined(crt_alloc)
 #define crt_alloc(size) \
-    c_realloc(size, NULL, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    c_realloc(size, NULL, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
-// Re-allocate memory 
+// Re-allocate memory
 //
 #if !defined(crt_realloc)
 #define crt_realloc(p, size) \
-    c_realloc(size, p,  __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    c_realloc(size, p,  __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -258,7 +258,7 @@ inline int fuzzing_memcmp(
 //
 #if !defined(crt_free)
 #define crt_free(p) \
-    c_free(p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    c_free(p, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 //
@@ -266,7 +266,7 @@ inline int fuzzing_memcmp(
 //
 #if !defined(REFCOUNT_TYPE_FREE)
 #define REFCOUNT_TYPE_FREE(type, p) \
-    c_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__) 
+    c_free((type*)p, __FILE__, sizeof(__FILE__)-1, __LINE__)
 #endif
 
 #if !defined(mem_cmp)

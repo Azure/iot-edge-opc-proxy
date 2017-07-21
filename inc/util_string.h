@@ -112,7 +112,7 @@ decl_internal_2(int32_t, STRING_compare_c_str_nocase,
 );
 
 //
-// Find STRING in STRING 
+// Find STRING in STRING
 //
 decl_internal_2(const char*, STRING_find,
     STRING_HANDLE, string,
@@ -128,7 +128,7 @@ decl_internal_2(const char*, STRING_find_nocase,
 );
 
 //
-// Find c string in STRING 
+// Find c string in STRING
 //
 decl_internal_2(const char*, STRING_find_c_str,
     STRING_HANDLE, string,
@@ -279,7 +279,7 @@ decl_internal_2(const char*, string_find_nocase,
     const char*, to_find
 );
 
-// 
+//
 // Removes all characters in trim_chars from the start
 //
 decl_internal_2(const char*, string_trim_front,
@@ -287,7 +287,7 @@ decl_internal_2(const char*, string_trim_front,
     const char*, trim_chars
 );
 
-// 
+//
 // Removes all characters in trim_chars in the back
 //
 decl_internal_2(void, string_trim_back,
@@ -295,7 +295,7 @@ decl_internal_2(void, string_trim_back,
     const char*, trim_chars
 );
 
-// 
+//
 // Removes all characters in trim_chars from the start and end
 //
 decl_internal_2(const char*, string_trim,
@@ -352,7 +352,7 @@ decl_internal_5(int32_t, string_copy_service_full_name,
 );
 
 //
-// Decode base64 into bytes 
+// Decode base64 into bytes
 //
 decl_internal_3(int32_t, string_base64_to_byte_array,
     const char*, val,

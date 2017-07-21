@@ -5,11 +5,11 @@
 # Unit test includes
 #
 set(libpal_ut_include
-    ${_PROJECT_INC} 
-    ${_PROJECT_SRC}/pal 
-    ${_IOTSDK_INC} 
-    ${_UMOCKC_INC} 
-    ${_TRUNNER_INC} 
+    ${_PROJECT_INC}
+    ${_PROJECT_SRC}/pal
+    ${_IOTSDK_INC}
+    ${_UMOCKC_INC}
+    ${_TRUNNER_INC}
     ${_CTEST_INC}
 )
 
@@ -54,9 +54,9 @@ set(_PAL_UNITS_UNDER_TEST
 compileAsC99()
 
 #
-# Builds a unit tests for each component 
+# Builds a unit tests for each component
 #
-foreach(unit ${_PAL_UNITS_UNDER_TEST}) 
+foreach(unit ${_PAL_UNITS_UNDER_TEST})
     set(${unit}_ut_test_includes ${libpal_ut_include})
     set(${unit}_ut_test_files ${_PROJECT_TEST}/ut/pal/${unit}_ut.c)
     build_ut(${unit}_ut "proxy_tests")

@@ -8,7 +8,7 @@
 
 #define __str(n) #n
 
-#define MAX_SHORT_VALUE 32767 
+#define MAX_SHORT_VALUE 32767
 
 //
 // Swap and min/max utility macros

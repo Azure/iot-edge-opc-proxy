@@ -86,15 +86,15 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Select the proxy to bind to
         /// </summary>
-        /// <param name="endpoint"></param>
+        /// <param name="address"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override Task BindAsync(SocketAddress endpoint, CancellationToken ct) {
+        public override Task BindAsync(SocketAddress address, CancellationToken ct) {
             if (_boundEndpoint != null) {
                 throw new SocketException(
                     "Cannot double bind already bound socket. Use collection address.");
             }
-            _boundEndpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+            _boundEndpoint = address ?? throw new ArgumentNullException(nameof(address));
 
             while (_boundEndpoint.Family == AddressFamily.Bound) {
                 // Unwrap bound address
@@ -112,8 +112,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public override async Task ConnectAsync(SocketAddress address, CancellationToken ct) {
             //
-            // The address is a combination of proxy binding and remote address.  This is 
-            // the case for all addresses returned by Dns resolution.  If no address was 
+            // The address is a combination of proxy binding and remote address.  This is
+            // the case for all addresses returned by Dns resolution.  If no address was
             // previously bound - use the one provided here.
             //
             Info.Address = address;
@@ -155,7 +155,26 @@ namespace Microsoft.Azure.Devices.Proxy {
             // Create tpl network for connect - prioritize input above errored attempts using
             // prioritized scheduling queue.
             //
-            var input = DataflowMessage<INameRecord>.CreateAdapter(new ExecutionDataflowBlockOptions {
+            var retries = new CancellationTokenSource();
+            ct.Register(() => retries.Cancel());
+            var errors = new TransformBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
+            async (error) => {
+                if (error.FaultCount > 0) {
+                    Host.RemoveReference(error.Arg.Address);
+                    await Provider.NameService.AddOrUpdateAsync(Host, retries.Token).ConfigureAwait(false);
+                    ProxyEventSource.Log.LinkFailure(this, error.Arg, Host, error.LastFault);
+                }
+                await Task.Delay((error.FaultCount + 1) * _throttleDelayMs, retries.Token).ConfigureAwait(false);
+                return error;
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Error (Connect) Id={1}",
+                MaxDegreeOfParallelism = 2, // 2 parallel retries
+                CancellationToken = retries.Token
+            });
+
+            var linkAdapter = DataflowMessage<INameRecord>.CreateAdapter(
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Adapt (Connect) Id={1}",
                 CancellationToken = ct,
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
@@ -164,29 +183,15 @@ namespace Microsoft.Azure.Devices.Proxy {
                 EnsureOrdered = false
             });
 
-            var errors = new TransformBlock<DataflowMessage<INameRecord>, DataflowMessage<INameRecord>>(
-            async (error) => {
-                Host.RemoveReference(error.Arg.Address);
-                await Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), 
-                    ct).ConfigureAwait(false);
-                await Task.Delay(error.Exceptions.Count * _throttleDelayMs).ConfigureAwait(false);
-                ProxyEventSource.Log.LinkFailure(this, error.Arg, Host);
-                return error;
-            },
+            var linkQuery = Provider.NameService.Read(
             new ExecutionDataflowBlockOptions {
-                NameFormat = "Error (Connect) Id={1}",
-                CancellationToken = ct
-            });
-
-            var query = Provider.NameService.Lookup(new ExecutionDataflowBlockOptions {
-                NameFormat = "Lookup (Connect) Id={1}",
+                NameFormat = "Query (Connect) Id={1}",
                 CancellationToken = ct,
-                MaxDegreeOfParallelism = 2, // 2 parallel lookups
-                MaxMessagesPerTask = 1,
-                EnsureOrdered = false
+                EnsureOrdered = true
             });
 
-            var pinger = CreatePingBlock(errors, Info.Address, new ExecutionDataflowBlockOptions {
+            var pinger = CreatePingBlock(errors, Info.Address,
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Ping (Connect) Id={1}",
                 CancellationToken = ct,
                 MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
@@ -194,70 +199,95 @@ namespace Microsoft.Azure.Devices.Proxy {
                 EnsureOrdered = false
             });
 
-            var linker = CreateLinkBlock(errors, new ExecutionDataflowBlockOptions {
+            var linker = CreateLinkBlock(errors,
+            new ExecutionDataflowBlockOptions {
                 NameFormat = "Link (Connect) Id={1}",
                 CancellationToken = ct,
                 MaxDegreeOfParallelism = 1, // Ensure one link is created at a time.
                 MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
-                SingleProducerConstrained = true,
                 EnsureOrdered = false
             });
 
-            var connection = new WriteOnceBlock<IProxyLink>(l => l, new DataflowBlockOptions {
+            var connection = new WriteOnceBlock<IProxyLink>(l => l,
+            new DataflowBlockOptions {
                 NameFormat = "Final (Connect) Id={1}",
                 MaxMessagesPerTask = 1, // Auto complete when link is created
                 EnsureOrdered = false
             });
 
-            query.ConnectTo(input);
-            input.ConnectTo(pinger);
+            linkQuery.ConnectTo(linkAdapter);
+            linkAdapter.ConnectTo(linker);
             errors.ConnectTo(pinger);
             pinger.ConnectTo(linker);
             linker.ConnectTo(connection);
 
-            // Now post proxies to the lookup block - start by sending all bound addresses
-            var queries = new List<Task<bool>>();
+            //
+            // Now connect by starting the connection pipeline from query source...
+            //
             if (_boundEndpoint != null) {
-                // Todo - consider removing ping and try link only here...
-
-                if (_boundEndpoint.Family == AddressFamily.Collection) {
-                    foreach (var item in ((SocketAddressCollection)_boundEndpoint).Addresses()) {
-                        queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                            item.ToString(), NameRecordType.Proxy), ct));
-                    }
-                }
-                else {
-                    queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                        _boundEndpoint.ToString(), NameRecordType.Proxy), ct));
-                }
+                //
+                // User asked for specific set of proxies. Try linking with each
+                // until we have a successful link.
+                //
+                await linkQuery.SendAsync(r => r.Matches(_boundEndpoint,
+                    NameRecordType.Proxy), ct).ConfigureAwait(false);
             }
             else {
+                //
+                // Consider all endpoints - if the host has a candidate list
+                // use this list to directly link, and then ping remaining with
+                // a throttle.  Otherwise do a full ping.
+                //
+                var pingAdapter = DataflowMessage<INameRecord>.CreateAdapter(
+                new ExecutionDataflowBlockOptions {
+                    NameFormat = "Any (Connect) Id={1}",
+                    CancellationToken = ct,
+                    MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded,
+                    MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                    SingleProducerConstrained = true,
+                    EnsureOrdered = false
+                });
+
+                var remaining = Provider.NameService.Read(
+                new ExecutionDataflowBlockOptions {
+                    NameFormat = "Remaining (Connect) Id={1}",
+                    CancellationToken = ct,
+                    EnsureOrdered = true
+                });
+
+                remaining.ConnectTo(pingAdapter);
+
                 if (Host.References.Any()) {
-                    foreach (var item in Host.References) {
-                        queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                            item, NameRecordType.Proxy), ct));
-                    }
+                    // Delay ping through errors path to give references time to link...
+                    pingAdapter.ConnectTo(errors);
+
+                    await linkQuery.SendAsync(r => r.Matches(Host.References,
+                        NameRecordType.Proxy), ct).ConfigureAwait(false);
                 }
                 else {
-                    queries.Add(query.SendAsync(Provider.NameService.NewQuery(
-                        Reference.All, NameRecordType.Proxy), ct));
+                    // Send directly to ping
+                    pingAdapter.ConnectTo(pinger);
                 }
-            }
 
-            // TODO: Consider waiting later or cancelling wait when link received...
-            await Task.WhenAll(queries.ToArray()).ConfigureAwait(false);
+                await remaining.SendAsync(r =>
+                        !Host.References.Contains(r.Address) &&
+                        r.Matches(Reference.All, NameRecordType.Proxy),
+                    ct).ConfigureAwait(false);
+            }
 
             // Wait until a connected link is received.  Then cancel the remainder of the pipeline.
             _link = await connection.ReceiveAsync(ct);
             connection.Complete();
+            retries.Cancel();
 
             Host.AddReference(_link.Proxy.Address);
-            var update = Provider.NameService.Update.SendAsync(Tuple.Create(Host, true), ct);
+            Host.LastActivity = _link.Proxy.LastActivity = DateTime.Now;
+            await Provider.NameService.AddOrUpdateAsync(Host, ct).ConfigureAwait(false);
+            await Provider.NameService.AddOrUpdateAsync(_link.Proxy, ct).ConfigureAwait(false);
         }
 
-        public override Task ListenAsync(int backlog, CancellationToken ct) {
+        public override Task ListenAsync(int backlog, CancellationToken ct) =>
             throw new NotSupportedException("Cannot call listen on client socket!");
-        }
 
         /// <summary>
         /// Send socket option message to all streams
@@ -304,7 +334,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public async override Task<int> SendAsync(ArraySegment<byte> buffer,
             SocketAddress endpoint, CancellationToken ct) {
-            bool sent = await SendBlock.SendAsync(Message.Create(null, null, null, 
+            bool sent = await SendBlock.SendAsync(Message.Create(null, null, null,
                 DataMessage.Create(buffer, endpoint)), ct).ConfigureAwait(false);
             return buffer.Count;
         }
@@ -370,7 +400,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     if (_lastData == null) {
                         break;
                     }
-                    else if (_lastData.Payload.Length == 0) {
+                    if (_lastData.Payload.Length == 0) {
                         _lastData.Dispose();
                         _lastData = null;
                         break;
@@ -411,7 +441,9 @@ namespace Microsoft.Azure.Devices.Proxy {
             return toCopy;
         }
 
-
+        /// <summary>
+        /// Dispose the socket
+        /// </summary>
         public override void Dispose() {
             if (_lastData != null) {
                 _lastData.Dispose();
@@ -431,7 +463,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         private SocketAddress _boundEndpoint;
         private DataMessage _lastData;
         private int _offset;
-        private const int _throttleDelayMs = 1000;
+        private const int _throttleDelayMs = 3000;
 #if PERF
         private long _transferred;
         private Stopwatch _transferredw = Stopwatch.StartNew();

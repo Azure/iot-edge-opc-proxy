@@ -61,6 +61,7 @@ MOCKABLE_FUNCTION(, bool, cmp_read_str_size, cmp_ctx_t*, ctx, uint32_t*, size);
 MOCKABLE_FUNCTION(, bool, cmp_read_bin_size, cmp_ctx_t*, ctx, uint32_t*, size);
 MOCKABLE_FUNCTION(, bool, cmp_read_object, cmp_ctx_t*, ctx, cmp_object_t*, obj);
 MOCKABLE_FUNCTION(, bool, cmp_read_array, cmp_ctx_t*, ctx, uint32_t*, size);
+MOCKABLE_FUNCTION(, bool, cmp_skip_object, cmp_ctx_t*, ctx, cmp_object_t*, obj);
 
 //
 // 2. Include unit under test
@@ -82,9 +83,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-#ifdef io_codec_ctx_init // 
-// Test io_codec_ctx_init happy path 
-// 
+#ifdef io_codec_ctx_init //
+// Test io_codec_ctx_init happy path
+//
 TEST_FUNCTION(io_codec_ctx_init__success)
 {
     static const io_codec_t* k_codec_valid;
@@ -94,120 +95,120 @@ TEST_FUNCTION(io_codec_ctx_init__success)
     static const zlog_t k_log_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_codec_ctx_init(k_codec_valid, k_ctx_valid, k_stream_valid, k_init_from_stream_valid, k_log_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init passing as codec argument an invalid io_codec_t* value 
-// 
+//
+// Test io_codec_ctx_init passing as codec argument an invalid io_codec_t* value
+//
 TEST_FUNCTION(io_codec_ctx_init__arg_codec_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_codec_ctx_init passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_codec_ctx_init__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init passing as stream argument an invalid io_stream_t* value 
-// 
+//
+// Test io_codec_ctx_init passing as stream argument an invalid io_stream_t* value
+//
 TEST_FUNCTION(io_codec_ctx_init__arg_stream_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init passing as init_from_stream argument an invalid bool value 
-// 
+//
+// Test io_codec_ctx_init passing as init_from_stream argument an invalid bool value
+//
 TEST_FUNCTION(io_codec_ctx_init__arg_init_from_stream_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init passing as log argument an invalid zlog_t value 
-// 
+//
+// Test io_codec_ctx_init passing as log argument an invalid zlog_t value
+//
 TEST_FUNCTION(io_codec_ctx_init__arg_log_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_init();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_init unhappy path 
-// 
+//
+// Test io_codec_ctx_init unhappy path
+//
 TEST_FUNCTION(io_codec_ctx_init__neg)
 {
     static const io_codec_t* k_codec_valid;
@@ -219,62 +220,62 @@ TEST_FUNCTION(io_codec_ctx_init__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_codec_ctx_init(k_codec_valid, k_ctx_valid, k_stream_valid, k_init_from_stream_valid, k_log_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_codec_ctx_init
 
-#ifdef io_codec_ctx_get_codec_id // 
-// Test io_codec_ctx_get_codec_id happy path 
-// 
+#ifdef io_codec_ctx_get_codec_id //
+// Test io_codec_ctx_get_codec_id happy path
+//
 TEST_FUNCTION(io_codec_ctx_get_codec_id__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     io_codec_id_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_codec_ctx_get_codec_id(k_ctx_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(io_codec_id_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_get_codec_id passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_codec_ctx_get_codec_id passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_codec_ctx_get_codec_id__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_get_codec_id();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_get_codec_id unhappy path 
-// 
+//
+// Test io_codec_ctx_get_codec_id unhappy path
+//
 TEST_FUNCTION(io_codec_ctx_get_codec_id__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -282,23 +283,23 @@ TEST_FUNCTION(io_codec_ctx_get_codec_id__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_codec_ctx_get_codec_id(k_ctx_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(io_codec_id_t, result, er_ok);
 }
 
 #endif // io_codec_ctx_get_codec_id
 
-#ifdef io_codec_ctx_fini // 
-// Test io_codec_ctx_fini happy path 
-// 
+#ifdef io_codec_ctx_fini //
+// Test io_codec_ctx_fini happy path
+//
 TEST_FUNCTION(io_codec_ctx_fini__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -306,80 +307,80 @@ TEST_FUNCTION(io_codec_ctx_fini__success)
     static const bool k_flush_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_codec_ctx_fini(k_ctx_valid, k_stream_valid, k_flush_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_fini passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_codec_ctx_fini passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_codec_ctx_fini__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_fini();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_fini passing as stream argument an invalid io_stream_t* value 
-// 
+//
+// Test io_codec_ctx_fini passing as stream argument an invalid io_stream_t* value
+//
 TEST_FUNCTION(io_codec_ctx_fini__arg_stream_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_fini();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_fini passing as flush argument an invalid bool value 
-// 
+//
+// Test io_codec_ctx_fini passing as flush argument an invalid bool value
+//
 TEST_FUNCTION(io_codec_ctx_fini__arg_flush_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_ctx_fini();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_ctx_fini unhappy path 
-// 
+//
+// Test io_codec_ctx_fini unhappy path
+//
 TEST_FUNCTION(io_codec_ctx_fini__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -389,23 +390,23 @@ TEST_FUNCTION(io_codec_ctx_fini__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_codec_ctx_fini(k_ctx_valid, k_stream_valid, k_flush_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_codec_ctx_fini
 
-#ifdef io_encode_int64 // 
-// Test io_encode_int64 happy path 
-// 
+#ifdef io_encode_int64 //
+// Test io_encode_int64 happy path
+//
 TEST_FUNCTION(io_encode_int64__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -413,80 +414,80 @@ TEST_FUNCTION(io_encode_int64__success)
     static const int64_t k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_int64(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_int64 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_int64 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_int64__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_int64 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_int64 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_int64__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_int64 passing as value argument an invalid int64_t value 
-// 
+//
+// Test io_encode_int64 passing as value argument an invalid int64_t value
+//
 TEST_FUNCTION(io_encode_int64__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_int64 unhappy path 
-// 
+//
+// Test io_encode_int64 unhappy path
+//
 TEST_FUNCTION(io_encode_int64__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -496,23 +497,23 @@ TEST_FUNCTION(io_encode_int64__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_int64(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_int64
 
-#ifdef io_encode_uint64 // 
-// Test io_encode_uint64 happy path 
-// 
+#ifdef io_encode_uint64 //
+// Test io_encode_uint64 happy path
+//
 TEST_FUNCTION(io_encode_uint64__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -520,80 +521,80 @@ TEST_FUNCTION(io_encode_uint64__success)
     static const uint64_t k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_uint64(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_uint64 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_uint64 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_uint64__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_uint64 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_uint64 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_uint64__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_uint64 passing as value argument an invalid uint64_t value 
-// 
+//
+// Test io_encode_uint64 passing as value argument an invalid uint64_t value
+//
 TEST_FUNCTION(io_encode_uint64__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_uint64 unhappy path 
-// 
+//
+// Test io_encode_uint64 unhappy path
+//
 TEST_FUNCTION(io_encode_uint64__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -603,23 +604,23 @@ TEST_FUNCTION(io_encode_uint64__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_uint64(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_uint64
 
-#ifdef io_encode_double // 
-// Test io_encode_double happy path 
-// 
+#ifdef io_encode_double //
+// Test io_encode_double happy path
+//
 TEST_FUNCTION(io_encode_double__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -627,80 +628,80 @@ TEST_FUNCTION(io_encode_double__success)
     static const double k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_double(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_double passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_double passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_double__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_double passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_double passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_double__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_double passing as value argument an invalid double value 
-// 
+//
+// Test io_encode_double passing as value argument an invalid double value
+//
 TEST_FUNCTION(io_encode_double__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_double unhappy path 
-// 
+//
+// Test io_encode_double unhappy path
+//
 TEST_FUNCTION(io_encode_double__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -710,23 +711,23 @@ TEST_FUNCTION(io_encode_double__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_double(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_double
 
-#ifdef io_encode_bool // 
-// Test io_encode_bool happy path 
-// 
+#ifdef io_encode_bool //
+// Test io_encode_bool happy path
+//
 TEST_FUNCTION(io_encode_bool__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -734,80 +735,80 @@ TEST_FUNCTION(io_encode_bool__success)
     static const bool k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_bool(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bool passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_bool passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_bool__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bool passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_bool passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_bool__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bool passing as value argument an invalid bool value 
-// 
+//
+// Test io_encode_bool passing as value argument an invalid bool value
+//
 TEST_FUNCTION(io_encode_bool__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bool unhappy path 
-// 
+//
+// Test io_encode_bool unhappy path
+//
 TEST_FUNCTION(io_encode_bool__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -817,23 +818,23 @@ TEST_FUNCTION(io_encode_bool__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_bool(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_bool
 
-#ifdef io_encode_string // 
-// Test io_encode_string happy path 
-// 
+#ifdef io_encode_string //
+// Test io_encode_string happy path
+//
 TEST_FUNCTION(io_encode_string__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -841,80 +842,80 @@ TEST_FUNCTION(io_encode_string__success)
     static const const char* k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_string(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_string passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_string passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_string__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_string passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_string passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_string__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_string passing as value argument an invalid const char* value 
-// 
+//
+// Test io_encode_string passing as value argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_string__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_string unhappy path 
-// 
+//
+// Test io_encode_string unhappy path
+//
 TEST_FUNCTION(io_encode_string__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -924,23 +925,23 @@ TEST_FUNCTION(io_encode_string__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_string(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_string
 
-#ifdef io_encode_bin // 
-// Test io_encode_bin happy path 
-// 
+#ifdef io_encode_bin //
+// Test io_encode_bin happy path
+//
 TEST_FUNCTION(io_encode_bin__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -949,100 +950,100 @@ TEST_FUNCTION(io_encode_bin__success)
     static const size_t k_size_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_bin(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bin passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_bin passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_bin__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bin passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_bin passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_bin__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bin passing as value argument an invalid const void* value 
-// 
+//
+// Test io_encode_bin passing as value argument an invalid const void* value
+//
 TEST_FUNCTION(io_encode_bin__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bin passing as size argument an invalid size_t value 
-// 
+//
+// Test io_encode_bin passing as size argument an invalid size_t value
+//
 TEST_FUNCTION(io_encode_bin__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_bin unhappy path 
-// 
+//
+// Test io_encode_bin unhappy path
+//
 TEST_FUNCTION(io_encode_bin__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1053,83 +1054,83 @@ TEST_FUNCTION(io_encode_bin__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_bin(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_bin
 
-#ifdef io_encode_type_begin // 
-// Test io_encode_type_begin happy path 
-// 
+#ifdef io_encode_type_begin //
+// Test io_encode_type_begin happy path
+//
 TEST_FUNCTION(io_encode_type_begin__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     static const size_t k_members_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_type_begin(k_ctx_valid, k_members_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_type_begin passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_type_begin passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_type_begin__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_type_begin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_type_begin passing as members argument an invalid size_t value 
-// 
+//
+// Test io_encode_type_begin passing as members argument an invalid size_t value
+//
 TEST_FUNCTION(io_encode_type_begin__arg_members_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_type_begin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_type_begin unhappy path 
-// 
+//
+// Test io_encode_type_begin unhappy path
+//
 TEST_FUNCTION(io_encode_type_begin__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1138,62 +1139,62 @@ TEST_FUNCTION(io_encode_type_begin__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_type_begin(k_ctx_valid, k_members_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_type_begin
 
-#ifdef io_encode_type_end // 
-// Test io_encode_type_end happy path 
-// 
+#ifdef io_encode_type_end //
+// Test io_encode_type_end happy path
+//
 TEST_FUNCTION(io_encode_type_end__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_type_end(k_ctx_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_type_end passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_type_end passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_type_end__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_type_end();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_type_end unhappy path 
-// 
+//
+// Test io_encode_type_end unhappy path
+//
 TEST_FUNCTION(io_encode_type_end__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1201,23 +1202,23 @@ TEST_FUNCTION(io_encode_type_end__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_type_end(k_ctx_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_type_end
 
-#ifdef io_encode_object // 
-// Test io_encode_object happy path 
-// 
+#ifdef io_encode_object //
+// Test io_encode_object happy path
+//
 TEST_FUNCTION(io_encode_object__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1226,100 +1227,100 @@ TEST_FUNCTION(io_encode_object__success)
     static const io_codec_ctx_t* k_object_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_object(k_ctx_valid, k_name_valid, k_is_null_valid, k_object_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_object passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_object passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_object__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_object passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_object passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_object__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_object passing as is_null argument an invalid bool value 
-// 
+//
+// Test io_encode_object passing as is_null argument an invalid bool value
+//
 TEST_FUNCTION(io_encode_object__arg_is_null_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_object passing as object argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_object passing as object argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_object__arg_object_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_object unhappy path 
-// 
+//
+// Test io_encode_object unhappy path
+//
 TEST_FUNCTION(io_encode_object__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1330,23 +1331,23 @@ TEST_FUNCTION(io_encode_object__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_object(k_ctx_valid, k_name_valid, k_is_null_valid, k_object_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_object
 
-#ifdef io_encode_array // 
-// Test io_encode_array happy path 
-// 
+#ifdef io_encode_array //
+// Test io_encode_array happy path
+//
 TEST_FUNCTION(io_encode_array__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1355,100 +1356,100 @@ TEST_FUNCTION(io_encode_array__success)
     static const io_codec_ctx_t* k_array_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_array(k_ctx_valid, k_name_valid, k_size_valid, k_array_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_array passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_array passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_array__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_array passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_array passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_array__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_array passing as size argument an invalid size_t value 
-// 
+//
+// Test io_encode_array passing as size argument an invalid size_t value
+//
 TEST_FUNCTION(io_encode_array__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_array passing as array argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_array passing as array argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_array__arg_array_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_array unhappy path 
-// 
+//
+// Test io_encode_array unhappy path
+//
 TEST_FUNCTION(io_encode_array__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1459,23 +1460,23 @@ TEST_FUNCTION(io_encode_array__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_array(k_ctx_valid, k_name_valid, k_size_valid, k_array_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_array
 
-#ifdef io_encode_STRING_HANDLE // 
-// Test io_encode_STRING_HANDLE happy path 
-// 
+#ifdef io_encode_STRING_HANDLE //
+// Test io_encode_STRING_HANDLE happy path
+//
 TEST_FUNCTION(io_encode_STRING_HANDLE__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1483,80 +1484,80 @@ TEST_FUNCTION(io_encode_STRING_HANDLE__success)
     static const STRING_HANDLE k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_STRING_HANDLE(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_STRING_HANDLE passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_STRING_HANDLE passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_STRING_HANDLE__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_STRING_HANDLE passing as name argument an invalid const char* value 
-// 
+//
+// Test io_encode_STRING_HANDLE passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_encode_STRING_HANDLE__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_STRING_HANDLE passing as value argument an invalid STRING_HANDLE value 
-// 
+//
+// Test io_encode_STRING_HANDLE passing as value argument an invalid STRING_HANDLE value
+//
 TEST_FUNCTION(io_encode_STRING_HANDLE__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_STRING_HANDLE unhappy path 
-// 
+//
+// Test io_encode_STRING_HANDLE unhappy path
+//
 TEST_FUNCTION(io_encode_STRING_HANDLE__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1566,23 +1567,23 @@ TEST_FUNCTION(io_encode_STRING_HANDLE__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_STRING_HANDLE(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_encode_STRING_HANDLE
 
-#ifdef io_decode_int64 // 
-// Test io_decode_int64 happy path 
-// 
+#ifdef io_decode_int64 //
+// Test io_decode_int64 happy path
+//
 TEST_FUNCTION(io_decode_int64__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1590,80 +1591,80 @@ TEST_FUNCTION(io_decode_int64__success)
     static const int64_t* k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_int64(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int64 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_int64 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_int64__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int64 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_int64 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_int64__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int64 passing as value argument an invalid int64_t* value 
-// 
+//
+// Test io_decode_int64 passing as value argument an invalid int64_t* value
+//
 TEST_FUNCTION(io_decode_int64__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int64 unhappy path 
-// 
+//
+// Test io_decode_int64 unhappy path
+//
 TEST_FUNCTION(io_decode_int64__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1673,23 +1674,23 @@ TEST_FUNCTION(io_decode_int64__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_int64(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_int64
 
-#ifdef io_decode_uint64 // 
-// Test io_decode_uint64 happy path 
-// 
+#ifdef io_decode_uint64 //
+// Test io_decode_uint64 happy path
+//
 TEST_FUNCTION(io_decode_uint64__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1697,80 +1698,80 @@ TEST_FUNCTION(io_decode_uint64__success)
     static const uint64_t* k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_uint64(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint64 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_uint64 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_uint64__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint64 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_uint64 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_uint64__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint64 passing as value argument an invalid uint64_t* value 
-// 
+//
+// Test io_decode_uint64 passing as value argument an invalid uint64_t* value
+//
 TEST_FUNCTION(io_decode_uint64__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint64();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint64 unhappy path 
-// 
+//
+// Test io_decode_uint64 unhappy path
+//
 TEST_FUNCTION(io_decode_uint64__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1780,23 +1781,23 @@ TEST_FUNCTION(io_decode_uint64__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_uint64(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_uint64
 
-#ifdef io_decode_uint32 // 
-// Test io_decode_uint32 happy path 
-// 
+#ifdef io_decode_uint32 //
+// Test io_decode_uint32 happy path
+//
 TEST_FUNCTION(io_decode_uint32__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1804,80 +1805,80 @@ TEST_FUNCTION(io_decode_uint32__success)
     static const uint32_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_uint32(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint32 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_uint32 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_uint32__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint32 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_uint32 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_uint32__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint32 passing as val argument an invalid uint32_t* value 
-// 
+//
+// Test io_decode_uint32 passing as val argument an invalid uint32_t* value
+//
 TEST_FUNCTION(io_decode_uint32__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint32 unhappy path 
-// 
+//
+// Test io_decode_uint32 unhappy path
+//
 TEST_FUNCTION(io_decode_uint32__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1887,23 +1888,23 @@ TEST_FUNCTION(io_decode_uint32__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_uint32(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_uint32
 
-#ifdef io_decode_uint16 // 
-// Test io_decode_uint16 happy path 
-// 
+#ifdef io_decode_uint16 //
+// Test io_decode_uint16 happy path
+//
 TEST_FUNCTION(io_decode_uint16__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1911,80 +1912,80 @@ TEST_FUNCTION(io_decode_uint16__success)
     static const uint16_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_uint16(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint16 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_uint16 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_uint16__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint16 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_uint16 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_uint16__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint16 passing as val argument an invalid uint16_t* value 
-// 
+//
+// Test io_decode_uint16 passing as val argument an invalid uint16_t* value
+//
 TEST_FUNCTION(io_decode_uint16__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint16 unhappy path 
-// 
+//
+// Test io_decode_uint16 unhappy path
+//
 TEST_FUNCTION(io_decode_uint16__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -1994,23 +1995,23 @@ TEST_FUNCTION(io_decode_uint16__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_uint16(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_uint16
 
-#ifdef io_decode_uint8 // 
-// Test io_decode_uint8 happy path 
-// 
+#ifdef io_decode_uint8 //
+// Test io_decode_uint8 happy path
+//
 TEST_FUNCTION(io_decode_uint8__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2018,80 +2019,80 @@ TEST_FUNCTION(io_decode_uint8__success)
     static const uint8_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_uint8(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint8 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_uint8 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_uint8__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint8 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_uint8 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_uint8__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint8 passing as val argument an invalid uint8_t* value 
-// 
+//
+// Test io_decode_uint8 passing as val argument an invalid uint8_t* value
+//
 TEST_FUNCTION(io_decode_uint8__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_uint8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_uint8 unhappy path 
-// 
+//
+// Test io_decode_uint8 unhappy path
+//
 TEST_FUNCTION(io_decode_uint8__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2101,23 +2102,23 @@ TEST_FUNCTION(io_decode_uint8__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_uint8(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_uint8
 
-#ifdef io_decode_int32 // 
-// Test io_decode_int32 happy path 
-// 
+#ifdef io_decode_int32 //
+// Test io_decode_int32 happy path
+//
 TEST_FUNCTION(io_decode_int32__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2125,80 +2126,80 @@ TEST_FUNCTION(io_decode_int32__success)
     static const int32_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_int32(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int32 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_int32 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_int32__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int32 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_int32 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_int32__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int32 passing as val argument an invalid int32_t* value 
-// 
+//
+// Test io_decode_int32 passing as val argument an invalid int32_t* value
+//
 TEST_FUNCTION(io_decode_int32__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int32();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int32 unhappy path 
-// 
+//
+// Test io_decode_int32 unhappy path
+//
 TEST_FUNCTION(io_decode_int32__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2208,23 +2209,23 @@ TEST_FUNCTION(io_decode_int32__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_int32(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_int32
 
-#ifdef io_decode_int16 // 
-// Test io_decode_int16 happy path 
-// 
+#ifdef io_decode_int16 //
+// Test io_decode_int16 happy path
+//
 TEST_FUNCTION(io_decode_int16__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2232,80 +2233,80 @@ TEST_FUNCTION(io_decode_int16__success)
     static const int16_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_int16(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int16 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_int16 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_int16__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int16 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_int16 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_int16__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int16 passing as val argument an invalid int16_t* value 
-// 
+//
+// Test io_decode_int16 passing as val argument an invalid int16_t* value
+//
 TEST_FUNCTION(io_decode_int16__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int16();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int16 unhappy path 
-// 
+//
+// Test io_decode_int16 unhappy path
+//
 TEST_FUNCTION(io_decode_int16__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2315,23 +2316,23 @@ TEST_FUNCTION(io_decode_int16__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_int16(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_int16
 
-#ifdef io_decode_int8 // 
-// Test io_decode_int8 happy path 
-// 
+#ifdef io_decode_int8 //
+// Test io_decode_int8 happy path
+//
 TEST_FUNCTION(io_decode_int8__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2339,80 +2340,80 @@ TEST_FUNCTION(io_decode_int8__success)
     static const int8_t* k_val_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_int8(k_ctx_valid, k_name_valid, k_val_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int8 passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_int8 passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_int8__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int8 passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_int8 passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_int8__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int8 passing as val argument an invalid int8_t* value 
-// 
+//
+// Test io_decode_int8 passing as val argument an invalid int8_t* value
+//
 TEST_FUNCTION(io_decode_int8__arg_val_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_int8();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_int8 unhappy path 
-// 
+//
+// Test io_decode_int8 unhappy path
+//
 TEST_FUNCTION(io_decode_int8__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2422,23 +2423,23 @@ TEST_FUNCTION(io_decode_int8__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_int8(k_ctx_valid, k_name_valid, k_val_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_int8
 
-#ifdef io_decode_double // 
-// Test io_decode_double happy path 
-// 
+#ifdef io_decode_double //
+// Test io_decode_double happy path
+//
 TEST_FUNCTION(io_decode_double__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2446,80 +2447,80 @@ TEST_FUNCTION(io_decode_double__success)
     static const double* k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_double(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_double passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_double passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_double__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_double passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_double passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_double__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_double passing as value argument an invalid double* value 
-// 
+//
+// Test io_decode_double passing as value argument an invalid double* value
+//
 TEST_FUNCTION(io_decode_double__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_double();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_double unhappy path 
-// 
+//
+// Test io_decode_double unhappy path
+//
 TEST_FUNCTION(io_decode_double__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2529,23 +2530,23 @@ TEST_FUNCTION(io_decode_double__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_double(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_double
 
-#ifdef io_decode_bool // 
-// Test io_decode_bool happy path 
-// 
+#ifdef io_decode_bool //
+// Test io_decode_bool happy path
+//
 TEST_FUNCTION(io_decode_bool__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2553,80 +2554,80 @@ TEST_FUNCTION(io_decode_bool__success)
     static const bool* k_value_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_bool(k_ctx_valid, k_name_valid, k_value_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bool passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_bool passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_bool__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bool passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_bool passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_bool__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bool passing as value argument an invalid bool* value 
-// 
+//
+// Test io_decode_bool passing as value argument an invalid bool* value
+//
 TEST_FUNCTION(io_decode_bool__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bool();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bool unhappy path 
-// 
+//
+// Test io_decode_bool unhappy path
+//
 TEST_FUNCTION(io_decode_bool__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2636,23 +2637,23 @@ TEST_FUNCTION(io_decode_bool__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_bool(k_ctx_valid, k_name_valid, k_value_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_bool
 
-#ifdef io_decode_string // 
-// Test io_decode_string happy path 
-// 
+#ifdef io_decode_string //
+// Test io_decode_string happy path
+//
 TEST_FUNCTION(io_decode_string__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2662,120 +2663,120 @@ TEST_FUNCTION(io_decode_string__success)
     static const size_t* k_size_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_string(k_ctx_valid, k_name_valid, k_alloc_valid, k_value_valid, k_size_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_string passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_string__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_string passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_string__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string passing as alloc argument an invalid io_decode_allocator_t value 
-// 
+//
+// Test io_decode_string passing as alloc argument an invalid io_decode_allocator_t value
+//
 TEST_FUNCTION(io_decode_string__arg_alloc_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string passing as value argument an invalid char** value 
-// 
+//
+// Test io_decode_string passing as value argument an invalid char** value
+//
 TEST_FUNCTION(io_decode_string__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string passing as size argument an invalid size_t* value 
-// 
+//
+// Test io_decode_string passing as size argument an invalid size_t* value
+//
 TEST_FUNCTION(io_decode_string__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string unhappy path 
-// 
+//
+// Test io_decode_string unhappy path
+//
 TEST_FUNCTION(io_decode_string__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2787,23 +2788,23 @@ TEST_FUNCTION(io_decode_string__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_string(k_ctx_valid, k_name_valid, k_alloc_valid, k_value_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_string
 
-#ifdef io_decode_string_default // 
-// Test io_decode_string_default happy path 
-// 
+#ifdef io_decode_string_default //
+// Test io_decode_string_default happy path
+//
 TEST_FUNCTION(io_decode_string_default__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2811,80 +2812,80 @@ TEST_FUNCTION(io_decode_string_default__success)
     static const char** k_string_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_string_default(k_ctx_valid, k_name_valid, k_string_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_default passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_string_default passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_string_default__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_default passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_string_default passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_string_default__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_default passing as string argument an invalid char** value 
-// 
+//
+// Test io_decode_string_default passing as string argument an invalid char** value
+//
 TEST_FUNCTION(io_decode_string_default__arg_string_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_default unhappy path 
-// 
+//
+// Test io_decode_string_default unhappy path
+//
 TEST_FUNCTION(io_decode_string_default__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2894,23 +2895,23 @@ TEST_FUNCTION(io_decode_string_default__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_string_default(k_ctx_valid, k_name_valid, k_string_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_string_default;
 
-#ifdef io_decode_string_fixed // 
-// Test io_decode_string_fixed happy path 
-// 
+#ifdef io_decode_string_fixed //
+// Test io_decode_string_fixed happy path
+//
 TEST_FUNCTION(io_decode_string_fixed__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -2919,100 +2920,100 @@ TEST_FUNCTION(io_decode_string_fixed__success)
     static const size_t k_len_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_string_fixed(k_ctx_valid, k_name_valid, k_string_valid, k_len_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_fixed passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_string_fixed passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_string_fixed__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_fixed passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_string_fixed passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_string_fixed__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_fixed passing as string argument an invalid char* value 
-// 
+//
+// Test io_decode_string_fixed passing as string argument an invalid char* value
+//
 TEST_FUNCTION(io_decode_string_fixed__arg_string_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_fixed passing as len argument an invalid size_t value 
-// 
+//
+// Test io_decode_string_fixed passing as len argument an invalid size_t value
+//
 TEST_FUNCTION(io_decode_string_fixed__arg_len_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_string_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_string_fixed unhappy path 
-// 
+//
+// Test io_decode_string_fixed unhappy path
+//
 TEST_FUNCTION(io_decode_string_fixed__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3023,23 +3024,23 @@ TEST_FUNCTION(io_decode_string_fixed__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_string_fixed(k_ctx_valid, k_name_valid, k_string_valid, k_len_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_string_fixed;
 
-#ifdef io_decode_STRING_HANDLE // 
-// Test io_decode_STRING_HANDLE happy path 
-// 
+#ifdef io_decode_STRING_HANDLE //
+// Test io_decode_STRING_HANDLE happy path
+//
 TEST_FUNCTION(io_decode_STRING_HANDLE__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3047,80 +3048,80 @@ TEST_FUNCTION(io_decode_STRING_HANDLE__success)
     static const STRING_HANDLE* k_string_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_STRING_HANDLE(k_ctx_valid, k_name_valid, k_string_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_STRING_HANDLE passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_STRING_HANDLE passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_STRING_HANDLE__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_STRING_HANDLE passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_STRING_HANDLE passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_STRING_HANDLE__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_STRING_HANDLE passing as string argument an invalid STRING_HANDLE* value 
-// 
+//
+// Test io_decode_STRING_HANDLE passing as string argument an invalid STRING_HANDLE* value
+//
 TEST_FUNCTION(io_decode_STRING_HANDLE__arg_string_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_STRING_HANDLE();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_STRING_HANDLE unhappy path 
-// 
+//
+// Test io_decode_STRING_HANDLE unhappy path
+//
 TEST_FUNCTION(io_decode_STRING_HANDLE__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3130,23 +3131,23 @@ TEST_FUNCTION(io_decode_STRING_HANDLE__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_STRING_HANDLE(k_ctx_valid, k_name_valid, k_string_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_STRING_HANDLE;
 
-#ifdef io_decode_bin // 
-// Test io_decode_bin happy path 
-// 
+#ifdef io_decode_bin //
+// Test io_decode_bin happy path
+//
 TEST_FUNCTION(io_decode_bin__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3156,120 +3157,120 @@ TEST_FUNCTION(io_decode_bin__success)
     static const size_t* k_size_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_bin(k_ctx_valid, k_name_valid, k_alloc_valid, k_value_valid, k_size_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_bin passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_bin__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_bin passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_bin__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin passing as alloc argument an invalid io_decode_allocator_t value 
-// 
+//
+// Test io_decode_bin passing as alloc argument an invalid io_decode_allocator_t value
+//
 TEST_FUNCTION(io_decode_bin__arg_alloc_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin passing as value argument an invalid void** value 
-// 
+//
+// Test io_decode_bin passing as value argument an invalid void** value
+//
 TEST_FUNCTION(io_decode_bin__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin passing as size argument an invalid size_t* value 
-// 
+//
+// Test io_decode_bin passing as size argument an invalid size_t* value
+//
 TEST_FUNCTION(io_decode_bin__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin unhappy path 
-// 
+//
+// Test io_decode_bin unhappy path
+//
 TEST_FUNCTION(io_decode_bin__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3281,23 +3282,23 @@ TEST_FUNCTION(io_decode_bin__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_bin(k_ctx_valid, k_name_valid, k_alloc_valid, k_value_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_bin
 
-#ifdef io_decode_bin_default // 
-// Test io_decode_bin_default happy path 
-// 
+#ifdef io_decode_bin_default //
+// Test io_decode_bin_default happy path
+//
 TEST_FUNCTION(io_decode_bin_default__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3306,100 +3307,100 @@ TEST_FUNCTION(io_decode_bin_default__success)
     static const size_t* k_size_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_bin_default(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_default passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_bin_default passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_bin_default__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_default passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_bin_default passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_bin_default__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_default passing as value argument an invalid void** value 
-// 
+//
+// Test io_decode_bin_default passing as value argument an invalid void** value
+//
 TEST_FUNCTION(io_decode_bin_default__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_default passing as size argument an invalid size_t* value 
-// 
+//
+// Test io_decode_bin_default passing as size argument an invalid size_t* value
+//
 TEST_FUNCTION(io_decode_bin_default__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_default();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_default unhappy path 
-// 
+//
+// Test io_decode_bin_default unhappy path
+//
 TEST_FUNCTION(io_decode_bin_default__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3410,23 +3411,23 @@ TEST_FUNCTION(io_decode_bin_default__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_bin_default(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_bin_default;
 
-#ifdef io_decode_bin_fixed // 
-// Test io_decode_bin_fixed happy path 
-// 
+#ifdef io_decode_bin_fixed //
+// Test io_decode_bin_fixed happy path
+//
 TEST_FUNCTION(io_decode_bin_fixed__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3435,100 +3436,100 @@ TEST_FUNCTION(io_decode_bin_fixed__success)
     static const size_t* k_size_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_bin_fixed(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_fixed passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_bin_fixed passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_bin_fixed__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_fixed passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_bin_fixed passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_bin_fixed__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_fixed passing as value argument an invalid void* value 
-// 
+//
+// Test io_decode_bin_fixed passing as value argument an invalid void* value
+//
 TEST_FUNCTION(io_decode_bin_fixed__arg_value_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_fixed passing as size argument an invalid size_t* value 
-// 
+//
+// Test io_decode_bin_fixed passing as size argument an invalid size_t* value
+//
 TEST_FUNCTION(io_decode_bin_fixed__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_bin_fixed();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_bin_fixed unhappy path 
-// 
+//
+// Test io_decode_bin_fixed unhappy path
+//
 TEST_FUNCTION(io_decode_bin_fixed__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3539,62 +3540,62 @@ TEST_FUNCTION(io_decode_bin_fixed__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_bin_fixed(k_ctx_valid, k_name_valid, k_value_valid, k_size_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_bin_fixed;
 
-#ifdef io_decode_type_begin // 
-// Test io_decode_type_begin happy path 
-// 
+#ifdef io_decode_type_begin //
+// Test io_decode_type_begin happy path
+//
 TEST_FUNCTION(io_decode_type_begin__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_type_begin(k_ctx_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_type_begin passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_type_begin passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_type_begin__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_type_begin();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_type_begin unhappy path 
-// 
+//
+// Test io_decode_type_begin unhappy path
+//
 TEST_FUNCTION(io_decode_type_begin__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3602,62 +3603,62 @@ TEST_FUNCTION(io_decode_type_begin__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_type_begin(k_ctx_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_type_begin
 
-#ifdef io_decode_type_end // 
-// Test io_decode_type_end happy path 
-// 
+#ifdef io_decode_type_end //
+// Test io_decode_type_end happy path
+//
 TEST_FUNCTION(io_decode_type_end__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_type_end(k_ctx_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_type_end passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_type_end passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_type_end__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_type_end();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_type_end unhappy path 
-// 
+//
+// Test io_decode_type_end unhappy path
+//
 TEST_FUNCTION(io_decode_type_end__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3665,23 +3666,23 @@ TEST_FUNCTION(io_decode_type_end__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_type_end(k_ctx_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_type_end
 
-#ifdef io_decode_object // 
-// Test io_decode_object happy path 
-// 
+#ifdef io_decode_object //
+// Test io_decode_object happy path
+//
 TEST_FUNCTION(io_decode_object__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3690,100 +3691,100 @@ TEST_FUNCTION(io_decode_object__success)
     static const io_codec_ctx_t* k_object_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_object(k_ctx_valid, k_name_valid, k_is_null_valid, k_object_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_object passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_object passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_object__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_object passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_object passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_object__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_object passing as is_null argument an invalid bool* value 
-// 
+//
+// Test io_decode_object passing as is_null argument an invalid bool* value
+//
 TEST_FUNCTION(io_decode_object__arg_is_null_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_object passing as object argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_object passing as object argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_object__arg_object_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_object();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_object unhappy path 
-// 
+//
+// Test io_decode_object unhappy path
+//
 TEST_FUNCTION(io_decode_object__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3794,23 +3795,23 @@ TEST_FUNCTION(io_decode_object__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_object(k_ctx_valid, k_name_valid, k_is_null_valid, k_object_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_object
 
-#ifdef io_decode_array // 
-// Test io_decode_array happy path 
-// 
+#ifdef io_decode_array //
+// Test io_decode_array happy path
+//
 TEST_FUNCTION(io_decode_array__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3819,100 +3820,100 @@ TEST_FUNCTION(io_decode_array__success)
     static const io_codec_ctx_t* k_array_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_array(k_ctx_valid, k_name_valid, k_size_valid, k_array_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_array passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_array passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_array__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_array passing as name argument an invalid const char* value 
-// 
+//
+// Test io_decode_array passing as name argument an invalid const char* value
+//
 TEST_FUNCTION(io_decode_array__arg_name_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_array passing as size argument an invalid size_t* value 
-// 
+//
+// Test io_decode_array passing as size argument an invalid size_t* value
+//
 TEST_FUNCTION(io_decode_array__arg_size_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_array passing as array argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_array passing as array argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_array__arg_array_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_array();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_array unhappy path 
-// 
+//
+// Test io_decode_array unhappy path
+//
 TEST_FUNCTION(io_decode_array__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -3923,62 +3924,62 @@ TEST_FUNCTION(io_decode_array__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_array(k_ctx_valid, k_name_valid, k_size_valid, k_array_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
 #endif // io_decode_array
 
-#ifdef io_codec_by_id // 
-// Test io_codec_by_id happy path 
-// 
+#ifdef io_codec_by_id //
+// Test io_codec_by_id happy path
+//
 TEST_FUNCTION(io_codec_by_id__success)
 {
     static const io_codec_id_t k_id_valid;
     io_codec_t* result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_codec_by_id(k_id_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(io_codec_t*, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_by_id passing as id argument an invalid io_codec_id_t value 
-// 
+//
+// Test io_codec_by_id passing as id argument an invalid io_codec_id_t value
+//
 TEST_FUNCTION(io_codec_by_id__arg_id_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_codec_by_id();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_codec_by_id unhappy path 
-// 
+//
+// Test io_codec_by_id unhappy path
+//
 TEST_FUNCTION(io_codec_by_id__neg)
 {
     static const io_codec_id_t k_id_valid;
@@ -3986,15 +3987,15 @@ TEST_FUNCTION(io_codec_by_id__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_codec_by_id(k_id_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(io_codec_t*, result, er_ok);
 }
 

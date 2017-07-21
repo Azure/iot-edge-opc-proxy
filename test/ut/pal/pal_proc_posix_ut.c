@@ -11,7 +11,7 @@
 
 
 // spawn.h
-MOCKABLE_FUNCTION(, int, posix_spawn, 
+MOCKABLE_FUNCTION(, int, posix_spawn,
     pid_t*, pid, const char*, path, const posix_spawn_file_actions_t*, file_actions,
     const posix_spawnattr_t*, attrp, char**, argv, char**, envp);
 
@@ -47,9 +47,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_process_spawn happy path 
-// 
+//
+// Test pal_process_spawn happy path
+//
 TEST_FUNCTION(pal_posix_process_spawn__success)
 {
     static const char* k_image_valid = "test";
@@ -63,7 +63,7 @@ TEST_FUNCTION(pal_posix_process_spawn__success)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(process_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
@@ -84,17 +84,17 @@ TEST_FUNCTION(pal_posix_process_spawn__success)
         .CopyOutArgumentBuffer_pid(&k_process_id_valid, sizeof(k_process_id_valid))
         .SetReturn(0); // Parent
 
-    // act 
+    // act
     result = pal_process_spawn(k_image_valid, k_argc_valid, k_argv_valid, &created_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_process_spawn passing as created argument an invalid process_t** value 
-// 
+//
+// Test pal_process_spawn passing as created argument an invalid process_t** value
+//
 TEST_FUNCTION(pal_posix_process_spawn__arg_created_null)
 {
     static const char* k_image_valid = "test";
@@ -102,19 +102,19 @@ TEST_FUNCTION(pal_posix_process_spawn__arg_created_null)
     static const char* k_argv_valid[] = { "a", "b", "c" };
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_process_spawn(k_image_valid, k_argc_valid, k_argv_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_process_spawn unhappy path 
-// 
+//
+// Test pal_process_spawn unhappy path
+//
 TEST_FUNCTION(pal_posix_process_spawn__neg)
 {
     static const char* k_image_valid = "test";
@@ -128,7 +128,7 @@ TEST_FUNCTION(pal_posix_process_spawn__neg)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(h_realloc(sizeof(process_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
@@ -156,7 +156,7 @@ TEST_FUNCTION(pal_posix_process_spawn__neg)
         .SetReturn(0)
         .SetFailReturn(-1); // Parent
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
     result = pal_process_spawn(k_image_valid, k_argc_valid, k_argv_valid, &created_valid);
@@ -167,41 +167,41 @@ TEST_FUNCTION(pal_posix_process_spawn__neg)
         er_out_of_memory, er_out_of_memory, er_ok, er_ok, er_out_of_memory);
 }
 
-// 
-// Test pal_process_kill happy path 
-// 
+//
+// Test pal_process_kill happy path
+//
 TEST_FUNCTION(pal_posix_process_kill__success)
 {
     static const pid_t k_process_id_valid = (pid_t)0x2342;
     process_t process_valid;
     process_valid.pid = k_process_id_valid;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_process_kill(&process_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_process_kill passing as process argument an invalid process_t* value 
-// 
+//
+// Test pal_process_kill passing as process argument an invalid process_t* value
+//
 TEST_FUNCTION(pal_posix_process_kill__arg_pal_process_null)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_process_kill(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_process_yield happy path 
-// 
+//
+// Test pal_process_yield happy path
+//
 TEST_FUNCTION(pal_posix_process_yield__success)
 {
     static const pid_t k_process_id_valid = (pid_t)0x2342;
@@ -211,7 +211,7 @@ TEST_FUNCTION(pal_posix_process_yield__success)
     process_valid.pid = k_process_id_valid;
     process_valid.cmd_line = (char**)k_cmd_line_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(fflush(NULL))
         .SetReturn(0);
     for (size_t i = 0; i < _countof(k_cmd_line_valid) - 1; i++)
@@ -224,24 +224,24 @@ TEST_FUNCTION(pal_posix_process_yield__success)
     STRICT_EXPECTED_CALL(h_free((void*)&process_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     pal_process_yield(&process_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_process_yield passing as proc argument an invalid process_t* value 
-// 
+//
+// Test pal_process_yield passing as proc argument an invalid process_t* value
+//
 TEST_FUNCTION(pal_posix_process_yield__arg_proc_invalid)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_process_yield(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

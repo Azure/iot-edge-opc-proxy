@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="policy"></param>
         /// <param name="maxRetry"></param>
         /// <returns></returns>
-        public static async Task Do(CancellationToken ct, Func<Task> work, 
+        public static async Task Do(CancellationToken ct, Func<Task> work,
             Func<Exception, bool> cont, Func<int, int> policy, int maxRetry) {
             for (int k = 1; k <= maxRetry; k++) {
                 if (ct.IsCancellationRequested)
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
                 catch (Exception ex) {
                     if (!cont(ex))
-                        throw ProxyEventSource.Log.Rethrow(ex, work); 
+                        throw ProxyEventSource.Log.Rethrow(ex, work);
                     ProxyEventSource.Log.Retry(work, k, ex);
                 }
                 int delay = policy(k);
@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         /// <param name="work"></param>
         /// <returns></returns>
-        public static Task WithLinearBackoff(CancellationToken ct, 
+        public static Task WithLinearBackoff(CancellationToken ct,
             Func<Task> work) =>
             WithLinearBackoff(ct, work, ex => ex is ITransientException);
 
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <returns></returns>
         public static Task<T> WithLinearBackoff<T>(Func<Task<T>> work) =>
             WithLinearBackoff(CancellationToken.None, work);
-        
+
 
         /// <summary>
         /// Retry with exponential backoff

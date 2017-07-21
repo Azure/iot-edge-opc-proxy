@@ -30,7 +30,7 @@
     )
 if(WIN32)
     set(source_c_files ${source_c_files}
-        ${_PROJECT_TEST}/ut/main.c 
+        ${_PROJECT_TEST}/ut/main.c
     )
 endif()
 
@@ -42,10 +42,10 @@ compileAsC99()
     add_library(libtest STATIC ${source_c_files})
     set_property(TARGET libtest PROPERTY POSITION_INDEPENDENT_CODE ON)
 
-    target_include_directories(libtest 
-        PRIVATE ${_PROJECT_INC} 
-        PUBLIC ${_UMOCKC_INC} 
-        PUBLIC ${_TRUNNER_INC} 
+    target_include_directories(libtest
+        PRIVATE ${_PROJECT_INC}
+        PUBLIC ${_UMOCKC_INC}
+        PUBLIC ${_TRUNNER_INC}
         PUBLIC ${_CTEST_INC}
     )
 if(WIN32)

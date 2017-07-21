@@ -61,7 +61,7 @@ struct io_codec_ctx
 typedef int32_t (*io_codec_init_ctx_t)(
     io_codec_ctx_t* ctx,
     io_stream_t* stream,
-    bool init_from_stream, 
+    bool init_from_stream,
     log_t log
     );
 
@@ -84,7 +84,7 @@ typedef int32_t (*io_encode_uint64_t)(
     );
 
 //
-// Encodes a decimal value 
+// Encodes a decimal value
 //
 typedef int32_t (*io_encode_double_t)(
     io_codec_ctx_t* ctx,
@@ -174,7 +174,7 @@ typedef int32_t (*io_decode_uint64_t)(
     );
 
 //
-// Decodes a decimal value 
+// Decodes a decimal value
 //
 typedef int32_t (*io_decode_double_t)(
     io_codec_ctx_t* ctx,
@@ -374,7 +374,7 @@ decl_inline_3(int32_t, io_encode_uint64,
 #define io_encode_uint8 io_encode_uint64
 
 //
-// Encodes decimal value 
+// Encodes decimal value
 //
 decl_inline_3(int32_t, io_encode_double,
     io_codec_ctx_t*, ctx,
@@ -644,7 +644,7 @@ decl_inline_3(int32_t, io_decode_int8,
 }
 
 //
-// decodes a decimal value 
+// decodes a decimal value
 //
 decl_inline_3(int32_t, io_decode_double,
     io_codec_ctx_t*, ctx,
@@ -910,7 +910,7 @@ typedef struct STRING_TAG* STRING_HANDLE_t;
         result = io_decode_type_begin(ctx); \
         if (result != er_ok) \
             return result; \
-    } 
+    }
 
 //
 // Utility macro to finish decoding type

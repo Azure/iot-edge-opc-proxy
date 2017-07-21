@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Stringify address
         /// </summary>
         /// <returns></returns>
-        public string AsString() => 
+        public string AsString() =>
             $"{Address[0]}.{Address[1]}.{Address[2]}.{Address[3]}";
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                         // Now parse port if we have one, otherwise set to 0.
                         ushort port = 0;
                         if (labels.Length == 1 ||
-                           (labels.Length == 2 && 
+                           (labels.Length == 2 &&
                             ushort.TryParse(labels[1], out port))) {
                             parsed = new Inet4SocketAddress(addressBuffer, port);
                             return true;

@@ -104,7 +104,7 @@ int32_t signal_wait_ex(
 
     Lock(signal->lock);
     if (signal->state == signal_state_destroyed)
-        result = er_aborted; 
+        result = er_aborted;
     else if (signal->state == signal_state_set)
     {
         // Reset event if automatic reset event
@@ -112,7 +112,7 @@ int32_t signal_wait_ex(
             signal->state = signal_state_clear;
         result = er_ok;
     }
-    else 
+    else
     {
         do
         {

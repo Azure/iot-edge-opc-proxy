@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="codecId"></param>
-        /// <param name="reader">As reader or writer stream</param>
+        /// <param name="owner">Whether to own the stream</param>
         /// <returns></returns>
         public static ICodecStream AsCodecStream(this Stream stream, CodecId codecId,
             bool owner = false) {
@@ -36,9 +36,9 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="codecId"></param>
-        /// <param name="reader">As reader or writer stream</param>
+        /// <param name="owner">Whether to own the stream</param>
         /// <returns></returns>
-        public static ICodecStream<S> AsCodecStream<S>(this S stream, CodecId codecId, 
+        public static ICodecStream<S> AsCodecStream<S>(this S stream, CodecId codecId,
             bool owner = false) where S : Stream {
             switch (codecId) {
                 case CodecId.Json:
@@ -75,10 +75,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Encode 
+        /// Encode
         /// </summary>
+        /// <param name="ziss"></param>
         /// <param name="stream"></param>
-        /// <param name=""></param>
         /// <param name="codecId"></param>
         public static void Encode<T>(this T ziss, Stream stream, CodecId codecId) where T : Poco {
             using (var writer = stream.AsCodecStream(codecId)) {
@@ -87,12 +87,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Encode 
+        /// Encode
         /// </summary>
+        /// <param name="ziss"></param>
         /// <param name="stream"></param>
-        /// <param name=""></param>
         /// <param name="codecId"></param>
-        public static async Task EncodeAsync<T>(this T ziss, Stream stream, CodecId codecId, 
+        public static async Task EncodeAsync<T>(this T ziss, Stream stream, CodecId codecId,
             CancellationToken ct) where T : Poco {
             using (var writer = stream.AsCodecStream(codecId)) {
                 await writer.WriteAsync(ziss, ct).ConfigureAwait(false);

@@ -53,7 +53,7 @@ struct prx_browse_session
 
     int32_t last_error;  // Last error received in connect/disconnect path
     struct hashtable* requests;                 // List of active requests
-    
+
     pal_sdclient_t* owner; // The client used to create contained browsers
     DLIST_ENTRY link;           // Link to queue browser clients in server
     log_t log;
@@ -152,7 +152,7 @@ static void prx_browse_session_free(
         io_queue_free(session->inbound);
     if (session->scheduler)
         prx_scheduler_release(session->scheduler, session);
-    
+
     if (session->server)
     {
         lock_enter(session->server->sessions_lock);
@@ -194,26 +194,26 @@ static void prx_browse_session_send_response(
     dbg_assert_ptr(session);
     dbg_assert_ptr(browse_response);
 
-    // Assumption is that session is valid here, i.e. sched thread to ensure 
-    // all pal resources (sk, sd) are properly destroyed before session itself 
+    // Assumption is that session is valid here, i.e. sched thread to ensure
+    // all pal resources (sk, sd) are properly destroyed before session itself
     // is taken down!
 
-    result = io_queue_create_buffer(session->outbound, NULL, 
+    result = io_queue_create_buffer(session->outbound, NULL,
         MAX_MESSAGE_SIZE, &buffer);
     if (result != er_ok)
     {
         // failed to create buffer - bail
-        log_error(session->log, "Failed to create outbound buffer (%s)", 
+        log_error(session->log, "Failed to create outbound buffer (%s)",
             prx_err_string(result));
         return;
     }
     do
     {
-        result = io_codec_ctx_init(session->codec, &ctx, 
+        result = io_codec_ctx_init(session->codec, &ctx,
             io_queue_buffer_as_stream(buffer), false, session->log);
         if (result != er_ok)
         {
-            log_error(session->log, 
+            log_error(session->log,
                 "Failed to initialize codec from stream (%s)",
                 prx_err_string(result));
             break;
@@ -244,7 +244,7 @@ static void prx_browse_session_send_response(
 
         if (browse_response->error_code != er_ok)
         {
-            log_trace(session->log, "Browse response sent (with error code %s)", 
+            log_trace(session->log, "Browse response sent (with error code %s)",
                 prx_err_string(browse_response->error_code));
         }
         else
@@ -254,7 +254,7 @@ static void prx_browse_session_send_response(
 
         __do_next(session, prx_browse_session_send_buffers);
         return;
-    } 
+    }
     while (0);
     // Error, release buffer here
     io_queue_buffer_release(buffer);
@@ -468,7 +468,7 @@ static void prx_browse_session_handle_dirpath_request(
             prx_browse_session_handle_dirpath_response(stream, er_nomore, NULL, NULL);
         }
         return;
-    } 
+    }
     while (0);
 
     log_error(session->log, "Failed reading folder (%s)", prx_err_string(result));
@@ -504,7 +504,7 @@ static int32_t prx_browse_session_handle_service_response(
     (void)itf_index;
 
     // Clear timeout countdown we previously scheduled since we got results
-    prx_scheduler_clear(stream->session->scheduler, 
+    prx_scheduler_clear(stream->session->scheduler,
         (prx_task_t)prx_browse_stream_timeout, stream);
 
     memset(&browse_response, 0, sizeof(io_browse_response_t));
@@ -520,12 +520,12 @@ static int32_t prx_browse_session_handle_service_response(
         res = (pal_sd_service_entry_t*)browse_result;
 
         dbg_assert_ptr(res->addr);
-        dbg_assert(res->addr->family == prx_address_family_proxy, 
+        dbg_assert(res->addr->family == prx_address_family_proxy,
             "Expected proxy address from pal.");
         dbg_assert(res->records_len == 0 || res->records,
             "Expected %d records but got NULL ptr", res->records_len);
 
-        memcpy(&browse_response.item.un.proxy, res->addr, 
+        memcpy(&browse_response.item.un.proxy, res->addr,
             sizeof(prx_socket_address_proxy_t));
         browse_response.props_size = res->records_len;
         browse_response.props = res->records;
@@ -555,14 +555,14 @@ static int32_t prx_browse_session_handle_service_response(
         {
             result = string_copy_service_full_name(rec->service_name,
                 rec->service_type, rec->domain, full_name, full_name_len);
-            browse_response.item.un.proxy.host_dyn = 
+            browse_response.item.un.proxy.host_dyn =
                 result == er_ok ? full_name : NULL;
         }
 
         if (result != er_ok && error == er_ok)
         {
             log_error(stream->session->log,
-                "Failed to make full name from supposedly good results (%s).", 
+                "Failed to make full name from supposedly good results (%s).",
                     prx_err_string(result));
             error = result;
         }
@@ -583,7 +583,7 @@ static int32_t prx_browse_session_handle_service_response(
     // Schedule timeout to send all for now if not already done so...
     if (0 == (flags & pal_sd_result_all_for_now))
     {
-        __do_later_s(stream->session->scheduler, prx_browse_stream_timeout, 
+        __do_later_s(stream->session->scheduler, prx_browse_stream_timeout,
             stream, STREAM_TIMEOUT);
     }
     return er_ok;
@@ -648,9 +648,9 @@ static void prx_browse_session_handle_resolve_request(
         }
 
         // Resolve with specified query
-        log_trace(session->log, "Resolving %s...", 
+        log_trace(session->log, "Resolving %s...",
             prx_socket_address_proxy_get_host(&browse_request->item.un.proxy));
-        result = pal_sdbrowser_resolve(stream->sdbrowser, &browse_request->item.un.proxy, 
+        result = pal_sdbrowser_resolve(stream->sdbrowser, &browse_request->item.un.proxy,
             prx_itf_index_all /*browse_request->item.un.proxy.itf_index*/);
         if (result != er_ok)
             break;
@@ -659,7 +659,7 @@ static void prx_browse_session_handle_resolve_request(
         __do_later_s(session->scheduler, prx_browse_stream_timeout,
             stream, STREAM_TIMEOUT);
         return;
-    } 
+    }
     while (0);
 
     log_error(session->log, "Failed creating browse stream (%s)", prx_err_string(result));
@@ -725,7 +725,7 @@ static void prx_browse_session_handle_service_request(
         // Now get or create the stream for this handle
         result = prx_browse_session_get_or_create_request(session,
             &browse_request->handle, &stream);
-        if (result != er_ok) 
+        if (result != er_ok)
             break;
         if (!stream->sdbrowser)
         {
@@ -743,7 +743,7 @@ static void prx_browse_session_handle_service_request(
 
         // Browse with specified query
         log_trace(session->log, "Service query: %s...", query);
-        result = pal_sdbrowser_browse(stream->sdbrowser, service_name, service_type, 
+        result = pal_sdbrowser_browse(stream->sdbrowser, service_name, service_type,
             domain, prx_itf_index_all /*browse_request->item.un.proxy.itf_index*/);
         if (result != er_ok)
             break;
@@ -753,7 +753,7 @@ static void prx_browse_session_handle_service_request(
             stream, STREAM_TIMEOUT);
         mem_free(query);
         return;
-    } 
+    }
     while (0);
 
     log_error(session->log, "Failed creating browse stream (%s)", prx_err_string(result));
@@ -813,7 +813,7 @@ static void prx_browse_session_decode_and_process_request(
     dbg_assert_ptr(stream);
     dbg_assert_is_task(session->scheduler);
 
-    result = io_codec_ctx_init(session->codec, &ctx, stream, true, 
+    result = io_codec_ctx_init(session->codec, &ctx, stream, true,
         session->log);
     if (result != er_ok)
     {
@@ -874,7 +874,7 @@ static void prx_browse_session_receive_buffers(
             break;
 
         // Decode and process request
-        prx_browse_session_decode_and_process_request(session, 
+        prx_browse_session_decode_and_process_request(session,
             io_queue_buffer_as_stream(buffer));
 
         // release buffer
@@ -975,8 +975,8 @@ static void prx_browse_session_on_end_receive(
     buffer = io_queue_buffer_from_ptr(*buf);
     dbg_assert_ptr(buffer);
 
-    if (result != er_ok && 
-        result != er_aborted && 
+    if (result != er_ok &&
+        result != er_aborted &&
         result != er_retry &&
         result != er_closed)
     {
@@ -1056,8 +1056,8 @@ static void prx_browse_session_on_end_send(
     dbg_assert_ptr(length);
     dbg_assert_ptr(*buf);
 
-    if (result != er_ok && 
-        result != er_aborted && 
+    if (result != er_ok &&
+        result != er_aborted &&
         result != er_retry &&
         result != er_closed)
     {
@@ -1167,7 +1167,7 @@ static void prx_browse_server_sdclient_reconnect(
         server, &server->sdclient);
     if (result != er_ok)
     {
-        log_error(server->log, 
+        log_error(server->log,
             "Failed to create sd client (%s), retrying later... ",
             prx_err_string(result));
         __do_later(server, prx_browse_server_sdclient_reconnect, 30000);
@@ -1208,7 +1208,7 @@ static void prx_browse_server_sdclient_reset(
 
     // Free client and recreate/reconnect - clear out all queued resets...
     pal_sdclient_free(sdclient);
-    prx_scheduler_clear(server->scheduler, 
+    prx_scheduler_clear(server->scheduler,
         (prx_task_t)prx_browse_server_sdclient_reset, server);
 
     __do_later(server, prx_browse_server_sdclient_reconnect, 3000);
@@ -1246,7 +1246,7 @@ void prx_browse_server_free(
     if (!DList_IsListEmpty(&server->sessions))
     {
         // Free session first, it will schedule a free again...
-        __do_next(containingRecord(server->sessions.Flink, 
+        __do_next(containingRecord(server->sessions.Flink,
             prx_browse_session_t, link), prx_browse_session_free);
         lock_exit(server->sessions_lock);
         return; // Wait for session to close
@@ -1341,7 +1341,7 @@ int32_t prx_browse_server_accept(
         session->server = server;
         lock_exit(server->sessions_lock);
         return er_ok;
-    } 
+    }
     while (0);
     prx_browse_session_free(session);
     return result;
@@ -1392,7 +1392,7 @@ int32_t prx_browse_server_create(
 
         *created = server;
         return er_ok;
-    } 
+    }
     while (0);
     prx_browse_server_free(server);
     return result;

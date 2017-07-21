@@ -19,8 +19,8 @@ namespace System.Threading.Tasks {
                     faultAction(task);
                     break;
                 default:
-                    task.ContinueWith(faultAction, 
-                        TaskContinuationOptions.OnlyOnFaulted | 
+                    task.ContinueWith(faultAction,
+                        TaskContinuationOptions.OnlyOnFaulted |
                         TaskContinuationOptions.ExecuteSynchronously);
                     break;
             }
@@ -35,8 +35,8 @@ namespace System.Threading.Tasks {
                     faultAction(task, state);
                     break;
                 default:
-                    task.ContinueWith(faultAction, state, 
-                        TaskContinuationOptions.OnlyOnFaulted | 
+                    task.ContinueWith(faultAction, state,
+                        TaskContinuationOptions.OnlyOnFaulted |
                         TaskContinuationOptions.ExecuteSynchronously);
                     break;
             }

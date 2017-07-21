@@ -41,7 +41,7 @@ compileAsC99()
 #
 add_library(libzlog SHARED ${source_c_files})
 
-target_include_directories(libzlog 
+target_include_directories(libzlog
     PUBLIC ${_PROJECT_INC}
     PUBLIC ${_ZLOG_INC}
     PRIVATE ${_IOTSDK_INC}

@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             return info;
         }
 
-        public FileInfo Clone() => Create(NodeId, DeviceId, Type, Size, 
+        public FileInfo Clone() => Create(NodeId, DeviceId, Type, Size,
             LastAccessedAsUnixTime, LastModifiedAsUnixTime);
 
         /// <summary>

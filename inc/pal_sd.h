@@ -55,8 +55,8 @@ typedef int32_t (*pal_sd_result_cb_t)(
 typedef struct pal_sd_browse_result
 {
     const char* service_name;
-    const char* service_type;  
-    const char* domain; 
+    const char* service_type;
+    const char* domain;
 }
 pal_sd_browse_result_t;
 
@@ -67,7 +67,7 @@ typedef struct pal_sd_service_entry
 {
     prx_socket_address_proxy_t* addr;     // The host:port address
     size_t records_len;                   // Number of txt records
-    prx_property_t* records;                       // in blob form 
+    prx_property_t* records;                       // in blob form
 }
 pal_sd_service_entry_t;
 

@@ -17,7 +17,7 @@ decl_internal_1(io_ref_t*, prx_host_get_id,
 );
 
 //
-// returns a pointer to the name service  
+// returns a pointer to the name service
 //
 decl_internal_1(prx_ns_t*, prx_host_get_ns,
     prx_host_t*, host

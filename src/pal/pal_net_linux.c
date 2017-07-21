@@ -66,7 +66,7 @@ int32_t pal_os_to_prx_ifaddrinfo(
     //
     // Note that we use sizeof(struct sockaddr_in6), assuming here the family
     // in the socket buffer denotes the real struct size and os is returning
-    // an address with the right length.  
+    // an address with the right length.
     //
     result = pal_os_to_prx_socket_address(
         ifaddr, sizeof(struct sockaddr_in6), &prx_ifa->address);
@@ -206,7 +206,7 @@ int32_t pal_getifaddrinfo(
                 result = pal_os_to_prx_ifaddrinfo(ifa, ifa->ifa_addr, prx_ifa_cur);
                 if (result != er_ok)
                     continue;
-                
+
                 prx_ifa_cur->index = if_nametoindex(ifa->ifa_name);
                 if (prx_ifa_cur->index != 0)  // Returns index 0 on error
                     (*prx_ifa_count)++;
@@ -295,7 +295,7 @@ int32_t pal_gethostname(
 // Leave multicast group
 //
 int32_t pal_leave_multicast_group(
-    prx_fd_t fd, 
+    prx_fd_t fd,
     prx_multicast_option_t* option
 )
 {
@@ -334,7 +334,7 @@ int32_t pal_leave_multicast_group(
 // Join multicast group
 //
 int32_t pal_join_multicast_group(
-    prx_fd_t fd, 
+    prx_fd_t fd,
     prx_multicast_option_t* option
 )
 {
@@ -357,7 +357,7 @@ int32_t pal_join_multicast_group(
             (fd_t)fd, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&opt, sizeof(opt));
         break;
     case prx_address_family_inet6:
-        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8, 
+        memcpy(opt6.ipv6mr_multiaddr.s6_addr, option->addr.in6.un.u8,
             sizeof(option->addr.in6.un.u8));
         opt6.ipv6mr_interface = option->itf_index;
 #if !defined(IPV6_ADD_MEMBERSHIP) && defined(IPV6_JOIN_GROUP)

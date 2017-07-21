@@ -177,7 +177,7 @@ int32_t io_encode_prx_config(
         {
             continue;
         }
-        result = io_encode_STRING_HANDLE(ctx, 
+        result = io_encode_STRING_HANDLE(ctx,
             prx_config_key_name((prx_config_key_t)i), config->values[i]);
         if (result != er_ok)
             return result;
@@ -212,7 +212,7 @@ int32_t io_decode_prx_config(
 }
 
 //
-// Get global process config 
+// Get global process config
 //
 prx_config_t* _prx_config(
     void

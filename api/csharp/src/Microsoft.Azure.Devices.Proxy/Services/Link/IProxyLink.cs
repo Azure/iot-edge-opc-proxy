@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Proxy link interface represents a virtual link to an activated socket 
+    /// Proxy link interface represents a virtual link to an activated socket
     /// instance on a remote proxy.  It can be made up of many endpoints, which
     /// are themselves links.
     /// </summary>

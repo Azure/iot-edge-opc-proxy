@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Proxy the socket is bound on.  
+        /// Proxy the socket is bound on.
         /// </summary>
         public SocketAddress ProxyAddress {
             get => Proxy.Address.ToSocketAddress();
@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="remoteId"></param>
         /// <param name="localAddress"></param>
         /// <param name="peerAddress"></param>
-        internal ProxyLink(ProxySocket socket, INameRecord proxy, Reference remoteId, 
+        internal ProxyLink(ProxySocket socket, INameRecord proxy, Reference remoteId,
             SocketAddress localAddress, SocketAddress peerAddress) {
 
             _socket = socket ?? throw new ArgumentNullException(nameof(socket));
@@ -160,41 +160,39 @@ namespace Microsoft.Azure.Devices.Proxy {
                         DataMessage.Create(segment, null));
                 }
                 return segmentMessages;
-            }, 
+            },
             options);
         }
 
         /// <summary>
         /// Create receive block
         /// </summary>
-        /// <param name="maxSize"></param>
         protected virtual void CreateReceiveBlock() {
-            var options = new ExecutionDataflowBlockOptions {
-                NameFormat = "Receive (in Link) Id={1}",
-                EnsureOrdered = true,
-                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
-                SingleProducerConstrained = true,
-                BoundedCapacity = 3
-            };
-
             _receive = new TransformManyBlock<Message, Message>((message) => {
                 if (message.Error == (int)SocketError.Closed ||
                     message.TypeId == MessageContent.Close) {
                     // Remote side closed
                     throw new SocketException("Remote side closed", null, SocketError.Closed);
                 }
-                else if (message.Error != (int)SocketError.Success) {
+                if (message.Error == (int)SocketError.Duplicate) {
+                    return Enumerable.Empty<Message>();
+                }
+                if (message.Error != (int)SocketError.Success) {
                     ProxySocket.ThrowIfFailed(message);
                 }
                 else if (message.TypeId == MessageContent.Data) {
                     return message.AsEnumerable();
                 }
-                else {
-                    // Todo: log error?
-                }
+                // Todo: log error?
                 return Enumerable.Empty<Message>();
-            }, 
-            options);
+            },
+            new ExecutionDataflowBlockOptions {
+                NameFormat = "Receive (in Link) Id={1}",
+                EnsureOrdered = true,
+                MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
+                SingleProducerConstrained = true,
+                BoundedCapacity = 3
+            });
         }
 
         /// <summary>
@@ -327,7 +325,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             try {
                 var response = await _socket.Provider.ControlChannel.CallAsync(Proxy,
                     request, TimeSpan.FromSeconds(10), ct).ConfigureAwait(false);
-                ProxyEventSource.Log.ObjectDestroyed(this);
+                ProxyEventSource.Log.LinkRemoved(this);
                 if (response != null) {
                     SocketError errorCode = (SocketError)response.Error;
                     if (errorCode != SocketError.Success &&
@@ -350,7 +348,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns>A string that represents the current object.</returns>
         public override string ToString() {
-            return 
+            return
                 $"Link {PeerAddress} through {LocalAddress} on {Proxy} "
               + $"with stream {_streamId} (Socket {_socket})";
         }

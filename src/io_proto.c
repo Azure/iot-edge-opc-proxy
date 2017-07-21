@@ -50,7 +50,7 @@ int32_t io_message_factory_create(
     int result;
     io_message_factory_t* factory;
     prx_pool_config_t config;
-    
+
     factory = mem_zalloc_type(io_message_factory_t);
     if (!factory)
         return er_out_of_memory;
@@ -239,11 +239,12 @@ static int32_t io_encode_link_response(
 )
 {
     int32_t result;
-    __io_encode_type_begin(ctx, response, 4);
+    __io_encode_type_begin(ctx, response, 5);
     __io_encode_object(ctx, ref, response, link_id);
     __io_encode_object(ctx, prx_socket_address, response, local_address);
     __io_encode_object(ctx, prx_socket_address, response, peer_address);
     __io_encode_value(ctx, uint32, response, transport_caps);
+    __io_encode_value(ctx, uint32, response, max_send);
     __io_encode_type_end(ctx);
     return result;
 }
@@ -257,11 +258,12 @@ static int32_t io_decode_link_response(
 )
 {
     int32_t result;
-    __io_decode_type_begin(ctx, response, 4);
+    __io_decode_type_begin(ctx, response, 5);
     __io_decode_object(ctx, ref, response, link_id);
     __io_decode_object(ctx, prx_socket_address, response, local_address);
     __io_decode_object(ctx, prx_socket_address, response, peer_address);
     __io_decode_value(ctx, uint32, response, transport_caps);
+    __io_decode_value(ctx, uint32, response, max_send);
     __io_decode_type_end(ctx);
     return result;
 }
@@ -444,7 +446,7 @@ static int32_t io_encode_data_message(
 {
     int32_t result;
 
-    __io_encode_type_begin(ctx, message, 4);
+    __io_encode_type_begin(ctx, message, 5);
     __io_encode_value(ctx, uint64, message, sequence_number);
     __io_encode_object(ctx, prx_socket_address, message, source_address);
     result = io_encode_bin(ctx, "buffer",
@@ -455,6 +457,7 @@ static int32_t io_encode_data_message(
         message->control_buffer, (uint32_t)message->control_buffer_length);
     if (result != er_ok)
         return result;
+    __io_encode_value(ctx, int32, message, flags);
     __io_encode_type_end(ctx);
     return result;
 }
@@ -469,17 +472,18 @@ static int32_t io_decode_data_message(
 {
     int32_t result;
 
-    __io_decode_type_begin(ctx, message, 4);
+    __io_decode_type_begin(ctx, message, 5);
     __io_decode_value(ctx, uint64, message, sequence_number);
     __io_decode_object(ctx, prx_socket_address, message, source_address);
-    result = io_decode_bin_default(ctx, "buffer", 
+    result = io_decode_bin_default(ctx, "buffer",
         (void**)&message->buffer, &message->buffer_length);
     if (result != er_ok)
         return result;
-    result = io_decode_bin_default(ctx, "control_buffer", 
+    result = io_decode_bin_default(ctx, "control_buffer",
         (void**)&message->control_buffer, &message->control_buffer_length);
     if (result != er_ok)
         return result;
+    __io_decode_value(ctx, int32, message, flags);
     __io_decode_type_end(ctx);
     return result;
 }
@@ -546,7 +550,7 @@ static int32_t io_encode_message_content(
     if (result != er_ok) \
         return result; \
     } while(0)
-    
+
     dbg_assert_msg(msg);
     if (msg->is_response)
     {
@@ -566,13 +570,13 @@ static int32_t io_encode_message_content(
             __io_encode_null(ctx);
         else if (msg->type == io_message_type_getopt)
             __io_encode_content(ctx, getopt_response, msg);
-        else 
+        else
             result = er_not_supported;
     }
     else  // encode request
     {
         /**/ if (msg->type == io_message_type_data)
-            __io_encode_content(ctx, data_message, msg); 
+            __io_encode_content(ctx, data_message, msg);
         else if (msg->type == io_message_type_close)
             __io_encode_null(ctx);
         else if (msg->type == io_message_type_ping)
@@ -634,7 +638,7 @@ static int32_t io_decode_message_content(
     if (msg->is_response)
     {
         /**/ if (msg->type == io_message_type_data)
-            __io_decode_content(ctx, data_message, msg); 
+            __io_decode_content(ctx, data_message, msg);
         else if (msg->type == io_message_type_close)
             __io_decode_content(ctx, close_response, msg);
         else if (msg->type == io_message_type_ping)
@@ -655,7 +659,7 @@ static int32_t io_decode_message_content(
     else  // decode request
     {
         /**/ if (msg->type == io_message_type_data)
-            __io_decode_content(ctx, data_message, msg); 
+            __io_decode_content(ctx, data_message, msg);
         else if (msg->type == io_message_type_close)
             __io_decode_null(ctx);
         else if (msg->type == io_message_type_ping)
@@ -850,7 +854,7 @@ void io_message_release(
     dbg_assert_ptr(message->owner);
     dbg_assert_msg(message);
     if (!message->owner)
-        return; // Safe 
+        return; // Safe
 
     if (message->buffer)
         prx_buffer_release(message->owner->buffers, message->buffer);
@@ -939,7 +943,7 @@ int32_t io_decode_message(
 }
 
 //
-// Converts message to response 
+// Converts message to response
 //
 void io_message_as_response(
     io_message_t* message

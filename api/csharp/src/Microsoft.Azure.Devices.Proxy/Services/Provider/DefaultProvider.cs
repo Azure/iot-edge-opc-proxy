@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <param name="iothub"></param>
         /// <param name="registryRefresh"></param>
-        public DefaultProvider(ConnectionString iothub, TimeSpan registryRefresh) {
+        public DefaultProvider(ConnectionString iothub) {
             if (iothub == null) {
                 throw new ArgumentException("You must provide the iothubowner connection " +
                     "string, which can be obtained from the Azure IoT Hub portal. You must " +
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                     "environment variable.");
             }
             try {
-                _iothub = new IoTHubService(iothub, registryRefresh);
+                _iothub = new IoTHubService(iothub);
             }
             catch(Exception e) {
                 throw ProxyEventSource.Log.Rethrow(e, this);
@@ -41,7 +41,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <param name="iothub"></param>
         /// <param name="registryRefresh"></param>
-        public DefaultProvider(string iothub, TimeSpan registryRefresh) {
+        public DefaultProvider(string iothub) {
             if (string.IsNullOrEmpty(iothub)) {
                 iothub = Environment.GetEnvironmentVariable("_HUB_CS");
             }
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 throw ProxyEventSource.Log.ArgumentNull(nameof(iothub), this);
             }
             try {
-                _iothub = new IoTHubService(ConnectionString.Parse(iothub), registryRefresh);
+                _iothub = new IoTHubService(ConnectionString.Parse(iothub));
             }
             catch(Exception e) {
                 throw ProxyEventSource.Log.Rethrow(e, this);
@@ -57,22 +57,10 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         /// <summary>
-        /// Initialize default provider
-        /// </summary>
-        /// <param name="iothub"></param>
-        public DefaultProvider(ConnectionString iothub) : this(iothub, _defaultRefresh) { }
-
-        /// <summary>
-        /// Initialize default provider
-        /// </summary>
-        /// <param name="iothub"></param>
-        public DefaultProvider(string iothub) : this(iothub, _defaultRefresh) { }
-
-        /// <summary>
         /// Default constructor, initializes from environment
         /// </summary>
         public DefaultProvider() : this((string)null) {}
-        
+
         /// <summary>
         /// Same as constructor
         /// </summary>
@@ -88,6 +76,5 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public static IProvider Create(ConnectionString iothub) => new DefaultProvider(iothub);
 
         private readonly IoTHubService _iothub;
-        private static readonly TimeSpan _defaultRefresh = TimeSpan.FromMinutes(1);
     }
 }

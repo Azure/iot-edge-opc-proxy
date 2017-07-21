@@ -165,7 +165,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             var port = request.IsHttps ? 443 : 80;
             string target = null;
 
-            if (!string.IsNullOrEmpty(path) && path.StartsWith(_root)) {
+            if (!string.IsNullOrEmpty(path) && path.StartsWith(_root, StringComparison.CurrentCulture)) {
                 path = path.Substring(_root.Length).TrimStart('/');
 
                 // Parse out target, which is url encoded host:port before path?query
@@ -211,7 +211,8 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         protected async Task<Stream> ConnectAsync(TcpClient client, Uri uri) {
             await client.ConnectAsync(new ProxySocketAddress(uri.Host, uri.Port)).ConfigureAwait(false);
             var stream = (Stream)client.GetStream();
-            if (!uri.Scheme.EndsWith("s")) {  // simplistic way to find if we need to connect via ssl...
+            if (!uri.Scheme.EndsWith("s", StringComparison.Ordinal)) { 
+                // simplistic way to find if we need to connect via ssl...
                 return stream;
             }
             var sslStream = new SslStream(stream, true, (o, c, ch, e) => true, null);
@@ -395,7 +396,8 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                     // 2. find any href="/ and src="/ and rewrite content.
                     s = _rels.Replace(s, (f) => {
                         var val = f.Groups["url"].Value.TrimStart().TrimStart('.');
-                        if (!val.StartsWith("/") || val.StartsWith("//")) {
+                        if (!val.StartsWith("/", StringComparison.Ordinal) || 
+                            val.StartsWith("//", StringComparison.Ordinal)) {
                             return f.Value;
                         }
                         return f.Value.Replace(f.Groups["url"].Value, rewrite(val));
@@ -434,12 +436,12 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
         /// <summary>
         /// Return port for this webapp and desired scheme
         /// </summary>
-        /// <param name="app"></param>
+        /// <param name="scheme"></param>
         /// <returns></returns>
         private int GetPort(string scheme) {
             var addresses = _app.ServerFeatures.Get<IServerAddressesFeature>();
             foreach (var addr in addresses.Addresses) {
-                if (addr.StartsWith(scheme)) {
+                if (addr.StartsWith(scheme, StringComparison.Ordinal)) {
                     var parts = addr.Split(':');
                     if (parts.Length > 2) {
                         return int.Parse(parts[2]);
@@ -484,8 +486,8 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
                 if (toplevel.Equals("application") &&
                     (subtype.Equals("json") ||
                      subtype.Equals("javascript") ||
-                     subtype.EndsWith("+xml") ||
-                     subtype.EndsWith("+json"))) {
+                     subtype.EndsWith("+xml", StringComparison.Ordinal) ||
+                     subtype.EndsWith("+json", StringComparison.Ordinal))) {
                     isText = true;  // also text
                 }
                 // TODO: Multipart support?
@@ -543,7 +545,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             /// <summary>
             /// Read body with filter, read as chunked if needed...
             /// </summary>
-            /// <param name="contentLength"></param>
+            /// <param name="response"></param>
             /// <param name="chunked"></param>
             /// <param name="filter"></param>
             internal async Task ReadBodyAsync(HttpResponse response, bool chunked, 
@@ -676,7 +678,7 @@ namespace Microsoft.Azure.Devices.Proxy.Samples {
             private Stream _stream;
         }
 
-        private static readonly byte[] _crlf = new byte[] { (byte)'\r', (byte)'\n' };
+        private static readonly byte[] _crlf = { (byte)'\r', (byte)'\n' };
         private static Regex _rels = new Regex(
             @"(?<n>(a)|img|(script))\b[^>]*?\b(?<t>(?(1)href|src))\s*=\s*(?:" +
             @"""(?<url>(?:\\""|[^""])*)""|"+ 

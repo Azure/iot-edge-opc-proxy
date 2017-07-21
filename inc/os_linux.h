@@ -15,7 +15,7 @@
 #define _SVID_SOURCE 1
 #endif
 
-// ... plus xopen and posix apis 
+// ... plus xopen and posix apis
 #if !defined(_XOPEN_SOURCE) || (_XOPEN_SOURCE < 600)
 #undef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600

@@ -9,14 +9,14 @@
 //
 
 #include <sys/ioctl.h>
-#include <sys/types.h>          
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/utsname.h>
-#include <netinet/in.h>  
-#include <netinet/tcp.h> 
-#include <arpa/inet.h> 
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <arpa/inet.h>
 #include <poll.h>
 #include <net/if.h>
 #include <ifaddrs.h>

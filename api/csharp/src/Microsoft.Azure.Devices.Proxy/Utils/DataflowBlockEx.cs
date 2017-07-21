@@ -10,17 +10,17 @@ namespace System.Threading.Tasks.Dataflow {
 
         public static bool Push<T>(this ITargetBlock<DataflowMessage<T>> block,
             DataflowMessage<T> message, Exception exception) {
-            message.Exceptions.AddFirst(exception);
+            message.OnFault(exception);
             return block.Post(message);
         }
 
         public static bool Push<T>(this ITargetBlock<DataflowMessage<T>> block,
             DataflowMessage<T> message) {
-            message.Exceptions.Clear();
+            message.Reset();
             return block.Post(message);
         }
 
-        private static DataflowLinkOptions _propagateOption = new DataflowLinkOptions { 
+        private static DataflowLinkOptions _propagateOption = new DataflowLinkOptions {
             PropagateCompletion = true,
             Append = true
         };
@@ -42,7 +42,7 @@ namespace System.Threading.Tasks.Dataflow {
             ITargetBlock<TInput> target, ISourceBlock<TOutput> source) =>
             new EncapsulatingPropagator<TInput, TOutput>(target, source);
 
-        private sealed class EncapsulatingPropagator<TInput, TOutput> : 
+        private sealed class EncapsulatingPropagator<TInput, TOutput> :
             IPropagatorBlock<TInput, TOutput> {
 
             public EncapsulatingPropagator(ITargetBlock<TInput> target, ISourceBlock<TOutput> source) {

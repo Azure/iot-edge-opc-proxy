@@ -2,7 +2,7 @@
 # Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 #
-# Build libiotsdk - we build with custom cmake file since we only need 
+# Build libiotsdk - we build with custom cmake file since we only need
 # a subset and replace other parts in the public shared sdk, e.g. logging.
 #
 
@@ -89,14 +89,14 @@ compileAsC99()
     set_property(TARGET libiotsdk PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32)
-    target_include_directories(libiotsdk 
+    target_include_directories(libiotsdk
         PUBLIC ${_IOTSDK_INC}
         PUBLIC ${_UMQTT_INC}
     )
 else()
     target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
-    target_include_directories(libiotsdk 
+    target_include_directories(libiotsdk
         PUBLIC ${_IOTSDK_INC}
         PUBLIC ${_UMQTT_INC}
         PRIVATE ${CURL_INCLUDE_DIRS}

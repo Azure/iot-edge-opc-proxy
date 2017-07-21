@@ -9,7 +9,7 @@
 
 //
 // Proxy configuration
-// 
+//
 typedef struct prx_config prx_config_t;
 
 //
@@ -25,7 +25,7 @@ typedef enum prx_config_key
     prx_config_key_policy_import,   // Whether to allow policy import
     prx_config_key_log_telemetry, // Whether to send log to event hub
     prx_config_key_browse_fs, // Whether to allow browsing filesystem
-    prx_config_key_restricted_ports,      // Ports allowed to connect to
+    prx_config_key_restricted_ports,   // Ports allowed to connect to
     prx_config_key_max
 }
 prx_config_key_t;
@@ -108,7 +108,7 @@ decl_internal_0(prx_config_t*, _prx_config,
 //
 #define __prx_config_get(k, d) \
     prx_config_get_string(_prx_config(), k, d)
-    
+
 //
 // Updates a global string value
 //

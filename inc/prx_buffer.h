@@ -15,7 +15,7 @@ typedef size_t (*prx_buffer_factory_available_t) (
     );
 
 //
-// Allocate buffer 
+// Allocate buffer
 //
 typedef void* (*prx_buffer_alloc_t) (
     void* context,
@@ -59,7 +59,7 @@ typedef void (*prx_buffer_factory_free_t) (
 //
 typedef struct prx_buffer_factory
 {
-    void* context;                      // Buffer buffer_factory implementation 
+    void* context;                      // Buffer buffer_factory implementation
     prx_buffer_alloc_t on_alloc;                           // Allocate a buffer
     prx_buffer_get_size_t on_get_size;        // Returns the size of the buffer
     prx_buffer_set_size_t on_set_size;           // Resize the buffer to length
@@ -197,8 +197,8 @@ decl_internal_4(int32_t, prx_dynamic_pool_create,
 //
 decl_internal_4(int32_t, prx_fixed_pool_create,
     const char*, name,
-    size_t, fixed_item_size, 
-    prx_pool_config_t*, config,          
+    size_t, fixed_item_size,
+    prx_pool_config_t*, config,
     prx_buffer_factory_t**, pool
 );
 

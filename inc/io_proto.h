@@ -136,9 +136,9 @@ decl_internal_1(const char*, io_message_type_as_string,
 );
 
 //
-// Ping messages, are used to ping hosts on proxys. Ping requests 
-// are broadcasts containing a proxy address to ping. Responses 
-// are only sent when host was reached. Responses include MAC 
+// Ping messages, are used to ping hosts on proxys. Ping requests
+// are broadcasts containing a proxy address to ping. Responses
+// are only sent when host was reached. Responses include MAC
 // address to uniquely identify the target, and the latency.
 //
 
@@ -163,8 +163,8 @@ typedef struct io_ping_response
 io_ping_response_t;
 
 //
-// Link requests are used to create a link between caller and 
-// host:port in the form of a proxied socket.  Sockets are 
+// Link requests are used to create a link between caller and
+// host:port in the form of a proxied socket.  Sockets are
 // opened according to the socket properties passed.  Future
 // versions of link request messages will contain a connection
 // string that binds the link to a unique device identity.
@@ -193,12 +193,13 @@ typedef struct io_link_response
     prx_socket_address_t local_address;
     prx_socket_address_t peer_address;
     uint32_t transport_caps;
+    uint32_t max_send;                                // added 1.0.2
 }
 io_link_response_t;
 
 //
 // Allows to set options on a link, which correspond to local
-// socket options which have a value of less than 64 bit (not 
+// socket options which have a value of less than 64 bit (not
 // multicast join/leave, which are currently not supported).
 // Responses are exception responses only (i.e. The error_code
 // member of message is set to something other than er_ok.
@@ -214,8 +215,8 @@ typedef struct io_setopt_request
 io_setopt_request_t;
 
 //
-// Allows to retrieve an option value from the proxied link. Not 
-// all options can be retrieved.  Responses contain the option 
+// Allows to retrieve an option value from the proxied link. Not
+// all options can be retrieved.  Responses contain the option
 // value.
 //
 
@@ -238,7 +239,7 @@ typedef struct io_getopt_response
 io_getopt_response_t;
 
 //
-// Open requests open a channel for asynchronous messages on the 
+// Open requests open a channel for asynchronous messages on the
 // link, which mainly include data messages.  For this the open
 // request carries a connection string that points to an endpoint.
 // Responses are exception responses only (i.e. error_code
@@ -262,7 +263,7 @@ io_open_request_t;
 
 //
 // Poll messages allow streaming in polled mode (see open). A poll
-// request specifies how long to wait for data to arrive. A response 
+// request specifies how long to wait for data to arrive. A response
 // does not contain a timeout.
 //
 typedef struct io_poll_message
@@ -274,8 +275,8 @@ io_poll_message_t;
 
 //
 // Stream data messages are sent either as a request to write, a
-// response to a poll request, or unsolicited on an asynchronous 
-// stream. They contain the last successful read of the underlying 
+// response to a poll request, or unsolicited on an asynchronous
+// stream. They contain the last successful read of the underlying
 // proxied socket.
 //
 
@@ -290,13 +291,14 @@ typedef struct io_data_message
     uint8_t* control_buffer;
     size_t buffer_length;
     uint8_t* buffer;
+    int32_t flags;                                    // added 1.0.2
 }
 io_data_message_t;
 
 //
-// Close requests request closing of the channel and underlying 
-// link i.e. there is no link close message. The response error 
-// code has a socket error code, e.g. if the socket was closed 
+// Close requests request closing of the channel and underlying
+// link i.e. there is no link close message. The response error
+// code has a socket error code, e.g. if the socket was closed
 // from remote side.
 //
 
@@ -316,7 +318,7 @@ io_close_response_t;
 //
 // A proxy protocol message is a union of all protocol messages
 //
-struct io_message 
+struct io_message
 {
     io_ref_t source_id;             // Source proxy address and
     io_ref_t proxy_id;     // Proxy the message is sent through

@@ -10,7 +10,7 @@
 
 //
 // Represents a location where hosts and proxies are looked up from
-// 
+//
 typedef struct prx_ns prx_ns_t;
 
 //
@@ -18,7 +18,7 @@ typedef struct prx_ns prx_ns_t;
 //
 typedef struct prx_ns_result prx_ns_result_t;
 
-// 
+//
 // Type of registry entry
 //
 typedef enum prx_ns_entry_type
@@ -93,7 +93,7 @@ typedef int32_t (*prx_ns_get_entry_by_type_t)(
 //
 typedef int32_t (*prx_ns_create_entry_t)(
     void* context,
-    prx_ns_entry_t* entry  
+    prx_ns_entry_t* entry
     );
 
 //
@@ -121,7 +121,7 @@ typedef void (*prx_ns_close_t)(
 
 //
 // Database interface
-// 
+//
 struct prx_ns
 {
     void* context;
@@ -259,7 +259,7 @@ typedef void(*prx_ns_result_release_t)(
 
 //
 // Result set interface for query results
-// 
+//
 struct prx_ns_result
 {
     void* context;
@@ -527,7 +527,7 @@ decl_internal_3(int32_t, prx_ns_entry_to_prx_socket_address,
 );
 
 //
-// Create in memory entry 
+// Create in memory entry
 //
 decl_internal_5(int32_t, prx_ns_entry_create,
     uint32_t, type,

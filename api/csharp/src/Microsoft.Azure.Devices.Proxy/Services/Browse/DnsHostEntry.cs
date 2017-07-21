@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="address"></param>
         /// <param name="entries"></param>
         /// <returns></returns>
-        internal static DnsHostEntry ToEntry(SocketAddress address, 
+        internal static DnsHostEntry ToEntry(SocketAddress address,
             IEnumerable<DnsHostEntry> entries) {
             if (entries == null || !entries.Any()) {
                 return new DnsHostEntry {
@@ -129,4 +129,4 @@ namespace Microsoft.Azure.Devices.Proxy {
             };
         }
     }
-} 
+}

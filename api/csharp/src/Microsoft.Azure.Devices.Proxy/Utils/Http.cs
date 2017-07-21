@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override string ToString() => $"{StatusCode}: {Response}";
     }
 
-    public class Http {
+    public class Http : IDisposable {
         private readonly HttpClient _client;
 
         public static readonly HttpMethod Patch = new HttpMethod("PATCH");
@@ -60,8 +60,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public Http() {
             _client = new HttpClient { Timeout = TimeSpan.FromMinutes(10) };
         }
-
-
+        
         /// <summary>
         /// Helper to do rest call
         /// </summary>
@@ -96,10 +95,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                     // https://github.com/dotnet/corefx/issues/10040 causes deadlocks
                     ct = CancellationToken.None;
 #endif
-#if PERF 
+#if PERF
                     var sw = System.Diagnostics.Stopwatch.StartNew();
 #endif
-                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, 
+                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead,
                         ct).ConfigureAwait(false);
 #if PERF
                     System.Diagnostics.Trace.TraceInformation($"CallAsync to {uri} took {sw.Elapsed}");
@@ -108,7 +107,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     if ((int)resp.StatusCode < 200 || (int)resp.StatusCode > 300) {
                         throw new HttpResponseException(resp.StatusCode, await resp.Content.ReadAsStringAsync());
                     }
-                    return await resp.Content.ReadAsStringAsync().ConfigureAwait(false); 
+                    return await resp.Content.ReadAsStringAsync().ConfigureAwait(false);
                 }
                 catch (TaskCanceledException ex) {
                     if (!ct.IsCancellationRequested) {
@@ -153,10 +152,10 @@ namespace Microsoft.Azure.Devices.Proxy {
                     // https://github.com/dotnet/corefx/issues/10040 causes deadlocks
                     ct = CancellationToken.None;
 #endif
-#if PERF 
+#if PERF
                     var sw = System.Diagnostics.Stopwatch.StartNew();
 #endif
-                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead, 
+                    var resp = await _client.SendAsync(msg, HttpCompletionOption.ResponseHeadersRead,
                         ct).ConfigureAwait(false);
 #if PERF
                     System.Diagnostics.Trace.TraceInformation($"StreamAsync to {uri} took {sw.Elapsed}");
@@ -175,5 +174,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 }
             }
         }
+
+        public void Dispose() => _client.Dispose();
     }
 }

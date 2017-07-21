@@ -31,71 +31,71 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-#ifdef io_encode_browse_request 
-// 
-// Test io_encode_browse_request happy path 
-// 
+#ifdef io_encode_browse_request
+//
+// Test io_encode_browse_request happy path
+//
 TEST_FUNCTION(io_encode_browse_request__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     static const const io_browse_request_t* k_prx_br_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_browse_request(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_request passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_browse_request passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_browse_request__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_browse_request();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_request passing as prx_br argument an invalid const io_browse_request_t* value 
-// 
+//
+// Test io_encode_browse_request passing as prx_br argument an invalid const io_browse_request_t* value
+//
 TEST_FUNCTION(io_encode_browse_request__arg_prx_br_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_browse_request();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_request unhappy path 
-// 
+//
+// Test io_encode_browse_request unhappy path
+//
 TEST_FUNCTION(io_encode_browse_request__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -104,85 +104,85 @@ TEST_FUNCTION(io_encode_browse_request__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_browse_request(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-#endif // io_encode_browse_request 
+#endif // io_encode_browse_request
 
-#ifdef io_decode_browse_request 
-// 
-// Test io_decode_browse_request happy path 
-// 
+#ifdef io_decode_browse_request
+//
+// Test io_decode_browse_request happy path
+//
 TEST_FUNCTION(io_decode_browse_request__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     static const io_browse_request_t* k_prx_br_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_browse_request(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_request passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_browse_request passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_browse_request__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_browse_request();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_request passing as prx_br argument an invalid io_browse_request_t* value 
-// 
+//
+// Test io_decode_browse_request passing as prx_br argument an invalid io_browse_request_t* value
+//
 TEST_FUNCTION(io_decode_browse_request__arg_prx_br_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_browse_request();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_request unhappy path 
-// 
+//
+// Test io_decode_browse_request unhappy path
+//
 TEST_FUNCTION(io_decode_browse_request__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -191,85 +191,85 @@ TEST_FUNCTION(io_decode_browse_request__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_browse_request(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-#endif // io_decode_browse_request 
+#endif // io_decode_browse_request
 
-#ifdef io_encode_browse_response 
-// 
-// Test io_encode_browse_response happy path 
-// 
+#ifdef io_encode_browse_response
+//
+// Test io_encode_browse_response happy path
+//
 TEST_FUNCTION(io_encode_browse_response__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     static const const io_browse_response_t* k_prx_br_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_encode_browse_response(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_response passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_encode_browse_response passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_encode_browse_response__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_browse_response();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_response passing as prx_br argument an invalid const io_browse_response_t* value 
-// 
+//
+// Test io_encode_browse_response passing as prx_br argument an invalid const io_browse_response_t* value
+//
 TEST_FUNCTION(io_encode_browse_response__arg_prx_br_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_encode_browse_response();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_encode_browse_response unhappy path 
-// 
+//
+// Test io_encode_browse_response unhappy path
+//
 TEST_FUNCTION(io_encode_browse_response__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -278,86 +278,86 @@ TEST_FUNCTION(io_encode_browse_response__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_browse_response(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-#endif // io_encode_browse_response 
+#endif // io_encode_browse_response
 
 
-#ifdef io_decode_browse_response 
-// 
-// Test io_decode_browse_response happy path 
-// 
+#ifdef io_decode_browse_response
+//
+// Test io_decode_browse_response happy path
+//
 TEST_FUNCTION(io_decode_browse_response__success)
 {
     static const io_codec_ctx_t* k_ctx_valid;
     static const io_browse_response_t* k_prx_br_valid;
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     result = io_decode_browse_response(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_response passing as ctx argument an invalid io_codec_ctx_t* value 
-// 
+//
+// Test io_decode_browse_response passing as ctx argument an invalid io_codec_ctx_t* value
+//
 TEST_FUNCTION(io_decode_browse_response__arg_ctx_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_browse_response();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_response passing as prx_br argument an invalid io_browse_response_t* value 
-// 
+//
+// Test io_decode_browse_response passing as prx_br argument an invalid io_browse_response_t* value
+//
 TEST_FUNCTION(io_decode_browse_response__arg_prx_br_invalid)
 {
-    // ... 
+    // ...
     int32_t result;
 
-    // arrange 
-    // ... 
+    // arrange
+    // ...
 
-    // act 
+    // act
     handle = io_decode_browse_response();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ... 
+    // ...
 }
 
-// 
-// Test io_decode_browse_response unhappy path 
-// 
+//
+// Test io_decode_browse_response unhappy path
+//
 TEST_FUNCTION(io_decode_browse_response__neg)
 {
     static const io_codec_ctx_t* k_ctx_valid;
@@ -366,19 +366,19 @@ TEST_FUNCTION(io_decode_browse_response__neg)
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
-    // ... 
+    // ...
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_browse_response(k_ctx_valid, k_prx_br_valid);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
 }
 
-#endif // io_decode_browse_response 
+#endif // io_decode_browse_response
 
 //
 // 5. Teardown tests and test suite

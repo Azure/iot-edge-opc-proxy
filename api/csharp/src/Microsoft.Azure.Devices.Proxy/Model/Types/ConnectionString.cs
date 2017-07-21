@@ -171,7 +171,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 throw new ArgumentException("Connection string must be non null");
             var cs = ConnectionString.Create();
             foreach (var elem in connectionString.Split(';')) {
-                int i = elem.IndexOf("=");
+                int i = elem.IndexOf("=", StringComparison.Ordinal);
                 if (i < 0)
                     throw new InvalidDataContractException("Bad key value pair.");
                 // Throws argument if already exists or parse fails...
@@ -198,11 +198,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Type safe compare
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="that"></param>
         /// <returns></returns>
-        public override bool IsEqual(ConnectionString other) =>
-            IsEqual(items, other.items);
-        
+        public override bool IsEqual(ConnectionString that) =>
+            IsEqual(items, that.items);
+
         protected override void SetHashCode() =>
             MixToHash(items);
     }

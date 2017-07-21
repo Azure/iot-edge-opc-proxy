@@ -241,7 +241,7 @@ static int32_t log_system_create(
         if (result != er_ok)
             break;
 
-        dbg_assert(!DList_IsListEmpty(&ls->streams), 
+        dbg_assert(!DList_IsListEmpty(&ls->streams),
             "unexpected");
         *created = ls;
         return er_ok;
@@ -332,10 +332,10 @@ void xlogging_logger_v(
     buf_len = sizeof(message) - 1;
     buf = message;
     t = time(NULL);
-    written = snprintf(buf, buf_len, 
+    written = snprintf(buf, buf_len,
         "%.24s (%s:%d) [%s] ", ctime(&t), func, line,
         log_category == AZ_LOG_ERROR ? "ERROR" :
-        log_category == AZ_LOG_INFO  ? "INFO" : 
+        log_category == AZ_LOG_INFO  ? "INFO" :
                                        "DEBUG");
     if (!written)
         return;

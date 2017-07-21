@@ -165,7 +165,7 @@ static int32_t pal_sd_getaddrinfo(
         result = pal_sdbrowser_resolve(browser, &host_addr, prx_itf_index_all);
         if (result != er_ok)
         {
-            log_error(NULL, "Warning: Failed to resolve on sd browser (%s)", 
+            log_error(NULL, "Warning: Failed to resolve on sd browser (%s)",
                 prx_err_string(result));
             break;
         }
@@ -174,7 +174,7 @@ static int32_t pal_sd_getaddrinfo(
         result = signal_wait_ex(ctx.signal, &timeout);
 
         // Collect result
-        if (!ctx.result) 
+        if (!ctx.result)
         {
             if (ctx.error == er_ok)
                 result = er_not_found;
@@ -190,7 +190,7 @@ static int32_t pal_sd_getaddrinfo(
         ctx.result_len = 0;
         result = er_ok;
         break;
-    } 
+    }
     while (0);
     if (browser)
         pal_sdbrowser_free(browser);
@@ -211,15 +211,15 @@ int32_t pal_os_to_prx_gai_error(
 {
     switch (error)
     {
-    case 0:               
+    case 0:
         return er_ok;
-    case EAI_AGAIN:         
+    case EAI_AGAIN:
         return er_retry;
-    case EAI_BADFLAGS:      
+    case EAI_BADFLAGS:
         return er_bad_flags;
     case EAI_FAMILY:
         return er_address_family;
-    case EAI_NONAME:     
+    case EAI_NONAME:
         return er_host_unknown;
     default:
         /**/ if (error == EAI_NODATA)
@@ -242,17 +242,17 @@ int pal_os_from_prx_gai_error(
 {
     switch (error)
     {
-    case er_ok:             
+    case er_ok:
         return 0;
-    case er_retry:          
+    case er_retry:
         return EAI_AGAIN;
-    case er_bad_flags:      
+    case er_bad_flags:
         return EAI_BADFLAGS;
-    case er_address_family: 
+    case er_address_family:
         return EAI_FAMILY;
-    case er_fatal:         
+    case er_fatal:
         return EAI_FAIL;
-    case er_host_unknown:   
+    case er_host_unknown:
         return EAI_NONAME;
     default:
         dbg_assert(0, "Unknown getaddrinfo pi error");
@@ -261,7 +261,7 @@ int pal_os_from_prx_gai_error(
     return EAI_NONAME;
 }
 
-// 
+//
 // Convert error from gethostname to pal error
 //
 int32_t pal_os_to_prx_h_error(
@@ -270,13 +270,13 @@ int32_t pal_os_to_prx_h_error(
 {
     switch (error)
     {
-    case HOST_NOT_FOUND:  
+    case HOST_NOT_FOUND:
         return er_no_host;
-    case TRY_AGAIN:       
+    case TRY_AGAIN:
         return er_retry;
-    case NO_RECOVERY:     
+    case NO_RECOVERY:
         return er_fatal;
-    case NO_DATA:         
+    case NO_DATA:
         return er_no_address;
     default:
         dbg_assert(0, "Unknown gethostbyname/gethostbyaddr os error");
@@ -284,7 +284,7 @@ int32_t pal_os_to_prx_h_error(
     return er_unknown;
 }
 
-// 
+//
 // Convert error from gethostname
 //
 int pal_os_from_prx_h_error(
@@ -293,13 +293,13 @@ int pal_os_from_prx_h_error(
 {
     switch (error)
     {
-    case er_retry:     
+    case er_retry:
         return TRY_AGAIN;
-    case er_fatal:     
+    case er_fatal:
         return NO_RECOVERY;
-    case er_no_address:   
+    case er_no_address:
         return NO_DATA;
-    case er_no_host:    
+    case er_no_host:
         return HOST_NOT_FOUND;
     default:
         dbg_assert(0, "Unknown gethostbyname/gethostbyaddr pi error");
@@ -511,7 +511,7 @@ int32_t pal_os_from_prx_message_flags(
     chk_arg_fault_return(plat_flags);
 
     *plat_flags = 0;
-    if (flags & ~(prx_msg_flag_oob | prx_msg_flag_peek | 
+    if (flags & ~(prx_msg_flag_oob | prx_msg_flag_peek | prx_msg_flag_more |
         prx_msg_flag_dontroute | prx_msg_flag_trunc | prx_msg_flag_ctrunc))
         return er_arg;
 
@@ -525,6 +525,8 @@ int32_t pal_os_from_prx_message_flags(
         *plat_flags |= MSG_TRUNC;
     if (prx_msg_flag_ctrunc == (flags & prx_msg_flag_ctrunc))
         *plat_flags |= MSG_CTRUNC;
+    if (prx_msg_flag_more == (flags & prx_msg_flag_more))
+        *plat_flags |= MSG_MORE;
 
     return er_ok;
 }
@@ -554,6 +556,8 @@ int32_t pal_os_to_prx_message_flags(
         *prx_flags |= prx_msg_flag_trunc;
     if (MSG_CTRUNC == (flags & MSG_CTRUNC))
         *prx_flags |= prx_msg_flag_ctrunc;
+    if (MSG_MORE == (flags & MSG_MORE))
+        *prx_flags |= prx_msg_flag_more;
 
     return er_ok;
 }
@@ -574,53 +578,53 @@ int32_t pal_os_to_prx_socket_option(
     case SOL_SOCKET:
         switch (opt_name)
         {
-        case SO_DEBUG:             
-            *option = prx_so_debug;               
+        case SO_DEBUG:
+            *option = prx_so_debug;
             break;
-        case SO_ACCEPTCONN:         
-            *option = prx_so_acceptconn;       
+        case SO_ACCEPTCONN:
+            *option = prx_so_acceptconn;
             break;
-        case SO_REUSEADDR:         
-            *option = prx_so_reuseaddr;          
+        case SO_REUSEADDR:
+            *option = prx_so_reuseaddr;
             break;
-        case SO_KEEPALIVE:         
-            *option = prx_so_keepalive;           
+        case SO_KEEPALIVE:
+            *option = prx_so_keepalive;
             break;
-        case SO_DONTROUTE:         
-            *option = prx_so_dontroute;           
+        case SO_DONTROUTE:
+            *option = prx_so_dontroute;
             break;
-        case SO_BROADCAST:         
-            *option = prx_so_broadcast;           
+        case SO_BROADCAST:
+            *option = prx_so_broadcast;
             break;
-        case SO_LINGER:            
-            *option = prx_so_linger;             
+        case SO_LINGER:
+            *option = prx_so_linger;
             break;
-        case SO_OOBINLINE:         
-            *option = prx_so_oobinline;          
+        case SO_OOBINLINE:
+            *option = prx_so_oobinline;
             break;
-        case SO_SNDBUF:             
-            *option = prx_so_sndbuf;              
+        case SO_SNDBUF:
+            *option = prx_so_sndbuf;
             break;
-        case SO_RCVBUF:       
-            *option = prx_so_rcvbuf;             
+        case SO_RCVBUF:
+            *option = prx_so_rcvbuf;
             break;
-        case SO_SNDLOWAT:      
-            *option = prx_so_sndlowat;          
+        case SO_SNDLOWAT:
+            *option = prx_so_sndlowat;
             break;
-        case SO_RCVLOWAT:     
+        case SO_RCVLOWAT:
             *option = prx_so_rcvlowat;
             break;
-        case SO_SNDTIMEO:     
-            *option = prx_so_sndtimeo; 
+        case SO_SNDTIMEO:
+            *option = prx_so_sndtimeo;
             break;
-        case SO_RCVTIMEO:    
+        case SO_RCVTIMEO:
             *option = prx_so_rcvtimeo;
             break;
-        case SO_ERROR:       
-            *option = prx_so_error; 
+        case SO_ERROR:
+            *option = prx_so_error;
             break;
-        case SO_TYPE:        
-            *option = prx_so_type;   
+        case SO_TYPE:
+            *option = prx_so_type;
             break;
         default:
             return er_not_supported;
@@ -629,26 +633,26 @@ int32_t pal_os_to_prx_socket_option(
     case IPPROTO_IP:
         switch (opt_name)
         {
-        case IP_OPTIONS:         
-            *option = prx_so_ip_options; 
+        case IP_OPTIONS:
+            *option = prx_so_ip_options;
             break;
-        case IP_HDRINCL:        
+        case IP_HDRINCL:
             *option = prx_so_ip_hdrincl;
             break;
-        case IP_TOS:            
-            *option = prx_so_ip_tos;  
+        case IP_TOS:
+            *option = prx_so_ip_tos;
             break;
-        case IP_TTL:            
-            *option = prx_so_ip_ttl;  
+        case IP_TTL:
+            *option = prx_so_ip_ttl;
             break;
-        case IP_MULTICAST_TTL:    
+        case IP_MULTICAST_TTL:
             *option = prx_so_ip_multicast_ttl;
             break;
-        case IP_MULTICAST_LOOP:    
-            *option = prx_so_ip_multicast_loop;  
+        case IP_MULTICAST_LOOP:
+            *option = prx_so_ip_multicast_loop;
             break;
-        case IP_PKTINFO:         
-            *option = prx_so_ip_pktinfo;  
+        case IP_PKTINFO:
+            *option = prx_so_ip_pktinfo;
             break;
 
         default:
@@ -658,11 +662,11 @@ int32_t pal_os_to_prx_socket_option(
     case IPPROTO_IPV6:
         switch (opt_name)
         {
-        case IPV6_HOPLIMIT:   
+        case IPV6_HOPLIMIT:
             *option = prx_so_ipv6_hoplimit;
             break;
-        case IPV6_V6ONLY:      
-            *option = prx_so_ipv6_v6only; 
+        case IPV6_V6ONLY:
+            *option = prx_so_ipv6_v6only;
             break;
         default:
             return er_not_supported;
@@ -671,8 +675,8 @@ int32_t pal_os_to_prx_socket_option(
     case IPPROTO_TCP:
         switch (opt_name)
         {
-        case TCP_NODELAY:      
-            *option = prx_so_tcp_nodelay;  
+        case TCP_NODELAY:
+            *option = prx_so_tcp_nodelay;
             break;
         default:
             return er_not_supported;
@@ -686,7 +690,7 @@ int32_t pal_os_to_prx_socket_option(
 }
 
 //
-// Convert platform independent option to os socket option 
+// Convert platform independent option to os socket option
 //
 int32_t pal_os_from_prx_socket_option(
     prx_socket_option_t socket_option,
@@ -701,53 +705,53 @@ int32_t pal_os_from_prx_socket_option(
     result = er_ok;
     switch (socket_option)
     {
-    case prx_so_debug:              
-        *opt_name = SO_DEBUG;                 
+    case prx_so_debug:
+        *opt_name = SO_DEBUG;
         break;
-    case prx_so_acceptconn:          
-        *opt_name = SO_ACCEPTCONN;           
+    case prx_so_acceptconn:
+        *opt_name = SO_ACCEPTCONN;
         break;
-    case prx_so_reuseaddr:           
-        *opt_name = SO_REUSEADDR;           
+    case prx_so_reuseaddr:
+        *opt_name = SO_REUSEADDR;
         break;
-    case prx_so_keepalive:       
-        *opt_name = SO_KEEPALIVE;          
+    case prx_so_keepalive:
+        *opt_name = SO_KEEPALIVE;
         break;
-    case prx_so_dontroute:       
-        *opt_name = SO_DONTROUTE;         
+    case prx_so_dontroute:
+        *opt_name = SO_DONTROUTE;
         break;
-    case prx_so_broadcast:          
-        *opt_name = SO_BROADCAST;            
+    case prx_so_broadcast:
+        *opt_name = SO_BROADCAST;
         break;
-    case prx_so_linger:          
-        *opt_name = SO_LINGER;            
+    case prx_so_linger:
+        *opt_name = SO_LINGER;
         break;
-    case prx_so_oobinline:       
-        *opt_name = SO_OOBINLINE;          
+    case prx_so_oobinline:
+        *opt_name = SO_OOBINLINE;
         break;
-    case prx_so_sndbuf:            
-        *opt_name = SO_SNDBUF;           
+    case prx_so_sndbuf:
+        *opt_name = SO_SNDBUF;
         break;
-    case prx_so_rcvbuf:           
-        *opt_name = SO_RCVBUF;           
+    case prx_so_rcvbuf:
+        *opt_name = SO_RCVBUF;
         break;
-    case prx_so_sndlowat:         
-        *opt_name = SO_SNDLOWAT;        
+    case prx_so_sndlowat:
+        *opt_name = SO_SNDLOWAT;
         break;
-    case prx_so_rcvlowat:        
-        *opt_name = SO_RCVLOWAT;        
+    case prx_so_rcvlowat:
+        *opt_name = SO_RCVLOWAT;
         break;
-    case prx_so_sndtimeo:          
-        *opt_name = SO_SNDTIMEO;        
+    case prx_so_sndtimeo:
+        *opt_name = SO_SNDTIMEO;
         break;
-    case prx_so_rcvtimeo:          
-        *opt_name = SO_RCVTIMEO;   
+    case prx_so_rcvtimeo:
+        *opt_name = SO_RCVTIMEO;
         break;
-    case prx_so_error:           
-        *opt_name = SO_ERROR;    
+    case prx_so_error:
+        *opt_name = SO_ERROR;
         break;
-    case prx_so_type:                
-        *opt_name = SO_TYPE;     
+    case prx_so_type:
+        *opt_name = SO_TYPE;
         break;
     default:
         result = er_not_supported;
@@ -762,26 +766,26 @@ int32_t pal_os_from_prx_socket_option(
     result = er_ok;
     switch (socket_option)
     {
-    case prx_so_ip_options:          
-        *opt_name = IP_OPTIONS;                
+    case prx_so_ip_options:
+        *opt_name = IP_OPTIONS;
         break;
-    case prx_so_ip_hdrincl:          
-        *opt_name = IP_HDRINCL;                
+    case prx_so_ip_hdrincl:
+        *opt_name = IP_HDRINCL;
         break;
-    case prx_so_ip_tos:            
-        *opt_name = IP_TOS;                   
+    case prx_so_ip_tos:
+        *opt_name = IP_TOS;
         break;
-    case prx_so_ip_ttl:             
-        *opt_name = IP_TTL;                   
+    case prx_so_ip_ttl:
+        *opt_name = IP_TTL;
         break;
-    case prx_so_ip_multicast_ttl:    
-        *opt_name = IP_MULTICAST_TTL;          
+    case prx_so_ip_multicast_ttl:
+        *opt_name = IP_MULTICAST_TTL;
         break;
-    case prx_so_ip_multicast_loop:  
-        *opt_name = IP_MULTICAST_LOOP;         
+    case prx_so_ip_multicast_loop:
+        *opt_name = IP_MULTICAST_LOOP;
         break;
-    case prx_so_ip_pktinfo:          
-        *opt_name = IP_PKTINFO;              
+    case prx_so_ip_pktinfo:
+        *opt_name = IP_PKTINFO;
         break;
     default:
         result = er_not_supported;
@@ -797,11 +801,11 @@ int32_t pal_os_from_prx_socket_option(
     result = er_ok;
     switch (socket_option)
     {
-    case prx_so_ipv6_hoplimit:  
-        *opt_name = IPV6_HOPLIMIT;            
+    case prx_so_ipv6_hoplimit:
+        *opt_name = IPV6_HOPLIMIT;
         break;
-    case prx_so_ipv6_v6only:     
-        *opt_name = IPV6_V6ONLY;            
+    case prx_so_ipv6_v6only:
+        *opt_name = IPV6_V6ONLY;
         break;
     default:
         result = er_not_supported;
@@ -817,8 +821,8 @@ int32_t pal_os_from_prx_socket_option(
     result = er_ok;
     switch (socket_option)
     {
-    case prx_so_tcp_nodelay:        
-        *opt_name = TCP_NODELAY;               
+    case prx_so_tcp_nodelay:
+        *opt_name = TCP_NODELAY;
         break;
     default:
         result = er_not_supported;
@@ -845,14 +849,14 @@ int32_t pal_os_to_prx_shutdown_op(
     chk_arg_fault_return(prx_shutdown);
     switch (platform_shutdown)
     {
-    case SHUT_RD:         
-        *prx_shutdown = prx_shutdown_op_read;   
+    case SHUT_RD:
+        *prx_shutdown = prx_shutdown_op_read;
         break;
-    case SHUT_WR:           
-        *prx_shutdown = prx_shutdown_op_write;   
+    case SHUT_WR:
+        *prx_shutdown = prx_shutdown_op_write;
         break;
-    case SHUT_RDWR:        
-        *prx_shutdown = prx_shutdown_op_both;     
+    case SHUT_RDWR:
+        *prx_shutdown = prx_shutdown_op_both;
         break;
     default:
         return er_arg;
@@ -871,14 +875,14 @@ int32_t pal_os_from_prx_shutdown_op(
     chk_arg_fault_return(platform_shutdown);
     switch (prx_shutdown)
     {
-    case prx_shutdown_op_read:  
-        *platform_shutdown = SHUT_RD;          
+    case prx_shutdown_op_read:
+        *platform_shutdown = SHUT_RD;
         break;
-    case prx_shutdown_op_write: 
-        *platform_shutdown = SHUT_WR;         
+    case prx_shutdown_op_write:
+        *platform_shutdown = SHUT_WR;
         break;
-    case prx_shutdown_op_both:  
-        *platform_shutdown = SHUT_RDWR;      
+    case prx_shutdown_op_both:
+        *platform_shutdown = SHUT_RDWR;
         break;
     default:
         return er_arg;
@@ -897,17 +901,17 @@ int32_t pal_os_to_prx_address_family(
     chk_arg_fault_return(prx_af);
     switch (platform_af)
     {
-    case AF_UNSPEC:   
-        *prx_af = prx_address_family_unspec;     
+    case AF_UNSPEC:
+        *prx_af = prx_address_family_unspec;
         break;
-    case AF_UNIX:       
-        *prx_af = prx_address_family_unix;       
+    case AF_UNIX:
+        *prx_af = prx_address_family_unix;
         break;
-    case AF_INET:        
-        *prx_af = prx_address_family_inet;      
+    case AF_INET:
+        *prx_af = prx_address_family_inet;
         break;
-    case AF_INET6:        
-        *prx_af = prx_address_family_inet6;      
+    case AF_INET6:
+        *prx_af = prx_address_family_inet6;
         break;
     default:
         return er_not_supported;
@@ -926,16 +930,16 @@ int32_t pal_os_from_prx_address_family(
     chk_arg_fault_return(platform_af);
     switch (prx_af)
     {
-    case prx_address_family_unspec:    
-        *platform_af = AF_UNSPEC;           
+    case prx_address_family_unspec:
+        *platform_af = AF_UNSPEC;
         break;
-    case prx_address_family_unix:       
-        *platform_af = AF_UNIX;             
+    case prx_address_family_unix:
+        *platform_af = AF_UNIX;
         break;
-    case prx_address_family_inet:       
+    case prx_address_family_inet:
         *platform_af = AF_INET;
         break;
-    case prx_address_family_inet6:      
+    case prx_address_family_inet6:
         *platform_af = AF_INET6;
         break;
     default:
@@ -955,19 +959,19 @@ int32_t pal_os_to_prx_protocol_type(
     chk_arg_fault_return(prx_proto);
     switch (platform_proto)
     {
-    case IPPROTO_TCP:           
+    case IPPROTO_TCP:
         *prx_proto = prx_protocol_type_tcp;
         break;
-    case IPPROTO_UDP:           
+    case IPPROTO_UDP:
         *prx_proto = prx_protocol_type_udp;
         break;
-    case IPPROTO_ICMP:          
+    case IPPROTO_ICMP:
         *prx_proto = prx_protocol_type_icmp;
         break;
-    case IPPROTO_ICMPV6:        
-        *prx_proto = prx_protocol_type_icmpv6; 
+    case IPPROTO_ICMPV6:
+        *prx_proto = prx_protocol_type_icmpv6;
         break;
-    case 0:                     
+    case 0:
         *prx_proto = prx_protocol_type_unspecified;
         break;
     default:
@@ -987,22 +991,22 @@ int32_t pal_os_from_prx_protocol_type(
     chk_arg_fault_return(platform_proto);
     switch (prx_proto)
     {
-    case prx_protocol_type_tcp:         
-        *platform_proto = IPPROTO_TCP; 
+    case prx_protocol_type_tcp:
+        *platform_proto = IPPROTO_TCP;
         break;
-    case prx_protocol_type_udp:         
-        *platform_proto = IPPROTO_UDP;    
+    case prx_protocol_type_udp:
+        *platform_proto = IPPROTO_UDP;
         break;
-    case prx_protocol_type_icmp:        
-        *platform_proto = IPPROTO_ICMP;    
+    case prx_protocol_type_icmp:
+        *platform_proto = IPPROTO_ICMP;
         break;
-    case prx_protocol_type_icmpv6:      
-        *platform_proto = IPPROTO_ICMPV6;   
+    case prx_protocol_type_icmpv6:
+        *platform_proto = IPPROTO_ICMPV6;
         break;
-    case prx_protocol_type_unspecified: 
-        *platform_proto = 0;              
+    case prx_protocol_type_unspecified:
+        *platform_proto = 0;
         break;
-    default:                           
+    default:
         *platform_proto = (int)prx_proto;
         return er_arg;
     }
@@ -1020,20 +1024,20 @@ int32_t pal_os_to_prx_socket_type(
     chk_arg_fault_return(prx_socktype);
     switch (platform_socktype)
     {
-    case SOCK_DGRAM:       
+    case SOCK_DGRAM:
         *prx_socktype = prx_socket_type_dgram;
         break;
-    case SOCK_STREAM:      
-        *prx_socktype = prx_socket_type_stream; 
+    case SOCK_STREAM:
+        *prx_socktype = prx_socket_type_stream;
         break;
-    case SOCK_RAW:         
-        *prx_socktype = prx_socket_type_raw;    
+    case SOCK_RAW:
+        *prx_socktype = prx_socket_type_raw;
         break;
-    case SOCK_RDM:          
-        *prx_socktype = prx_socket_type_rdm;      
+    case SOCK_RDM:
+        *prx_socktype = prx_socket_type_rdm;
         break;
-    case SOCK_SEQPACKET:    
-        *prx_socktype = prx_socket_type_seqpacket;   
+    case SOCK_SEQPACKET:
+        *prx_socktype = prx_socket_type_seqpacket;
         break;
     default:
         return er_not_supported;
@@ -1172,7 +1176,7 @@ int32_t pal_getaddrinfo(
     chk_arg_fault_return(prx_ai_result_count);
     chk_arg_fault_return(prx_ai_result);
 
-    log_info(NULL, "Resolving %s:%s (family: %d)...", address, service, 
+    log_info(NULL, "Resolving %s:%s (family: %d)...", address, service,
         family);
 
     // Get all address families and the canonical name
@@ -1201,7 +1205,7 @@ int32_t pal_getaddrinfo(
             break;
         }
 
-        // Workaround for issue #32 when host wants AF_INET6 
+        // Workaround for issue #32 when host wants AF_INET6
         if (error == EAI_ADDRFAMILY || error == EAI_FAMILY)
         {
             if (hint.ai_family == AF_INET)
@@ -1223,7 +1227,7 @@ int32_t pal_getaddrinfo(
 
         log_info(NULL, "getaddrinfo returned error '%s' (%d) - try again...",
             gai_strerror(error), error);
-        
+
         if (!info)
             continue;
         freeaddrinfo(info);
@@ -1282,18 +1286,18 @@ int32_t pal_getaddrinfo(
         *prx_ai_result_count = prx_ai_count;
         result = er_ok;
         break;
-    } 
+    }
     while (0);
 
     if (info)
         freeaddrinfo(info);
 
     //
-    // We do getaddrinfo first since doing mdns lookup is more expansive due to the 
-    // allocation and closing of sd clients. Todo: consider to cache a client instance 
+    // We do getaddrinfo first since doing mdns lookup is more expansive due to the
+    // allocation and closing of sd clients. Todo: consider to cache a client instance
     // and re-create it only in case of errors.
     //
-    if (result != er_ok && address && 
+    if (result != er_ok && address &&
         0 == (flags & prx_ai_passive) && (pal_caps() & pal_cap_dnssd))
         return pal_sd_getaddrinfo(address, service, 100, prx_ai_result, prx_ai_result_count);
     else

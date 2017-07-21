@@ -11,17 +11,17 @@
 #endif
 
 //
-// Inline logging 
+// Inline logging
 //
 
 #if !defined(UNIT_TEST)
 
 #include <stdarg.h>
 
-#if defined(NO_LOGGING) || defined(NO_ZLOG) 
+#if defined(NO_LOGGING) || defined(NO_ZLOG)
 #define NO_ZLOG 1
 
-// 
+//
 // Null or xlogging
 //
 #define log_t \
@@ -52,7 +52,7 @@ void xlogging_logger_v(
 );
 #endif // !NO_LOGGING
 
-#else // !NO_LOGGING && !NO_ZLOG 
+#else // !NO_LOGGING && !NO_ZLOG
 
 //
 // Zlog logging adapter
@@ -68,7 +68,7 @@ void xlogging_logger_v(
 #define log_get \
     zlog_get
 
-#endif // !NO_LOGGING && !NO_ZLOG 
+#endif // !NO_LOGGING && !NO_ZLOG
 
 #define __nolog(a, f, fl, c, cl, n, b, bl) \
      (void)a; (void)f; (void)fl; (void)c; (void)cl; (void)n; (void)b; (void)bl;
@@ -294,14 +294,14 @@ _inl__ void __log_error_b(
 //
 // Log an error message for a category
 //
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #define log_error(log, fmt, ...) \
      __log_error(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, __VA_ARGS__) 
+        fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define log_error(log, fmt, ...) \
      __log_error(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ##__VA_ARGS__) 
+        fmt, ##__VA_ARGS__)
 #else
 #define log_error(log, fmt, args...) \
      __log_error(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
@@ -311,14 +311,14 @@ _inl__ void __log_error_b(
 //
 // Log an event message for a category
 //
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #define log_info(log, fmt, ...) \
       __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, __VA_ARGS__) 
+        fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define log_info(log, fmt, ...) \
       __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ##__VA_ARGS__) 
+        fmt, ##__VA_ARGS__)
 #else
 #define log_info(log, fmt, args...) \
       __log_info(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
@@ -328,14 +328,14 @@ _inl__ void __log_error_b(
 //
 // Log a trace message for a category
 //
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #define log_trace(log, fmt, ...) \
       __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, __VA_ARGS__) 
+        fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define log_trace(log, fmt, ...) \
       __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ##__VA_ARGS__) 
+        fmt, ##__VA_ARGS__)
 #else
 #define log_trace(log, fmt, args...) \
       __log_trace(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
@@ -345,14 +345,14 @@ _inl__ void __log_error_b(
 //
 // Log a debug message for a category
 //
-#if defined(_MSC_VER) 
+#if defined(_MSC_VER)
 #define log_debug(log, fmt, ...) \
       __log_debug(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, __VA_ARGS__) 
+        fmt, __VA_ARGS__)
 #elif defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #define log_debug(log, fmt, ...) \
       __log_debug(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \
-        fmt, ##__VA_ARGS__) 
+        fmt, ##__VA_ARGS__)
 #else
 #define log_debug(log, fmt, args...) \
       __log_debug(log, __FILE__, sizeof(__FILE__)-1, __func__, sizeof(__func__)-1, __LINE__, \

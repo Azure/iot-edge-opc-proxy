@@ -43,9 +43,9 @@ END_DECLARE_TEST_SUITE()
 // 4. Setup and run tests
 //
 DECLARE_TEST_SETUP()
-// 
-// Test prx_config_create happy path 
-// 
+//
+// Test prx_config_create happy path
+//
 TEST_FUNCTION(prx_config_create__success)
 {
     prx_config_t* config_valid;
@@ -53,60 +53,60 @@ TEST_FUNCTION(prx_config_create__success)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(prx_config_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
 
-    // act 
+    // act
     result = prx_config_create(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test prx_config_create passing as created argument an invalid prx_config_t** value 
-// 
+//
+// Test prx_config_create passing as created argument an invalid prx_config_t** value
+//
 TEST_FUNCTION(prx_config_create__arg_created_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_create(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test prx_config_create unhappy path 
-// 
+//
+// Test prx_config_create unhappy path
+//
 TEST_FUNCTION(prx_config_create__neg)
 {
     prx_config_t* config_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(prx_config_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = prx_config_create(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test prx_config_free happy path 
-// 
+//
+// Test prx_config_free happy path
+//
 TEST_FUNCTION(prx_config_free__success)
 {
     prx_config_t config_valid;
@@ -114,7 +114,7 @@ TEST_FUNCTION(prx_config_free__success)
     for (size_t i = 0; i < _countof(config_valid.values); i++)
         config_valid.values[i] = (STRING_HANDLE)(0x8000 | i);
 
-    // arrange 
+    // arrange
     for (size_t i = 0; i < _countof(config_valid.values); i++)
     {
         STRICT_EXPECTED_CALL(STRING_delete((STRING_HANDLE)(0x8000 | i)));
@@ -122,33 +122,33 @@ TEST_FUNCTION(prx_config_free__success)
     STRICT_EXPECTED_CALL(h_free(&config_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     prx_config_free(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test prx_config_free passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_free passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_free__arg_config_null)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     prx_config_free(NULL);
 
-    // assert 
-    // ... 
+    // assert
+    // ...
     ASSERT_EXPECTED_CALLS();
 }
 
 #if 0
 
-// 
-// Test prx_config_get_partition_count happy path 
-// 
+//
+// Test prx_config_get_partition_count happy path
+//
 TEST_FUNCTION(prx_config_get_partition_count__success)
 {
     static const char* k_string_c_valid = "5";
@@ -159,21 +159,21 @@ TEST_FUNCTION(prx_config_get_partition_count__success)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_partition_count] = k_string_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
         .SetReturn(k_string_c_valid);
 
-    // act 
+    // act
     result = prx_config_get_partition_count(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, 5, result);
 }
 
-// 
-// Test prx_config_get_partition_count passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_get_partition_count passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_get_partition_count__arg_config_invalid)
 {
     prx_config_t config_valid;
@@ -181,36 +181,36 @@ TEST_FUNCTION(prx_config_get_partition_count__arg_config_invalid)
 
     memset(&config_valid, 0, sizeof(config_valid));
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_get_partition_count(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
-// 
-// Test prx_config_get_partition_count passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_get_partition_count passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_get_partition_count__arg_config_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_get_partition_count(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, 0, result);
 }
 
-// 
-// Test prx_config_set_partition_count happy path 
-// 
+//
+// Test prx_config_set_partition_count happy path
+//
 TEST_FUNCTION(prx_config_set_partition_count__success)
 {
     static const char* k_string_c_valid = "32";
@@ -222,7 +222,7 @@ TEST_FUNCTION(prx_config_set_partition_count__success)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_partition_count] = k_string1_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_int(32, 10, IGNORED_PTR_ARG, 32))
         .CopyOutArgumentBuffer_string(k_string_c_valid, strlen(k_string_c_valid)+1)
         .SetReturn(er_ok);
@@ -230,17 +230,17 @@ TEST_FUNCTION(prx_config_set_partition_count__success)
     STRICT_EXPECTED_CALL(STRING_construct(k_string_c_valid))
         .SetReturn(k_string2_valid);
 
-    // act 
+    // act
     result = prx_config_set_partition_count(&config_valid, 32);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
+//
 // Test prx_config_set_partition_count happy path
-// 
+//
 TEST_FUNCTION(prx_config_set_partition_count__success_null)
 {
     const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x1;
@@ -250,42 +250,42 @@ TEST_FUNCTION(prx_config_set_partition_count__success_null)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_partition_count] = k_string_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_delete(k_string_valid));
 
-    // act 
+    // act
     result = prx_config_set_partition_count(&config_valid, 0);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, NULL, config_valid.entries[prx_config_entry_partition_count]);
 }
 
-// 
-// Test prx_config_set_partition_count passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_set_partition_count passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_set_partition_count__arg_config_null)
 {
     static const char* k_string_c_valid = "16";
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(string_from_int(16, 10, IGNORED_PTR_ARG, 32))
         .CopyOutArgumentBuffer_string(k_string_c_valid, strlen(k_string_c_valid) + 1)
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = prx_config_set_partition_count(NULL, 16);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test prx_config_set_partition_count unhappy path 
-// 
+//
+// Test prx_config_set_partition_count unhappy path
+//
 TEST_FUNCTION(prx_config_set_partition_count__neg)
 {
     static const char* k_string_c_valid = "6";
@@ -294,7 +294,7 @@ TEST_FUNCTION(prx_config_set_partition_count__neg)
 
     memset(&config_valid, 0, sizeof(config_valid));
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(string_from_int(6, 10, IGNORED_PTR_ARG, 32))
         .CopyOutArgumentBuffer_string(k_string_c_valid, strlen(k_string_c_valid) + 1)
@@ -304,17 +304,17 @@ TEST_FUNCTION(prx_config_set_partition_count__neg)
         .SetReturn((STRING_HANDLE)2)
         .SetFailReturn(NULL);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = prx_config_set_partition_count(&config_valid, 6);
 
-    // assert 
+    // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_invalid_format, er_out_of_memory);
 }
 
-// 
-// Test prx_config_get_entity happy path 
-// 
+//
+// Test prx_config_get_entity happy path
+//
 TEST_FUNCTION(prx_config_get_entity__success)
 {
     static const char* k_string_c_valid = "queue1";
@@ -325,21 +325,21 @@ TEST_FUNCTION(prx_config_get_entity__success)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_entity] = k_string_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_c_str(k_string_valid))
         .SetReturn(k_string_c_valid);
 
-    // act 
+    // act
     result = prx_config_get_entity(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, k_string_c_valid, result);
 }
 
-// 
-// Test prx_config_get_entity passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_get_entity passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_get_entity__arg_config_invalid)
 {
     prx_config_t config_valid;
@@ -347,36 +347,36 @@ TEST_FUNCTION(prx_config_get_entity__arg_config_invalid)
 
     memset(&config_valid, 0, sizeof(config_valid));
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_get_entity(&config_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
-// 
-// Test prx_config_get_entity passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_get_entity passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_get_entity__arg_config_null)
 {
     const char* result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_get_entity(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(char_ptr, NULL, result);
 }
 
-// 
-// Test prx_config_set_entity happy path 
-// 
+//
+// Test prx_config_set_entity happy path
+//
 TEST_FUNCTION(prx_config_set_entity__success)
 {
     static const char* k_string_c_valid = "queue3";
@@ -388,22 +388,22 @@ TEST_FUNCTION(prx_config_set_entity__success)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_entity] = k_string1_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_delete(k_string1_valid));
     STRICT_EXPECTED_CALL(STRING_construct(k_string_c_valid))
         .SetReturn(k_string2_valid);
 
-    // act 
+    // act
     result = prx_config_set_entity(&config_valid, k_string_c_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
+//
 // Test prx_config_set_entity happy path
-// 
+//
 TEST_FUNCTION(prx_config_set_entity__success_null)
 {
     const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x1;
@@ -413,39 +413,39 @@ TEST_FUNCTION(prx_config_set_entity__success_null)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[prx_config_entry_entity] = k_string_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_delete(k_string_valid));
 
-    // act 
+    // act
     result = prx_config_set_entity(&config_valid, NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, NULL, config_valid.entries[prx_config_entry_entity]);
 }
 
-// 
-// Test prx_config_set_entity passing as config argument an invalid prx_config_t* value 
-// 
+//
+// Test prx_config_set_entity passing as config argument an invalid prx_config_t* value
+//
 TEST_FUNCTION(prx_config_set_entity__arg_config_null)
 {
     static const char* k_string_c_valid = "queue3";
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = prx_config_set_entity(NULL, k_string_c_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test prx_config_set_entity unhappy path 
-// 
+//
+// Test prx_config_set_entity unhappy path
+//
 TEST_FUNCTION(prx_config_set_entity__neg)
 {
     static const char* k_string_c_valid = "queue54";
@@ -454,21 +454,21 @@ TEST_FUNCTION(prx_config_set_entity__neg)
 
     memset(&config_valid, 0, sizeof(config_valid));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(STRING_construct(k_string_c_valid))
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = prx_config_set_entity(&config_valid, k_string_c_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test io_encode_config happy path 
-// 
+//
+// Test io_encode_config happy path
+//
 TEST_FUNCTION(io_encode_config__success)
 {
     static const STRING_HANDLE k_string1_valid = (STRING_HANDLE)0x654;
@@ -481,7 +481,7 @@ TEST_FUNCTION(io_encode_config__success)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[0] = k_string2_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(STRING_new())
@@ -498,17 +498,17 @@ TEST_FUNCTION(io_encode_config__success)
     STRICT_EXPECTED_CALL(io_encode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_encode_config(k_ctx_valid, &config_ptr_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_encode_config unhappy path 
-// 
+//
+// Test io_encode_config unhappy path
+//
 TEST_FUNCTION(io_encode_config__neg)
 {
     static const STRING_HANDLE k_string1_valid = (STRING_HANDLE)0x654;
@@ -521,7 +521,7 @@ TEST_FUNCTION(io_encode_config__neg)
     memset(&config_valid, 0, sizeof(config_valid));
     config_valid.entries[0] = k_string2_valid;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_encode_type_begin(k_ctx_valid, 1))
         .SetReturn(er_ok)
@@ -546,19 +546,19 @@ TEST_FUNCTION(io_encode_config__neg)
         .SetReturn(er_ok)
         .SetFailReturn(er_invalid_format);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_encode_config(k_ctx_valid, &config_ptr_valid);
 
-    // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
-        er_writing, er_out_of_memory, er_ok, er_out_of_memory, er_out_of_memory, 
+    // assert
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
+        er_writing, er_out_of_memory, er_ok, er_out_of_memory, er_out_of_memory,
         er_writing, er_ok,            er_invalid_format);
 }
 
-// 
-// Test io_decode_config happy path 
-// 
+//
+// Test io_decode_config happy path
+//
 TEST_FUNCTION(io_decode_config__success)
 {
     static const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x654;
@@ -574,7 +574,7 @@ TEST_FUNCTION(io_decode_config__success)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(io_decode_STRING_HANDLE(k_ctx_valid, "connection-string", IGNORED_PTR_ARG))
@@ -602,17 +602,17 @@ TEST_FUNCTION(io_decode_config__success)
     STRICT_EXPECTED_CALL(io_decode_type_end(k_ctx_valid))
         .SetReturn(er_ok);
 
-    // act 
+    // act
     result = io_decode_config(k_ctx_valid, &config_ptr_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test io_decode_config unhappy path 
-// 
+//
+// Test io_decode_config unhappy path
+//
 TEST_FUNCTION(io_decode_config__neg)
 {
     static const STRING_HANDLE k_string_valid = (STRING_HANDLE)0x654;
@@ -628,7 +628,7 @@ TEST_FUNCTION(io_decode_config__neg)
 
     memset(UT_MEM, 0, sizeof(UT_MEM));
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(io_decode_type_begin(k_ctx_valid))
         .SetReturn(er_ok)
@@ -667,12 +667,12 @@ TEST_FUNCTION(io_decode_config__neg)
         .SetReturn(er_ok)
         .SetFailReturn(er_invalid_format);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = io_decode_config(k_ctx_valid, &config_ptr_valid);
 
-    // assert 
-    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, 
+    // assert
+    UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_invalid_format, er_invalid_format, er_ok, er_out_of_memory, er_invalid_format);
 }
 

@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="encoding"></param>
         /// <param name="connectionString"></param>
         public WebSocketConnection(WebSocketMiddleware provider, Reference streamId,
-            Reference remoteId, CodecId encoding, ConnectionString connectionString) : 
+            Reference remoteId, CodecId encoding, ConnectionString connectionString) :
             base(streamId, remoteId, encoding, connectionString) {
             _provider = provider;
         }

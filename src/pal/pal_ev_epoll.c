@@ -30,7 +30,7 @@ typedef struct pal_epoll_port
 pal_epoll_port_t;
 
 //
-// Poll event contains context and callback 
+// Poll event contains context and callback
 //
 typedef struct pal_epoll_event
 {
@@ -75,9 +75,9 @@ static int32_t pal_epoll_worker_thread(
 
         //
         // We should never see 0 events. Given an infinite timeout, epoll_wait
-        // will never return 0 events even if there are no file descriptors 
-        // registered with the epoll fd. In that case, the wait will block 
-        // until a file descriptor is added and an event occurs on the added 
+        // will never return 0 events even if there are no file descriptors
+        // registered with the epoll fd. In that case, the wait will block
+        // until a file descriptor is added and an event occurs on the added
         // file descriptor.
         //
         if (result < 1)
@@ -99,7 +99,7 @@ static int32_t pal_epoll_worker_thread(
             while (0 != (evt.events & EPOLLIN))
             {
                 ctl.evt.data.ptr = NULL;
-                result = recv(pal_port->control_fd[1], (sockbuf_t*)&ctl, 
+                result = recv(pal_port->control_fd[1], (sockbuf_t*)&ctl,
                     sizeof(pal_epoll_ctl_t), 0);
                 if (result != sizeof(pal_epoll_ctl_t))
                     break; // Done - no more control events for us.
@@ -107,18 +107,30 @@ static int32_t pal_epoll_worker_thread(
                 ev_data = (pal_epoll_event_t*)ctl.evt.data.ptr;
 
                 dbg_assert_ptr(ev_data);
-                dbg_assert(ctl.op == EPOLL_CTL_DEL || ctl.op == EPOLL_CTL_MOD, 
+                dbg_assert(ctl.op == EPOLL_CTL_DEL || ctl.op == EPOLL_CTL_MOD,
                     "Unexpected control op %d", ctl.op);
+
+                if (ctl.op != EPOLL_CTL_DEL)
+                {
+                    if (0 != (ctl.evt.events & EPOLLOUT))
+                    {
+                        while (er_ok == ev_data->cb(
+                            ev_data->context, pal_event_type_write, 0))
+                        {
+                            // Write as much as possible then register
+                        }
+                    }
+                }
 
                 result = epoll_ctl(pal_port->epoll_fd, ctl.op, ev_data->sock_fd,
                     &ctl.evt);
                 if (result != 0)
                 {
                     result = pal_os_last_net_error_as_prx_error();
-                    log_error(pal_port->log, "Failed to epoll_ctl(%d) (%s)", 
+                    log_error(pal_port->log, "Failed to epoll_ctl(%d) (%s)",
                         ctl.op, prx_err_string(result));
                 }
-                
+
                 // In case of delete, free event data and resources
                 if (ctl.op == EPOLL_CTL_DEL)
                 {
@@ -146,21 +158,15 @@ static int32_t pal_epoll_worker_thread(
                 ev_data->cb(ev_data->context, pal_event_type_error, 0);
             else
             {
-                if (0 != (evt.events & EPOLLIN))
+                // Read/Write as much as possible, but do so interleaved
+                while (0 != (evt.events & (EPOLLIN | EPOLLOUT)))
                 {
-                    while (er_ok == ev_data->cb(
+                    if (0 != (evt.events & EPOLLIN) && er_ok != ev_data->cb(
                         ev_data->context, pal_event_type_read, 0))
-                    {
-                        // Read as much as possible
-                    }
-                }
-                if (0 != (evt.events & EPOLLOUT))
-                {
-                    while (er_ok == ev_data->cb(
+                        evt.events &= ~EPOLLIN;
+                    if (0 != (evt.events & EPOLLOUT) && er_ok != ev_data->cb(
                         ev_data->context, pal_event_type_write, 0))
-                    {
-                        // Write as much as possible
-                    }
+                        evt.events &= ~EPOLLOUT;
                 }
             }
         }
@@ -209,7 +215,7 @@ int32_t pal_event_port_register(
 
         _fd_nonblock(ev_data->sock_fd, result);
 
-        if (0 != epoll_ctl(pal_port->epoll_fd, EPOLL_CTL_ADD, 
+        if (0 != epoll_ctl(pal_port->epoll_fd, EPOLL_CTL_ADD,
             ev_data->sock_fd, &evt))
         {
             result = pal_os_last_net_error_as_prx_error();
@@ -217,10 +223,10 @@ int32_t pal_event_port_register(
         }
 
         *event_handle = (uintptr_t)ev_data;
-        log_debug(pal_port->log, "Added event port for %x.", 
+        log_debug(pal_port->log, "Added event port for %x.",
             (int)sock_fd);
         return er_ok;
-    } 
+    }
     while (0);
 
     mem_free_type(pal_epoll_event_t, ev_data);
@@ -228,10 +234,10 @@ int32_t pal_event_port_register(
 }
 
 //
-// Convert socket event type to epoll event type 
+// Convert socket event type to epoll event type
 //
 static uint32_t pal_event_type_to_epoll_event(
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     switch (event_type)
@@ -258,18 +264,18 @@ static uint32_t pal_event_type_to_epoll_event(
 //
 int32_t pal_event_select(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result;
     pal_epoll_ctl_t ctl;
     pal_epoll_event_t* ev_data = (pal_epoll_event_t*)event_handle;
     uint32_t plat_event = pal_event_type_to_epoll_event(event_type);
-    
+
     chk_arg_fault_return(ev_data);
     if (!plat_event)
         return er_ok;
-    
+
     lock_enter(ev_data->lock);
     memset(&ctl, 0, sizeof(pal_epoll_ctl_t));
     ctl.evt.events = (ev_data->events | EPOLLET) | plat_event;
@@ -296,14 +302,14 @@ int32_t pal_event_select(
 //
 int32_t pal_event_clear(
     uintptr_t event_handle,
-    pal_event_type event_type
+    pal_event_type_t event_type
 )
 {
     int32_t result;
     pal_epoll_ctl_t ctl;
     pal_epoll_event_t* ev_data = (pal_epoll_event_t*)event_handle;
     uint32_t plat_event = pal_event_type_to_epoll_event(event_type);
-    
+
     chk_arg_fault_return(ev_data);
     if (!plat_event)
         return er_ok;
@@ -313,7 +319,7 @@ int32_t pal_event_clear(
     ctl.evt.events = (ev_data->events | EPOLLET) & ~plat_event;
     ctl.evt.data.ptr = (void*)ev_data;
     ctl.op = EPOLL_CTL_MOD;
-    if (0 > send(ev_data->port->control_fd[0], (const sockbuf_t*)&ctl, 
+    if (0 > send(ev_data->port->control_fd[0], (const sockbuf_t*)&ctl,
         sizeof(pal_epoll_ctl_t), 0))
     {
         result = pal_os_last_net_error_as_prx_error();
@@ -350,11 +356,11 @@ void pal_event_close(
     memset(&ctl, 0, sizeof(pal_epoll_ctl_t));
     ctl.evt.data.ptr = (void*)ev_data;
     ctl.op = EPOLL_CTL_DEL;
-    if (0 > send(ev_data->port->control_fd[0], (const sockbuf_t*)&ctl, 
+    if (0 > send(ev_data->port->control_fd[0], (const sockbuf_t*)&ctl,
         sizeof(pal_epoll_ctl_t), 0))
     {
         result = pal_os_last_net_error_as_prx_error();
-        log_error(ev_data->port->log, "Failed to send DEL to epoll port (%s).", 
+        log_error(ev_data->port->log, "Failed to send DEL to epoll port (%s).",
             prx_err_string(result));
     }
     lock_exit(ev_data->lock);
@@ -401,7 +407,7 @@ int32_t pal_event_port_create(
         // Register control socket with epoll port
         evt.data.ptr = NULL;
         evt.events = EPOLLET | EPOLLIN | EPOLLERR | EPOLLOUT;
-        if (0 != epoll_ctl(pal_port->epoll_fd, EPOLL_CTL_ADD, 
+        if (0 != epoll_ctl(pal_port->epoll_fd, EPOLL_CTL_ADD,
             pal_port->control_fd[1], &evt))
         {
             result = pal_os_last_net_error_as_prx_error();
@@ -419,7 +425,7 @@ int32_t pal_event_port_create(
 
         *port = (uintptr_t)pal_port;
         return er_ok;
-    } 
+    }
     while (0);
 
     pal_event_port_close((uintptr_t)pal_port);
@@ -438,7 +444,7 @@ void pal_event_port_close(
     pal_epoll_port_t* pal_port = (pal_epoll_port_t*)port;
     if (!pal_port)
         return;
-    
+
     pal_port->running = false;
     if (pal_port->control_fd[1] != _invalid_fd)
         (void)send(pal_port->control_fd[0], &control_char, 1, 0);

@@ -9,7 +9,7 @@
 //
 #if defined (UNIT_TEST)
 #include "os_mock.h"
-#elif defined(_WIN32) 
+#elif defined(_WIN32)
 #include "os_win.h"
 #elif defined(__linux__)
 #include "os_linux.h"
@@ -19,6 +19,6 @@
 #define OS_H os_##PAL
 #define OS_H_str #OS_H
 #include OS_H_str
-#endif 
+#endif
 
 #endif // _os_h_

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Runtime.Serialization;
 
     /// <summary>
-    /// Name service entry 
+    /// Name service entry
     /// </summary>
     [DataContract]
     public class NameRecord : Poco<NameRecord>, INameRecord {
@@ -63,6 +63,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         } = new HashSet<Reference>();
 
         /// <summary>
+        /// Time this record was last seen
+        /// </summary>
+        [DataMember(Name = "last_activity", Order = 7)]
+        public DateTime LastActivity {
+            get; set;
+        } = DateTime.Now;
+
+        /// <summary>
         /// References as enumerable
         /// </summary>
         public IEnumerable<Reference> References {
@@ -85,6 +93,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             Type = record.Type;
             Id = record.Id;
             Name = record.Name;
+            LastActivity = record.LastActivity;
             ReferenceSet.AddRange(record.References);
         }
 
@@ -105,14 +114,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Add a address
         /// </summary>
         /// <param name="address"></param>
-        public void AddReference(Reference address) => 
+        public void AddReference(Reference address) =>
             ReferenceSet.Add(address);
 
         /// <summary>
         /// Add a address
         /// </summary>
         /// <param name="address"></param>
-        public void RemoveReference(Reference address) => 
+        public void RemoveReference(Reference address) =>
             ReferenceSet.Remove(address);
 
         /// <summary>
@@ -126,6 +135,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             Type = record.Type;
             Name = record.Name;
+            LastActivity = record.LastActivity;
 
             ReferenceSet.Clear();
             ReferenceSet.AddRange(record.References);
@@ -143,17 +153,18 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsEqual(Type, that.Type) &&
                 IsEqual(Id, that.Id) &&
                 IsEqual(Name, that.Name) &&
+                IsEqual(LastActivity, that.LastActivity) &&
                 ReferenceSet.SetEquals(that.References)
                 ;
         }
 
-        public override string ToString() => 
+        public override string ToString() =>
             $"Record {Id} for {Name} with address {Address}";
 
-        public override bool IsEqual(NameRecord other) =>
-            Equals(other as INameRecord);
+        public override bool IsEqual(NameRecord that) =>
+            Equals(that as INameRecord);
 
-        protected override void SetHashCode() => 
+        protected override void SetHashCode() =>
             MixToHash(Address);
     }
 }

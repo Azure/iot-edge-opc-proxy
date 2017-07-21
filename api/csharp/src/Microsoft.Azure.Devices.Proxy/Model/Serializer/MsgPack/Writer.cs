@@ -12,7 +12,7 @@ namespace MsgPack {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Adorns a stream and writes msgpack types to it as per 
+    /// Adorns a stream and writes msgpack types to it as per
     /// https://github.com/msgpack/msgpack/blob/master/spec.md.
     /// </summary>
     public class Writer : IDisposable {
@@ -288,7 +288,7 @@ namespace MsgPack {
         /// <param name="ct"></param>
         /// <returns></returns>
         public Task WriteAsync(float val, CancellationToken ct) {
-            byte[] raw = BitConverter.GetBytes(val); 
+            byte[] raw = BitConverter.GetBytes(val);
             _buffer[0] = (byte)Types.Float;
             if (BitConverter.IsLittleEndian) {
                 _buffer[1] = raw[3];
@@ -312,7 +312,7 @@ namespace MsgPack {
         /// <param name="ct"></param>
         /// <returns></returns>
         public Task WriteAsync(double val, CancellationToken ct) {
-            byte[] raw = BitConverter.GetBytes(val); 
+            byte[] raw = BitConverter.GetBytes(val);
             _buffer[0] = (byte)Types.Double;
             if (BitConverter.IsLittleEndian) {
                 _buffer[1] = raw[7];
@@ -550,7 +550,7 @@ namespace MsgPack {
 
             bool done = false;
             while (len > 0 || !done) {
-                encoder.Convert(chars, offset, len, _buffer, 0, _buffer.Length, false, 
+                encoder.Convert(chars, offset, len, _buffer, 0, _buffer.Length, false,
                     out encoded, out copied, out done);
                 await _strm.WriteAsync(_buffer, 0, copied, ct).ConfigureAwait(false);
                 if (done)
@@ -561,8 +561,8 @@ namespace MsgPack {
         }
 
         /// <summary>
-        /// Write one of the message pack types to the stream.  Throws if method 
-        /// cannot be found, e.g. if unsupported type info is passed.  Used by 
+        /// Write one of the message pack types to the stream.  Throws if method
+        /// cannot be found, e.g. if unsupported type info is passed.  Used by
         /// reflection serializer.
         /// </summary>
         /// <param name="val"></param>

@@ -14,7 +14,7 @@
 //
 // Receive and send in up to 4k frames
 //
-#define DEFAULT_FRAME_SIZE 0x1000  
+#define DEFAULT_FRAME_SIZE 0x1000
 
 //
 // Status of connection
@@ -129,7 +129,7 @@ static int32_t io_ws_connection_stream_reader(
 
         // Read from frame...
         result = io_stream_read(
-            io_queue_buffer_as_stream(connection->inbound.current), 
+            io_queue_buffer_as_stream(connection->inbound.current),
             &buf[*read], count, &was_read);
         if (result != er_ok)
         {
@@ -184,7 +184,7 @@ static int32_t io_ws_connection_stream_reset(
             break;
         io_queue_buffer_release(buffer);
     }
-  
+
     buffer = connection->outbound.current;
     connection->outbound.current = NULL;
     if (buffer)
@@ -217,12 +217,12 @@ static int32_t io_ws_connection_stream_writer(
     {
         if (connection->outbound.current)
         {
-            avail = connection->outbound.current->length - 
+            avail = connection->outbound.current->length -
                 connection->outbound.current->write_offset;
             if (!avail)
             {
                 // Current buffer full, mark as fragment and add to ready list
-                connection->outbound.current->flags = 
+                connection->outbound.current->flags =
                     pal_wsclient_buffer_type_binary_fragment;
                 io_queue_buffer_set_ready(connection->outbound.current);
                 connection->outbound.current = NULL;
@@ -232,7 +232,7 @@ static int32_t io_ws_connection_stream_writer(
         if (!connection->outbound.current)
         {
             // Create new buffer to write to
-            result = io_queue_create_buffer(connection->outbound.queue, 
+            result = io_queue_create_buffer(connection->outbound.queue,
                 NULL, DEFAULT_FRAME_SIZE, &connection->outbound.current);
             if (result != er_ok)
             {
@@ -312,7 +312,7 @@ static void io_ws_connection_free(
     }
 
     connection->status = io_ws_connection_status_closed;
-    
+
     if (connection->scheduler)
         prx_scheduler_release(connection->scheduler, connection);
 
@@ -332,13 +332,13 @@ static void io_ws_connection_free(
         STRING_delete(connection->user_header_key);
     if (connection->pwd_header_key)
         STRING_delete(connection->pwd_header_key);
-    
+
     log_trace(connection->log, "connection %p freed!", connection);
     mem_free_type(io_ws_connection_t, connection);
 }
 
 //
-// Clear back_off timer 
+// Clear back_off timer
 //
 static void io_ws_connection_clear_failures(
     io_ws_connection_t* connection
@@ -409,11 +409,11 @@ static void io_ws_connection_deliver_stream(
         buffer = io_queue_pop_ready(connection->inbound.queue);
         if (!buffer)
         {
-            dbg_assert(connection->status != 
+            dbg_assert(connection->status !=
                 io_ws_connection_status_connected,
                 "Must not be connected here");
-            log_info(connection->log, 
-                "No buffer while streaming (state: %d)...", 
+            log_info(connection->log,
+                "No buffer while streaming (state: %d)...",
                 connection->status);
             return;
         }
@@ -452,7 +452,7 @@ static void io_ws_connection_deliver_stream(
 }
 
 //
-// Scheduler task that delivers all send results 
+// Scheduler task that delivers all send results
 //
 static void io_ws_connection_deliver_send_results(
     io_ws_connection_t* connection
@@ -509,7 +509,7 @@ static void io_ws_connection_on_disconnected(
     }
     else if (connection->status == io_ws_connection_status_connected)
     {
-        log_debug(connection->log, "connection %p disconnected... reset!", 
+        log_debug(connection->log, "connection %p disconnected... reset!",
             connection);
         connection->status = io_ws_connection_status_disconnected;
         connection->last_error = er_closed;
@@ -517,7 +517,7 @@ static void io_ws_connection_on_disconnected(
     }
     else if (connection->status != io_ws_connection_status_disconnected)
     {
-        dbg_assert(0, "bad state %d for connection %p", 
+        dbg_assert(0, "bad state %d for connection %p",
             connection->status, connection);
     }
 }
@@ -531,7 +531,7 @@ static void io_ws_connection_on_connected(
 {
     connection->status = io_ws_connection_status_connected;
     connection->last_activity = ticks_get();
-    // Start sending and receiving 
+    // Start sending and receiving
     pal_wsclient_can_send(connection->wsclient, true);
     pal_wsclient_can_recv(connection->wsclient, true);
 }
@@ -678,7 +678,7 @@ static void io_ws_connection_on_end_send(
     buffer->code = result;
     io_queue_buffer_set_inprogress(buffer);
 
-    if (result == er_ok && 
+    if (result == er_ok &&
         buffer->flags == pal_wsclient_buffer_type_binary_msg)
     {
         // If last buffer of message, then set all so far to done and deliver result
@@ -692,7 +692,7 @@ static void io_ws_connection_on_end_send(
         __do_next(connection, io_ws_connection_deliver_send_results);
     }
 
-    else if (result != er_ok && result != er_aborted && 
+    else if (result != er_ok && result != er_aborted &&
         connection->last_error != result)
     {
         if (result != er_closed)
@@ -712,7 +712,7 @@ static void io_ws_connection_on_end_send(
 }
 
 //
-// Pal event callback 
+// Pal event callback
 //
 static void io_ws_connection_event_handler(
     void* context,
@@ -831,13 +831,13 @@ static void io_ws_connection_reconnect(
             secure = 0 != STRING_compare_c_str_nocase(connection->address->scheme, "ws");
         else
             secure = true;
-        result = pal_wsclient_create("proxy", STRING_c_str(connection->address->host_name), 
+        result = pal_wsclient_create("proxy", STRING_c_str(connection->address->host_name),
             connection->address->port, STRING_c_str(connection->address->path), secure,
             io_ws_connection_event_handler, connection, &connection->wsclient);
         if (result != er_ok)
             break;
 
-        // Add authorization 
+        // Add authorization
         if (connection->address->token_provider)
         {
             result = io_token_provider_new_token(connection->address->token_provider,
@@ -847,7 +847,7 @@ static void io_ws_connection_reconnect(
                 log_error(connection->log, "Failed to make token for connection (%s)!",
                     prx_err_string(result));
 
-                // TODO: Notify transport since this might not be recoverable 
+                // TODO: Notify transport since this might not be recoverable
                 // in case of one time token
                 break;
             }
@@ -889,7 +889,7 @@ static void io_ws_connection_reconnect(
             if (result != er_ok)
                 break;
         }
-    } 
+    }
     while (0);
 
     if (token)
@@ -900,7 +900,7 @@ static void io_ws_connection_reconnect(
     {
         if (result != er_ok)
             break;
- 
+
         result = pal_wsclient_connect(connection->wsclient);
         if (result != er_ok)
             break;
@@ -914,7 +914,7 @@ static void io_ws_connection_reconnect(
             __do_later(connection, io_ws_connection_renew_token, (uint32_t)ttl);
         }
         return;
-    } 
+    }
     while (0);
 
     // Attempt to reconnect
@@ -950,7 +950,7 @@ int32_t io_ws_connection_create(
         connection->receiver_cb = receiver_cb;
         connection->receiver_ctx = receiver_ctx;
         connection->status = io_ws_connection_status_disconnected;
-        
+
         result = io_url_clone(address, &connection->address);
         if (result != er_ok)
             break;
@@ -1058,7 +1058,7 @@ int32_t io_ws_connection_send(
     {
         if (complete_cb)
             complete_cb(complete_ctx, result);
-        return result; 
+        return result;
     }
 
     // Flush current message into ready and mark as end of stream
@@ -1086,9 +1086,9 @@ int32_t io_ws_connection_close(
     dbg_assert_is_task(connection->scheduler);
     chk_arg_fault_return(connection);
 
-    dbg_assert(connection->status != io_ws_connection_status_closing && 
+    dbg_assert(connection->status != io_ws_connection_status_closing &&
         connection->status != io_ws_connection_status_closed,
-        "Double close of %p ...", connection); 
+        "Double close of %p ...", connection);
     connection->reconnect_cb = NULL;
 
     // Abort all outbound buffers

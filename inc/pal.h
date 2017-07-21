@@ -21,7 +21,7 @@ typedef enum pal_capabilities
     pal_cap_wsclient = 0x8,      // Pal has websocket client
     pal_cap_cred = 0x10, // Pal has credential store support
     pal_cap_ev = 0x20,         // Pal supports async sockets
-    pal_cap_dnssd = 0x40,    // Pal supports service browsing
+    pal_cap_dnssd = 0x40,   // Pal supports service browsing
     pal_cap_dirs = 0x80,        // Pal supports dir browsing
 
     pal_cap_all = 0xff
@@ -43,7 +43,7 @@ decl_public_0(uint32_t, pal_caps,
 );
 
 //
-// Deinit pal 
+// Deinit pal
 //
 decl_public_0(int32_t, pal_deinit,
     void

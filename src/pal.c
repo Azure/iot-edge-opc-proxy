@@ -51,7 +51,7 @@ int32_t pal_init(
     }
     do
     {
-        // Initialize secret store 
+        // Initialize secret store
         result = pal_cred_init();
         if (result == er_ok)
             capabilities |= pal_cap_cred;
@@ -62,18 +62,18 @@ int32_t pal_init(
             break;
         }
 
-        // Initialize file 
+        // Initialize file
         result = pal_file_init();
         if (result == er_ok)
             capabilities |= pal_cap_file;
         else if (result != er_not_supported)
         {
-            log_error(NULL, "Failed to init file pal (%s).", 
+            log_error(NULL, "Failed to init file pal (%s).",
                 prx_err_string(result));
             break;
         }
 
-        // Initialize networking 
+        // Initialize networking
         result = pal_net_init();
         if (result == er_ok)
             capabilities |= pal_cap_net;
@@ -84,7 +84,7 @@ int32_t pal_init(
             break;
         }
 
-        // Initialize service discovery 
+        // Initialize service discovery
         result = pal_sd_init();
         if (result == er_ok)
             capabilities |= pal_cap_dnssd;
@@ -95,7 +95,7 @@ int32_t pal_init(
             break;
         }
 
-        // Initialize socket 
+        // Initialize socket
         result = pal_socket_init(&capabilities);
         if (result != er_ok)
         {
@@ -119,7 +119,7 @@ int32_t pal_init(
 
         // Success...
         return er_ok;
-    } 
+    }
     while (0);
 
     if (capabilities == pal_not_init)

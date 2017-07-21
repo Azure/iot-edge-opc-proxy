@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public NetworkStream(Socket socket) : this(socket, false) {}
 
         /// <summary>
-        /// Returns the underlying socket 
+        /// Returns the underlying socket
         /// </summary>
         public Socket Socket {
             get; private set;
@@ -69,28 +69,28 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Indicates that data can be read from the stream.
         /// </summary>
         public override bool CanRead {
-            get => Readable; 
+            get => Readable;
         }
 
         /// <summary>
         /// Cannot seek
         /// </summary>
         public override bool CanSeek {
-            get => false; 
+            get => false;
         }
 
         /// <summary>
         /// Indicates that data can be written to the stream.
         /// </summary>
         public override bool CanWrite {
-            get => Writeable; 
+            get => Writeable;
         }
 
         /// <summary>
         /// Can always timeout
         /// </summary>
         public override bool CanTimeout {
-            get => true; 
+            get => true;
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Returns the write timeout 
+        /// Returns the write timeout
         /// </summary>
         public override int WriteTimeout {
             get => Socket.SendTimeout;
@@ -430,7 +430,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Flushes data from the stream.
         /// </summary>
         public override void Flush() {}
-        
+
         /// <summary>
         /// Same no op but async
         /// <summary>

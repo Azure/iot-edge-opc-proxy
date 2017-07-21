@@ -8,20 +8,20 @@
 
 #include "azure_c_shared_utility/strings.h"
 
-// 
+//
 // An interface to a platform specific secret storage that
-// enables the connection string class to protect any long 
-// term shared access key secret, and a hardware or OS 
+// enables the connection string class to protect any long
+// term shared access key secret, and a hardware or OS
 // specific way to create short term tokens. Keys are imported
-// into a container (e.g. TPM) and a persisted handle is 
+// into a container (e.g. TPM) and a persisted handle is
 // returned. The handle can be used to sign buffers. While
 // secrets are long lived, it is possible that old secrets
-// accumulate, so a robust implementation will limit the 
+// accumulate, so a robust implementation will limit the
 // number of keys and store them as a persisted FIFO.
 //
 
 //
-// Initialize credential store 
+// Initialize credential store
 //
 decl_public_0(int32_t, pal_cred_init,
     void

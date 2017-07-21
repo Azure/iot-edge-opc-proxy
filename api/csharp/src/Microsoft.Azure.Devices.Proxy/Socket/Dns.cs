@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="cached">Only return items until cache is exhausted</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static Task<IDnsServiceResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord service, 
+        public static Task<IDnsServiceResolver> BrowseAsync(SocketAddress proxy, DnsServiceRecord service,
             bool cached, CancellationToken ct) =>
             BrowseClient.CreateServiceRecordResolverAsync(proxy, service, cached, ct);
 
@@ -93,14 +93,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Browse for service types in a domain
         //
-        public static Task<IDnsServiceBrowser> BrowseAsync(string domain, 
+        public static Task<IDnsServiceBrowser> BrowseAsync(string domain,
             CancellationToken ct) =>
             BrowseAsync(null, null, domain, ct);
-        
+
         //
         // Browse all domains on a particular proxy
         //
-        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy, 
+        public static Task<IDnsServiceBrowser> BrowseAsync(SocketAddress proxy,
             CancellationToken ct) =>
             BrowseClient.CreateServiceRecordBrowserAsync(proxy, null, null, true, ct);
 
@@ -122,7 +122,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="cached"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static Task<IDnsHostEntryResolver> ResolveAsync(SocketAddress proxy, SocketAddress address, bool cached, 
+        public static Task<IDnsHostEntryResolver> ResolveAsync(SocketAddress proxy, SocketAddress address, bool cached,
             CancellationToken ct) {
             return BrowseClient.CreateHostEntryResolverAsync(proxy, address, cached, ct);
         }
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         //
         // Resolve dns address entries
         //
-        public static Task<IDnsHostEntryResolver> ResolveAsync(SocketAddress proxy, SocketAddress address, 
+        public static Task<IDnsHostEntryResolver> ResolveAsync(SocketAddress proxy, SocketAddress address,
             CancellationToken ct) =>
             ResolveAsync(proxy, address, false, CancellationToken.None);
 

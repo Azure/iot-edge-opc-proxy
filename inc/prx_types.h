@@ -7,8 +7,8 @@
 #include "common.h"
 
 //
-// Platform independent proxy types. As far as reasonable 
-// or possible it follows berkley socket semantics.  
+// Platform independent proxy types. As far as reasonable
+// or possible it follows berkley socket semantics.
 //
 // Keep in sync with managed layer, in particular order of
 // members!
@@ -18,7 +18,7 @@ typedef intptr_t prx_fd_t;
 
 #define prx_invalid_socket ((prx_fd_t)(-1))
 
-#define MAX_HOST_LENGTH 1025 
+#define MAX_HOST_LENGTH 1025
 #define MAX_INTERFACE_LENGTH 128
 #define MAX_UNIX_PATH_LENGTH 108
 #define MAX_PORT_LENGTH 32
@@ -28,13 +28,13 @@ typedef intptr_t prx_fd_t;
 //
 typedef enum prx_address_family
 {
-    prx_address_family_unspec = 0,     
+    prx_address_family_unspec = 0,
     prx_address_family_unix = 1,
     prx_address_family_inet = 2,
     prx_address_family_inet6 = 23,
 
-                 // Non standard first come first serve family for proxy
-    prx_address_family_proxy = 28165   
+         // Non standard first come first serve family for proxy
+    prx_address_family_proxy = 28165
 }
 prx_address_family_t;
 
@@ -106,7 +106,7 @@ typedef struct prx_socket_address_inet
 {
     prx_address_family_t family; // Always first so can be cast
     uint16_t port;           // In host byte order, not network
-    uint16_t _padding;   
+    uint16_t _padding;
     uint32_t flow;                 // Only valid for in6 family
     union
     {
@@ -159,13 +159,13 @@ prx_socket_address_t;
 //
 // Socket type
 //
-typedef enum prx_socket_type 
+typedef enum prx_socket_type
 {
-    prx_socket_type_stream = 1,        
-    prx_socket_type_dgram = 2,         
-    prx_socket_type_raw = 3,           
-    prx_socket_type_rdm = 4,           
-    prx_socket_type_seqpacket = 5      
+    prx_socket_type_stream = 1,
+    prx_socket_type_dgram = 2,
+    prx_socket_type_raw = 3,
+    prx_socket_type_rdm = 4,
+    prx_socket_type_seqpacket = 5
 }
 prx_socket_type_t;
 
@@ -174,31 +174,31 @@ prx_socket_type_t;
 //
 typedef enum prx_protocol_type
 {
-    prx_protocol_type_unspecified = 0, 
-    prx_protocol_type_icmp = 1,        
-    prx_protocol_type_tcp = 6,         
-    prx_protocol_type_udp = 17,        
-    prx_protocol_type_icmpv6 = 58      
+    prx_protocol_type_unspecified = 0,
+    prx_protocol_type_icmp = 1,
+    prx_protocol_type_tcp = 6,
+    prx_protocol_type_udp = 17,
+    prx_protocol_type_icmpv6 = 58
 }
 prx_protocol_type_t;
 
 //
 // flags used in calls to getnameinfo
 //
-typedef enum prx_client_getnameinfo_flags
+typedef enum prx_getnameinfo_flags
 {
     prx_ni_flag_namereqd = 0x1
 }
-prx_client_getnameinfo_flags_t;
+prx_getnameinfo_flags_t;
 
 //
 // flags used in calls to getaddrinfo
 //
-typedef enum prx_client_getaddrinfo_flags
+typedef enum prx_getaddrinfo_flags
 {
     prx_ai_passive = 0x1
 }
-prx_client_getaddrinfo_flags_t;
+prx_getaddrinfo_flags_t;
 
 //
 // prx_addrinfo provides a platform independent host resolution
@@ -211,6 +211,9 @@ typedef struct prx_addrinfo
 }
 prx_addrinfo_t;
 
+//
+// flags used in calls to getifaddrinfo
+//
 typedef enum prx_ifaddrinfo_flags
 {
     prx_ifa_up = 0x1,
@@ -384,16 +387,17 @@ typedef struct prx_property
 }
 prx_property_t;
 
-// 
+//
 // message flags for calls to send and recv
-// 
+//
 typedef enum prx_message_flags
 {
-    prx_msg_flag_oob = 0x0001,       
-    prx_msg_flag_peek = 0x0002,      
-    prx_msg_flag_dontroute = 0x0004, 
-    prx_msg_flag_trunc = 0x0100,     
-    prx_msg_flag_ctrunc = 0x0200     
+    prx_msg_flag_oob = 0x0001,
+    prx_msg_flag_peek = 0x0002,
+    prx_msg_flag_dontroute = 0x0004,
+    prx_msg_flag_trunc = 0x0100,
+    prx_msg_flag_ctrunc = 0x0200,
+    prx_msg_flag_more = 0x1000
 }
 prx_message_flags_t;
 
@@ -413,7 +417,7 @@ prx_shutdown_op_t;
 //
 typedef enum prx_socket_flags
 {
-    prx_socket_flag_passive = 0x1,         // Socket is passive 
+    prx_socket_flag_passive = 0x1,         // Socket is passive
     prx_socket_flag_internal = 0x2, // An internal proxy socket
     prx_socket_flag_persistent = 0x4   // Persistent connection
 }
@@ -440,7 +444,7 @@ typedef struct prx_socket_properties
     prx_protocol_type_t proto_type;
     uint32_t flags;                       // prx_socket_flags_t
     uint64_t timeout;    // Timeout of socket after which to gc
-    prx_socket_address_t address;      // address of the socket 
+    prx_socket_address_t address;      // address of the socket
     size_t options_len;
     prx_property_t* options;        // options to apply on open
 }

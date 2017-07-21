@@ -4,23 +4,23 @@
 
 //
 // To avoid pulling in azure-c-shared into public headers, we define a subset of macros to support
-// function declarations that can be turned into mocks. #define ENABLE_MOCKS to generate mocks, 
+// function declarations that can be turned into mocks. #define ENABLE_MOCKS to generate mocks,
 // and UNIT_HEADER around
 //
 
 #undef decl_g
-#undef decl_f_0 
-#undef decl_f_1 
-#undef decl_f_2 
-#undef decl_f_3 
-#undef decl_f_4 
-#undef decl_f_5 
-#undef decl_f_6 
-#undef decl_f_7 
-#undef decl_f_8 
+#undef decl_f_0
+#undef decl_f_1
+#undef decl_f_2
+#undef decl_f_3
+#undef decl_f_4
+#undef decl_f_5
+#undef decl_f_6
+#undef decl_f_7
+#undef decl_f_8
 
 #undef _attr_
-#if defined(_WIN32) 
+#if defined(_WIN32)
 #define _attr_ __cdecl
 #else
 #define _attr_
@@ -69,15 +69,15 @@
     _inl__ r _attr_ C2(name, __inline_func)(IF(COUNT_ARG(__VA_ARGS__), , void) \
         FOR_EACH_2_COUNTED(UMOCK_C_ARG_IN_SIGNATURE, __VA_ARGS__))
 
-#undef decl_inline_0 
-#undef decl_inline_1 
-#undef decl_inline_2 
-#undef decl_inline_3 
-#undef decl_inline_4 
-#undef decl_inline_5 
-#undef decl_inline_6 
-#undef decl_inline_7 
-#undef decl_inline_8 
+#undef decl_inline_0
+#undef decl_inline_1
+#undef decl_inline_2
+#undef decl_inline_3
+#undef decl_inline_4
+#undef decl_inline_5
+#undef decl_inline_6
+#undef decl_inline_7
+#undef decl_inline_8
 
 #define decl_inline_0 decl_inline
 #define decl_inline_1 decl_inline
@@ -126,21 +126,21 @@
 //
 
 #define decl_f_0(s, r, m, name) \
-                                                                                  s r m name(void) 
+                                                                                  s r m name(void)
 #define decl_f_1(s, r, m, name, t1, a1) \
-                                                                                 s r m name(t1 a1) 
+                                                                                 s r m name(t1 a1)
 #define decl_f_2(s, r, m, name, t1, a1, t2, a2) \
-                                                                          s r m name(t1 a1, t2 a2) 
+                                                                          s r m name(t1 a1, t2 a2)
 #define decl_f_3(s, r, m, name, t1, a1, t2, a2, t3, a3) \
-                                                                   s r m name(t1 a1, t2 a2, t3 a3) 
+                                                                   s r m name(t1 a1, t2 a2, t3 a3)
 #define decl_f_4(s, r, m, name, t1, a1, t2, a2, t3, a3, t4, a4) \
-                                                            s r m name(t1 a1, t2 a2, t3 a3, t4 a4) 
+                                                            s r m name(t1 a1, t2 a2, t3 a3, t4 a4)
 #define decl_f_5(s, r, m, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5) \
-                                                     s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5) 
+                                                     s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5)
 #define decl_f_6(s, r, m, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6) \
-                                              s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6) 
+                                              s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6)
 #define decl_f_7(s, r, m, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7) \
-                                       s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7) 
+                                       s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7)
 #define decl_f_8(s, r, m, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7, t8, a8) \
                                 s r m name(t1 a1, t2 a2, t3 a3, t4 a4, t5 a5, t6 a6, t7 a7, t8 a8)
 
@@ -151,15 +151,15 @@
 //
 // Inline api
 //
-#undef decl_inline_0 
-#undef decl_inline_1 
-#undef decl_inline_2 
-#undef decl_inline_3 
-#undef decl_inline_4 
-#undef decl_inline_5 
-#undef decl_inline_6 
-#undef decl_inline_7 
-#undef decl_inline_8 
+#undef decl_inline_0
+#undef decl_inline_1
+#undef decl_inline_2
+#undef decl_inline_3
+#undef decl_inline_4
+#undef decl_inline_5
+#undef decl_inline_6
+#undef decl_inline_7
+#undef decl_inline_8
 
 #define decl_inline_8(r, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7, t8, a8) \
 decl_f_8(_inl__, r, _attr_, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7, t8, a8)
@@ -185,15 +185,15 @@ decl_f_8(_inl__, r, _attr_, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6
 //
 // Public api, exported by the dll
 //
-#undef decl_public_0 
-#undef decl_public_1 
-#undef decl_public_2 
-#undef decl_public_3 
-#undef decl_public_4 
-#undef decl_public_5 
-#undef decl_public_6 
-#undef decl_public_7 
-#undef decl_public_8 
+#undef decl_public_0
+#undef decl_public_1
+#undef decl_public_2
+#undef decl_public_3
+#undef decl_public_4
+#undef decl_public_5
+#undef decl_public_6
+#undef decl_public_7
+#undef decl_public_8
 
 #define decl_public_8(r, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7, t8, a8) \
 decl_f_8(_ext__, r, _attr_, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6, t7, a7, t8, a8)
@@ -217,15 +217,15 @@ decl_f_8(_ext__, r, _attr_, name, t1, a1, t2, a2, t3, a3, t4, a4, t5, a5, t6, a6
 //
 // Internal api, not exported but used between compilation units
 //
-#undef decl_internal_0 
-#undef decl_internal_1 
-#undef decl_internal_2 
-#undef decl_internal_3 
-#undef decl_internal_4 
-#undef decl_internal_5 
-#undef decl_internal_6 
-#undef decl_internal_7 
-#undef decl_internal_8 
+#undef decl_internal_0
+#undef decl_internal_1
+#undef decl_internal_2
+#undef decl_internal_3
+#undef decl_internal_4
+#undef decl_internal_5
+#undef decl_internal_6
+#undef decl_internal_7
+#undef decl_internal_8
 
 #define decl_internal_0(r, name, v) \
                                                                        decl_f_0(extern, r, , name)

@@ -5,45 +5,33 @@
 
 namespace Microsoft.Azure.Devices.Proxy {
     using System;
-    using System.Threading;
+    using System.Linq.Expressions;
     using System.Threading.Tasks.Dataflow;
 
     /// <summary>
-    /// Interface for name services exposed by provider object.  
+    /// Interface for name services exposed by provider object.
     /// </summary>
     public interface INameService {
-        /// <summary>
-        /// Creates a query based on name. The name can also be a stringified 
-        /// address, or an alias name of the record. It cannot be null or empty.
-        /// </summary>
-        /// <param name="name">The name to query for</param>
-        /// <param name="type">The type of record</param>
-        /// <returns></returns>
-        IQuery NewQuery(string name, NameRecordType type);
 
         /// <summary>
-        /// Creates a query based on address. It is valid to specify Reference.All 
-        /// to receive all records of a particular type. It is not valid to specify 
-        /// null or Reference.Null as address.
+        /// Produces name records for a set of expression queries posted to the
+        /// returned block, which source can be connected to other blocks.
         /// </summary>
-        /// <param name="address">The address to query for</param>
-        /// <param name="type">The type of records</param>
+        /// <param name="options">Read source execution options</param>
         /// <returns></returns>
-        IQuery NewQuery(Reference address, NameRecordType type);
+        IPropagatorBlock<Expression<Func<INameRecord, bool>>, INameRecord> Read(
+            ExecutionDataflowBlockOptions options);
 
         /// <summary>
-        /// Produces name records for a set of queries posted to the returned Lookup 
-        /// block.  Results will be send to the results block.
+        /// Singleton writer block. Post add, updates or removal operations to
+        /// the block to be lazily completed.  Subscribe to the block to receive
+        /// updates to the device registry broadcasted.
         /// </summary>
-        /// <param name="results">target block to post results to</param>
-        /// <param name="ct">Cancel the current query in progress</param>
-        /// <returns></returns>
-        IPropagatorBlock<IQuery, INameRecord> Lookup(ExecutionDataflowBlockOptions options);
-
-        /// <summary>
-        /// Post name record to add or update (true) the record in the name service
-        /// or remove it (false). Add, update, remove are all done in the 
-        /// </summary>
-        ITargetBlock<Tuple<INameRecord, bool>> Update { get; }
+        IPropagatorBlock<
+            Tuple<INameRecord, NameServiceOperation>,
+            Tuple<INameRecord, NameServiceEvent>>
+        Write {
+            get;
+        }
     }
 }

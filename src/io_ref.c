@@ -9,7 +9,7 @@
 #include "pal_rand.h"
 #include "util_string.h"
 
-// 
+//
 // Assign new ref
 //
 int32_t io_ref_new(
@@ -20,7 +20,7 @@ int32_t io_ref_new(
     return pal_rand_fill(ref->un.u8, sizeof(ref->un.u8));
 }
 
-// 
+//
 // Clear ref
 //
 void io_ref_clear(
@@ -84,7 +84,7 @@ int32_t io_ref_from_string(
     result = string_to_uuid(ptr, ref->un.u8);
     if (result == er_ok)
         return result;
-    
+
     result = pal_pton(ptr, &sa);
     if (result == er_ok)
     {
@@ -92,7 +92,7 @@ int32_t io_ref_from_string(
         if (result == er_ok)
             return result;
     }
-    
+
     log_error(NULL, "Invalid reference string %s passed (%s).",
         string, prx_err_string(result));
     return result;
@@ -126,7 +126,7 @@ int32_t io_ref_append_to_STRING(
     int32_t result;
     char tmp[UUID_PRINTABLE_STRING_LENGTH];
     tmp[0] = 0;
-    
+
     chk_arg_fault_return(ref);
     chk_arg_fault_return(string);
 
@@ -200,8 +200,8 @@ uint32_t io_ref_hash(
     const io_ref_t *ref
 )
 {
-    return 
-        ((ref->un.u32[0] ^      ( ref->un.u32[1] << 16 | 
+    return
+        ((ref->un.u32[0] ^      ( ref->un.u32[1] << 16 |
          ref->un.u32[2] << 24)) | ref->un.u32[3]);
 }
 

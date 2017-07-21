@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Target object 
+        /// Target object
         /// </summary>
         [DataMember(Name = "target_id", Order = 4)]
         public Reference Target {

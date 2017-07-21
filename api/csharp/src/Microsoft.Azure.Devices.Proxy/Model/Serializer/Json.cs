@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     public class CustomResolver : DefaultContractResolver {
         public static readonly CustomResolver Instance = new CustomResolver();
 
-        protected override JsonProperty CreateProperty(MemberInfo member, 
+        protected override JsonProperty CreateProperty(MemberInfo member,
             MemberSerialization memberSerialization) {
             JsonProperty property = base.CreateProperty(member, memberSerialization);
 
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             public override bool CanConvert(Type objectType) {
                 return false;
             }
-            public override object ReadJson(JsonReader reader, Type objectType, 
+            public override object ReadJson(JsonReader reader, Type objectType,
                 object existingValue, JsonSerializer serializer) {
                 var message = Message.Get();
                 // Hand this message to the content converter as existing object
@@ -120,7 +120,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         class VoidConverter : MessageContentConverter {
-            public override void WriteJson(JsonWriter writer, 
+            public override void WriteJson(JsonWriter writer,
                 object value, JsonSerializer serializer) {
                 writer.WriteNull();
             }
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return address;
             }
 
-            public override void WriteJson(JsonWriter writer, object value, 
+            public override void WriteJson(JsonWriter writer, object value,
                 JsonSerializer serializer) {
                 writer.WriteStartObject();
                 writer.WritePropertyName("id");
@@ -172,7 +172,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 return false;
             }
 
-            public override object ReadJson(JsonReader reader, Type objectType, 
+            public override object ReadJson(JsonReader reader, Type objectType,
                 object existingValue, JsonSerializer serializer) {
                 JObject jsonObject = JObject.Load(reader);
                 AddressFamily family = (AddressFamily)jsonObject.Value<int>("family");
@@ -191,7 +191,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                         throw new SerializationException($"Bad socket address family {family}");
                 }
             }
-            public override void WriteJson(JsonWriter writer, object value, 
+            public override void WriteJson(JsonWriter writer, object value,
                 JsonSerializer serializer) {
                 throw new NotImplementedException();
             }

@@ -3,7 +3,7 @@
 
 function(build_fuzztest cur_test )
     if (NOT CMAKE_CROSSCOMPILING)
-        add_executable(${cur_test}fuzz 
+        add_executable(${cur_test}fuzz
             ${_PROJECT_ROOT}/test/fuzz/${cur_test}.c
             ${_PROJECT_ROOT}/test/fuzz/main.c
         )

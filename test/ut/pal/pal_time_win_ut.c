@@ -32,49 +32,49 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_time_init happy path 
-// 
+//
+// Test pal_time_init happy path
+//
 TEST_FUNCTION(pal_win_time_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_time_init();
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test ticks_get happy path 
-// 
+//
+// Test ticks_get happy path
+//
 TEST_FUNCTION(pal_win_ticks_get__success)
 {
     ULONGLONG k_ticks_valid = 0x1234ULL;
     ticks_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(GetTickCount64())
         .SetReturn(k_ticks_valid);
 
-    // act 
+    // act
     result = ticks_get();
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_IS_TRUE((ticks_t)k_ticks_valid == result);
 }
 
-// 
-// Test pal_time_deinit happy path 
-// 
+//
+// Test pal_time_deinit happy path
+//
 TEST_FUNCTION(pal_win_time_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_time_deinit();
 
     ASSERT_EXPECTED_CALLS();

@@ -85,4 +85,4 @@ namespace Microsoft.Azure.Devices.Proxy {
             MixToHash(Item);
         }
     }
-} 
+}

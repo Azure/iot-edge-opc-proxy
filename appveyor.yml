@@ -1,14 +1,10 @@
-version: 0.2.0.{build}
+version: 1.0.2.{build}
 environment:
   matrix:
     - proxy: no_zlog 
       build_args: -p Win32 --skip-unittests --skip-dotnet 
     - proxy: no_zlog_x64
       build_args: -p x64 --skip-unittests --skip-dotnet 
-    - proxy: with_openssl
-      build_args: -p Win32 --skip-unittests --skip-dotnet --use-openssl
-    - proxy: with_libwebsockets
-      build_args: -p Win32 --skip-unittests --skip-dotnet --use-libwebsockets
     - proxy: default
       build_args: -p Win32 --use-zlog
     - proxy: default_x64
@@ -16,8 +12,8 @@ environment:
 image: Visual Studio 2017
 install:
   - git submodule update --init
-  - ps: Start-FileDownload 'https://libwebsockets.org:444/Win32OpenSSL-1_0_2h.exe'
-  - cmd /c Win32OpenSSL-1_0_2h.exe /silent /verysilent /sp- /suppressmsgboxes
+  - ps: Start-FileDownload 'https://slproweb.com/download/Win32OpenSSL-1_0_2L.exe'
+  - cmd /c Win32OpenSSL-1_0_2L.exe /silent /verysilent /sp- /suppressmsgboxes
 build:
 build_script:
   - bld\build.cmd -c %build_args%

@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="info"></param>
         /// <param name="interface"></param>
         /// <returns></returns>
-        internal static FileEntry Create(string fileName, FileInfo info, 
+        internal static FileEntry Create(string fileName, FileInfo info,
             SocketAddress @interface) {
             var entry = Get();
             entry.FileName = fileName;
@@ -63,4 +63,4 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         public override string ToString() => $"{FileName} ({Info})";
     }
-} 
+}

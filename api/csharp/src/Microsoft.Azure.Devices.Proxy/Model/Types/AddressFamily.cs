@@ -6,7 +6,7 @@
 // Keep in sync with native layer, in particular order of members!
 namespace Microsoft.Azure.Devices.Proxy {
     /// <summary>
-    /// Address family 
+    /// Address family
     /// </summary>
     public enum AddressFamily {
         // Standard http://www.iana.org assigned numbers

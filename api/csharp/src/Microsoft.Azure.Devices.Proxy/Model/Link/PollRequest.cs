@@ -44,8 +44,8 @@ namespace Microsoft.Azure.Devices.Proxy {
         public IMessageContent Clone() => Create(Timeout, SequenceNumber);
 
         public override bool IsEqual(PollRequest that) {
-            return 
-                IsEqual(Timeout, that.Timeout) && 
+            return
+                IsEqual(Timeout, that.Timeout) &&
                 IsEqual(SequenceNumber, that.SequenceNumber);
         }
 

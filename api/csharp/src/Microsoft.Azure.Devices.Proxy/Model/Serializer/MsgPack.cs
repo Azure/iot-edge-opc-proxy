@@ -131,23 +131,23 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             await writer.WriteAsync(message.Version, ct).ConfigureAwait(false);
 
-            await context.Get<Reference>().WriteAsync(                                 
+            await context.Get<Reference>().WriteAsync(
                 writer, message.Source, context, ct).ConfigureAwait(false);
-            await context.Get<Reference>().WriteAsync(                                 
+            await context.Get<Reference>().WriteAsync(
                 writer, message.Proxy, context, ct).ConfigureAwait(false);
-            await context.Get<Reference>().WriteAsync(                                 
+            await context.Get<Reference>().WriteAsync(
                 writer, message.Target, context, ct).ConfigureAwait(false);
 
             await writer.WriteAsync(message.SequenceId, ct).ConfigureAwait(false);
 
-            await writer.WriteAsync(message.Error, ct).ConfigureAwait(false);                                
+            await writer.WriteAsync(message.Error, ct).ConfigureAwait(false);
 
-            await writer.WriteAsync(message.IsResponse, ct).ConfigureAwait(false);                           
+            await writer.WriteAsync(message.IsResponse, ct).ConfigureAwait(false);
 
-            await writer.WriteAsync(message.TypeId, ct).ConfigureAwait(false);                               
+            await writer.WriteAsync(message.TypeId, ct).ConfigureAwait(false);
 
-            /**/ if (message.Content is DataMessage)                                   
-                await context.Get<DataMessage>().WriteAsync(writer, 
+            /**/ if (message.Content is DataMessage)
+                await context.Get<DataMessage>().WriteAsync(writer,
                     (DataMessage)message.Content, context, ct).ConfigureAwait(false);
             else if (message.Content is PollRequest)
                 await context.Get<PollRequest>().WriteAsync(writer,
@@ -291,26 +291,26 @@ namespace Microsoft.Azure.Devices.Proxy {
                     throw new NotSupportedException();
             }
 
-            await writer.WriteAsync((int)addr.Family, 
+            await writer.WriteAsync((int)addr.Family,
                 ct).ConfigureAwait(false);
             if (addr.Family == AddressFamily.Unix) {
-                await writer.WriteAsync(((UnixSocketAddress)addr).Path, 
+                await writer.WriteAsync(((UnixSocketAddress)addr).Path,
                     ct).ConfigureAwait(false);
             }
             else if (addr.Family != AddressFamily.Unspecified) {
-                await writer.WriteAsync(((InetSocketAddress)addr).Port, 
+                await writer.WriteAsync(((InetSocketAddress)addr).Port,
                     ct).ConfigureAwait(false);
                 switch (addr.Family) {
                     case AddressFamily.InterNetwork:
-                        await writer.WriteAsync(((Inet4SocketAddress)addr).Address, 
+                        await writer.WriteAsync(((Inet4SocketAddress)addr).Address,
                             ct).ConfigureAwait(false);
                         break;
                     case AddressFamily.InterNetworkV6:
                         await writer.WriteAsync(((Inet6SocketAddress)addr).Flow,
                             ct).ConfigureAwait(false);
-                        await writer.WriteAsync(((Inet6SocketAddress)addr).Address, 
+                        await writer.WriteAsync(((Inet6SocketAddress)addr).Address,
                             ct).ConfigureAwait(false);
-                        await writer.WriteAsync(((Inet6SocketAddress)addr).ScopeId, 
+                        await writer.WriteAsync(((Inet6SocketAddress)addr).ScopeId,
                             ct).ConfigureAwait(false);
                         break;
                     case AddressFamily.Proxy:
@@ -376,7 +376,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             await writer.WriteAsync((int)option.Family, ct).ConfigureAwait(false);
             switch (option.Family) {
                 case AddressFamily.InterNetwork:
-                    await writer.WriteAsync(((Inet4MulticastOption)option).InterfaceIndex, 
+                    await writer.WriteAsync(((Inet4MulticastOption)option).InterfaceIndex,
                         ct).ConfigureAwait(false);
                     await writer.WriteAsync(((Inet4MulticastOption)option).Address,
                         ct).ConfigureAwait(false);
@@ -457,7 +457,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             if (property.Type == (uint)SocketOption.IpMulticastJoin ||
                 property.Type == (uint)SocketOption.IpMulticastLeave) {
                 await context.Get<IMulticastOption>().WriteAsync(writer,
-                    ((Property<IMulticastOption>)property).Value, context, 
+                    ((Property<IMulticastOption>)property).Value, context,
                         ct).ConfigureAwait(false);
             }
             else if (property.Type == (uint)PropertyType.FileInfo) {

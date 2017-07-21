@@ -11,7 +11,7 @@ namespace MsgPack {
     using System.Threading.Tasks;
 
     /// <summary>
-    /// Adorns a stream and reads msgpack types from it as per 
+    /// Adorns a stream and reads msgpack types from it as per
     /// https://github.com/msgpack/msgpack/blob/master/spec.md
     /// </summary>
     public class Reader : IDisposable {
@@ -219,8 +219,8 @@ namespace MsgPack {
         /// </summary>
         public bool IsBoolean {
             get {
-                return 
-                    _type == Types.True || 
+                return
+                    _type == Types.True ||
                     _type == Types.False;
             }
         }
@@ -288,7 +288,7 @@ namespace MsgPack {
         /// <returns></returns>
         public async Task<char> ReadCharAsync(CancellationToken ct) =>
             (char)await ReadUInt16Async(ct).ConfigureAwait(false);
-        
+
 
         /// <summary>
         /// Typesafe read of uint
@@ -507,7 +507,7 @@ namespace MsgPack {
             }
 
             _type = (Types)_buffer[0];
-            switch (_type) { // big-endian 
+            switch (_type) { // big-endian
                 case Types.Float:
                     await ReadAsync(_buffer, 4, ct).ConfigureAwait(false);
                     if (BitConverter.IsLittleEndian) {
@@ -515,11 +515,11 @@ namespace MsgPack {
                             _buffer[ 5] = _buffer[ 2];
                             _buffer[ 6] = _buffer[ 1];
                             _buffer[ 7] = _buffer[ 0];
-                        Double = 
+                        Double =
                             BitConverter.ToSingle(_buffer, 4);
                     }
                     else {
-                        Double = 
+                        Double =
                             BitConverter.ToSingle(_buffer, 0);
                     }
                     break;
@@ -538,7 +538,7 @@ namespace MsgPack {
                             BitConverter.ToDouble(_buffer, 8);
                     }
                     else {
-                        Double = 
+                        Double =
                             BitConverter.ToDouble(_buffer, 0);
                     }
                     break;

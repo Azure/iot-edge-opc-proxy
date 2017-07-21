@@ -36,10 +36,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         public override bool IsEqual(SetOptRequest that) =>
             IsEqual(OptionValue, that.OptionValue);
 
-        protected override void SetHashCode() => 
+        protected override void SetHashCode() =>
             MixToHash(OptionValue);
 
-        public override string ToString() => 
+        public override string ToString() =>
             OptionValue.ToString();
     }
 }

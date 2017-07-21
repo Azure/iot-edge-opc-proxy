@@ -16,17 +16,26 @@ namespace System.Threading.Tasks.Dataflow {
         /// <summary> The message input or output content </summary>
         public T Arg { get; set; }
 
-        /// <summary> Exceptions that occurred during processing </summary>
-        public LinkedList<Exception> Exceptions { get; set; } = new LinkedList<Exception>();
+        internal void Reset() => _exceptions.Clear();
 
-        public override string ToString() => $"{Arg} ({Exceptions.Count})";
+        public Exception LastFault {
+            get => _exceptions.Peek();
+        }
+
+        public int FaultCount {
+            get => _exceptions.Count;
+        }
+
+        internal void OnFault(Exception exception)  => _exceptions.Push(exception);
+
+        public override string ToString() => $"{Arg} ({FaultCount})";
 
         /// <summary>
-        /// Helper to reset the message
+        /// Helper to initialize the message
         /// </summary>
         /// <param name="arg"></param>
         /// <returns></returns>
-        internal DataflowMessage<T> Reset(T arg) {
+        internal DataflowMessage<T> Init(T arg) {
             Arg = arg;
             return this;
         }
@@ -35,7 +44,7 @@ namespace System.Threading.Tasks.Dataflow {
         /// Call dispose to return the message back to the pool when done.
         /// </summary>
         public void Dispose() {
-            Exceptions.Clear();
+            _exceptions.Clear();
             Arg = default(T);
             _pool.Return(this);
         }
@@ -45,7 +54,7 @@ namespace System.Threading.Tasks.Dataflow {
         /// </summary>
         /// <returns>The adapter block</returns>
         public static IPropagatorBlock<T, DataflowMessage<T>> CreateAdapter() =>
-            new TransformBlock<T, DataflowMessage<T>>(arg => _pool.Get().Reset(arg));
+            new TransformBlock<T, DataflowMessage<T>>(arg => _pool.Get().Init(arg));
 
         /// <summary>
         /// Create an adapter to change T into a dataflow message
@@ -53,10 +62,10 @@ namespace System.Threading.Tasks.Dataflow {
         /// <param name="options">Execution options for the returned block</param>
         /// <returns>The adapter block</returns>
         public static IPropagatorBlock<T, DataflowMessage<T>> CreateAdapter(ExecutionDataflowBlockOptions options) =>
-            new TransformBlock<T, DataflowMessage<T>>(arg => _pool.Get().Reset(arg), options);
+            new TransformBlock<T, DataflowMessage<T>>(arg => _pool.Get().Init(arg), options);
 
-
-        private static ObjectPool<DataflowMessage<T>> _pool = 
+        private readonly Stack<Exception> _exceptions = new Stack<Exception>();
+        private static readonly ObjectPool<DataflowMessage<T>> _pool =
             new ObjectPool<DataflowMessage<T>>(() => new DataflowMessage<T>());
     }
 }

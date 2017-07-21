@@ -167,7 +167,7 @@ int32_t prx_buffer_pool_init(
 
     if (pool->config.low_watermark > pool->config.high_watermark)
         pool->config.low_watermark = 0;
-    if (pool->config.max_count != 0 && 
+    if (pool->config.max_count != 0 &&
         pool->config.high_watermark >= pool->config.max_count)
         pool->config.high_watermark = pool->config.max_count - 1;
     return er_ok;
@@ -187,7 +187,7 @@ void prx_buffer_pool_deinit(
 }
 
 //
-// Prototype of function to create buffer 
+// Prototype of function to create buffer
 //
 static void* prx_buffer_pool_alloc_buffer(
     prx_buffer_pool_t* pool,
@@ -215,7 +215,7 @@ static void* prx_buffer_pool_alloc_buffer(
     {
         if (DList_IsListEmpty(&pool->free_list))
         {
-            log_debug(pool->log, 
+            log_debug(pool->log,
                 "Failed to alloc buffer from %s free list (pool-count: %zu)",
                 pool->name, pool->count);
             result = NULL;
@@ -234,7 +234,7 @@ static void* prx_buffer_pool_alloc_buffer(
         {
             if (!pool->empty)
             {
-                log_debug(pool->log, 
+                log_debug(pool->log,
                     "Pool %s hit low water (pool-count: %zu, free: %zu)",
                     pool->name, pool->count, pool->free_count);
                 pool->empty = signal = true;
@@ -246,15 +246,15 @@ static void* prx_buffer_pool_alloc_buffer(
         DList_InsertTailList(&pool->checked_out, &out->link);
         dbg_assert_buf(out);
 
-        log_debug(pool->log, 
+        log_debug(pool->log,
             "Buffer allocated from %s (pool-count: %zu, free: %zu)",
             pool->name, pool->count, pool->free_count);
 
         result = __raw_buffer(out);
-    } 
+    }
     while (0);
     lock_exit(pool->lock);
-    
+
     if (signal)
         pool->config.cb(pool->config.context, true);  // Low mem
 
@@ -378,12 +378,12 @@ static int32_t prx_dynamic_pool_grow_no_lock(
     {
         log_debug(pool->pool.log,
             "Refuse to grow dynamic pool %s (max: %zu, pool-count: %zu, free: %zu)",
-            pool->pool.name, pool->pool.config.max_count, pool->pool.count, 
+            pool->pool.name, pool->pool.config.max_count, pool->pool.count,
             pool->pool.free_count);
         return er_out_of_memory;
     }
 
-    log_debug(pool->pool.log, 
+    log_debug(pool->pool.log,
         "Growing dynamic pool %s by %zu (pool-count: %zu, free: %zu)",
         pool->pool.name, items, pool->pool.count, pool->pool.free_count);
 
@@ -404,7 +404,7 @@ static int32_t prx_dynamic_pool_grow_no_lock(
         pool->pool.count++;
         pool->pool.free_count++;
     }
-    
+
     if (!pool->pool.free_count)
     {
         log_error(pool->pool.log,
@@ -423,7 +423,7 @@ static void* prx_dynamic_buffer_alloc(
     void* original
 )
 {
-    return prx_buffer_pool_alloc_buffer(&pool->pool, original, 
+    return prx_buffer_pool_alloc_buffer(&pool->pool, original,
         (prx_buffer_pool_grow_t)prx_dynamic_pool_grow_no_lock, pool);
 }
 
@@ -559,7 +559,7 @@ static int32_t prx_fixed_pool_grow_no_lock(
     {
         log_debug(pool->pool.log,
             "Refuse to grow fixed pool %s (max: %zu, pool-count: %zu, free: %zu)",
-            pool->pool.name, pool->pool.config.max_count, pool->pool.count, 
+            pool->pool.name, pool->pool.config.max_count, pool->pool.count,
             pool->pool.free_count);
         return er_out_of_memory;  // Reached our max
     }
@@ -576,7 +576,7 @@ static int32_t prx_fixed_pool_grow_no_lock(
         return er_out_of_memory;
     }
 
-    log_debug(pool->pool.log, 
+    log_debug(pool->pool.log,
         "Growing fixed pool %s by %zu (pool-count: %zu, free: %zu)",
         pool->pool.name, items, pool->pool.count, pool->pool.free_count);
 
@@ -587,7 +587,7 @@ static int32_t prx_fixed_pool_grow_no_lock(
     buf->sentinel = _sentinel;
 #endif
     DList_InsertTailList(&pool->blocks, &buf->link);
-   
+
     // Initialize all buffers in block
     buf = (prx_buffer_t*)__raw_buffer(buf);
 
@@ -618,7 +618,7 @@ static void* prx_fixed_buffer_alloc(
     void* original
 )
 {
-    return prx_buffer_pool_alloc_buffer(&pool->pool, original, 
+    return prx_buffer_pool_alloc_buffer(&pool->pool, original,
         (prx_buffer_pool_grow_t)prx_fixed_pool_grow_no_lock, pool);
 }
 
@@ -653,7 +653,7 @@ static int32_t prx_fixed_buffer_set_size(
 }
 
 //
-// Returns raw memory pointer 
+// Returns raw memory pointer
 //
 static size_t prx_fixed_buffer_get_size(
     prx_fixed_pool_t* pool,
@@ -665,7 +665,7 @@ static size_t prx_fixed_buffer_get_size(
 }
 
 //
-// Creates a dynamic buffer pool 
+// Creates a dynamic buffer pool
 //
 int32_t prx_dynamic_pool_create(
     const char* name,
@@ -693,7 +693,7 @@ int32_t prx_dynamic_pool_create(
         if (result != er_ok)
             break;
 
-        pool->funcs.context = 
+        pool->funcs.context =
             pool;
         pool->funcs.on_available = (prx_buffer_factory_available_t)
             prx_dynamic_pool_available;
@@ -717,7 +717,7 @@ int32_t prx_dynamic_pool_create(
 }
 
 //
-// Creates a fixed buffer pool 
+// Creates a fixed buffer pool
 //
 int32_t prx_fixed_pool_create(
     const char* name,

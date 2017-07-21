@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         } = "";
 
         /// <summary>
-        /// Index of interface 
+        /// Index of interface
         /// </summary>
         [DataMember(Name = "index", Order = 5)]
         public int Index {

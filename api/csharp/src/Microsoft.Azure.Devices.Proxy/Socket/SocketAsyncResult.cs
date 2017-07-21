@@ -47,10 +47,10 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         //
-        // Hash 
+        // Hash
         //
         public override int GetHashCode() {
-            return ((Buffer != null ? Buffer.GetHashCode() : 0) * 31) ^ 
+            return ((Buffer != null ? Buffer.GetHashCode() : 0) * 31) ^
                 (Endpoint != null ? Endpoint.GetHashCode() : 0);
         }
 

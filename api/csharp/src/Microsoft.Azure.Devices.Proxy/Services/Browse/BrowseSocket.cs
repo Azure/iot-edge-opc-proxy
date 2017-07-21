@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         internal BrowseSocket(IProvider provider, CodecId codec = CodecId.Mpack) :
             base(
                 //
-                // Set up socket as internal datagram socket and let proxy  
+                // Set up socket as internal datagram socket and let proxy
                 // decide the protocol and address family part of the internal
                 // connection.
                 //
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     Address = new ProxySocketAddress("", _browsePort, (ushort)codec),
                     Protocol = ProtocolType.Unspecified,
                     Family = AddressFamily.Unspecified
-                }, 
+                },
                 provider) {
 
             _requests = new TransformBlock<BrowseRequest, Message>(async (request) => {
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Encode (in BrowseSocket) Id={1}",
                 EnsureOrdered = true,
-                BoundedCapacity = 3
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
             });
 
             _requests.ConnectTo(SendBlock);
@@ -74,11 +74,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                     _open.Token).ConfigureAwait(false);
                 response.Interface = message.Proxy.ToSocketAddress();
                 return response;
-            }, 
+            },
             new ExecutionDataflowBlockOptions {
                 NameFormat = "Decode (in BrowseSocket) Id={1}",
                 EnsureOrdered = true,
-                BoundedCapacity = 3
+                MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded
             });
 
             ReceiveBlock.ConnectTo(_responses);
@@ -87,23 +87,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Connects to browse server on a proxy
         /// </summary>
-        /// <param name="endpoint">proxy endpoint or null for all proxies</param>
+        /// <param name="address">proxy endpoint or null for all proxies</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override Task ConnectAsync(SocketAddress endpoint, CancellationToken ct) =>
-            LinkAsync(endpoint, ct);
+        public override Task ConnectAsync(SocketAddress address, CancellationToken ct) =>
+            LinkAsync(address, ct);
 
-
-        // Init: Attach null block to receives.
-        // Create browser object.
-        //
-        // Browser attaches buffer block to responses, filtering on unique id
-        // Browser sends unique request to requests block
-        // Next, next next, using receiveAsync
-        //
-        // When done, dispose browser.
-        // Browser detaches from receive block on dispose
-        
         /// <summary>
         /// Start browsing specified item
         /// </summary>
@@ -128,43 +117,81 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="ct"></param>
         /// <returns></returns>
         public async Task<BrowseResponse> BrowseNextAsync(CancellationToken ct) {
-            try {
-                return await _responses.ReceiveAsync(ct);
-            }
-            catch (InvalidOperationException) {
-                // Pipeline completed
-                return null;
-            }
-            catch (OperationCanceledException) {
-                throw;
-            }
-            catch (Exception e) {
-                throw SocketException.Create("Browse next error", e);
+            while (true) {
+                try {
+                    var response = await _responses.ReceiveAsync(ct).ConfigureAwait(false);
+                    if (response == null) {
+                        return null;
+                    }
+                    if ((response.Flags & BrowseResponse.Eos) != 0) {
+                        // Check ref count and remove eos if other links are streaming
+                        // Console.WriteLine($"sr {streamingLinkRefCount}");
+                        if (Interlocked.Decrement(ref streamingLinkRefCount) > 0) {
+                            response.Flags &= ~BrowseResponse.Eos;
+                        }
+                    }
+                    if ((response.Flags & BrowseResponse.AllForNow) != 0) {
+                        // Check ref count and remove afn if other links still produce
+                        // Console.WriteLine($"af {allForNowLinkRefCount}");
+                        if (Interlocked.Decrement(ref allForNowLinkRefCount) > 0) {
+                            response.Flags &= ~BrowseResponse.AllForNow;
+                        }
+                    }
+                    return response;
+                }
+                catch (InvalidOperationException) {
+                    // Pipeline completed
+                    return null;
+                }
+                catch (OperationCanceledException) {
+                    throw;
+                }
+                catch (Exception e) {
+                    throw SocketException.Create("Browse next error", e);
+                }
             }
         }
 
-
-        public override Task BindAsync(SocketAddress address, CancellationToken ct) {
+        public override Task BindAsync(SocketAddress address, CancellationToken ct) =>
             throw new NotSupportedException("Cannot call bind on browse socket");
-        }
 
-        public override Task ListenAsync(int backlog, 
-            CancellationToken ct) {
+        public override Task ListenAsync(int backlog, CancellationToken ct) =>
             throw new NotSupportedException("Cannot call listen on browse socket");
-        }
 
         public override Task<int> SendAsync(ArraySegment<Byte> buffer, SocketAddress endpoint,
-            CancellationToken ct) {
+            CancellationToken ct) =>
             throw new NotSupportedException("Cannot call send on browse socket");
+
+        public override Task<ProxyAsyncResult> ReceiveAsync(ArraySegment<byte> buffer,
+            CancellationToken ct) =>
+            throw new NotSupportedException("Cannot call receive on browse socket");
+
+        /// <summary>
+        /// Called to add link
+        /// </summary>
+        /// <param name="link"></param>
+        internal override void OnAdd(BroadcastLink link) {
+            // Start stream and cache counter
+            Interlocked.Increment(ref streamingLinkRefCount);
+            Interlocked.Increment(ref allForNowLinkRefCount);
+            base.OnAdd(link);
         }
 
-        public override Task<ProxyAsyncResult> ReceiveAsync(ArraySegment<byte> buffer, 
-            CancellationToken ct) {
-            throw new NotSupportedException("Cannot call receive on browse socket");
+        /// <summary>
+        /// Called to remove link
+        /// </summary>
+        /// <param name="link"></param>
+        internal override void OnRemove(BroadcastLink link) {
+            base.OnRemove(link);
+            // Stop stream and cache counter when link is reconnected.
+            Interlocked.Decrement(ref allForNowLinkRefCount);
+            Interlocked.Decrement(ref streamingLinkRefCount);
         }
 
         private readonly Reference _id = new Reference();
         private IPropagatorBlock<BrowseRequest, Message> _requests;
         private IPropagatorBlock<Message, BrowseResponse> _responses;
+        private long streamingLinkRefCount;
+        private long allForNowLinkRefCount;
     }
 }

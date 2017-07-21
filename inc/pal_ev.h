@@ -10,7 +10,7 @@
 //
 // Socket event types
 //
-typedef enum 
+typedef enum pal_event_type
 {
     pal_event_type_unknown = 0,
     pal_event_type_read,
@@ -19,14 +19,14 @@ typedef enum
     pal_event_type_error,
     pal_event_type_destroy
 }
-pal_event_type;
+pal_event_type_t;
 
 //
 // Callback to notify about events
 //
 typedef int32_t (*pal_event_port_handler_t)(
     void* context,
-    pal_event_type event_type,
+    pal_event_type_t event_type,
     int32_t error_code
     );
 
@@ -60,7 +60,7 @@ decl_public_5(int32_t, pal_event_port_register,
 //
 decl_public_2(int32_t, pal_event_select,
     uintptr_t, event_handle,
-    pal_event_type, event_type
+    pal_event_type_t, event_type
 );
 
 //
@@ -68,7 +68,7 @@ decl_public_2(int32_t, pal_event_select,
 //
 decl_public_2(int32_t, pal_event_clear,
     uintptr_t, event_handle,
-    pal_event_type, event_type
+    pal_event_type_t, event_type
 );
 
 //

@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         /// <returns></returns>
         public static void Create(bool useSsl = false) {
-            Create(new UriBuilder(useSsl ? 
+            Create(new UriBuilder(useSsl ?
                 "https://localhost:8081" : "http://localhost:8080").Uri);
         }
 

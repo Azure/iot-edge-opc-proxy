@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
-        /// Mac address of machine 
+        /// Mac address of machine
         /// </summary>
         [DataMember(Name = "physical_address", Order = 2)]
         public byte[] PhysicalAddress {
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Create response
         /// </summary>
         /// <param name="socketAddress"></param>
-        public static PingResponse Create(SocketAddress socketAddress, 
+        public static PingResponse Create(SocketAddress socketAddress,
             byte[] physicalAddress = null, uint timeMs = 0) {
             var response = Get();
             response.SocketAddress = socketAddress;

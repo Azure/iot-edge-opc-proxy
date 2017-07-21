@@ -52,7 +52,7 @@ static int32_t pal_read_drives(
 }
 
 //
-// Initialize 
+// Initialize
 //
 int32_t pal_file_init(
     void
@@ -69,7 +69,7 @@ bool pal_file_exists(
 )
 {
     DWORD attributes = GetFileAttributesA(file_name);
-    return 
+    return
          (attributes != INVALID_FILE_ATTRIBUTES &&
         !(attributes & FILE_ATTRIBUTE_DIRECTORY));
 }
@@ -80,7 +80,7 @@ bool pal_file_exists(
 int32_t pal_get_real_path(
     const char* file_name,
     const char** path
-) 
+)
 {
     DWORD copied;
     char *buf = NULL;
@@ -124,7 +124,7 @@ int32_t pal_read_dir(
     if (!*dir_name || *dir_name == '/')
         return pal_read_drives(cb, context);
 
-    root = STRING_construct_n(dir_name, 
+    root = STRING_construct_n(dir_name,
         string_trim_back_len(dir_name, strlen(dir_name), k_sep));
     if (!root)
         return er_out_of_memory;
@@ -149,7 +149,7 @@ int32_t pal_read_dir(
         result = er_not_found;
         while(true)
         {
-            if (!data.cFileName[0] || 
+            if (!data.cFileName[0] ||
                 (data.cFileName[0] == '.' && !data.cFileName[1]) ||
                 (data.cFileName[0] == '.' && data.cFileName[1] == '.' && !data.cFileName[2]))
             {
@@ -203,7 +203,7 @@ int32_t pal_read_dir(
         if (result == er_nomore)
             result = er_ok;
         break;
-    } 
+    }
     while (0);
 
     if (file)

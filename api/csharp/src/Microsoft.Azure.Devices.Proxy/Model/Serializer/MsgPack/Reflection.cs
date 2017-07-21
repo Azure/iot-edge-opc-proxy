@@ -61,7 +61,7 @@ namespace MsgPack {
         /// <param name="context"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public override async Task<T> ReadAsync(Reader reader, 
+        public override async Task<T> ReadAsync(Reader reader,
             SerializerContext context, CancellationToken ct) {
             var result = CreateInstance();
 
@@ -72,6 +72,10 @@ namespace MsgPack {
             }
             foreach (var item in _members) {
                 if (members == 0) {
+                    if (item != null) {
+                        item.Prop.SetValue(result, null);
+                        continue;
+                    }
                     throw new FormatException("Not enough members");
                 }
                 object obj = await ReadAsync(reader,
@@ -116,7 +120,7 @@ namespace MsgPack {
 
             foreach (var item in _members) {
                 if (item != null) {
-                    await WriteAsync(writer, item.Prop.GetValue(obj), 
+                    await WriteAsync(writer, item.Prop.GetValue(obj),
                         item.Prop.PropertyType, context, ct).ConfigureAwait(false);
                 }
                 else {
@@ -275,7 +279,7 @@ namespace MsgPack {
         /// <param name="context"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        private async Task WriteAsync(Writer writer, object obj, Type type, 
+        private async Task WriteAsync(Writer writer, object obj, Type type,
             SerializerContext context, CancellationToken ct) {
 
             Type nullable  = Nullable.GetUnderlyingType(type);
@@ -291,23 +295,23 @@ namespace MsgPack {
 
             else if (type.GetTypeInfo().IsValueType) {
                 type = Enum.GetUnderlyingType(type);
-                await WriteAsync(writer, Convert.ChangeType(obj, type), 
+                await WriteAsync(writer, Convert.ChangeType(obj, type),
                     type, context, ct).ConfigureAwait(false);
             }
 
             else if (type.GetTypeInfo().IsArray) {
-                await WriteAsync(writer, context, ct, (IEnumerable)obj, 
+                await WriteAsync(writer, context, ct, (IEnumerable)obj,
                     ((object[])obj).Length).ConfigureAwait(false);
             }
             else if (typeof(IList).IsAssignableFrom(type)) {
-                await WriteAsync(writer, context, ct, (IEnumerable)obj, 
+                await WriteAsync(writer, context, ct, (IEnumerable)obj,
                     ((IList)obj).Count).ConfigureAwait(false);
             }
             else if (typeof(IEnumerable).IsAssignableFrom(type)) {
                 IEnumerable enumerable = (IEnumerable)obj;
                 int len = 0;
                 foreach (var item in enumerable) { len++; }
-                await WriteAsync(writer, context, ct, 
+                await WriteAsync(writer, context, ct,
                     enumerable, len).ConfigureAwait(false);
             }
 
@@ -319,10 +323,10 @@ namespace MsgPack {
                     throw new FormatException("non-generic collections not supported");
 #else
                     IDictionaryEnumerator enumerator = map.GetEnumerator();
-                    while (enumerator.MoveNext()) { 
-                        await WriteAsync(writer, enumerator.Key, 
+                    while (enumerator.MoveNext()) {
+                        await WriteAsync(writer, enumerator.Key,
                             enumerator.Key.GetType(), context, ct).ConfigureAwait(false);
-                        await WriteAsync(writer, enumerator.Value, 
+                        await WriteAsync(writer, enumerator.Value,
                             enumerator.Value.GetType(), context, ct).ConfigureAwait(false);
                     }
 #endif
@@ -331,10 +335,10 @@ namespace MsgPack {
                     Type keyType = map.GetType().GetGenericArguments()[0];
                     Type valueType = map.GetType().GetGenericArguments()[1];
                     IDictionaryEnumerator enumerator = map.GetEnumerator();
-                    while (enumerator.MoveNext()) { 
-                        await WriteAsync(writer, enumerator.Key, 
+                    while (enumerator.MoveNext()) {
+                        await WriteAsync(writer, enumerator.Key,
                             keyType, context, ct).ConfigureAwait(false);
-                        await WriteAsync(writer, enumerator.Value, 
+                        await WriteAsync(writer, enumerator.Value,
                             valueType, context, ct).ConfigureAwait(false);
                     }
                 }
@@ -373,7 +377,7 @@ namespace MsgPack {
             else {
                 Type generic = enumerable.GetType().GetGenericArguments()[0];
                 foreach (var item in enumerable) {
-                    await WriteAsync(writer, 
+                    await WriteAsync(writer,
                         item, generic, context, ct).ConfigureAwait(false);
                 }
             }

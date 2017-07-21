@@ -272,7 +272,7 @@ io_stream_t* io_fixed_buffer_stream_init(
     mem->out = out;
     mem->out_len = out_len;
 
-    mem->itf.context = 
+    mem->itf.context =
         mem;
     mem->itf.reader = (io_stream_reader_t)
         io_fixed_buffer_stream_reader;
@@ -290,7 +290,7 @@ io_stream_t* io_fixed_buffer_stream_init(
 }
 
 //
-// Initialize a dynamic out buffer memory stream 
+// Initialize a dynamic out buffer memory stream
 //
 io_stream_t* io_dynamic_buffer_stream_init(
     io_dynamic_buffer_stream_t* mem,
@@ -347,9 +347,9 @@ io_stream_t* io_file_stream_init(
         NULL;
     fs->itf.readable =
         NULL;
-    fs->in_fd = 
+    fs->in_fd =
         NULL;
-    fs->out_fd = 
+    fs->out_fd =
         NULL;
     fs->itf.writer =
         NULL;

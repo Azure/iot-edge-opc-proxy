@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     /// <summary>
     /// Specialized implementation of relay based message stream
     /// </summary>
-    public abstract class ConnectionBase<S> : IConnection, IMessageStream 
+    public abstract class ConnectionBase<S> : IConnection, IMessageStream
         where S : Stream {
 
         /// <summary>
@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Connection string for connection
         /// </summary>
         public ConnectionString ConnectionString {
-            get; private set;
+            get; 
         }
 
         /// <summary>
@@ -55,10 +55,11 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="relay"></param>
         /// <param name="streamId"></param>
+        /// <param name="remoteId"></param>
+        /// <param name="encoding"></param>
         /// <param name="connectionString"></param>
-        protected ConnectionBase(Reference streamId, Reference remoteId, CodecId encoding, 
+        protected ConnectionBase(Reference streamId, Reference remoteId, CodecId encoding,
             ConnectionString connectionString) {
 
             _remoteId = remoteId;
@@ -77,7 +78,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
 
             SendBlock = _send = new BufferBlock<Message>(new DataflowBlockOptions {
                 NameFormat = "Send (in Stream) Id={1}",
-                BoundedCapacity = 1, 
+                BoundedCapacity = 1,
                 EnsureOrdered = true,
                 MaxMessagesPerTask = DataflowBlockOptions.Unbounded,
                 CancellationToken = _open.Token
@@ -112,7 +113,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 // Remove ourselves from the listener...
                 Close();
 
-                // Fail any in progress open 
+                // Fail any in progress open
                 if (!Tcs.Task.IsCompleted) {
                     Tcs.TrySetException(new SocketException(SocketError.Closed));
                 }
@@ -200,7 +201,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             break;
                         }
                         try {
-                            _lastMessage = await _send.ReceiveAsync(_timeout, 
+                            _lastMessage = await _send.ReceiveAsync(_timeout,
                                 _open.Token).ConfigureAwait(false);
                             var data = _lastMessage.Content as DataMessage;
                             if (data != null) {
@@ -232,7 +233,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         /// <summary>
-        /// Receive producer, reading messages one by one from relay and 
+        /// Receive producer, reading messages one by one from relay and
         /// writing to receive block.  Manages stream as well.
         /// </summary>
         /// <returns></returns>
@@ -245,9 +246,15 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         var data = message.Content as DataMessage;
                         if (data != null && data.SequenceNumber != _nextReceiveSequenceNumber++) {
                             // TODO: Implement poll for previous message
-                            System.Diagnostics.Trace.TraceError(
-                                $"{data.SequenceNumber} received, {_nextReceiveSequenceNumber - 1} expected.");
-                            message.Error = (int)SocketError.Comm;
+                            if (data.SequenceNumber > _nextReceiveSequenceNumber - 1) {
+                                ProxyEventSource.Log.MissingData(this, data, _nextReceiveSequenceNumber - 1);
+                                message.Error = (int)SocketError.Missing;
+                            }
+                            else {
+                                ProxyEventSource.Log.DuplicateData(this, data, _nextReceiveSequenceNumber - 1);
+                                // Do not even bother to forward
+                                continue;
+                            }
                         }
                         if (!await _receive.SendAsync(message, _open.Token).ConfigureAwait(false) ||
                                 message.TypeId == MessageContent.Close) {
@@ -275,7 +282,6 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <returns></returns>
         protected abstract Task CloseStreamAsync(ICodecStream<S> codec);
 
-
         protected Message _lastMessage;
         protected TimeSpan _timeout = TimeSpan.FromMinutes(1);
         protected Task _pumps;
@@ -284,8 +290,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         protected readonly BufferBlock<Message> _send;
         protected readonly CodecId _encoding;
         protected readonly Reference _remoteId;
-        protected ulong _nextSendSequenceNumber = 0;
-        protected ulong _nextReceiveSequenceNumber = 0;
+        protected ulong _nextSendSequenceNumber;
+        protected ulong _nextReceiveSequenceNumber;
 
         /// <summary>
         /// Wrapper that calls dispose on the stream - at a minimum...
@@ -293,7 +299,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <param name="codec"></param>
         /// <param name="parentHasFaulted"></param>
         /// <returns></returns>
-        private async Task CloseStreamAsync(ICodecStream<S> codec, 
+        private async Task CloseStreamAsync(ICodecStream<S> codec,
             bool parentHasFaulted) {
             ProxyEventSource.Log.StreamClosing(this, codec.Stream);
             if (!parentHasFaulted) {

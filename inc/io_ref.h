@@ -24,20 +24,20 @@ typedef struct io_ref
 }
 io_ref_t;
 
-// 
+//
 // reference constants for comparison and copy
 //
 decl_g(io_ref_t, io_ref_null,  {  0ULL,  0ULL });
 decl_g(io_ref_t, io_ref_bcast, { ~0ULL, ~0ULL });
 
-// 
+//
 // Assign new reference
 //
 decl_internal_1(int32_t, io_ref_new,
     io_ref_t*, ref
 );
 
-// 
+//
 // Clear reference
 //
 decl_internal_1(void, io_ref_clear,

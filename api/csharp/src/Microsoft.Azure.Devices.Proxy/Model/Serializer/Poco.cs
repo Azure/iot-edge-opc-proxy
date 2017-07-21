@@ -29,26 +29,25 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         public static T Get() => _pool.Get() as T;
-        private static ObjectPool<Poco> _pool = new ObjectPool<Poco>(() => new T());
+        private static readonly ObjectPool<Poco> _pool = new ObjectPool<Poco>(() => new T());
     }
 
     /// <summary>
     /// Utility base class for any object in the object model.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     public abstract class Poco : IDisposable {
 
         /// <summary>
         /// Comparison
         /// </summary>
-        /// <param name="that"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object that) => IsEqual(that);
+        public override bool Equals(object obj) => IsEqual(obj);
 
         /// <summary>
         /// Returns hash for efficient lookup in sets, etc.
         /// The hash is calculated lazily at first use (i.e. insertion
-        /// into a map or set, etc.).  This is so that deserialized 
+        /// into a map or set, etc.).  This is so that deserialized
         /// objects can be constructed without the need to be finalized
         /// </summary>
         /// <returns>hash code</returns>
@@ -80,7 +79,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Helper to mix an array of items into the hash value
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="enumeration"></param>
         protected void MixToHash(IEnumerable enumeration) {
             foreach (var item in enumeration) {
                 MixToHash(item);
@@ -90,7 +89,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Helper to mix an items hash code
         /// </summary>
-        /// <param name="hash"></param>
+        /// <param name="item"></param>
         protected void MixToHash(object item) {
             if (item is IEnumerable) {
                 MixToHash((IEnumerable)item);
@@ -205,7 +204,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Must be implemented for equality
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="that"></param>
         /// <returns></returns>
         public abstract bool IsEqual(object that);
 

@@ -14,7 +14,7 @@
 // Wincrypt.h
 MOCKABLE_FUNCTION(WINAPI, BOOL, CryptAcquireContextA,
     HCRYPTPROV*, phProv, LPCSTR, szContainer, LPCSTR, szProvider, DWORD, dwProvType, DWORD, dwFlags);
-MOCKABLE_FUNCTION(WINAPI, BOOL, CryptGenRandom, 
+MOCKABLE_FUNCTION(WINAPI, BOOL, CryptGenRandom,
     HCRYPTPROV, hProv, DWORD, dwLen, BYTE*, pbBuffer);
 MOCKABLE_FUNCTION(WINAPI, BOOL, CryptReleaseContext,
     HCRYPTPROV, hProv, DWORD, dwFlags);
@@ -44,9 +44,9 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_win_rand_fill__success)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
@@ -54,21 +54,21 @@ TEST_FUNCTION(pal_win_rand_fill__success)
 
     h_prov = k_ctx_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptGenRandom(k_ctx_valid, 100, (BYTE*)UT_MEM))
         .SetReturn(TRUE);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_rand_fill passing as uuid argument an invalid pal_uuid_t value 
-// 
+//
+// Test pal_rand_fill passing as uuid argument an invalid pal_uuid_t value
+//
 TEST_FUNCTION(pal_win_rand_fill__arg_context_null)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
@@ -76,23 +76,23 @@ TEST_FUNCTION(pal_win_rand_fill__arg_context_null)
 
     h_prov = NULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptGenRandom(NULL, 100, (BYTE*)UT_MEM))
         .SetReturn(FALSE);
     STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
         .SetReturn(er_fault);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_rand_fill passing as uuid argument an invalid pal_uuid_t value 
-// 
+//
+// Test pal_rand_fill passing as uuid argument an invalid pal_uuid_t value
+//
 TEST_FUNCTION(pal_win_rand_fill__arg_buf_null)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
@@ -100,57 +100,57 @@ TEST_FUNCTION(pal_win_rand_fill__arg_buf_null)
 
     h_prov = k_ctx_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptGenRandom(k_ctx_valid, 100, NULL))
         .SetReturn(FALSE);
     STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
         .SetReturn(er_fault);
 
-    // act 
+    // act
     result = pal_rand_fill(NULL, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
+//
 // Test pal_rand_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_win_rand_deinit__success_1)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
 
     h_prov = k_ctx_valid;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptReleaseContext(k_ctx_valid, 0))
         .SetReturn(TRUE);
 
-    // act 
+    // act
     pal_rand_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
+//
 // Test pal_rand_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_win_rand_deinit__success_2)
 {
     h_prov = NULL;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_rand_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_rand_init happy path 
-// 
+//
+// Test pal_rand_init happy path
+//
 TEST_FUNCTION(pal_win_rand_init__success)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
@@ -158,12 +158,12 @@ TEST_FUNCTION(pal_win_rand_init__success)
 
     h_prov = NULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptAcquireContextA(&h_prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
         .CopyOutArgumentBuffer_phProv(&k_ctx_valid, sizeof(k_ctx_valid))
         .SetReturn(TRUE);
 
-    // act 
+    // act
     result = pal_rand_init();
 
     ASSERT_EXPECTED_CALLS();
@@ -171,31 +171,31 @@ TEST_FUNCTION(pal_win_rand_init__success)
     ASSERT_ARE_EQUAL(void_ptr, k_ctx_valid, h_prov);
 }
 
-// 
-// Test pal_rand_init unhappy path 
-// 
+//
+// Test pal_rand_init unhappy path
+//
 TEST_FUNCTION(pal_win_rand_init__neg_1)
 {
     int32_t result;
 
     h_prov = NULL;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(CryptAcquireContextA(&h_prov, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT | CRYPT_SILENT))
         .SetReturn(FALSE);
     STRICT_EXPECTED_CALL(pal_os_last_error_as_prx_error())
         .SetReturn(er_fatal);
 
-    // act 
+    // act
     result = pal_rand_init();
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
 }
 
-// 
-// Test pal_rand_init unhappy path 
-// 
+//
+// Test pal_rand_init unhappy path
+//
 TEST_FUNCTION(pal_win_rand_init__neg_2)
 {
     static const HCRYPTPROV k_ctx_valid = (HCRYPTPROV)0x2342;
@@ -203,9 +203,9 @@ TEST_FUNCTION(pal_win_rand_init__neg_2)
 
     h_prov = k_ctx_valid;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_rand_init();
 
     ASSERT_EXPECTED_CALLS();

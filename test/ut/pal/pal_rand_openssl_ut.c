@@ -37,67 +37,67 @@ END_DECLARE_TEST_SUITE()
 DECLARE_TEST_SETUP()
 
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_openssl_rand_fill__success_1)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(RAND_bytes((unsigned char*)UT_MEM, 100))
         .SetReturn(1);
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_openssl_rand_fill__success_2)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_rand_fill(UT_MEM, 0);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
+//
 // Test pal_rand_fill passing as buf argument an invalid ptr
-// 
+//
 TEST_FUNCTION(pal_openssl_rand_fill__arg_buf_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_rand_fill(NULL, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test pal_rand_fill happy path 
-// 
+//
+// Test pal_rand_fill happy path
+//
 TEST_FUNCTION(pal_openssl_rand_fill__neg)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(RAND_bytes((unsigned char*)UT_MEM, 100))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(ERR_get_error())
@@ -106,39 +106,39 @@ TEST_FUNCTION(pal_openssl_rand_fill__neg)
         .IgnoreArgument(2);
     STRICT_EXPECTED_CALL(ERR_get_error())
         .SetReturn(0);
-    
-    // act 
+
+    // act
     result = pal_rand_fill(UT_MEM, 100);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fatal, result);
 }
 
 
-// 
+//
 // Test pal_rand_deinit happy path
-// 
+//
 TEST_FUNCTION(pal_openssl_rand_deinit__success)
 {
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     pal_rand_deinit();
 
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test pal_rand_init happy path 
-// 
+//
+// Test pal_rand_init happy path
+//
 TEST_FUNCTION(pal_openssl_rand_init__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = pal_rand_init();
 
     ASSERT_EXPECTED_CALLS();

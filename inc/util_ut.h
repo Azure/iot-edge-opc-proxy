@@ -82,8 +82,8 @@ static void on_umock_c_error(
     case UMOCK_C_NULL_ARGUMENT:               ASSERT_FAIL("NULL_ARGUMENT");
     case UMOCK_C_INVALID_PAIRED_CALLS:        ASSERT_FAIL("INVALID_PAIRED_CALLS");
     case UMOCK_C_REGISTER_TYPE_FAILED:        ASSERT_FAIL("UMOCK_C_REGISTER_TYPE_FAILED");
-    case UMOCK_C_ERROR:                       
-        break; // ASSERT_FAIL("ERROR"); 
+    case UMOCK_C_ERROR:
+        break; // ASSERT_FAIL("ERROR");
     }
 }
 
@@ -169,7 +169,7 @@ static bool k_true = true;
 #define ASSERT_EXPECTED_CALLS() \
     ASSERT_ARE_EQUAL(char_ptr, umock_c_get_expected_calls(), umock_c_get_actual_calls())
 
-// 
+//
 // Negative tests arrange
 //
 #define UMOCK_C_NEGATIVE_TESTS_ARRANGE() \
@@ -205,7 +205,7 @@ static bool k_true = true;
         } while(0); \
     }
 
-// 
+//
 // Range tests arrange - from list
 //
 #define UMOCK_C_RANGE_TESTS_ARRANGE(type, I, ...) \

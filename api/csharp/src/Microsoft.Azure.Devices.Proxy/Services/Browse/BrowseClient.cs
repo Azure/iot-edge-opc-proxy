@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Base enumerator implementation wrapping the browse socket
         /// </summary>
-        abstract class BrowserAsyncEnumerator<T> : IAsyncEnumerator<T>, IDisposable 
+        abstract class BrowserAsyncEnumerator<T> : IAsyncEnumerator<T>, IDisposable
             where T : class {
 
             internal BrowseSocket Socket {
@@ -32,14 +32,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                 get; set;
             }
 
-
             /// <summary>
             /// Create socket
             /// </summary>
             /// <param name="proxy"></param>
             /// <param name="ct"></param>
             /// <returns></returns>
-            protected async Task InitAsync(IProvider provider, SocketAddress proxy, 
+            protected async Task InitAsync(IProvider provider, SocketAddress proxy,
                 CancellationToken ct) {
 
                 Socket = new BrowseSocket(provider);
@@ -92,9 +91,11 @@ namespace Microsoft.Azure.Devices.Proxy {
                             if (Throw) {
                                 throw new BrowseException((SocketError)response.Error);
                             }
-                         //   ProxyEventSource
-                            _done = true;
-                            return false;
+                            // TODO: ProxyEventSource log error
+                            continue;
+                        }
+                        else {
+                            continue;
                         }
                     }
                     else {
@@ -131,7 +132,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Enumerator for service records
         /// </summary>
-        class ServiceRecordBrowser : BrowserAsyncEnumerator<DnsServiceRecord>, 
+        class ServiceRecordBrowser : BrowserAsyncEnumerator<DnsServiceRecord>,
             IDnsServiceBrowser {
 
             internal async Task InitAsync(IProvider provider, SocketAddress proxy,
@@ -167,7 +168,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             protected override DnsServiceEntry Yield(BrowseResponse response) =>
                 DnsServiceEntry.Create(
                     new BoundSocketAddress(response.Interface, response.Item),
-                    DnsServiceRecord.Create(_service, response.Interface, 
+                    DnsServiceRecord.Create(_service, response.Interface,
                         (response.Flags & BrowseResponse.Removed) != 0
                     ),
                     response.Properties
@@ -186,7 +187,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                 _host = host;
             }
 
-            internal async Task InitAsync(IProvider provider, SocketAddress proxy, 
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
                 ProxySocketAddress address, CancellationToken ct) {
                 await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
                 await Socket.BrowseBeginAsync(address, BrowseRequest.Resolve,
@@ -218,7 +219,7 @@ namespace Microsoft.Azure.Devices.Proxy {
                     response.Interface
                 );
 
-            internal async Task InitAsync(IProvider provider, SocketAddress proxy, 
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
                 ProxySocketAddress proxySocketAddress, CancellationToken ct) {
                 await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
                 await Socket.BrowseBeginAsync(proxySocketAddress, BrowseRequest.Dirpath,
@@ -241,13 +242,13 @@ namespace Microsoft.Azure.Devices.Proxy {
                     nameof(record));
             }
             var resolver = new ServiceRecordResolver(record) { CacheOnly = cacheOnly };
-            await resolver.InitAsync(Socket.Provider, proxy ?? record.Interface, 
+            await resolver.InitAsync(Socket.Provider, proxy ?? record.Interface,
                 record.ToSocketAddress(), ct).ConfigureAwait(false);
             return resolver;
         }
 
         /// <summary>
-        /// Create service browser - returns service records, which identifiy either 
+        /// Create service browser - returns service records, which identifiy either
         /// - domains (if both domain and type are null)
         /// - service types (if only domain are given)
         /// - Service names - with type and domain (if both type and domain are provded)
@@ -291,7 +292,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
         /// <summary>
         /// Create directory browser to browse remote directories.  Catch BrowseException
-        /// and check code to understand e.g. permission issues, etc. 
+        /// and check code to understand e.g. permission issues, etc.
         /// </summary>
         /// <param name="folder">Folder name</param>
         /// <param name="cacheOnly">Only deliver from cache</param>

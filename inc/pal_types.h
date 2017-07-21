@@ -117,7 +117,7 @@ decl_public_3(int32_t, pal_os_to_prx_socket_option,
 );
 
 //
-// Convert platform independent to os socket option 
+// Convert platform independent to os socket option
 //
 decl_public_3(int32_t, pal_os_from_prx_socket_option,
     prx_socket_option_t, socket_option,
@@ -217,14 +217,14 @@ decl_public_1(int, pal_os_from_prx_gai_error,
     int32_t, error
 );
 
-// 
+//
 // Convert error from gethostname
 //
 decl_public_1(int32_t, pal_os_to_prx_h_error,
     int, error
 );
 
-// 
+//
 // Convert error from gethostname
 //
 decl_public_1(int, pal_os_from_prx_h_error,

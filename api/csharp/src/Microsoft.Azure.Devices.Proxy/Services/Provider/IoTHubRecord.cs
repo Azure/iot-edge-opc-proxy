@@ -7,18 +7,19 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
-    using System.Text;
 
     /// <summary>
     /// Wrapper around device twin result
     /// </summary>
-    internal class IoTHubRecord : INameRecord {
+    internal class IoTHubRecord : INameRecord, IComparable {
 
-        private static readonly string _typeTag = "type";
-        private static readonly string _addressTag = "address";
-        private static readonly string _referencesTag = "references";
-        private static readonly string _nameTag = "name";
+        private const string _typeTag = "type";
+        private const string _addressTag = "address";
+        private const string _referencesTag = "references";
+        private const string _nameTag = "name";
+        private const string _lastAliveProp = "$metadata.alive.$lastUpdated";
 
         /// <summary>
         /// Device id as unique identifier of the record on the hub
@@ -32,13 +33,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// </summary>
         public Reference Address {
             get {
-                var addr = this[_addressTag];
+                var addr = (string)this[_addressTag];
                 return addr == null ? Reference.Null : Reference.Parse(addr);
             }
             set {
                 // Do not update an existing address...
-                if (_tags[_addressTag] != null)
-                    return; 
+                if (_tags[_addressTag] != null) {
+                    return;
+                }
                 this[_addressTag] = value?.ToString();
             }
         }
@@ -47,7 +49,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// Returns the name of the record
         /// </summary>
         public string Name {
-            get => this[_nameTag] ?? "";
+            get => (string)this[_nameTag] ?? "";
             set => this[_nameTag] = value;
         }
 
@@ -57,23 +59,23 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public NameRecordType Type {
             get {
                 var value = this[_typeTag];
-                return (NameRecordType)(value == null ? 0 : int.Parse(value));
+                return (NameRecordType)(value == null ? 0 : (int)value);
             }
             set {
-                this[_typeTag] = ((int)value).ToString();
+                this[_typeTag] = (int)value;
                 // No support for bit queries ...
                 if (0 == (value & NameRecordType.Proxy))
                     this["proxy"] = null;
                 else
-                    this["proxy"] = "1";
+                    this["proxy"] = 1;
                 if (0 == (value & NameRecordType.Host))
                     this["host"] = null;
                 else
-                    this["host"] = "1";
+                    this["host"] = 1;
                 if (0 == (value & NameRecordType.Link))
                     this["link"] = null;
                 else
-                    this["link"] = "1";
+                    this["link"] = 1;
             }
         }
 
@@ -91,18 +93,54 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         }
 
         /// <summary>
+        /// Returns when this record was last seen
+        /// </summary>
+        public DateTime LastActivity {
+            get {
+                if (_lastActivity == null) {
+                    try {
+                        _lastActivity = (DateTime)_reported.SelectToken(_lastAliveProp, true);
+                    }
+                    catch(JsonException) {
+                        _lastActivity = DateTime.MinValue;
+                    }
+                }
+                return (DateTime)_lastActivity;
+            }
+            set {
+                if (_lastActivity == null || value > _lastActivity) {
+                    _lastActivity = value;
+                }
+            }
+        }
+
+        /// <summary>
         /// Device twin tags based record
         /// </summary>
-        public IoTHubRecord(string deviceId, string etag = null, JObject tags = null) {
-            Id = deviceId;
-            Etag = etag ?? "*";
-            _tags = tags ?? new JObject();
+        public IoTHubRecord(JObject twin) {
+            Id = (string)twin["deviceId"] ?? throw new ArgumentNullException(nameof(twin));
+            Etag = (string)twin["etag"] ?? "*";
+            _tags = (JObject)twin["tags"] ?? new JObject();
+            var props = (JObject)twin["properties"] ?? new JObject();
+            _desired = (JObject)props["desired"] ?? new JObject();
+            _reported = (JObject)props["reported"] ?? new JObject();
         }
 
         /// <summary>
         /// Clone constructor
         /// </summary>
         public IoTHubRecord(INameRecord record) : this(record.Id) => Assign(record);
+
+        /// <summary>
+        /// Clone constructor
+        /// </summary>
+        public IoTHubRecord(string deviceId) {
+            Id = deviceId;
+            Etag = "*";
+            _tags = new JObject();
+            _desired = new JObject();
+            _reported = new JObject();
+        }
 
         /// <summary>
         /// Add address
@@ -116,9 +154,8 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 refs = new JObject();
                 _tags.Add(_referencesTag, refs);
             }
-            JToken val;
-            if (!refs.TryGetValue(address.ToString(), 
-                StringComparison.CurrentCultureIgnoreCase, out val) ||
+            if (!refs.TryGetValue(address.ToString(),
+                StringComparison.CurrentCultureIgnoreCase, out JToken val) ||
                 !val.ToString().Equals(address.ToString())) {
 
                 refs[address.ToString()] = address.ToString();
@@ -168,8 +205,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
             Type = record.Type;
             Name = record.Name;
             Address = record.Address;
-
-            // TODO: Need to create intersection...!!!
+            LastActivity = record.LastActivity;
 
             foreach (var reference in record.References) {
                 AddReference(reference);
@@ -186,14 +222,17 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Returns the patches needed based on the changes in this record
         /// </summary>
-        internal string Log {
+        internal string Patch {
             get {
                 if (!_changes.HasValues) {
                     return null;
                 }
-                return new JObject(new JProperty("tags", _changes)).ToString();
+                var patch = new JObject(new JProperty("tags", _changes)).ToString();
+                return patch;
             }
         }
+
+        public bool Disconnected { get; internal set; } = false;
 
         /// <summary>
         /// Comparison
@@ -231,59 +270,37 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         /// <summary>
         /// Comparison
         /// </summary>
-        /// <param name="that"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        public override bool Equals(object that) => Equals(that as INameRecord);
-        
+        public override bool Equals(object obj) => Equals(obj as INameRecord);
 
         /// <summary>
         /// Returns hash for efficient lookup in list
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode() {
-            return Address.GetHashCode();
-        }
-
-        public override string ToString() => $"Record {Id} for {Name} with address {Address}";
+        public override int GetHashCode() => Address.GetHashCode();
 
         /// <summary>
-        /// Create record type expression from type
+        /// Compares based on last activity...
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        internal static string CreateTypeQueryString(NameRecordType type) {
-            var sql = new StringBuilder("(");
-            bool concat = false;
-
-            // No support for bit queries ...
-            if (0 != (type & NameRecordType.Proxy)) {
-                sql.Append("tags.proxy=1");
-                concat = true;
-            }
-            if (0 != (type & NameRecordType.Host)) {
-                if (concat) sql.Append(" OR ");
-                sql.Append("tags.host=1");
-                concat = true;
-            }
-            if (0 != (type & NameRecordType.Link)) {
-                if (concat) sql.Append(" OR ");
-                sql.Append("tags.link=1");
-                concat = true;
-            }
-            if (!concat) {
-                return "";
-            }
-            sql.Append(")");
-            return sql.ToString();
+        public int CompareTo(object obj) {
+            var that = obj as INameRecord;
+            return LastActivity.CompareTo(that == null ? DateTime.MinValue : that.LastActivity);
         }
 
+        public override string ToString() =>
+            $"Record {Id} for {Name} with address {Address} ({LastActivity})";
+
+
         /// <summary>
-        /// Helper to set or get a property in the twin tag and writing the 
+        /// Helper to set or get a property in the twin tag and writing the
         /// patch log at the same time.
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private string this[string name] {
+        private JToken this[string name] {
             get {
                 var prop = _tags[name];
                 return prop?.ToString();
@@ -296,14 +313,17 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                         _changes.Add(name, value);
                     }
                 }
-                else if (!prop.ToString().Equals(value)) {
+                else if (!prop.Equals(value)) {
                     _tags[name] = value;
                     _changes[name] = value;
                 }
             }
         }
 
+        private DateTime? _lastActivity;
         private readonly JObject _tags;
+        private readonly JObject _desired;
+        private readonly JObject _reported;
         private readonly JObject _changes = new JObject();
     }
 }

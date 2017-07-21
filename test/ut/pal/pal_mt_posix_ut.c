@@ -52,128 +52,128 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test lock_create happy path 
-// 
+//
+// Test lock_create happy path
+//
 TEST_FUNCTION(pal_posix_lock_create__success)
 {
     static const LOCK_HANDLE k_lock_handle_valid = (LOCK_HANDLE)0x26;
     lock_t created_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock_Init())
         .SetReturn(k_lock_handle_valid);
 
-    // act 
+    // act
     result = lock_create(&created_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, k_lock_handle_valid, created_valid);
 }
 
-// 
-// Test lock_create passing as created argument an invalid lock_t* value 
-// 
+//
+// Test lock_create passing as created argument an invalid lock_t* value
+//
 TEST_FUNCTION(pal_posix_lock_create__arg_created_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = lock_create(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test lock_create unhappy path 
-// 
+//
+// Test lock_create unhappy path
+//
 TEST_FUNCTION(pal_posix_lock_create__neg)
 {
     lock_t created_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock_Init())
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = lock_create(&created_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_out_of_memory, result);
 }
 
-// 
-// Test lock_enter happy path 
-// 
+//
+// Test lock_enter happy path
+//
 TEST_FUNCTION(pal_posix_lock_enter__success)
 {
     static const lock_t k_lock_valid = (lock_t)0x23423;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock((LOCK_HANDLE)k_lock_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     lock_enter(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test lock_exit happy path 
-// 
+//
+// Test lock_exit happy path
+//
 TEST_FUNCTION(pal_posix_lock_exit__success)
 {
     static const lock_t k_lock_valid = (lock_t)0x83456;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Unlock((LOCK_HANDLE)k_lock_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     lock_exit(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test lock_free happy path 
-// 
+//
+// Test lock_free happy path
+//
 TEST_FUNCTION(pal_posix_lock_free__success)
 {
     static const lock_t k_lock_valid = (lock_t)0x7423;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(Lock_Deinit((LOCK_HANDLE)k_lock_valid))
         .SetReturn(LOCK_OK);
 
-    // act 
+    // act
     lock_free(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test rw_lock_create happy path 
-// 
+//
+// Test rw_lock_create happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_create__success)
 {
     rw_lock_t created_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pthread_rwlock_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
         .SetReturn((void*)UT_MEM);
@@ -181,41 +181,41 @@ TEST_FUNCTION(pal_posix_rw_lock_create__success)
         .IgnoreArgument(2)
         .SetReturn(0);
 
-    // act 
+    // act
     result = rw_lock_create(&created_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_ARE_EQUAL(void_ptr, UT_MEM, created_valid);
 }
 
-// 
-// Test rw_lock_create passing as created argument an invalid rw_lock_t* value 
-// 
+//
+// Test rw_lock_create passing as created argument an invalid rw_lock_t* value
+//
 TEST_FUNCTION(pal_posix_rw_lock_create__arg_created_null)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
 
-    // act 
+    // act
     result = rw_lock_create(NULL);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
 }
 
-// 
-// Test rw_lock_create unhappy path 
-// 
+//
+// Test rw_lock_create unhappy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_create__neg)
 {
     rw_lock_t created_valid;
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();
     STRICT_EXPECTED_CALL(h_realloc(sizeof(pthread_rwlock_t), NULL, true, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(4).IgnoreArgument(5).IgnoreArgument(6)
@@ -226,7 +226,7 @@ TEST_FUNCTION(pal_posix_rw_lock_create__neg)
         .SetReturn(0)
         .SetFailReturn(-1);
 
-    // act 
+    // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     result = rw_lock_create(&created_valid);
 
@@ -234,96 +234,96 @@ TEST_FUNCTION(pal_posix_rw_lock_create__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory, er_fatal);
 }
 
-// 
-// Test rw_lock_enter happy path 
-// 
+//
+// Test rw_lock_enter happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_enter__success)
 {
     static const rw_lock_t k_lock_valid = (rw_lock_t)0x26234;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pthread_rwlock_rdlock((pthread_rwlock_t*)k_lock_valid))
         .SetReturn(0);
 
-    // act 
+    // act
     rw_lock_enter(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test rw_lock_exit happy path 
-// 
+//
+// Test rw_lock_exit happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_exit__success)
 {
     static const rw_lock_t k_lock_valid = (rw_lock_t)0x26234;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pthread_rwlock_unlock((pthread_rwlock_t*)k_lock_valid))
         .SetReturn(0);
 
-    // act 
+    // act
     rw_lock_exit(k_lock_valid);
 
-    // assert 
-    // ... 
+    // assert
+    // ...
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test rw_lock_enter_w happy path 
-// 
+//
+// Test rw_lock_enter_w happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_enter_w__success)
 {
     static const rw_lock_t k_lock_valid = (rw_lock_t)0x266344;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pthread_rwlock_wrlock((pthread_rwlock_t*)k_lock_valid))
         .SetReturn(0);
 
-    // act 
+    // act
     rw_lock_enter_w(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test rw_lock_exit_w happy path 
-// 
+//
+// Test rw_lock_exit_w happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_exit_w__success)
 {
     static const rw_lock_t k_lock_valid = (rw_lock_t)0x266344;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pthread_rwlock_unlock((pthread_rwlock_t*)k_lock_valid))
         .SetReturn(0);
 
-    // act 
+    // act
     rw_lock_exit_w(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 
-// 
-// Test rw_lock_free happy path 
-// 
+//
+// Test rw_lock_free happy path
+//
 TEST_FUNCTION(pal_posix_rw_lock_free__success)
 {
     static const rw_lock_t k_lock_valid = (rw_lock_t)0x266344;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(pthread_rwlock_destroy((pthread_rwlock_t*)k_lock_valid))
         .SetReturn(0);
     STRICT_EXPECTED_CALL(h_free((void*)k_lock_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
-    // act 
+    // act
     rw_lock_free(k_lock_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

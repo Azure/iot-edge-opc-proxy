@@ -72,7 +72,7 @@ else()
 
     include(CheckIncludeFile)
     include(FindPkgConfig)
- 
+
     set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
         pal_err_posix
         pal_file_posix
@@ -157,14 +157,14 @@ else()
     endif()
 
     if(LINUX)
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
             pal_ev_epoll
             pal_net_linux
             pal_proc_linux
         )
     else()
         set(use_openssl 1)
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} 
+        set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
             pal_ev_poll
             pal_net_stubs
             pal_proc_posix
@@ -176,7 +176,7 @@ else()
 endif()
     if (use_lws)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_lws)
-        message(STATUS "  linking with lws")    
+        message(STATUS "  linking with lws")
     endif()
 
 #
@@ -193,16 +193,16 @@ if (use_lws)
         set(CMAKE_MODULE_LINKER_FLAGS_PREV ${CMAKE_MODULE_LINKER_FLAGS})
         set(CMAKE_STATIC_LINKER_FLAGS_PREV ${CMAKE_MODULE_STATIC_FLAGS})
 
-        set(CMAKE_EXE_LINKER_FLAGS 
+        set(CMAKE_EXE_LINKER_FLAGS
                "${CMAKE_EXE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
-        set(CMAKE_SHARED_LINKER_FLAGS 
+        set(CMAKE_SHARED_LINKER_FLAGS
             "${CMAKE_SHARED_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
-        set(CMAKE_MODULE_LINKER_FLAGS 
+        set(CMAKE_MODULE_LINKER_FLAGS
             "${CMAKE_MODULE_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
-        set(CMAKE_STATIC_LINKER_FLAGS 
+        set(CMAKE_STATIC_LINKER_FLAGS
             "${CMAKE_STATIC_LINKER_FLAGS} /IGNORE:4006,4221,4018,4005,4047"
         )
         remove_definitions(/WX)
@@ -223,7 +223,7 @@ endif()
 
 if(use_openssl)
     include(FindOpenSSL)
-    message(STATUS "linking with openssl")    
+    message(STATUS "  linking with openssl")
 endif()
 
 compileAsC99()
@@ -231,10 +231,10 @@ compileAsC99()
 #
 # proxy shared library target
 #
-    set(source_c_files 
-        ${_CMP_ROOT}/cmp.c 
+    set(source_c_files
+        ${_CMP_ROOT}/cmp.c
         ${_PARSON_ROOT}/parson.c
-        ${_HASHTABLE_ROOT}/hashtable.c 
+        ${_HASHTABLE_ROOT}/hashtable.c
         ${_HASHTABLE_ROOT}/hashtable_itr.c
     )
 if(WIN32)
@@ -247,8 +247,8 @@ foreach(unit ${_PAL_COMPONENTS})
     set(source_c_files ${source_c_files} ${_PROJECT_ROOT}/src/pal/${unit}.c)
 endforeach()
 
-    add_library(libproxy SHARED 
-        $<TARGET_OBJECTS:libiotsdk> 
+    add_library(libproxy SHARED
+        $<TARGET_OBJECTS:libiotsdk>
         ${source_c_files}
     )
 
@@ -287,15 +287,15 @@ if(${use_zlog})
 endif()
 if(WIN32)
     target_link_libraries(libproxy
-        PRIVATE winhttp 
-        PRIVATE ws2_32 
+        PRIVATE winhttp
+        PRIVATE ws2_32
         PRIVATE iphlpapi
-        PRIVATE secur32 
-        PRIVATE crypt32 
+        PRIVATE secur32
+        PRIVATE crypt32
         PRIVATE schannel
     )
 else()
-    target_link_libraries(libproxy 
+    target_link_libraries(libproxy
         PRIVATE ${CURL_LIBRARIES}
         PRIVATE pthread m
     )
@@ -314,8 +314,8 @@ endif()
 # proxy static library target
 #
     linkStaticCrt(0)
-    add_library(libproxy-static STATIC 
-        $<TARGET_OBJECTS:libiotsdk> 
+    add_library(libproxy-static STATIC
+        $<TARGET_OBJECTS:libiotsdk>
         ${source_c_files}
     )
     set_target_properties(libproxy-static PROPERTIES PREFIX "")
@@ -353,15 +353,15 @@ endif()
 
 if(WIN32)
     target_link_libraries(libproxy-static
-        PUBLIC winhttp 
-        PUBLIC ws2_32 
+        PUBLIC winhttp
+        PUBLIC ws2_32
         PUBLIC iphlpapi
-        PUBLIC secur32 
-        PUBLIC crypt32 
+        PUBLIC secur32
+        PUBLIC crypt32
         PUBLIC schannel
     )
 else()
-    target_link_libraries(libproxy-static 
+    target_link_libraries(libproxy-static
         PRIVATE ${CURL_LIBRARIES}
         PRIVATE pthread m
     )
@@ -374,21 +374,6 @@ if(use_openssl)
     target_link_libraries(libproxy-static PUBLIC ${OPENSSL_LIBRARIES})
 endif()
     target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
-
-#
-# Try to define the version from the closest parent git tag and 
-# the current Git hash.
-#
-find_package(Git)
-if(GIT_EXECUTABLE)
-    execute_process(
-        WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-        COMMAND "${GIT_EXECUTABLE}" describe --always --tags --dirty
-        OUTPUT_VARIABLE GIT_VERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    target_compile_definitions(libproxy PRIVATE SCM_VERSION="${GIT_VERSION}")
-endif()
 
 if(WIN32)
   # Place here the install rule for win32

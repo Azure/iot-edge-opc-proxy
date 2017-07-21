@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Devices.Proxy {
     using System.Runtime.Serialization;
 
     /// <summary>
-    /// Link request - create socket link 
+    /// Link request - create socket link
     /// </summary>
     [DataContract]
     public class LinkRequest : Poco<LinkRequest>, IMessageContent, IRequest {
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         public IMessageContent Clone() => Create(Properties);
 
         public override bool IsEqual(LinkRequest that) {
-            return 
+            return
                 IsEqual(Version, that.Version) &&
                 IsEqual(Properties, that.Properties);
         }

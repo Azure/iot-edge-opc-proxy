@@ -26,7 +26,7 @@ typedef enum io_browse_request_type
     io_browse_request_resolve,     // Resolve string to address
     io_browse_request_service,               // Browse services
     io_browse_request_dirpath             // Recurse a dir path
-    
+
     // ...
 }
 io_browse_request_type_t;

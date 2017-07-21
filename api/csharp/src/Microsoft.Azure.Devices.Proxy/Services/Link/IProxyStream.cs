@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Send data (data)
         /// </summary>
         /// <param name="buffer"></param>
-        /// <param name="sendTimeout"></param>
+        /// <param name="endpoint"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<int> SendAsync(ArraySegment<byte> buffer,
@@ -27,7 +27,6 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Receive data (data)
         /// </summary>
         /// <param name="buffer"></param>
-        /// <param name="receiveTimeout"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<ProxyAsyncResult> ReceiveAsync(

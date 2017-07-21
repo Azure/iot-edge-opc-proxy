@@ -19,7 +19,7 @@ typedef struct xio_sk_config
 {
     const char* hostname;
     int32_t port;
-    void* reserved; 
+    void* reserved;
 }
 xio_sk_config_t;
 

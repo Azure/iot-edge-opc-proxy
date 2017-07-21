@@ -9,12 +9,12 @@
 #include "prx_sched.h"
 #include "pal_sk.h"
 
-// 
+//
 // Browse server instance
 //
 typedef struct prx_browse_server prx_browse_server_t;
 
-// 
+//
 // An instance of a client socket connected to browse server
 //
 typedef struct prx_browse_session prx_browse_session_t;

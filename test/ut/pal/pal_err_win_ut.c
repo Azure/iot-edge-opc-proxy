@@ -44,80 +44,80 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
-// 
-// Test pal_os_to_prx_net_error happy path 
-// 
+//
+// Test pal_os_to_prx_net_error happy path
+//
 TEST_FUNCTION(pal_win_os_to_prx_error__success)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     UMOCK_C_RANGE_TESTS_ARRANGE_FROM_TO(int, input, WIN_ERRORS_RANGE_BEGIN, WIN_ERRORS_RANGE_END);
     STRICT_EXPECTED_CALL(pal_os_to_prx_net_error(input))
         .SetReturn(er_unknown);
 
-    // act 
+    // act
     UMOCK_C_RANGE_TESTS_ACT();
     result = pal_os_to_prx_error(input);
 
-    // assert 
-    UMOCK_C_RANGE_TESTS_ASSERT(int32_t, result, er_unknown, 
-        er_ok,        er_not_found,   er_arg,        er_out_of_memory,  er_not_found, 
+    // assert
+    UMOCK_C_RANGE_TESTS_ASSERT(int32_t, result, er_unknown,
+        er_ok,        er_not_found,   er_arg,        er_out_of_memory,  er_not_found,
         er_fault,     er_aborted,     er_aborted,    er_arg,            er_waiting,
-        er_not_found, er_not_found,   er_nomore,     er_busy,           er_closed,    
+        er_not_found, er_not_found,   er_nomore,     er_busy,           er_closed,
         er_closed,    er_not_found,   er_permission,
         er_timeout,   er_aborted,     er_aborted,    er_aborted,        er_closed,
-        er_refused,   er_closed,      er_closed,     
+        er_refused,   er_closed,      er_closed,
         er_unknown);
 }
 
-// 
-// Test pal_os_from_prx_error happy path 
-// 
+//
+// Test pal_os_from_prx_error happy path
+//
 TEST_FUNCTION(pal_win_os_from_prx_error__success)
 {
     int result;
 
-    // arrange 
+    // arrange
     UMOCK_C_RANGE_TESTS_ARRANGE_FROM_TO(int32_t, input, er_unknown, er_ok);
     STRICT_EXPECTED_CALL(pal_os_from_prx_net_error(input))
         .SetReturn(-1);
 
-    // act 
+    // act
     UMOCK_C_RANGE_TESTS_ACT();
     result = pal_os_from_prx_error(input);
 
-    // assert 
+    // assert
     UMOCK_C_RANGE_TESTS_ASSERT(int, result, -1, 3, 6, 4, 2, 18, 13, 14, 10, 8, 1);  // see os_mock.h
 }
 
-// 
-// Test pal_os_last_error_as_prx_error happy path 
-// 
+//
+// Test pal_os_last_error_as_prx_error happy path
+//
 TEST_FUNCTION(pal_win_os_last_error_as_prx_error__success_1)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(GetLastError())
         .SetReturn(ERROR_SUCCESS);
 
-    // act 
+    // act
     result = pal_os_last_error_as_prx_error();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
 }
 
-// 
-// Test pal_os_last_error_as_prx_error happy path 
-// 
+//
+// Test pal_os_last_error_as_prx_error happy path
+//
 TEST_FUNCTION(pal_win_os_last_error_as_prx_error__success_2)
 {
     int32_t result;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(GetLastError())
         .SetReturn(ERROR_NO_DATA);
     STRICT_EXPECTED_CALL(FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -127,28 +127,28 @@ TEST_FUNCTION(pal_win_os_last_error_as_prx_error__success_2)
     STRICT_EXPECTED_CALL(LocalFree(IGNORED_PTR_ARG))
         .SetReturn(NULL);
 
-    // act 
+    // act
     result = pal_os_last_error_as_prx_error();
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_not_found, result);
 }
 
-// 
-// Test pal_os_set_error_as_prx_error happy path 
-// 
+//
+// Test pal_os_set_error_as_prx_error happy path
+//
 TEST_FUNCTION(pal_win_os_set_error_as_prx_error__success)
 {
     static const int32_t k_error_valid = er_ok;
 
-    // arrange 
+    // arrange
     STRICT_EXPECTED_CALL(SetLastError(ERROR_SUCCESS));
 
-    // act 
+    // act
     pal_os_set_error_as_prx_error(k_error_valid);
 
-    // assert 
+    // assert
     ASSERT_EXPECTED_CALLS();
 }
 

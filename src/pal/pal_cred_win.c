@@ -57,7 +57,7 @@ int32_t pal_cred_protect(
         protected_buf = (unsigned char*)mem_alloc(protected_len);
         if (!protected_buf)
             break;
-        
+
         // Store size of key
         *(size_t*)protected_buf = key_len;
         memcpy(protected_buf + sizeof(size_t), key_val, key_len);
@@ -150,11 +150,11 @@ void pal_cred_remove(
     const char* target;
     if (!handle)
         return;
-    
+
     target = STRING_c_str(handle);
     if (string_starts_with_nocase(target, HANDLE_PREFIX))
         return; // not a persisted credential key
-    
+
     if (!CredDeleteA(target, CRED_TYPE_GENERIC, 0))
     {
         log_error(NULL, "Failed deleting credential (%d)",
@@ -227,10 +227,10 @@ int32_t pal_cred_hmac_sha256(
         //
         // Compute and return hash - since we needed to unprotect the key we
         // can use our embedded api which works. A TPM implementation would
-        // never unprotect the key after import, and thus a hw hmac routine 
+        // never unprotect the key after import, and thus a hw hmac routine
         // would be called...
         //
-        if (HMACSHA256_OK != HMACSHA256_ComputeHash(key_val, key_len, 
+        if (HMACSHA256_OK != HMACSHA256_ComputeHash(key_val, key_len,
             (unsigned char*)buf, buf_len, hash))
         {
             result = er_invalid_format;
@@ -241,9 +241,9 @@ int32_t pal_cred_hmac_sha256(
         memcpy(sig, BUFFER_u_char(hash), min(sig_len, buf_len));
         result = er_ok;
         break;
-    } 
+    }
     while (0);
-    
+
     BUFFER_delete(hash);
 
     // Ensure we remove the key from memory asap

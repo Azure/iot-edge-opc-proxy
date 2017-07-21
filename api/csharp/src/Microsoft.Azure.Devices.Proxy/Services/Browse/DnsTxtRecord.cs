@@ -24,14 +24,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Helper constructor
         /// </summary>
-        /// <param name="key"></param>
         /// <param name="valueRaw"></param>
         internal static DnsTxtRecord Create(byte[] valueRaw) {
             var record = Get();
             record.Value = valueRaw;
             return record;
         }
-        
+
         /// <summary>
         /// Returns this record as key value pair
         /// </summary>
@@ -46,17 +45,17 @@ namespace Microsoft.Azure.Devices.Proxy {
             }
         }
 
-        public override Boolean IsEqual(DnsTxtRecord that) => 
+        public override Boolean IsEqual(DnsTxtRecord that) =>
             Value.SequenceEqual(that.Value);
 
-        protected override void SetHashCode() => 
+        protected override void SetHashCode() =>
             MixToHash(Value);
 
         /// <summary>
         /// Return object as string - assumption is that it is a utf-8 txt record.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => 
+        public override string ToString() =>
             Encoding.UTF8.GetString(Value);
     }
 }
