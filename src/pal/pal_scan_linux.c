@@ -221,7 +221,6 @@ void pal_scan_probe_begin(
     pal_scan_probe_t* task
 )
 {
-    int error;
     int32_t result;
     dbg_assert_ptr(task);
     do
