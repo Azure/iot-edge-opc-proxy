@@ -25,7 +25,8 @@ MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceResolve,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, const char*, name, const char*, regtype, const char*, domain, DNSServiceResolveReply, callBack, void*, context);
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceGetAddrInfo,
     DNSServiceRef*, sdRef, DNSServiceFlags, flags, uint32_t, interfaceIndex, DNSServiceProtocol, protocol, const char*, hostname, DNSServiceGetAddrInfoReply, callBack, void*, context);
-
+MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceGetProperty,
+    const char*, property, void*, value, uint32_t*, size);
 MOCKABLE_FUNCTION(, DNSServiceErrorType, DNSServiceCreateConnection,
     DNSServiceRef*, sdRef);
 

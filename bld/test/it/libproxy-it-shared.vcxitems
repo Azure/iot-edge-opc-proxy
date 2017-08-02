@@ -20,6 +20,7 @@
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\main.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\ns.c" />
+    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\scan.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\sd.c" />
   </ItemGroup>
 </Project>

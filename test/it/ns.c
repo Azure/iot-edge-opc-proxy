@@ -22,7 +22,7 @@ int32_t ns_add(
     int32_t result;
     prx_ns_entry_t* entry;
 
-    result = prx_ns_entry_create(type, id, name, MODULE_VER_NUM, &entry);
+    result = prx_ns_entry_create(type, id, name, "test", MODULE_VER_NUM, &entry);
     if (result != er_ok)
         return result;
     result = prx_ns_create_entry(ns, entry);

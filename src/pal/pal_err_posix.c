@@ -520,6 +520,7 @@ int32_t pal_os_last_error_as_prx_error(
     error = errno;
 
     if (error != 0 &&
+        error != EINPROGRESS &&
         error != EWOULDBLOCK &&
         error != EINTR)
     {

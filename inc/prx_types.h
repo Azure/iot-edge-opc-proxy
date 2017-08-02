@@ -120,6 +120,25 @@ typedef struct prx_socket_address_inet
 prx_socket_address_inet_t;
 
 //
+// Format utilities
+//
+#define __prx_sa_in6_fmt \
+    "[%x:%x:%x:%x:%x:%x:%x:%x]:%d"
+#define __prx_sa_in6_args(addr) \
+    (addr)->un.ip.un.in6.un.u16[0], (addr)->un.ip.un.in6.un.u16[1], \
+    (addr)->un.ip.un.in6.un.u16[2], (addr)->un.ip.un.in6.un.u16[3], \
+    (addr)->un.ip.un.in6.un.u16[4], (addr)->un.ip.un.in6.un.u16[5], \
+    (addr)->un.ip.un.in6.un.u16[6], (addr)->un.ip.un.in6.un.u16[7], \
+    (addr)->un.ip.port
+
+#define __prx_sa_in4_fmt \
+    "%d.%d.%d.%d:%d"
+#define __prx_sa_in4_args(addr) \
+    (addr)->un.ip.un.in4.un.u8[0], (addr)->un.ip.un.in4.un.u8[1], \
+    (addr)->un.ip.un.in4.un.u8[2], (addr)->un.ip.un.in4.un.u8[3], \
+    (addr)->un.ip.port
+
+//
 // Proxy socket address (prx_address_family_proxy)
 //
 typedef struct prx_socket_address_proxy

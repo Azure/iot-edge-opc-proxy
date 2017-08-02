@@ -7,13 +7,10 @@ welcome.
 
 ## Prerequisites
 
-Like any other sample included here, $_HUB_CS must be exported and point to the IoT Hub Owner connection string.  If run
-with the -R option, $_SB_CS must be set to the Service bus relay connection string (see relay provider sample for details).
+Like any other sample included, $_HUB_CS must be exported and point to the IoT Hub Owner connection string. If it 
+has not been started yet, start the ```proxyd``` in the same network as the ssh server or device you want to access. 
 
-If it has not been started yet, start the ```proxyd``` in the same network as the ssh server or device you want to 
-access. It is recommended to create an alias for ```dotnet pnetcat.dll``` e.g. as ```pnc``` that is globally accessible.
-
-## Using Proxy netcat Sample as an SSH Proxy
+## Using PNetcat as an SSH Proxy
 
 You can ssh directly through the proxy tunnel into an SSH server using the proxy command of the SSH client as pictured
 here:
@@ -26,13 +23,16 @@ here:
 |                 Client                 |                           |                 Server                 |
 +----------------------------------------+                           +----------------------------------------+
 ```
-To do so, use the -o option of SSH to specify pnetcat as your proxy command:
+To do so, use the -o option of SSH to specify PNetcat as your proxy command (Ensure you are in the same folder as PNetcat.dll):
 
 ```
-ssh USER@FINAL_DEST -o "ProxyCommand=pnc %h %p"
+ssh <host> -o "ProxyCommand=dotnet PNetcat.dll <host> 22"
 ```
 
-You can use the same option with scp and sftp.
+or using PuttY 0.70 on Windows:
 
-For more advanced use cases, e.g. if you want to combine  a pnetcat bridge with existing SSH tunneling and jump host
-functionality check out [https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts).
+```
+putty <host> -proxycmd "dotnet PNetcat.dll <host> 22"
+```
+
+For more advanced use cases, check out [https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts](https://en.wikibooks.org/wiki/OpenSSH/Cookbook/Proxies_and_Jump_Hosts).

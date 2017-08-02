@@ -92,7 +92,7 @@ static int32_t pal_socket_from_os_error(
     char* message = NULL;
     /**/ if (error == ERROR_SUCCESS)
         return er_ok;
-    else if (error != STATUS_CANCELLED)
+    else if (error != STATUS_CANCELLED && error != STATUS_PIPE_BROKEN)
     {
         FormatMessageA(
             FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM |
@@ -110,10 +110,6 @@ static int32_t pal_socket_from_os_error(
         {
             log_info(NULL, "Unknown socket error 0x%x.", error);
         }
-    }
-    else
-    {
-        log_debug(NULL, "Operation Cancelled");
     }
     return pal_os_to_prx_error(error);
 }
@@ -282,14 +278,14 @@ static void pal_socket_try_close(
 }
 
 //
-// Reset connect 
+// Reset connect
 //
 static int32_t pal_socket_async_connect_reset(
     pal_socket_async_t* async_op
 )
 {
     pal_socket_async_op_init(async_op);
-    return er_waiting; 
+    return er_waiting;
 }
 
 //
@@ -566,7 +562,6 @@ static void pal_socket_async_connect_complete(
     int32_t result;
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
-    dbg_assert_is_task(async_op->sock->scheduler);
 
     // Complete connection
     result = pal_socket_connect_complete(async_op);
@@ -721,7 +716,6 @@ static void pal_socket_async_send_complete(
 {
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
-    dbg_assert_is_task(async_op->sock->scheduler);
 
     // Complete send
     dbg_assert_ptr(async_op->buffer);
@@ -1771,7 +1765,8 @@ static void pal_socket_open_by_addr_begin(
 // Open a new socket based on properties passed during create
 //
 int32_t pal_socket_open(
-    pal_socket_t *sock
+    pal_socket_t *sock,
+    const char* itf_name
 )
 {
     chk_arg_fault_return(sock);
@@ -1782,6 +1777,11 @@ int32_t pal_socket_open(
 
     sock->open_op.enabled = true;
     sock->retry_connect = true;
+
+    if (itf_name)
+    {
+        // TODO
+    }
 
     /**/ if (sock->itf.props.address.un.family == prx_address_family_proxy)
         __do_next(sock, pal_socket_open_by_name_begin);
@@ -2416,7 +2416,7 @@ void pal_socket_free(
 }
 
 //
-// Socket pair abstraction to support controling event loops
+// Socket pair emulation - needed by pal_ev for controlling event loops
 //
 int socketpair(
     int domain,
@@ -2506,6 +2506,73 @@ int socketpair(
         closesocket(socks[1]);
     WSASetLastError(error);
     return -1;
+}
+
+//
+// Returns the socket scheduler - used by pal_net_win for scanning
+//
+prx_scheduler_t* pal_socket_scheduler(
+    void
+)
+{
+    return _scheduler;
+}
+
+//
+// Creates, binds, and connects a socket - used by pal_net_win for scanning
+//
+int32_t pal_socket_create_bind_and_connect_async(
+    int af,
+    const struct sockaddr* from,
+    int from_len,
+    const struct sockaddr* to,
+    int to_len,
+    LPOVERLAPPED ov,
+    LPOVERLAPPED_COMPLETION_ROUTINE completion,
+    SOCKET* out
+)
+{
+    int32_t result;
+    SOCKET fd;
+    DWORD tmp = 0;
+
+    chk_arg_fault_return(out);
+    chk_arg_fault_return(from);
+    chk_arg_fault_return(to);
+    chk_arg_fault_return(ov);
+    chk_arg_fault_return(completion);
+
+    *out = INVALID_SOCKET;
+    fd = WSASocket(af, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
+    if (fd == INVALID_SOCKET)
+        return pal_os_last_net_error_as_prx_error();
+    do
+    {
+        if (0 != bind(fd, from, from_len))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            break;
+        }
+
+        if (!BindIoCompletionCallback((HANDLE)fd, completion, 0))
+        {
+            result = pal_os_last_error_as_prx_error();
+            break;
+        }
+
+        if (!_ConnectEx(fd, to, to_len, NULL, 0, &tmp, ov))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            if (result != er_waiting)
+                break;
+        }
+
+        *out = fd;
+        return er_ok;
+    }
+    while (0);
+    closesocket(fd);
+    return result;
 }
 
 #if defined(USE_OPENSSL)

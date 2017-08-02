@@ -36,7 +36,7 @@ int32_t pal_os_to_prx_net_error(
     case WSAEOPNOTSUPP:               return er_not_impl;
     case WSAEAFNOSUPPORT:             return er_not_impl;
     case WSAEADDRINUSE:               return er_busy;
-    case WSAEADDRNOTAVAIL:            return er_unknown;
+    case WSAEADDRNOTAVAIL:            return er_not_found;
     case WSAHOST_NOT_FOUND:           return er_host_unknown;
     case WSAENETDOWN:                 return er_network;
     case WSAENETUNREACH:              return er_undelivered;

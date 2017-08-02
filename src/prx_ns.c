@@ -35,6 +35,7 @@ typedef struct prx_ns_generic_entry
     io_ref_t id;                              // Unique id of the entry
     io_cs_t* cs;                    // Entry specific connection string
     uint32_t type;                                     // Type of entry
+    STRING_HANDLE domain;                        // Domain of the entry
     uint32_t version;                           // Version of the entry
 }
 prx_ns_generic_entry_t;
@@ -228,6 +229,19 @@ static const char* prx_ns_generic_entry_get_name(
 }
 
 //
+// Returns domain of entry
+//
+static const char* prx_ns_generic_entry_get_domain(
+    prx_ns_generic_entry_t* entry
+)
+{
+    dbg_assert_ptr(entry);
+    if (!entry->domain)
+        return NULL;
+    return STRING_c_str(entry->domain);
+}
+
+//
 // Returns id of entry
 //
 static const char* prx_ns_generic_entry_get_id(
@@ -292,6 +306,7 @@ static int32_t prx_ns_generic_entry_create(
     uint32_t type,
     io_ref_t* id,
     const char* name,
+    const char* domain,
     uint32_t version,
     io_cs_t* cs,
     prx_ns_generic_entry_t** created
@@ -309,8 +324,10 @@ static int32_t prx_ns_generic_entry_clone(
     prx_ns_generic_entry_t *created;
     dbg_assert_ptr(entry);
 
-    result = prx_ns_generic_entry_create(entry->type, &entry->id, entry->name ?
-        STRING_c_str(entry->name) : NULL, entry->version, entry->cs, &created);
+    result = prx_ns_generic_entry_create(entry->type, &entry->id,
+        entry->name ? STRING_c_str(entry->name) : NULL,
+        entry->domain ? STRING_c_str(entry->domain) : NULL,
+        entry->version, entry->cs, &created);
     if (result != er_ok)
         return result;
 
@@ -372,6 +389,7 @@ static int32_t prx_ns_generic_entry_create(
     uint32_t type,
     io_ref_t* id,
     const char* name,
+    const char* domain,
     uint32_t version,
     io_cs_t* cs,
     prx_ns_generic_entry_t** created
@@ -410,6 +428,16 @@ static int32_t prx_ns_generic_entry_create(
             }
         }
 
+        if (domain)
+        {
+            entry->domain = STRING_construct(domain);
+            if (!entry->domain)
+            {
+                result = er_out_of_memory;
+                break;
+            }
+        }
+
         if (cs)
         {
             result = io_cs_clone(cs, &entry->cs);
@@ -435,6 +463,8 @@ static int32_t prx_ns_generic_entry_create(
             prx_ns_generic_entry_get_version;
         entry->itf.get_name = (prx_ns_entry_get_name_t)
             prx_ns_generic_entry_get_name;
+        entry->itf.get_domain = (prx_ns_entry_get_domain_t)
+            prx_ns_generic_entry_get_domain;
         entry->itf.get_links = (prx_ns_entry_get_links_t)
             prx_ns_generic_entry_get_links;
         entry->itf.get_type = (prx_ns_entry_get_type_t)
@@ -461,7 +491,7 @@ static int32_t prx_ns_generic_entry_encode(
     if (io_codec_json == io_codec_ctx_get_codec_id(ctx))
     {
         __io_encode_type_begin(ctx, entry,
-            entry->type != prx_ns_entry_type_gw ? 5 : 4);
+            entry->type != prx_ns_entry_type_gw ? 6 : 5);
 
         __io_encode_value(ctx, STRING_HANDLE, entry, name);
         result = io_encode_ref(ctx, &entry->id);
@@ -474,16 +504,18 @@ static int32_t prx_ns_generic_entry_encode(
         if (entry->type != prx_ns_entry_type_gw)
             __io_encode_value(ctx, uint32, entry, type);
         __io_encode_value(ctx, uint32, entry, version);
+        __io_encode_value(ctx, STRING_HANDLE, entry, domain);
         __io_encode_type_end(ctx);
     }
     else
     {
-        __io_encode_type_begin(ctx, entry, 5);
+        __io_encode_type_begin(ctx, entry, 6);
         __io_encode_value(ctx, STRING_HANDLE, entry, name);
         __io_encode_object(ctx, ref, entry, id);
         __io_encode_object(ctx, cs, entry, cs);
         __io_encode_value(ctx, uint32, entry, type);
         __io_encode_value(ctx, uint32, entry, version);
+        __io_encode_value(ctx, STRING_HANDLE, entry, domain);
         __io_encode_type_end(ctx);
     }
     return result;
@@ -506,7 +538,7 @@ static int32_t prx_ns_generic_entry_decode(
 
     if (io_codec_json == io_codec_ctx_get_codec_id(ctx))
     {
-        __io_decode_type_begin(ctx, entry, 4);
+        __io_decode_type_begin(ctx, entry, 5);
         __io_decode_value(ctx, STRING_HANDLE, entry, name);
         result = io_decode_ref(ctx, &entry->id);
         if (result != er_ok)
@@ -523,16 +555,19 @@ static int32_t prx_ns_generic_entry_decode(
         if (result != er_ok)
             entry->type = prx_ns_entry_type_gw;
         __io_decode_value(ctx, uint32, entry, version);
+
+        (void)io_decode_STRING_HANDLE(ctx, "domain", &entry->domain);
         __io_decode_type_end(ctx);
     }
     else
     {
-        __io_decode_type_begin(ctx, entry, 5);
+        __io_decode_type_begin(ctx, entry, 6);
         __io_decode_value(ctx, STRING_HANDLE, entry, name);
         __io_decode_object(ctx, ref, entry, id);
         __io_decode_object(ctx, cs, entry, cs);
         __io_decode_value(ctx, uint32, entry, type);
         __io_decode_value(ctx, uint32, entry, version);
+        __io_decode_value(ctx, STRING_HANDLE, entry, domain);
         __io_decode_type_end(ctx);
     }
     return result;
@@ -616,7 +651,7 @@ static int32_t prx_ns_generic_registry_decode(
             result = io_decode_object(&arr, NULL, NULL, &obj);
             if (result != er_ok)
                 break;
-            result = prx_ns_generic_entry_create(0, NULL, NULL, 0, NULL, &next);
+            result = prx_ns_generic_entry_create(0, NULL, NULL, NULL, 0, NULL, &next);
             if (result != er_ok)
                 break;
             DList_InsertTailList(&registry->entries, &next->link);
@@ -780,7 +815,7 @@ static int32_t prx_ns_generic_registry_entry_create(
             type |= prx_ns_entry_type_gw;
 
         result = prx_ns_generic_entry_create(type, &id, prx_ns_entry_get_name(entry),
-            prx_ns_entry_get_version(entry), cs, &next);
+            prx_ns_entry_get_domain(entry), prx_ns_entry_get_version(entry), cs, &next);
         if (result != er_ok)
             break;
         DList_InsertTailList(&registry->entries, &next->link);
@@ -835,7 +870,8 @@ static int32_t prx_ns_generic_registry_entry_update(
         if (result != er_ok)
             break;
         result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &id,
-            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry), cs, &update);
+            prx_ns_entry_get_name(entry), prx_ns_entry_get_domain(entry),
+            prx_ns_entry_get_version(entry), cs, &update);
         if (result != er_ok)
             break;
         DList_RemoveEntryList(&next->link);
@@ -1369,6 +1405,21 @@ static uint32_t prx_ns_iot_hub_twin_entry_get_version(
 }
 
 //
+// Returns domain of entry, which is part of twin
+//
+static const char* prx_ns_iot_hub_twin_entry_get_domain(
+    prx_ns_iot_hub_twin_entry_t* entry
+)
+{
+    JSON_Object* obj;
+    dbg_assert_ptr(entry);
+
+    obj = json_value_get_object(entry->twin);
+    dbg_assert_ptr(obj);
+    return json_object_dotget_string(obj, "tags.domain");
+}
+
+//
 // Returns type of entry, persisted as part of twin
 //
 static uint32_t prx_ns_iot_hub_twin_entry_get_type(
@@ -1534,6 +1585,8 @@ static int32_t prx_ns_iot_hub_twin_entry_create(
             prx_ns_iot_hub_twin_entry_get_index;
         entry->itf.get_version = (prx_ns_entry_get_version_t)
             prx_ns_iot_hub_twin_entry_get_version;
+        entry->itf.get_domain = (prx_ns_entry_get_domain_t)
+            prx_ns_iot_hub_twin_entry_get_domain;
         entry->itf.get_name = (prx_ns_entry_get_name_t)
             prx_ns_iot_hub_twin_entry_get_name;
         entry->itf.get_links = (prx_ns_entry_get_links_t)
@@ -1602,7 +1655,7 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
     uint32_t type;
     uint32_t version;
     io_ref_t id;
-    const char* name;
+    const char* name, *domain;
 
     dbg_assert_ptr(registry);
     dbg_assert_ptr(entry);
@@ -1653,6 +1706,10 @@ static int32_t prx_ns_iot_hub_registry_entry_update(
         version = prx_ns_entry_get_version(entry);
         if (version &&
             0 != json_object_dotset_number(obj, "tags.version", (double)version))
+            break;
+        domain = prx_ns_entry_get_domain(entry);
+        if (domain &&
+            0 != json_object_dotset_string(obj, "tags.domain", domain))
             break;
 
         // Patch existing document
@@ -2408,8 +2465,8 @@ int32_t prx_ns_iot_hub_create_from_cs(
         registry->log = log_get("ns_hub");
         DList_InitializeListHead(&registry->link);
 
-        result = prx_ns_generic_entry_create(
-            prx_ns_entry_type_hub, NULL, NULL, 0, hub_cs, &registry->hub_entry);
+        result = prx_ns_generic_entry_create(prx_ns_entry_type_hub, NULL,
+            NULL, NULL, 0, hub_cs, &registry->hub_entry);
         if (result != er_ok)
             break;
 
@@ -2606,7 +2663,7 @@ int32_t prx_ns_entry_create_from_cs(
     chk_arg_fault_return(cs);
     chk_arg_fault_return(created);
 
-    result = prx_ns_generic_entry_create(type, address, NULL, 0, cs, &entry);
+    result = prx_ns_generic_entry_create(type, address, NULL, NULL, 0, cs, &entry);
     if (result != er_ok)
         return result;
 
@@ -2621,6 +2678,7 @@ int32_t prx_ns_entry_create(
     uint32_t type,
     const char* id,
     const char* name,
+    const char* domain,
     uint32_t version,
     prx_ns_entry_t** created
 )
@@ -2635,7 +2693,7 @@ int32_t prx_ns_entry_create(
     result = io_cs_create("proxy.localhost", id, NULL, NULL, &cs);
     if (result != er_ok)
         return result;
-    result = prx_ns_generic_entry_create(type, NULL, name, version, cs, &entry);
+    result = prx_ns_generic_entry_create(type, NULL, name, domain, version, cs, &entry);
     io_cs_free(cs);
     if (result != er_ok)
         return result;
@@ -2671,7 +2729,7 @@ int32_t prx_ns_entry_create_from_string(
         result = io_decode_object(&ctx, NULL, NULL, &obj);
         if (result != er_ok)
             break;
-        result = prx_ns_generic_entry_create(0, NULL, NULL, 0, NULL, &generic_entry);
+        result = prx_ns_generic_entry_create(0, NULL, NULL, NULL, 0, NULL, &generic_entry);
         if (result != er_ok)
             break;
 
@@ -2725,8 +2783,8 @@ int32_t prx_ns_entry_to_STRING(
         if (result != er_ok)
             break;
         result = prx_ns_generic_entry_create(prx_ns_entry_get_type(entry), &addr,
-            prx_ns_entry_get_name(entry), prx_ns_entry_get_version(entry),
-            cs, &generic_entry);
+            prx_ns_entry_get_name(entry), prx_ns_entry_get_domain(entry),
+            prx_ns_entry_get_version(entry), cs, &generic_entry);
         if (result != er_ok)
             break;
 

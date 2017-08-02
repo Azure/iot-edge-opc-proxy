@@ -68,7 +68,8 @@ static prx_host_t* process_host = NULL;
 //
 static int32_t prx_host_install_server(
     prx_host_t* host,
-    const char* name
+    const char* name,
+    const char* domain
 )
 {
     int32_t result;
@@ -84,8 +85,8 @@ static int32_t prx_host_install_server(
         result = prx_ns_get_entry_by_name(host->remote, name, &resultset);
         if (result == er_not_found)
         {
-            result = prx_ns_entry_create(
-                prx_ns_entry_type_proxy, name, name, MODULE_VER_NUM, &entry);
+            result = prx_ns_entry_create(prx_ns_entry_type_proxy,
+                name, name, domain, MODULE_VER_NUM, &entry);
             if (result != er_ok)
                 break;
             result = prx_ns_create_entry(host->remote, entry);
@@ -205,6 +206,7 @@ static int32_t prx_host_init_from_command_line(
     io_cs_t *cs = NULL;
     prx_ns_entry_t* entry = NULL;
     const char *server_name = NULL;
+    const char *domain = NULL;
     const char *log_config = NULL;
     const char *log_file = NULL;
     const char *ns_registry = NULL;
@@ -214,38 +216,34 @@ static int32_t prx_host_init_from_command_line(
     bool is_install = false;
     bool is_uninstall = false;
     bool should_exit = false;
-    bool is_test = false;
-    int loops = 1;
-    io_ref_t test;
 
     static struct option long_options[] =
     {
-        { "install",                    no_argument,            NULL, 'i' },
-        { "uninstall",                  no_argument,            NULL, 'u' },
-        { "only-websocket",             no_argument,            NULL, 'w' },
-        { "hidden",                     no_argument,            NULL, 'd' },
-        { "help",                       no_argument,            NULL, 'h' },
-        { "version",                    no_argument,            NULL, 'v' },
-        { "log-to-iothub",              no_argument,            NULL, 'T' },
-        { "allow-fs-browsing",          no_argument,            NULL, 'F' },
-        { "allow-ws-unsecure",          no_argument,            NULL, 'W' },
-        { "blacklisted-ports",          required_argument,      NULL, 'r' },
-        { "import",                     required_argument,      NULL, 's' },
-        { "name",                       required_argument,      NULL, 'n' },
-        { "connection-string",          required_argument,      NULL, 'c' },
-        { "log-file",                   required_argument,      NULL, 'l' },
-        { "log-config-file",            required_argument,      NULL, 'L' },
-        { "connection-string-file",     required_argument,      NULL, 'C' },
-        { "hub-config-file",            required_argument,      NULL, 'H' },
-        { "db-file",                    required_argument,      NULL, 'D' },
-        { "proxy",                      required_argument,      NULL, 'p' },
-        { "proxy-user",                 required_argument,      NULL, 'x' },
-        { "proxy-pwd",                  required_argument,      NULL, 'y' },
-        { "token-ttl",                  required_argument,      NULL, 't' },
-#if defined(DEBUG)
-        { "test",                       required_argument,      NULL, '<' },
-#endif
-        { 0,                            0,                      NULL,  0  }
+        { "install",                        no_argument,                 NULL, 'i' },
+        { "uninstall",                      no_argument,                 NULL, 'u' },
+        { "only-websocket",                 no_argument,                 NULL, 'w' },
+        { "daemonize",                      no_argument,                 NULL, 'd' },
+        { "help",                           no_argument,                 NULL, 'h' },
+        { "version",                        no_argument,                 NULL, 'v' },
+        { "log-to-iothub",                  no_argument,                 NULL, 'T' },
+        { "allow-fs-browsing",              no_argument,                 NULL, 'F' },
+        { "allow-ws-unsecure",              no_argument,                 NULL, 'W' },
+        { "bind-to-device",                 required_argument,           NULL, 'b' },
+        { "blacklisted-ports",              required_argument,           NULL, 'r' },
+        { "import",                         required_argument,           NULL, 's' },
+        { "name",                           required_argument,           NULL, 'n' },
+        { "domain",                         required_argument,           NULL, 'N' },
+        { "connection-string",              required_argument,           NULL, 'c' },
+        { "log-file",                       required_argument,           NULL, 'l' },
+        { "log-config-file",                required_argument,           NULL, 'L' },
+        { "connection-string-file",         required_argument,           NULL, 'C' },
+        { "hub-config-file",                required_argument,           NULL, 'H' },
+        { "db-file",                        required_argument,           NULL, 'D' },
+        { "proxy",                          required_argument,           NULL, 'p' },
+        { "proxy-user",                     required_argument,           NULL, 'x' },
+        { "proxy-pwd",                      required_argument,           NULL, 'y' },
+        { "token-ttl",                      required_argument,           NULL, 't' },
+        { 0,                                0,                           NULL,  0  }
     };
 
     do
@@ -254,7 +252,7 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwWdhvTFr:s:n:c:l:L:C:H:D:p:x:y:t:<:",
+            c = getopt_long(argc, argv, "iuwWdhvTFr:s:n:N:c:l:L:C:H:D:p:x:y:t:b:",
                 long_options, &option_index);
             if (c == -1)
                 break;
@@ -291,6 +289,9 @@ static int32_t prx_host_init_from_command_line(
                 }
                 __prx_config_set(prx_config_key_restricted_ports, optarg);
                 break;
+            case 'b':
+                __prx_config_set(prx_config_key_bind_device, optarg);
+                break;
             case 'x':
                 __prx_config_set(prx_config_key_proxy_user, optarg);
                 break;
@@ -318,20 +319,11 @@ static int32_t prx_host_init_from_command_line(
                 printf("Version: <UNKNOWN>\n");
 #endif
                 break;
-            case '<':
-                is_test = true;
-                if (!optarg)
-                    break;
-                loops = atoi(optarg);
-                if (!loops)
-                {
-                    printf("ERROR: Bad arg for --test option (%.128s). \n\n",
-                        optarg ? optarg : "");
-                    result = er_arg;
-                }
-                break;
             case 'n':
                 server_name = optarg;
+                break;
+            case 'N':
+                domain = optarg;
                 break;
             case 's':
                 if (0 == (pal_caps() & pal_cap_cred))
@@ -415,9 +407,7 @@ static int32_t prx_host_init_from_command_line(
         if (result != er_ok)
             break;
 
-        if ((is_install && is_uninstall) ||
-            (is_test && is_install) ||
-            (is_test && is_uninstall))
+        if (is_install && is_uninstall)
         {
             printf("ERROR: Cannot use --install and --uninstall together...");
             result = er_arg;
@@ -485,7 +475,7 @@ static int32_t prx_host_init_from_command_line(
 
         if (cs && io_cs_get_device_id(cs))
         {
-            if (is_install || is_uninstall || is_test || server_name)
+            if (is_install || is_uninstall || server_name)
             {
                 printf("ERROR: A device connection string cannot be used for -i or -u or -n");
                 result = er_arg;
@@ -536,7 +526,7 @@ static int32_t prx_host_init_from_command_line(
             }
         }
 
-        if (!ns_registry && !is_install && !is_uninstall && !is_test)
+        if (!ns_registry && !is_install && !is_uninstall)
         {
             if (should_exit) // Exit now
                 break;
@@ -552,58 +542,38 @@ static int32_t prx_host_init_from_command_line(
             }
         }
 
-        if (is_test)
+        if (is_install || is_uninstall)
         {
-            if (loops > 1 && server_name)
-                loops = 1;
-            host->uninstall_on_exit = true;
-        }
-
-        if (is_install || is_uninstall || is_test)
-        {
-            for (int i = 0; i < loops; i++)
+            // Ensure we have a name
+            if (!server_name)
             {
-                // Ensure we have a name
-                if (!server_name)
-                {
-                    if (!is_test)
-                        result = pal_gethostname(buffer, _countof(buffer));
-                    else
-                    {
-                        result = io_ref_new(&test);
-                        if (result != er_ok)
-                        {
-                            printf("ERROR: Failed making id for proxy server. \n\n");
-                            break;
-                        }
-                        result = io_ref_to_string(&test, buffer, _countof(buffer));
-                    }
-                    if (result != er_ok)
-                        break;
-                    server_name = buffer;
-                }
-                else if (is_uninstall && 0 == string_compare(server_name, "*"))
-                    server_name = NULL;  // Remove all!
-
-                // Run install/uninstall
-                /**/ if (is_install || is_test)
-                    result = prx_host_install_server(host, server_name);
-                else if (is_uninstall)
-                    result = prx_host_uninstall_server(host, server_name);
-
+                result = pal_gethostname(buffer, _countof(buffer));
                 if (result != er_ok)
-                {
-                    printf("ERROR: %s %s failed! Check parameters...\n",
-                        prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                     break;
-                }
-                printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ?
-                    "installed" : "uninstalled");
-                server_name = NULL;
+                server_name = buffer;
             }
+            else if (is_uninstall && 0 == string_compare(server_name, "*"))
+                server_name = NULL;  // Remove all!
+
+            // Run install/uninstall
+            /**/ if (is_install)
+                result = prx_host_install_server(host, server_name, domain);
+            else if (is_uninstall)
+                result = prx_host_uninstall_server(host, server_name);
+
+            if (result != er_ok)
+            {
+                printf("ERROR: %s %s failed! Check parameters...\n",
+                    prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
+                break;
+            }
+            printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ?
+                "installed" : "uninstalled");
+            server_name = NULL;
         }
         break;
-    } while (0);
+    }
+    while (0);
 
     if (cs)
         io_cs_free(cs);
@@ -648,6 +618,10 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    that can contain ranges, for example -r \n");
     printf("                                    0-4839;4842-65536 restricts connections \n");
     printf("                                    to all ports except for 4840 and 4841.  \n");
+    printf(" -b, --bind-to-device string        Use this setting to direct the proxy to \n");
+    printf("                                    bind sockets to the named device.       \n");
+    printf("                                    Note that if this fails, e.g. due to    \n");
+    printf("                                    rights, the default OS behavior applies.\n");
     if (pal_caps() & pal_cap_wsclient)
     {
     printf(" -w, --only-websocket               Always use websockets for outbound      \n");
@@ -675,6 +649,9 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    and access to the shared access key.    \n");
     printf(" -n, --name <string>                Name of proxy to install or uninstall.  \n");
     printf("                                    If -n is not provided, hostname is used.\n");
+    printf("     --domain <string>              Virtual domain the proxy is assigned to.\n");
+    printf("                                    Use for -i. If not provided, no domain  \n");
+    printf("                                    is assigned.                            \n");
     if (pal_caps() & pal_cap_file)
     {
     printf(" -D, --db-file <file-name>          Local storage for proxy connection info.\n");
@@ -686,7 +663,7 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    access tokens provided to IoT Hub if you\n");
     printf("                                    prefer a value different from default.  \n");
 #if defined(EXPERIMENTAL)
-    printf(" -d, --hidden                       Runs the proxy as a service/daemon,     \n");
+    printf(" -d, --daemonize                    Runs the proxy as a service/daemon,     \n");
     printf("                                    otherwise runs proxy host process as    \n");
     printf("                                    console process.                        \n");
 #endif
@@ -769,8 +746,7 @@ static int32_t prx_host_modules_start(
 
         DList_InsertTailList(&host->modules, &module->link);
         module->entry = proxy_entry;
-        module->module = host->module->on_create(
-            NULL, module->entry);
+        module->module = host->module->on_create(NULL, module->entry);
 
         if (!module->module)
         {

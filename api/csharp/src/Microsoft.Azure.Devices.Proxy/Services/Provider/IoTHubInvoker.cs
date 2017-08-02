@@ -219,8 +219,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                 }
             }
             catch (HttpResponseException hex) {
-                /**/
-                if (hex.StatusCode == HttpStatusCode.NotFound) {
+                /**/ if (hex.StatusCode == HttpStatusCode.NotFound) {
                     throw new ProxyNotFound(hex);
                 }
                 else if (hex.StatusCode == HttpStatusCode.Forbidden) {

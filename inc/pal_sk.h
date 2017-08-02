@@ -18,14 +18,14 @@ typedef struct pal_socket pal_socket_t;
 typedef enum pal_socket_event
 {
     pal_socket_event_unknown = 0,
-    pal_socket_event_opened,                     // Socket opened
-    pal_socket_event_begin_accept,   // Requests client interface
-    pal_socket_event_end_accept,    // Sends newly created socket
-    pal_socket_event_begin_recv,      // Requests an empty buffer
-    pal_socket_event_end_recv,     // Sent when buffer was filled
-    pal_socket_event_begin_send,      // Requests a filled buffer
-    pal_socket_event_end_send,          // Filled buffer was sent
-    pal_socket_event_closed                      // Socket closed
+    pal_socket_event_opened,                           // Socket opened
+    pal_socket_event_begin_accept,         // Requests client interface
+    pal_socket_event_end_accept,          // Sends newly created socket
+    pal_socket_event_begin_recv,            // Requests an empty buffer
+    pal_socket_event_end_recv,           // Sent when buffer was filled
+    pal_socket_event_begin_send,            // Requests a filled buffer
+    pal_socket_event_end_send,                // Filled buffer was sent
+    pal_socket_event_closed                            // Socket closed
 }
 pal_socket_event_t;
 
@@ -35,12 +35,12 @@ pal_socket_event_t;
 typedef void (*pal_socket_event_handler_t)(
     void* context,
     pal_socket_event_t ev,
-    uint8_t** buffer,         // The buffer for the event or null
-    size_t* size,        // Size of buffer or amount read/written
-    prx_socket_address_t* addr,   // Socket address if applicable
-    int32_t* flags,                 // Flags describing operation
-    int32_t error,   // Error that occurred, e.g. as result of op
-    void** op_context        // A user provided operation context
+    uint8_t** buffer,               // The buffer for the event or null
+    size_t* size,              // Size of buffer or amount read/written
+    prx_socket_address_t* addr,         // Socket address if applicable
+    int32_t* flags,                       // Flags describing operation
+    int32_t error,         // Error that occurred, e.g. as result of op
+    void** op_context              // A user provided operation context
     );
 
 //
@@ -72,8 +72,9 @@ decl_internal_2(int32_t, pal_socket_create,
 //
 // Open a socket - wait for opened event
 //
-decl_internal_1(int32_t, pal_socket_open,
-    pal_socket_t*, sock
+decl_internal_2(int32_t, pal_socket_open,
+    pal_socket_t*, sock,
+    const char*, itf_name
 );
 
 //

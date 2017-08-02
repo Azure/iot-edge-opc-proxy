@@ -97,7 +97,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__success)
         .SetReturn(THREADAPI_OK);
 
     // act
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -114,7 +114,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__arg_port_null)
     // arrange
 
     // act
-    result = pal_event_port_create(NULL);
+    result = pal_event_port_create(NULL, NULL, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -160,7 +160,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_create__neg)
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
@@ -183,6 +183,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_1)
     port_valid.control_fd[1] = _invalid_fd;
     port_valid.thread = k_valid_thread_handle;
     port_valid.poll_buffer = (struct pollfd*)UT_MEM;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(send(k_valid_fd, IGNORED_PTR_ARG, 1, 0))
@@ -222,6 +223,7 @@ TEST_FUNCTION(pal_nix_poll_event_port_close__success_2)
     port_valid.control_fd[1] = k_invalid_fd;
     port_valid.thread = k_valid_thread_handle;
     port_valid.poll_buffer = NULL;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
@@ -777,6 +779,7 @@ TEST_FUNCTION(pal_nix_poll_event_clear__neg)
 //
 TEST_FUNCTION(pal_nix_poll_event_close__success)
 {
+    static const THREAD_HANDLE k_valid_thread_handle = (THREAD_HANDLE)0x33333;
     static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const int k_valid_fd = 1234;
     static const uint32_t k_events_expected = 0;
@@ -785,6 +788,7 @@ TEST_FUNCTION(pal_nix_poll_event_close__success)
     uintptr_t event_handle_valid = (uintptr_t)&ev_data_valid;
 
     port_valid.lock = (lock_t)0x1;
+    port_valid.thread = k_valid_thread_handle;
     port_valid.control_fd[0] = k_valid_fd;
     port_valid.control_fd[1] = 0;
 

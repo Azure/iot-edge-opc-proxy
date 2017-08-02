@@ -172,14 +172,14 @@ TEST_FUNCTION(pal_socket_create__neg)
 TEST_FUNCTION(pal_socket_open__success)
 {
     static const pal_socket_t* k_sock_valid;
-    static const void* k_op_context_valid;
+    static const char* k_itf_name_valid;
     int32_t result;
 
     // arrange
     // ...
 
     // act
-    result = pal_socket_open(k_sock_valid, k_op_context_valid);
+    result = pal_socket_open(k_sock_valid, k_itf_name_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -232,7 +232,7 @@ TEST_FUNCTION(pal_socket_open__arg_op_context_invalid)
 TEST_FUNCTION(pal_socket_open__neg)
 {
     static const pal_socket_t* k_sock_valid;
-    static const void* k_op_context_valid;
+    static const char* k_itf_name_valid;
     int32_t result;
 
     ASSERT_ARE_EQUAL(int, 0, umock_c_negative_tests_init());
@@ -243,7 +243,7 @@ TEST_FUNCTION(pal_socket_open__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = pal_socket_open(k_sock_valid, k_op_context_valid);
+    result = pal_socket_open(k_sock_valid, k_itf_name_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);

@@ -21,7 +21,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="$(MSBuildThisFileDirectory)..\..\..\deps\dnssd\src\dnssd.def">
+    <None Include="..\..\..\deps\dnssd\src\dnssd.def">
       <Filter>src</Filter>
     </None>
   </ItemGroup>

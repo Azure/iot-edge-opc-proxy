@@ -6,9 +6,7 @@
 
 #include "common.h"
 
-#if defined(DEBUG)
-#define LOG_VERBOSE 1
-#endif
+// #define LOG_VERBOSE 1
 
 //
 // Inline logging

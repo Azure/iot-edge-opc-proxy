@@ -50,6 +50,7 @@ struct pal_socket
     pal_handler_t write_cb;                     // Handles write events
     pal_socket_state_t state;                    // State of the socket
 
+    char* itf_name;         // Device name the socket is to be bound to
     prx_socket_address_t peer;                   // Cached peer address
     void* context;
 
@@ -390,8 +391,7 @@ static int32_t pal_socket_on_recvfrom(
     prx_socket_address_t sa;
     uint8_t sa_in[MAX_SOCKET_ADDRESS_BYTES];
     socklen_t sa_len = sizeof(sa_in);
-    int os_flags = 0;
-    int32_t flags;
+    int32_t flags = 0;
     uint8_t* buffer;
     size_t buf_len;
     void* context;
@@ -415,7 +415,7 @@ static int32_t pal_socket_on_recvfrom(
             break;
 
         // TODO: Use recvmsg to retrieve flags
-        result = recvfrom(sock->sock_fd, (char*)buffer, (int)buf_len, os_flags,
+        result = recvfrom(sock->sock_fd, (char*)buffer, (int)buf_len, 0,
             (struct sockaddr*)sa_in, &sa_len);
         if (result < 0)
         {
@@ -425,25 +425,28 @@ static int32_t pal_socket_on_recvfrom(
                 log_error(sock->log, "Recvfrom error %s.",
                     prx_err_string(result));
             }
+            buf_len = 0;
             break;
-        }
-        else
-        {
-            buf_len = result;
-            result = er_ok;
         }
 
-        result = pal_os_to_prx_message_flags(os_flags, &flags);
-        if (result != er_ok)
-            break;
+        buf_len = result;
+
         result = pal_os_to_prx_socket_address(
             (const struct sockaddr*)sa_in, sa_len, &sa);
         if (result != er_ok)
             break;
 
+        if (result == 0)
+        {
+            result = er_closed;
+            break;
+        }
+
+        result = er_ok;
         log_debug(sock->log, "Recvfrom: %zu bytes...", buf_len);
         break;
-    } while (0);
+    }
+    while (0);
 
     if (result != er_ok)
         buf_len = 0;
@@ -461,8 +464,7 @@ static int32_t pal_socket_on_recv(
     int32_t result
 )
 {
-    int os_flags = 0;
-    int32_t flags;
+    int32_t flags = 0;
     uint8_t* buffer;
     size_t buf_len;
     void* context;
@@ -490,7 +492,7 @@ static int32_t pal_socket_on_recv(
         if (result != er_ok)
             break;
 
-        result = recv(sock->sock_fd, (char*)buffer, (int)buf_len, os_flags);
+        result = recv(sock->sock_fd, (char*)buffer, (int)buf_len, 0);
         if (result < 0)
         {
             result = pal_os_last_net_error_as_prx_error();
@@ -499,23 +501,23 @@ static int32_t pal_socket_on_recv(
                 log_error(sock->log, "Recv error %s.",
                     prx_err_string(result));
             }
+            buf_len = 0;
             break;
-        }
-        else
-        {
-            buf_len = result;
-            result = er_ok;
         }
 
-        result = pal_os_to_prx_message_flags(os_flags, &flags);
-        if (result != er_ok)
+        buf_len = result;
+
+        if (result == 0)
+        {
+            result = er_closed;
             break;
+        }
+
+        result = er_ok;
         log_debug(sock->log, "Recv: %zu bytes...", buf_len);
         break;
-    } while (0);
-
-    if (result != er_ok)
-        buf_len = 0;
+    }
+    while (0);
 
     sock->itf.cb(sock->itf.context, pal_socket_event_end_recv,
         &buffer, &buf_len, NULL, &flags, result, &context);
@@ -574,24 +576,31 @@ static int32_t pal_socket_on_send(
         if (result < 0)
         {
             result = pal_os_last_net_error_as_prx_error();
-            if (result != er_retry)
+            // when we were connected, and now get refused, assume we are closed
+            if (result == er_refused)
+                result = er_closed;
+            else if (result != er_retry)
             {
                 log_error(sock->log, "Send error %s.",
                 prx_err_string(result));
             }
+            buf_len = 0;
             break;
         }
-        else
+
+        buf_len = result;
+
+        if (result == 0)
         {
-            buf_len = result;
-            result = er_ok;
+            result = er_closed;
+            break;
         }
+
+        result = er_ok;
         log_debug(sock->log, "Send: %zu bytes ...", buf_len);
         break;
-    } while (0);
-
-    if (result != er_ok)
-        buf_len = 0;
+    }
+    while (0);
 
     sock->itf.cb(sock->itf.context, pal_socket_event_end_send,
         &buffer, &buf_len, NULL, NULL, result, &context);
@@ -659,16 +668,23 @@ static int32_t pal_socket_on_sendto(
                 log_error(sock->log, "Sendto error %s.",
                     prx_err_string(result));
             }
+            buf_len = 0;
             break;
         }
-        else
+
+        buf_len = result;
+
+        if (result == 0)
         {
-            buf_len = result;
-            result = er_ok;
+            result = er_closed;
+            break;
         }
+
+        result = er_ok;
         log_debug(sock->log, "Sendto: %zu bytes ...", buf_len);
         break;
-    } while (0);
+    }
+    while (0);
 
     if (result != er_ok)
         buf_len = 0;
@@ -720,7 +736,7 @@ static int32_t pal_socket_connect(
         if (error < 0)
         {
             result = pal_os_last_net_error_as_prx_error();
-            if (result == er_waiting)
+            if (result == er_waiting || result == er_retry)
             {
                 result = pal_event_select(sock->event_handle,
                     pal_event_type_write);
@@ -792,7 +808,7 @@ static int32_t pal_socket_bind(
 
         if (sock->itf.props.sock_type == prx_socket_type_dgram ||
             sock->itf.props.sock_type == prx_socket_type_raw)
-            break;
+            break; // Not tcp, so we are done.
 
         dbg_assert(0 != (sock->itf.props.flags & prx_socket_flag_passive),
             "should be passive");
@@ -845,7 +861,27 @@ static int32_t pal_socket_try_open(
             result = pal_os_last_net_error_as_prx_error();
             break;
         }
+
         log_trace(sock->log, "Socket created ... (fd:%d)", sock->sock_fd);
+#if defined(SO_BINDTODEVICE)
+        if (sock->itf_name)
+        {
+            // Bind thios socket to device
+            result = setsockopt(sock->sock_fd, SOL_SOCKET, SO_BINDTODEVICE,
+                sock->itf_name, strlen(sock->itf_name));
+            if (result == 0)
+            {
+                log_info(sock->log, "Socket bound to %s.", sock->itf_name);
+                mem_free(sock->itf_name);
+                sock->itf_name = NULL;
+            }
+            else
+            {
+                // Eat this error - this can happen if adapter does not
+                // exist or proxy does not have caps set to do this.
+            }
+        }
+#endif
 
 #if defined(ASYNC_CONNECT)
         // This will make socket nonblocking
@@ -1025,9 +1061,11 @@ static int32_t pal_socket_open_by_addr(
 // Open a new socket based on properties passed during create
 //
 int32_t pal_socket_open(
-    pal_socket_t *sock
+    pal_socket_t *sock,
+    const char* itf_name
 )
 {
+    int32_t result;
     chk_arg_fault_return(sock);
 
     dbg_assert(!sock->prx_ai_cur && !sock->prx_ai_count && !sock->prx_ai,
@@ -1037,10 +1075,18 @@ int32_t pal_socket_open(
 
     sock->retry_connect = true;
     sock->state = pal_socket_state_opening;
+
+    if (itf_name)
+    {
+        result = string_clone(itf_name, &sock->itf_name);
+        if (result != er_ok)
+            return result;
+    }
+
     if (sock->itf.props.address.un.family == prx_address_family_proxy)
         return pal_socket_open_by_name(sock);
-
-    return pal_socket_open_by_addr(sock);
+    else
+        return pal_socket_open_by_addr(sock);
 }
 
 //
@@ -1505,6 +1551,10 @@ void pal_socket_free(
     if (!sock)
         return;
     dbg_assert(sock->sock_fd == _invalid_fd, "socket still open");
+
+    if (sock->itf_name)
+        mem_free(sock->itf_name);
+
     mem_free_type(pal_socket_t, sock);
 }
 
@@ -1529,7 +1579,7 @@ int32_t pal_socket_init(
 
     chk_arg_fault_return(caps);
 
-    result = pal_event_port_create(&event_port);
+    result = pal_event_port_create(NULL, NULL, &event_port);
     if (result != er_ok)
     {
         log_error(NULL, "FATAL: Failed creating event port.");
@@ -1553,7 +1603,6 @@ void pal_socket_deinit(
     if (event_port)
     {
         pal_event_port_close(event_port);
-
         tlsio_openssl_deinit();
     }
     event_port = 0;

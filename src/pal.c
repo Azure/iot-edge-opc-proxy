@@ -15,6 +15,7 @@
 #include "pal_sk.h"
 #include "pal_time.h"
 #include "pal_rand.h"
+#include "pal_scan.h"
 #include "pal_cred.h"
 
 static uint32_t capabilities = pal_not_init;
@@ -97,14 +98,25 @@ int32_t pal_init(
 
         // Initialize socket
         result = pal_socket_init(&capabilities);
-        if (result != er_ok)
+        if (result == er_ok)
+            capabilities |= pal_cap_sockets;
+        else
         {
             log_error(NULL, "Failed to init socket pal (%s).",
                 prx_err_string(result));
             break;
         }
 
-        capabilities |= pal_cap_sockets;
+        // Initialize networking scanning
+        result = pal_scan_init();
+        if (result == er_ok)
+            capabilities |= pal_cap_scan;
+        else if (result != er_not_supported)
+        {
+            log_error(NULL, "Failed to init net scanning pal (%s).",
+                prx_err_string(result));
+            break;
+        }
 
         // Initialize web socket functionality
         result = pal_wsclient_init();
@@ -157,6 +169,9 @@ int32_t pal_deinit(
 
     if (capabilities & pal_cap_wsclient)
         pal_wsclient_deinit();
+
+    if (capabilities & pal_cap_scan)
+        pal_scan_deinit();
 
     if (capabilities & pal_cap_sockets)
         pal_socket_deinit();

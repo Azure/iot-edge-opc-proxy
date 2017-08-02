@@ -25,11 +25,22 @@ typedef enum io_browse_request_type
 
     io_browse_request_resolve,     // Resolve string to address
     io_browse_request_service,               // Browse services
-    io_browse_request_dirpath             // Recurse a dir path
+    io_browse_request_dirpath,            // Recurse a dir path
+    io_browse_request_ipscan,                   // Scan network
+    io_browse_request_portscan      // Scan host for open ports
 
     // ...
 }
 io_browse_request_type_t;
+
+//
+// Flags determine aspects of request
+//
+typedef enum io_browse_request_flags
+{
+    io_browse_response_cache_only = 0x1    // Only browse cache
+}
+io_browse_request_flags_t;
 
 //
 // Browse service request
@@ -46,7 +57,7 @@ typedef struct io_browse_request
 io_browse_request_t;
 
 //
-// Flags determine aspects of request and response
+// Flags determine aspects of response
 //
 typedef enum io_browse_response_flags
 {

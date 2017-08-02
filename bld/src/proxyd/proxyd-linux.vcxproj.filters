@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{66a22f1d-2ddb-4484-a0c1-328662f22074}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{aeae9b99-db73-4abe-a539-f63178d3c7cd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\shared">
+      <UniqueIdentifier>{0e67d73f-7b62-4c92-8ec5-edaf7f948449}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\shared">
+      <UniqueIdentifier>{fdec9e49-6a3a-4b6e-aa7c-f4f3255fa135}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\inc\pal.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_cred.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_err.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_ev.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_file.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_mt.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_net.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_proc.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_rand.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_sd.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_sk.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_types.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_ws.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\deps\shared\adapters\linux_time.h">
+      <Filter>inc\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\inc\pal_time.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\src\pal\pal_cred_stub.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_err_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_ev_epoll.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_file_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_mt_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_net_linux.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_net_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_proc_linux.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_rand_openssl.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_scan_linux.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_sk_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_time_posix.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\adapters\condition_pthreads.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\adapters\httpapi_curl.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\adapters\lock_pthreads.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\adapters\threadapi_pthreads.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\src\tlsio_openssl.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\src\x509_openssl.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\deps\shared\adapters\linux_time.c">
+      <Filter>src\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_sd_stub.c">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\src\pal\pal_ws_stub.c">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>

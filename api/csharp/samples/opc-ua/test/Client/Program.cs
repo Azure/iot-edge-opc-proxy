@@ -220,37 +220,56 @@ Operations (Mutually exclusive):
                 Console.WriteLine("    WARN: missing application certificate, using unsecure connection.");
             }
 
-            if (op == Op.All || op == Op.Reconnect) {
-                int reconnectLoops = op == Op.All ? 1 : count;
-                for (int i = 1; i <= reconnectLoops; i++) {
+            int reconnectLoops = op == Op.All ? 1 : count;
+            for (int i = 1; i <= reconnectLoops; i++) {
 
-                    Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
-                    Uri endpointURI = new Uri(endpointURL);
-                    var endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
-                    var selectedEndpoint = SelectUaTcpEndpoint(endpointCollection, haveAppCertificate);
-                    Console.WriteLine("    Selected endpoint uses: {0}",
-                        selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
+                Console.WriteLine("2 - Discover endpoints of {0}.", endpointURL);
+                Uri endpointURI = new Uri(endpointURL);
+                var endpointCollection = DiscoverEndpoints(config, endpointURI, 10);
+                var selectedEndpoint = SelectUaTcpEndpoint(endpointCollection, haveAppCertificate);
+                Console.WriteLine("    Selected endpoint uses: {0}",
+                    selectedEndpoint.SecurityPolicyUri.Substring(selectedEndpoint.SecurityPolicyUri.LastIndexOf('#') + 1));
 
-                    Console.WriteLine("3 - Create session with OPC UA server.");
-                    var endpointConfiguration = EndpointConfiguration.Create(config);
-                    var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
-                    endpoint.Update(selectedEndpoint);
-                    var session = await CreateSessionAsync(config, endpoint);
+                Console.WriteLine("3 - Create session with OPC UA server.");
+                var endpointConfiguration = EndpointConfiguration.Create(config);
+                var endpoint = new ConfiguredEndpoint(selectedEndpoint.Server, endpointConfiguration);
+                endpoint.Update(selectedEndpoint);
+                var session = await CreateSessionAsync(config, endpoint);
 
-                    if (op == Op.All || op == Op.Browse) {
-                        Console.WriteLine("4 - Browse the OPC UA server namespace.");
-                        int j = 0;
+                if (op == Op.All || op == Op.Browse) {
+                    Console.WriteLine("4 - Browse the OPC UA server namespace.");
+                    int j = 0;
 
-                        while (true) {
-                            Stopwatch w = Stopwatch.StartNew();
-                            byte[] continuationPoint;
-                            ReferenceDescriptionCollection references;
+                    while (true) {
+                        Stopwatch w = Stopwatch.StartNew();
+                        byte[] continuationPoint;
+                        ReferenceDescriptionCollection references;
 
-                            var stack = new Stack<Tuple<string, ReferenceDescription>>();
+                        var stack = new Stack<Tuple<string, ReferenceDescription>>();
+                        session.Browse(
+                            null,
+                            null,
+                            ObjectIds.ObjectsFolder,
+                            0u,
+                            BrowseDirection.Forward,
+                            ReferenceTypeIds.HierarchicalReferences,
+                            true,
+                            (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
+                            out continuationPoint,
+                            out references);
+
+                        Console.WriteLine(" DisplayName, BrowseName, NodeClass");
+                        references.Reverse();
+                        foreach (var rd in references) {
+                            stack.Push(Tuple.Create("", rd));
+                        }
+
+                        while (stack.Count > 0) {
+                            var browsed = stack.Pop();
                             session.Browse(
                                 null,
                                 null,
-                                ObjectIds.ObjectsFolder,
+                                ExpandedNodeId.ToNodeId(browsed.Item2.NodeId, session.NamespaceUris),
                                 0u,
                                 BrowseDirection.Forward,
                                 ReferenceTypeIds.HierarchicalReferences,
@@ -259,70 +278,47 @@ Operations (Mutually exclusive):
                                 out continuationPoint,
                                 out references);
 
-                            Console.WriteLine(" DisplayName, BrowseName, NodeClass");
                             references.Reverse();
                             foreach (var rd in references) {
-                                stack.Push(Tuple.Create("", rd));
+                                stack.Push(Tuple.Create(browsed.Item1 + "   ", rd));
                             }
-
-                            while (stack.Count > 0) {
-                                var browsed = stack.Pop();
-                                session.Browse(
-                                    null,
-                                    null,
-                                    ExpandedNodeId.ToNodeId(browsed.Item2.NodeId, session.NamespaceUris),
-                                    0u,
-                                    BrowseDirection.Forward,
-                                    ReferenceTypeIds.HierarchicalReferences,
-                                    true,
-                                    (uint)NodeClass.Variable | (uint)NodeClass.Object | (uint)NodeClass.Method,
-                                    out continuationPoint,
-                                    out references);
-
-                                references.Reverse();
-                                foreach (var rd in references) {
-                                    stack.Push(Tuple.Create(browsed.Item1 + "   ", rd));
-                                }
-                                Console.WriteLine($"{browsed.Item1}{(references.Count == 0 ? "-" : "+")} "+
-                                    $"{browsed.Item2.DisplayName}, {browsed.Item2.BrowseName}, {browsed.Item2.NodeClass}");
-                            }
-                            Console.WriteLine($"   ....        took {w.ElapsedMilliseconds} ms...");
-                            if (++j <= count)
-                                break;
-
-                            // Reconnect
-                            session.Close();
-                            session = await CreateSessionAsync(config, endpoint);
+                            Console.WriteLine($"{browsed.Item1}{(references.Count == 0 ? "-" : "+")} "+
+                                $"{browsed.Item2.DisplayName}, {browsed.Item2.BrowseName}, {browsed.Item2.NodeClass}");
                         }
+                        Console.WriteLine($"   ....        took {w.ElapsedMilliseconds} ms...");
+                        if (++j <= count)
+                            break;
+
+                        // Reconnect
+                        session.Close();
+                        session = await CreateSessionAsync(config, endpoint);
                     }
-
-                    if (op == Op.All || op == Op.Subscribe) {
-
-                        notificationCount = new SemaphoreSlim(count);
-
-                        Console.WriteLine("5 - Create a subscription with publishing interval of 1 second.");
-                        var subscription = new Subscription(session.DefaultSubscription) { PublishingInterval = 1000 };
-
-                        Console.WriteLine("6 - Add a list of items (server current time and status) to the subscription.");
-                        var list = new List<MonitoredItem> {
-                            new MonitoredItem(subscription.DefaultItem) {
-                                DisplayName = "ServerStatusCurrentTime", StartNodeId = "i=2258"
-                            }
-                        };
-                        list.ForEach(m => m.Notification += OnNotification);
-                        subscription.AddItems(list);
-
-                        Console.WriteLine("7 - Add the subscription to the session.");
-                        session.AddSubscription(subscription);
-                        subscription.Create();
-
-                        await notificationCount.WaitAsync();
-                        subscription.Delete(false);
-                        subscription.Dispose();
-                    }
-
-                    session.Close();
                 }
+
+                if (op == Op.All || op == Op.Subscribe) {
+
+                    Console.WriteLine("5 - Create a subscription with publishing interval of 1 second.");
+                    var subscription = new Subscription(session.DefaultSubscription) { PublishingInterval = 1000 };
+
+                    Console.WriteLine("6 - Add a list of items (server current time and status) to the subscription.");
+                    var list = new List<MonitoredItem> {
+                        new MonitoredItem(subscription.DefaultItem) {
+                            DisplayName = "ServerStatusCurrentTime", StartNodeId = "i=2258"
+                        }
+                    };
+                    list.ForEach(m => m.Notification += OnNotification);
+                    subscription.AddItems(list);
+
+                    Console.WriteLine("7 - Add the subscription to the session.");
+                    session.AddSubscription(subscription);
+                    subscription.Create();
+
+                    await Task.Delay(1000 * (count + 1));
+                    subscription.Delete(false);
+                    subscription.Dispose();
+                }
+
+                session.Close();
             }
         }
 
@@ -338,13 +334,10 @@ Operations (Mutually exclusive):
             return session;
         }
 
-
-        static SemaphoreSlim notificationCount;
         private static void OnNotification(MonitoredItem item, MonitoredItemNotificationEventArgs e) {
             foreach (var value in item.DequeueValues()) {
                 Console.WriteLine("{0}: {1}, {2}, {3}", item.DisplayName, value.Value, value.SourceTimestamp, value.StatusCode);
             }
-            notificationCount.Release();
         }
 
         private static void CertificateValidator_CertificateValidation(CertificateValidator validator,

@@ -56,10 +56,9 @@ struct sockaddr_un
 // Implemented in pal_sk_win
 int socketpair(int, int, int, fd_t sv[2]);
 
-__inline int _fd_nonblock(fd_t fd, int r)
+__inline int _fd_nonblock(fd_t fd)
 {
     u_long on = 1;
-    (void)r;
     return ioctlsocket(fd, FIONBIO, &on);
 }
 

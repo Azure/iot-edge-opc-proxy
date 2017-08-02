@@ -50,12 +50,15 @@ typedef long long ticks_t;
 #endif
 
 #include <fcntl.h>
-#define _fd_nonblock(fd, r) \
-    r = fcntl(fd, F_GETFL, 0); \
-    if (r != -1) { \
-        r |= O_NONBLOCK; \
-        r = fcntl(fd, F_SETFL, r); \
+
+static inline int _fd_nonblock(fd_t fd)
+{
+    int r = fcntl(fd, F_GETFL, 0);
+    if (r != -1) {
+        r |= O_NONBLOCK;
+        r = fcntl(fd, F_SETFL, r);
     }
+}
 
 #define closesocket close
 

@@ -7,6 +7,7 @@ if (NOT CMAKE_CROSSCOMPILING)
     add_executable(libproxy-it
         ${_PROJECT_ROOT}/test/it/sd.c
         ${_PROJECT_ROOT}/test/it/ns.c
+        ${_PROJECT_ROOT}/test/it/scan.c
         ${_PROJECT_ROOT}/test/it/main.c
     )
     set_target_properties(libproxy-it PROPERTIES FOLDER it)

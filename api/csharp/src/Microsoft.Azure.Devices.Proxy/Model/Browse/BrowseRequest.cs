@@ -32,12 +32,14 @@ namespace Microsoft.Azure.Devices.Proxy {
         public Byte Version { get; internal set; } = BROWSE_VERSION;
 
         //
-        // Type of request - service, address resolver, folders
+        // Type of request - service, address resolver, folders, etc.
         //
         public static readonly int Cancel = 0;  // Cancel request with handle
         public static readonly int Resolve = 1;    // Resolve host to address
         public static readonly int Service = 2;            // Browse services
         public static readonly int Dirpath = 3;         // Recurse a dir path
+        public static readonly int IpScan = 4;                // Scan network
+        public static readonly int PortScan = 5;  // Scan host for open ports
 
         /// <summary>
         /// Type of request

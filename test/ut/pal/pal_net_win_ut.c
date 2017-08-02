@@ -32,7 +32,7 @@ MOCKABLE_FUNCTION(WSAAPI, int, WSAIoctl, SOCKET, s, DWORD, dwIoControlCode, LPVO
     DWORD, cbInBuffer, LPVOID, lpvOutBuffer, DWORD, cbOutBuffer, LPDWORD, lpcbBytesReturned,
     LPWSAOVERLAPPED, lpOverlapped, LPWSAOVERLAPPED_COMPLETION_ROUTINE, lpCompletionRoutine);
 MOCKABLE_FUNCTION(WSAAPI, int, WSACleanup);
-//iphlpapi.h
+// iphlpapi.h
 MOCKABLE_FUNCTION(WINAPI, ULONG, GetAdaptersAddresses,
     ULONG, Family, ULONG, Flags, PVOID, Reserved, PIP_ADAPTER_ADDRESSES, AdapterAddresses,
     PULONG, SizePointer);

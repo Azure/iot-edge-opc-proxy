@@ -57,6 +57,8 @@ TEST_FUNCTION(pal_init__success_1)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init(&capabilities))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_scan_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_ok);
 
@@ -67,7 +69,7 @@ TEST_FUNCTION(pal_init__success_1)
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities ==
-        (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file | pal_cap_wsclient));
+        (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file | pal_cap_scan | pal_cap_wsclient ));
 }
 
 //
@@ -116,6 +118,8 @@ TEST_FUNCTION(pal_init__success_3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init(&capabilities))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_scan_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_not_supported);
 
@@ -126,7 +130,7 @@ TEST_FUNCTION(pal_init__success_3)
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
     ASSERT_IS_TRUE(capabilities ==
-        (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file));
+        (pal_cap_sockets | pal_cap_cred | pal_cap_net | pal_cap_dnssd | pal_cap_file | pal_cap_scan));
 }
 
 //
@@ -155,6 +159,8 @@ TEST_FUNCTION(pal_init__success_4)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init(&capabilities))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_scan_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_not_supported);
 
@@ -164,7 +170,7 @@ TEST_FUNCTION(pal_init__success_4)
     // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
-    ASSERT_IS_TRUE(capabilities == (pal_cap_sockets | pal_cap_net | pal_cap_dnssd | pal_cap_file));
+    ASSERT_IS_TRUE(capabilities == (pal_cap_sockets | pal_cap_net | pal_cap_dnssd | pal_cap_file | pal_cap_scan));
 }
 
 //
@@ -270,8 +276,11 @@ TEST_FUNCTION(pal_init__neg_3)
         .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_socket_init(&capabilities))
         .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(pal_scan_init())
+        .SetReturn(er_ok);
     STRICT_EXPECTED_CALL(pal_wsclient_init())
         .SetReturn(er_fatal);
+    STRICT_EXPECTED_CALL(pal_scan_deinit());
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_sd_deinit());
     STRICT_EXPECTED_CALL(pal_net_deinit());
@@ -360,6 +369,7 @@ TEST_FUNCTION(pal_deinit__success_1)
 
     // arrange
     STRICT_EXPECTED_CALL(pal_wsclient_deinit());
+    STRICT_EXPECTED_CALL(pal_scan_deinit());
     STRICT_EXPECTED_CALL(pal_socket_deinit());
     STRICT_EXPECTED_CALL(pal_sd_deinit());
     STRICT_EXPECTED_CALL(pal_net_deinit());

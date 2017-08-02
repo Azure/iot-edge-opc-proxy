@@ -2201,7 +2201,8 @@ static void prx_server_handle_linkrequest(
             }
 
             // Now connect or bind socket using the address provided in socket properties
-            result = pal_socket_open(server_sock->sock);
+            result = pal_socket_open(server_sock->sock,
+                __prx_config_get(prx_config_key_bind_device, NULL));
             if (result != er_ok)
             {
                 log_error(server->log, "Failed to open client socket handle (%s)",

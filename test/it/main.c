@@ -44,14 +44,14 @@ int tests(const char* arg, int argc, char *argv[])
 {
 #undef __decl_test
 #define __decl_test(name, arg, usage) \
-    if (!arg) \
-        printf(" %15.15s  %s", #name, usage); \
-    if (!strcmp(arg, #name)) { \
+    if (!arg)  { \
+        printf(" %15.15s  %s\n", #name, usage); \
+    } \
+    else if (!strcmp(arg, #name)) { \
         return main_##name (argc, argv); \
     }
 #include "tests.h"
 #undef __decl_test
-    tests(NULL, 0, NULL);  // Show help
     return -1;
 }
 

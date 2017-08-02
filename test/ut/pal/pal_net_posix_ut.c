@@ -2874,7 +2874,7 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_host_length_invalid)
 
     // assert
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 //
@@ -2899,7 +2899,7 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_service_null)
 
     // assert
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 //
@@ -2924,7 +2924,7 @@ TEST_FUNCTION(pal_posix_getnameinfo__arg_service_length_invalid)
 
     // assert
     ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+    ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 //

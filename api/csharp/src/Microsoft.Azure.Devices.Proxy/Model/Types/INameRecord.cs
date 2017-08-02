@@ -20,6 +20,13 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Domain
+        /// </summary>
+        string Domain {
+            get; set;
+        }
+
+        /// <summary>
         /// Address of the record
         /// </summary>
         Reference Address {

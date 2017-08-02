@@ -14,6 +14,8 @@
 #include "pal.h"
 #include "pal_mt.h"
 #include "pal_sd.h"
+#include "pal_scan.h"
+#include "pal_net.h"
 #include "pal_file.h"
 
 #include "hashtable.h"
@@ -31,6 +33,7 @@ struct prx_browse_server
     lock_t sessions_lock;
                    // Client handles to browsable objects in the pal, etc.
     bool allow_fs_browse;           // Whether to allow file system browse
+    bool supports_scan;       // Whether port and ip scanning is supported
     pal_sdclient_t* sdclient;                     // Service browse client
     bool destroy;                             // Set to free browse server
     log_t log;
@@ -69,6 +72,7 @@ typedef struct prx_browse_stream
     prx_browse_session_t* session;               // Owning browser session
     io_ref_t handle;                                     // session handle
     pal_sdbrowser_t* sdbrowser;              // Proxied sd browser browser
+    pal_scan_t* scan;                         // If stream contains a scan
 }
 prx_browse_stream_t;
 
@@ -96,6 +100,9 @@ static void prx_browse_stream_free(
 
     if (stream->sdbrowser)
         pal_sdbrowser_free(stream->sdbrowser);
+
+    if (stream->scan)
+        pal_scan_close(stream->scan);
 
     // ...
 
@@ -374,6 +381,182 @@ static void prx_browse_session_handle_unknown_request(
 }
 
 //
+// Called for found ports and addresses
+//
+static void prx_browse_session_handle_scan_response(
+    void *context,
+    uint64_t itf_index,
+    int32_t error,
+    prx_socket_address_t *addr,
+    const char* host_name
+)
+{
+    io_browse_response_t browse_response;
+    prx_property_t prop;
+    prx_browse_stream_t* stream = (prx_browse_stream_t*)context;
+
+    (void)itf_index;
+    dbg_assert_ptr(context);
+
+    memset(&browse_response, 0, sizeof(io_browse_response_t));
+    io_ref_copy(&stream->handle, &browse_response.handle);
+
+    if (error != er_ok)
+    {
+        browse_response.flags |= io_browse_response_eos;
+        if (error != er_nomore)
+            browse_response.error_code = error;
+    }
+    if (addr)
+        memcpy(&browse_response.item, addr, sizeof(prx_socket_address_t));
+    else
+    {
+        browse_response.flags |= io_browse_response_empty;
+        browse_response.flags |= io_browse_response_allfornow;
+    }
+    if (host_name)
+    {
+        browse_response.props_size = 1;
+        browse_response.props = &prop;
+        prop.type = prx_record_type_default;
+        prop.property.bin.value = (uint8_t*)host_name;
+        prop.property.bin.size = strlen(host_name) + 1;
+    }
+    prx_browse_session_send_response(stream->session, &browse_response);
+}
+
+//
+// Create or update a port scanning session
+//
+static void prx_browse_session_handle_portscan_request(
+    prx_browse_session_t* session,
+    io_browse_request_t* browse_request
+)
+{
+    int32_t result;
+    prx_browse_stream_t* stream = NULL;
+    uint16_t port_start;
+    uint16_t port_end;
+    prx_addrinfo_t* info = NULL;
+    size_t info_count;
+
+    dbg_assert_ptr(session);
+    dbg_assert_ptr(browse_request);
+    dbg_assert_is_task(session->scheduler);
+    do
+    {
+        if (!session->server->supports_scan)
+        {
+            // ip scanning is not supported
+            prx_browse_session_handle_unknown_request(session, browse_request);
+            return;
+        }
+
+        // Now get or create the stream for this handle
+        result = prx_browse_session_get_or_create_request(session,
+            &browse_request->handle, &stream);
+        if (result != er_ok)
+            break;
+
+        // Parse and validate host string
+        if (browse_request->item.un.family != prx_address_family_proxy &&
+            browse_request->item.un.family != prx_address_family_inet &&
+            browse_request->item.un.family != prx_address_family_inet6)
+            port_start = 0;
+        else
+            port_start = browse_request->item.un.ip.port;
+
+        port_end = (uint16_t)-1;  // todo: Through upper 16 bit of flags?
+
+        if (browse_request->item.un.family == prx_address_family_proxy)
+        {
+            // Convert to ip address
+            result = pal_getaddrinfo(
+                prx_socket_address_proxy_get_host(&browse_request->item.un.proxy),
+                NULL, prx_address_family_unspec, 0, &info, &info_count);
+            if (result != er_ok)
+                break;
+            if (info_count == 0)
+            {
+                prx_browse_session_handle_scan_response(stream, 0, er_nomore, NULL, NULL);
+                pal_freeaddrinfo(info);
+                return;
+            }
+            result = pal_scan_ports(&info[0].address, port_start, port_end, 0,
+                prx_browse_session_handle_scan_response, stream, &stream->scan);
+            pal_freeaddrinfo(info);
+        }
+        else
+        {
+            result = pal_scan_ports(&browse_request->item, port_start, port_end, 0,
+                prx_browse_session_handle_scan_response, stream, &stream->scan);
+        }
+        if (result != er_ok)
+            break;
+        return;
+    }
+    while (0);
+
+    log_error(session->log, "Failed scanning host (%s)", prx_err_string(result));
+    prx_browse_session_send_error_response(session, &browse_request->handle, result);
+    if (stream)
+        prx_browse_session_close_request(session, &stream->handle);
+}
+
+//
+// Create or update a ip scanning session
+//
+static void prx_browse_session_handle_ipscan_request(
+    prx_browse_session_t* session,
+    io_browse_request_t* browse_request
+)
+{
+    int32_t result;
+    prx_browse_stream_t* stream = NULL;
+    uint16_t port;
+
+    dbg_assert_ptr(session);
+    dbg_assert_ptr(browse_request);
+    dbg_assert_is_task(session->scheduler);
+    do
+    {
+        if (!session->server->supports_scan)
+        {
+            // ip scanning is not supported
+            prx_browse_session_handle_unknown_request(session, browse_request);
+            return;
+        }
+
+        // Now get or create the stream for this handle
+        result = prx_browse_session_get_or_create_request(session,
+            &browse_request->handle, &stream);
+        if (result != er_ok)
+            break;
+
+        // Parse and validate host string
+        if (browse_request->item.un.family != prx_address_family_proxy &&
+            browse_request->item.un.family != prx_address_family_inet &&
+            browse_request->item.un.family != prx_address_family_inet6)
+            port = 0;
+        else
+            port = browse_request->item.un.ip.port;
+
+        result = pal_scan_net(port, browse_request->flags & io_browse_response_cache_only ?
+            pal_scan_cache_only : 0, prx_browse_session_handle_scan_response, stream,
+            &stream->scan);
+        if (result != er_ok)
+            break;
+        return;
+    }
+    while (0);
+
+    log_error(session->log, "Failed scanning network (%s)", prx_err_string(result));
+    prx_browse_session_send_error_response(session, &browse_request->handle, result);
+    if (stream)
+        prx_browse_session_close_request(session, &stream->handle);
+}
+
+//
 // Called for each file
 //
 int32_t prx_browse_session_handle_dirpath_response(
@@ -386,6 +569,8 @@ int32_t prx_browse_session_handle_dirpath_response(
     io_browse_response_t browse_response;
     prx_property_t prop;
     prx_browse_stream_t* stream = (prx_browse_stream_t*)context;
+
+    dbg_assert_ptr(context);
 
     memset(&browse_response, 0, sizeof(io_browse_response_t));
     browse_response.item.un.family = prx_address_family_proxy;
@@ -421,7 +606,7 @@ int32_t prx_browse_session_handle_dirpath_response(
 }
 
 //
-// Create or update int32_tdirectory path browsing session
+// Create or update directory path browsing session
 //
 static void prx_browse_session_handle_dirpath_request(
     prx_browse_session_t* session,
@@ -789,6 +974,12 @@ static void prx_browse_session_process_request(
         break;
     case io_browse_request_dirpath:
         prx_browse_session_handle_dirpath_request(browser, browse_request);
+        break;
+    case io_browse_request_ipscan:
+         prx_browse_session_handle_ipscan_request(browser, browse_request);
+        break;
+    case io_browse_request_portscan:
+       prx_browse_session_handle_portscan_request(browser, browse_request);
         break;
     default:
         prx_browse_session_handle_unknown_request(browser, browse_request);
@@ -1376,18 +1567,20 @@ int32_t prx_browse_server_create(
         if (result != er_ok)
             break;
 
-        if (pal_caps() & pal_cap_dnssd)
-        {
-            result = pal_sdclient_create(prx_browse_server_sdclient_error,
-                server, &server->sdclient);
-            if (result != er_ok)
-                break;
-        }
-
         if (pal_caps() & pal_cap_file)
         {
             if (__prx_config_get_int(prx_config_key_browse_fs, 0))
                 server->allow_fs_browse = true;
+        }
+
+        if (pal_caps() & pal_cap_dnssd)
+        {
+            __do_next(server, prx_browse_server_sdclient_reconnect);
+        }
+
+        if (pal_caps() & pal_cap_scan)
+        {
+            server->supports_scan = true;
         }
 
         *created = server;

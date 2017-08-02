@@ -93,7 +93,7 @@ TEST_FUNCTION(pal_nix_kq_event_port_create__success)
         .SetReturn(THREADAPI_OK);
 
     // act
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -110,7 +110,7 @@ TEST_FUNCTION(pal_nix_kq_event_port_create__arg_port_null)
     // arrange
 
     // act
-    result = pal_event_port_create(NULL);
+    result = pal_event_port_create(NULL, NULL, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -150,7 +150,7 @@ TEST_FUNCTION(pal_nix_kq_event_port_create__neg)
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
@@ -171,6 +171,7 @@ TEST_FUNCTION(pal_nix_kq_event_port_close__success_1)
     port_valid.lock = (lock_t)0x1;
     port_valid.kqueue_fd = k_valid_fd;
     port_valid.thread = k_valid_thread_handle;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
@@ -205,6 +206,7 @@ TEST_FUNCTION(pal_nix_kq_event_port_close__success_2)
     port_valid.lock = (lock_t)0x1;
     port_valid.kqueue_fd = k_invalid_fd;
     port_valid.thread = k_valid_thread_handle;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))

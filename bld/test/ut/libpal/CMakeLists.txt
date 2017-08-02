@@ -33,6 +33,10 @@ set(_PAL_UNITS_UNDER_TEST
     pal_net_linux
     pal_net_posix
     pal_net_win
+    pal_net_stub
+    pal_scan_linux
+    pal_scan_stub
+    pal_scan_win
     pal_proc_linux
     pal_proc_posix
     pal_proc_win
