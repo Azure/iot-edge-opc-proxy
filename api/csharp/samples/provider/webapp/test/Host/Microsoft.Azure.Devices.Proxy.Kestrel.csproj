@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Description>A Kestrel based sample stream provider Host for testing.</Description>
     <AssemblyTitle>Kestrel based stream provider sample Host for Azure Device Proxy</AssemblyTitle>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
     <AssemblyName>Client</AssemblyName>
     <OutputType>Exe</OutputType>

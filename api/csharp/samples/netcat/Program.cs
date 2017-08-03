@@ -53,6 +53,8 @@ options:
 
     --relay
      -R      Use relay provider instead of default provider.
+    --websocket
+     -W      Use websocket kestrel provider.
                ");
         }
 
@@ -86,6 +88,7 @@ options:
                                     break;
                                 case "version":
                                 case "relay":
+                                case "websocket":
                                     optc = char.ToUpperInvariant(optl[0]);
                                     break;
                                 case "proxy":
@@ -104,6 +107,9 @@ options:
                                 break;
                             case 'R':
                                 prog.UseRelay = true;
+                                break;
+                            case 'W':
+                                prog.UseWS = true;
                                 break;
                             case '?':
                             case 'h':
@@ -209,6 +215,7 @@ options:
         /// Proxy to connect through
         /// </summary>
         internal SocketAddress Proxy { get; set; }
+        public Boolean UseWS { get; private set; }
 
         /// <summary>
         /// Validate all properties
@@ -231,6 +238,9 @@ options:
 
             if (UseRelay) {
                 Socket.Provider = await Provider.RelayProvider.CreateAsync();
+            }
+            else if (UseWS) {
+                Provider.WebSocketProvider.Create();
             }
 
             foreach (int port in Ports) {

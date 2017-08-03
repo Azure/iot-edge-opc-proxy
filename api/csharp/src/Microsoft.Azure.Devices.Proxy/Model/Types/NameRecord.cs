@@ -23,9 +23,17 @@ namespace Microsoft.Azure.Devices.Proxy {
         }
 
         /// <summary>
+        /// Domain of the record
+        /// </summary>
+        [DataMember(Name = "domain", Order = 2)]
+        public string Domain {
+            get; set;
+        }
+
+        /// <summary>
         /// Address of entry
         /// </summary>
-        [DataMember(Name = "addr", Order = 2)]
+        [DataMember(Name = "addr", Order = 3)]
         public Reference Address {
             get; set;
         }
@@ -33,7 +41,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Connection string for the entry
         /// </summary>
-        [DataMember(Name = "cs", Order = 3)]
+        [DataMember(Name = "cs", Order = 4)]
         public string ConnectionString {
             get; set;
         }
@@ -41,7 +49,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Type of entry
         /// </summary>
-        [DataMember(Name = "type", Order = 4)]
+        [DataMember(Name = "type", Order = 5)]
         public NameRecordType Type {
             get; set;
         }
@@ -49,7 +57,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Id of entry
         /// </summary>
-        [DataMember(Name = "id", Order = 5)]
+        [DataMember(Name = "id", Order = 6)]
         public string Id {
             get; set;
         }
@@ -57,7 +65,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// References for this entry to support serializing
         /// </summary>
-        [DataMember(Name = "references", Order = 6)]
+        [DataMember(Name = "references", Order = 7)]
         public HashSet<Reference> ReferenceSet {
             get; set;
         } = new HashSet<Reference>();
@@ -65,7 +73,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <summary>
         /// Time this record was last seen
         /// </summary>
-        [DataMember(Name = "last_activity", Order = 7)]
+        [DataMember(Name = "last_activity", Order = 8)]
         public DateTime LastActivity {
             get; set;
         } = DateTime.Now;
@@ -93,6 +101,7 @@ namespace Microsoft.Azure.Devices.Proxy {
             Type = record.Type;
             Id = record.Id;
             Name = record.Name;
+            Domain = record.Domain;
             LastActivity = record.LastActivity;
             ReferenceSet.AddRange(record.References);
         }
@@ -102,10 +111,12 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <param name="type"></param>
         /// <param name="name"></param>
+        /// <param name="domain"></param>
         /// <param name="address"></param>
-        public NameRecord(NameRecordType type, string name, Reference address = null) {
+        public NameRecord(NameRecordType type, string name, string domain = null, Reference address = null) {
             Name = name;
             Id = name;
+            Domain = domain;
             Address = address ?? new Reference();
             Type = type;
         }
@@ -135,6 +146,7 @@ namespace Microsoft.Azure.Devices.Proxy {
 
             Type = record.Type;
             Name = record.Name;
+            Domain = record.Domain;
             LastActivity = record.LastActivity;
 
             ReferenceSet.Clear();
@@ -153,13 +165,14 @@ namespace Microsoft.Azure.Devices.Proxy {
                 IsEqual(Type, that.Type) &&
                 IsEqual(Id, that.Id) &&
                 IsEqual(Name, that.Name) &&
+                IsEqual(Domain, that.Domain) &&
                 IsEqual(LastActivity, that.LastActivity) &&
                 ReferenceSet.SetEquals(that.References)
                 ;
         }
 
         public override string ToString() =>
-            $"Record {Id} for {Name} with address {Address}";
+            $"Record {Id} for {Name} {Domain ?? ""} with address {Address}";
 
         public override bool IsEqual(NameRecord that) =>
             Equals(that as INameRecord);

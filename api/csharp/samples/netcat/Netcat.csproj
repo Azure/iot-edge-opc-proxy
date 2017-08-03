@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <Description>A Netcat like client using Azure Device proxy library</Description>
     <AssemblyTitle>PNetcat sample application</AssemblyTitle>
     <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.Azure.Devices.Proxy\Microsoft.Azure.Devices.Proxy.csproj" />
     <ProjectReference Include="..\provider\relay\src\Microsoft.Azure.Devices.Proxy.Relay\Microsoft.Azure.Devices.Proxy.Relay.csproj" />
+    <ProjectReference Include="..\provider\webapp\test\Host\Microsoft.Azure.Devices.Proxy.Kestrel.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

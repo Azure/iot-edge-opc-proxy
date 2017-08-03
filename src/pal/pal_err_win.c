@@ -81,7 +81,7 @@ int32_t pal_os_last_error_as_prx_error(
     void
 )
 {
-    int32_t error;
+    DWORD error;
     char* message = NULL;
 
     error = GetLastError();

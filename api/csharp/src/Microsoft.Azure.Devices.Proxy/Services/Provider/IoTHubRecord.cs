@@ -19,6 +19,7 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         private const string _addressTag = "address";
         private const string _referencesTag = "references";
         private const string _nameTag = "name";
+        private const string _domainTag = "domain";
         private const string _lastAliveProp = "$metadata.alive.$lastUpdated";
 
         /// <summary>
@@ -51,6 +52,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
         public string Name {
             get => (string)this[_nameTag] ?? "";
             set => this[_nameTag] = value;
+        }
+
+        /// <summary>
+        /// Returns the domain of the record
+        /// </summary>
+        public string Domain {
+            get => (string)this[_domainTag];
+            set => this[_domainTag] = value;
         }
 
         /// <summary>

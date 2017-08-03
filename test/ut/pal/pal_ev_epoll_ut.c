@@ -27,8 +27,6 @@ MOCKABLE_FUNCTION(, sockssize_t, send,
 // unistd.h
 MOCKABLE_FUNCTION(, int, close,
     int, fd);
-MOCKABLE_FUNCTION(, int, fcntl,
-    fd_t, s, int, cmd, int, val);
 
 
 //
@@ -49,6 +47,7 @@ BEGIN_DECLARE_TEST_SUITE()
 REGISTER_UMOCK_ALIAS_TYPE(lock_t, void*);
 REGISTER_UMOCK_ALIAS_TYPE(pal_event_type_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(fd_t, int);
+REGISTER_UMOCK_ALIAS_TYPE(tid_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(sockssize_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(socksize_t, int);
 REGISTER_UMOCK_ALIAS_TYPE(sockbuf_t*, void*);
@@ -99,7 +98,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_create__success)
         .SetReturn(THREADAPI_OK);
 
     // act
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -116,7 +115,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_create__arg_port_null)
     // arrange
 
     // act
-    result = pal_event_port_create(NULL);
+    result = pal_event_port_create(NULL, NULL, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -166,7 +165,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_create__neg)
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
     memset(UT_MEM, 0, sizeof(UT_MEM));
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_out_of_memory, er_out_of_memory, er_fatal);
@@ -188,6 +187,7 @@ TEST_FUNCTION(pal_nix_epoll_event_port_close__success_1)
     port_valid.control_fd[1] = 2;
     port_valid.epoll_fd = k_valid_fd;
     port_valid.thread = k_valid_thread_handle;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(send(1, IGNORED_PTR_ARG, 1, 0))
@@ -223,11 +223,11 @@ TEST_FUNCTION(pal_nix_epoll_event_port_close__success_2)
     pal_epoll_port_t port_valid;
     uintptr_t k_port_valid = (uintptr_t)&port_valid;
 
-
     port_valid.control_fd[0] = k_invalid_fd;
     port_valid.control_fd[1] = k_invalid_fd;
     port_valid.epoll_fd = k_invalid_fd;
     port_valid.thread = k_valid_thread_handle;
+    port_valid.running = true;
 
     // arrange
     STRICT_EXPECTED_CALL(ThreadAPI_Join(k_valid_thread_handle, IGNORED_PTR_ARG))
@@ -435,6 +435,7 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_1)
 
     port_valid.epoll_fd = 2;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
 
     ev_data_valid.events = EPOLLIN;
     ev_data_valid.lock = (lock_t)0x1;
@@ -448,6 +449,10 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_1)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(sizeof(ctl_valid));
@@ -476,6 +481,8 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_2)
 
     port_valid.epoll_fd = 2;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLOUT;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -488,6 +495,10 @@ TEST_FUNCTION(pal_nix_epoll_event_select__success_2)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(sizeof(ctl_valid));
@@ -558,6 +569,8 @@ TEST_FUNCTION(pal_nix_epoll_event_select__neg)
 
     port_valid.epoll_fd = 2;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLIN;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -570,6 +583,10 @@ TEST_FUNCTION(pal_nix_epoll_event_select__neg)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(-1);
@@ -600,6 +617,8 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_1)
 
     port_valid.epoll_fd = 3;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLOUT | EPOLLIN;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -612,6 +631,10 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_1)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(sizeof(ctl_valid));
@@ -640,6 +663,8 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_2)
 
     port_valid.epoll_fd = 3;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLOUT;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -652,6 +677,10 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__success_2)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(sizeof(ctl_valid));
@@ -721,6 +750,8 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__neg)
 
     port_valid.epoll_fd = 3;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLOUT;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -733,6 +764,10 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__neg)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(-1);
@@ -753,6 +788,7 @@ TEST_FUNCTION(pal_nix_epoll_event_clear__neg)
 //
 TEST_FUNCTION(pal_nix_epoll_event_close__success)
 {
+    static const THREAD_HANDLE k_valid_thread_handle = (THREAD_HANDLE)0x33333;
     static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_epoll_port_t port_valid;
@@ -763,6 +799,9 @@ TEST_FUNCTION(pal_nix_epoll_event_close__success)
 
     port_valid.epoll_fd = 3;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.thread = k_valid_thread_handle;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLIN;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -777,6 +816,10 @@ TEST_FUNCTION(pal_nix_epoll_event_close__success)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(sizeof(ctl_valid));
@@ -808,6 +851,7 @@ TEST_FUNCTION(pal_nix_epoll_event_close__arg_event_handle_null)
 //
 TEST_FUNCTION(pal_nix_epoll_event_close__neg)
 {
+    static const THREAD_HANDLE k_valid_thread_handle = (THREAD_HANDLE)0x33333;
     static const fd_t k_socket_valid = (fd_t)0xbaba;
     static const pal_event_type_t k_event_type_valid = pal_event_type_write;
     pal_epoll_port_t port_valid;
@@ -818,6 +862,9 @@ TEST_FUNCTION(pal_nix_epoll_event_close__neg)
 
     port_valid.epoll_fd = 3;
     port_valid.control_fd[0] = k_socket_valid;
+    port_valid.thread = k_valid_thread_handle;
+    port_valid.self = 123;
+
     ev_data_valid.events = EPOLLIN;
     ev_data_valid.lock = (lock_t)0x1;
     ev_data_valid.port = &port_valid;
@@ -832,12 +879,26 @@ TEST_FUNCTION(pal_nix_epoll_event_close__neg)
 
     // arrange
     STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(tid_self())
+        .SetReturn((tid_t)2);
+    STRICT_EXPECTED_CALL(tid_equal(port_valid.self, (tid_t)2))
+        .SetReturn(false);
     STRICT_EXPECTED_CALL(send(k_socket_valid, IGNORED_PTR_ARG, sizeof(pal_epoll_ctl_t), 0))
         .ValidateArgumentBuffer(2, &ctl_valid, sizeof(ctl_valid))
         .SetReturn(-1);
     STRICT_EXPECTED_CALL(pal_os_last_net_error_as_prx_error())
         .SetReturn(er_fatal);
     STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
+
+    STRICT_EXPECTED_CALL(lock_enter((lock_t)0x1));
+    STRICT_EXPECTED_CALL(close(k_socket_valid))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(lock_exit((lock_t)0x1));
+    STRICT_EXPECTED_CALL(lock_free((lock_t)0x1));
+    STRICT_EXPECTED_CALL(pal_event_handler_cb_mock(k_context_valid, pal_event_type_destroy, er_ok))
+        .SetReturn(er_ok);
+    STRICT_EXPECTED_CALL(h_free((void*)&ev_data_valid, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
 
     // act
     pal_event_close(event_handle_valid, true);

@@ -14,6 +14,7 @@
 #if !defined(UNIT_TEST)
 #include "libwebsockets.h"
 #include "openssl/ssl.h"
+#include "openssl/err.h"
 #endif
 
 // Must correspond to libwebsockets max_fds value

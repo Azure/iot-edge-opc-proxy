@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// <param name="item"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task BrowseBeginAsync(ProxySocketAddress item, int type, CancellationToken ct) {
+        public async Task BrowseBeginAsync(SocketAddress item, int type, CancellationToken ct) {
             if (_open.IsCancellationRequested) {
                 throw new SocketException(SocketError.Closed);
             }

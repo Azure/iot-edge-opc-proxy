@@ -82,6 +82,6 @@ decl_neg(r, name, __VA_ARGS__) \
 lr()\
 
 
-#include "pal_sd.h"
+#include "pal_scan.h"
 
 

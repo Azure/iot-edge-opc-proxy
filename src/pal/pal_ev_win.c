@@ -146,11 +146,15 @@ static void CALLBACK pal_wait_for_socket_events_callback(
 // Create event port
 //
 int32_t pal_event_port_create(
+    pal_timeout_handler_t timeout_handler,
+    void* context,
     uintptr_t* port
 )
 {
-    if (!port)
-        return er_fault;
+    chk_arg_fault_return(port);
+    if (timeout_handler)
+        return er_not_supported;
+    (void)context;
     *port = EVENT_PORT_HANDLE;
     return er_ok;
 }
@@ -182,8 +186,8 @@ int32_t pal_event_port_register(
 
     (void)port;
     dbg_assert(port == EVENT_PORT_HANDLE, "Wrong port");
-    if (!event_handle || !cb)
-        return er_fault;
+    chk_arg_fault_return(event_handle);
+    chk_arg_fault_return(cb);
     if (sock == _invalid_fd)
         return er_arg;
 
@@ -239,8 +243,7 @@ int32_t pal_event_select(
 {
     pal_event_data_t* ev_data = (pal_event_data_t*)event_handle;
     long plat_event;
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
     plat_event = pal_socket_to_fd_event_type(event_type);
     if (!plat_event)
         return er_ok;
@@ -280,8 +283,7 @@ int32_t pal_event_clear(
 {
     pal_event_data_t* ev_data = (pal_event_data_t*)event_handle;
     long plat_event = pal_socket_to_fd_event_type(event_type);
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
     if (!plat_event)
         return er_ok;
     if (plat_event == (ev_data->events & plat_event))

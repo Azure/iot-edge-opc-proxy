@@ -323,9 +323,16 @@ typedef const char* (*prx_ns_entry_get_id_t)(
     );
 
 //
-// Provider to return name of entry
+// Provider to return the name of the entry
 //
 typedef const char* (*prx_ns_entry_get_name_t)(
+    void* context
+    );
+
+//
+// Provider to return the domain of the entry
+//
+typedef const char* (*prx_ns_entry_get_domain_t)(
     void* context
     );
 
@@ -393,6 +400,7 @@ struct prx_ns_entry
     prx_ns_entry_get_id_t get_id;
     prx_ns_entry_get_version_t get_version;
     prx_ns_entry_get_name_t get_name;
+    prx_ns_entry_get_domain_t get_domain;
     prx_ns_entry_get_index_t get_index;
     prx_ns_entry_get_addr_t get_addr;
     prx_ns_entry_get_links_t get_links;
@@ -439,7 +447,7 @@ decl_inline_1(const char*, prx_ns_entry_get_id,
 }
 
 //
-// Returns name of entry
+// Returns name of the entry
 //
 decl_inline_1(const char*, prx_ns_entry_get_name,
     prx_ns_entry_t*, entry
@@ -449,6 +457,19 @@ decl_inline_1(const char*, prx_ns_entry_get_name,
         return NULL;
     dbg_assert_ptr(entry->get_name);
     return entry->get_name(entry->context);
+}
+
+//
+// Returns domain of the entry
+//
+decl_inline_1(const char*, prx_ns_entry_get_domain,
+    prx_ns_entry_t*, entry
+)
+{
+    if (!entry)
+        return NULL;
+    dbg_assert_ptr(entry->get_domain);
+    return entry->get_domain(entry->context);
 }
 
 //
@@ -529,10 +550,11 @@ decl_internal_3(int32_t, prx_ns_entry_to_prx_socket_address,
 //
 // Create in memory entry
 //
-decl_internal_5(int32_t, prx_ns_entry_create,
+decl_internal_6(int32_t, prx_ns_entry_create,
     uint32_t, type,
     const char*, id,
     const char*, name,
+    const char*, domain,
     uint32_t, version,
     prx_ns_entry_t**, entry
 );

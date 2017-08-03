@@ -521,7 +521,7 @@ static int32_t xio_socket_open(
 
     sk->last_error = er_ok;
 
-    return pal_socket_open(sk->sock);
+    return pal_socket_open(sk->sock, NULL);
 }
 
 //

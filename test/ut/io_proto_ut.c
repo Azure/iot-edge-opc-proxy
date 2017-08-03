@@ -353,6 +353,8 @@ TEST_FUNCTION(io_encode_link_response__success)
     io_link_response_t response_valid;
     int32_t result;
 
+    memset(&response_valid, 0xef, sizeof(response_valid));
+
     // arrange
     STRICT_EXPECTED_CALL_TO_ENCODE_TYPE_BEGIN(&k_ctx_valid, 5);
     STRICT_EXPECTED_CALL_TO_ENCODE_OBJECT(&k_ctx_valid, ref, &response_valid, link_id);
@@ -378,6 +380,8 @@ TEST_FUNCTION(io_encode_link_response__neg)
     static io_codec_ctx_t k_ctx_valid;
     io_link_response_t response_valid;
     int32_t result;
+
+    memset(&response_valid, 0xef, sizeof(response_valid));
 
     // arrange
     UMOCK_C_NEGATIVE_TESTS_ARRANGE();

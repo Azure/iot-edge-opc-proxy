@@ -76,7 +76,7 @@ TEST_FUNCTION(pal_win_event_port_create__success)
     // arrange
 
     // act
-    result = pal_event_port_create(&port_valid);
+    result = pal_event_port_create(NULL, NULL, &port_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -94,11 +94,31 @@ TEST_FUNCTION(pal_win_event_port_create__arg_port_null)
     // arrange
 
     // act
-    result = pal_event_port_create(NULL);
+    result = pal_event_port_create(NULL, NULL, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_fault, result);
+}
+
+//
+// Test pal_event_port_create passing as timeout argument an invalid value
+//
+TEST_FUNCTION(pal_win_event_port_create__arg_timeout_handler_invalid)
+{
+    uintptr_t port_valid;
+    static pal_timeout_handler_t k_timeout_handler_invalid = (pal_timeout_handler_t)0x234;
+    static void* k_timeout_context = (void*)0x234;
+    int32_t result;
+
+    // arrange
+
+    // act
+    result = pal_event_port_create(k_timeout_handler_invalid, k_timeout_context, &port_valid);
+
+    // assert
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(int32_t, er_not_supported, result);
 }
 
 //

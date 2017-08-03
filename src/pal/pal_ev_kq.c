@@ -8,6 +8,7 @@
 #include "pal_mt.h"
 #include "pal.h"
 #include "util_misc.h"
+
 #include "azure_c_shared_utility/doublylinkedlist.h"
 #include "azure_c_shared_utility/threadapi.h"
 
@@ -28,11 +29,15 @@ typedef struct pal_kqueue_port
     int32_t kqueue_fd;
     THREAD_HANDLE thread;  // Main event loop
     bool running;
+    atomic_t num_events;
+    pal_timeout_handler_t cb;
+    void* context;
+    log_t log;
 }
 pal_kqueue_port_t;
 
 //
-// kequeue event contains context and callback 
+// kequeue event contains context and callback
 //
 typedef struct pal_kqueue_event
 {
@@ -69,29 +74,44 @@ static int32_t pal_kqueue_event_loop(
     int32_t result = er_ok;
     struct kevent evt;
     pal_kqueue_event_t* ev_data;
-
+    struct timespec ts, *timeout = NULL;
+    int32_t timeout_ms;
     dbg_assert_ptr(pal_port);
+
+    ts.tv_nsec = 0;
+    ts.tv_sec = 0;
 
     lock_enter(pal_port->lock);
     while (pal_port->running)
     {
         // Wait forever for one event, result should be 1.
         lock_exit(pal_port->lock);
-        result = kevent(pal_port->kqueue_fd, NULL, 0, &evt, 1, NULL);
 
-        //
-        // We should never see 0 events. Given an infinite timeout, kqueue_wait
-        // will never return 0 events even if there are no file descriptors 
-        // registered with the kqueue fd. In that case, the wait will block 
-        // until a file descriptor is added and an event occurs on the added 
-        // file descriptor.
-        //
-        if (result < 1)
+        if (pal_port->cb)
         {
-            result = pal_os_last_net_error_as_prx_error();
-            if (result != er_ok && result != er_arg)
-                break;
+            timeout_ms = pal_port->cb(
+                pal_port->context, pal_port->num_events == 0);
+            if (timeout_ms == -1)
+                timeout = NULL;
+            else
+            {
+                ts.tv_nsec += (timeout_ms % 1000) * 1000000L;
+                ts.tv_sec += timeout_ms / 1000;
+                ts.tv_sec += ts.tv_nsec / 1000000L;
+                ts.tv_nsec %= 1000000L;
+                timeout = &ts;
+            }
+        }
 
+        result = kevent(pal_port->kqueue_fd, NULL, 0, &evt, 1, timeout);
+        if (result <= 0)
+        {
+            if (result != 0)
+            {
+                result = pal_os_last_net_error_as_prx_error();
+                if (result != er_ok && result != er_arg)
+                    break;
+            }
             result = er_ok;
             lock_enter(pal_port->lock);
             continue;
@@ -108,7 +128,7 @@ static int32_t pal_kqueue_event_loop(
         // Dispatch events
         if (evt.filter == EVFILT_READ)
             ev_data->cb(ev_data->context, pal_event_type_read, 0);
-        
+
         else if (evt.filter == EVFILT_WRITE)
         {
             if (0 != (evt.flags & EV_EOF))
@@ -179,7 +199,8 @@ int32_t pal_event_port_register(
     ev_data->port = pal_port;
     ev_data->sock_fd = (fd_t)sock_fd;
 
-    _fd_nonblock(ev_data->sock_fd, result);
+    _fd_nonblock(ev_data->sock_fd);
+    atomic_inc(pal_port->num_events);
 
     *event_handle = (uintptr_t)ev_data;
     log_debug(NULL, "Added event port for %x.", (int)sock_fd);
@@ -187,7 +208,7 @@ int32_t pal_event_port_register(
 }
 
 //
-// Convert socket event type to kqueue event type 
+// Convert socket event type to kqueue event type
 //
 static uint32_t pal_event_type_to_kqueue_event(
     pal_event_type_t event_type
@@ -225,8 +246,7 @@ int32_t pal_event_select(
     uint32_t plat_event;
 
     ev_data = (pal_kqueue_event_t*)event_handle;
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
 
     plat_event = pal_event_type_to_kqueue_event(event_type);
     if (!plat_event)
@@ -258,8 +278,7 @@ int32_t pal_event_clear(
     uint32_t plat_event;
 
     ev_data = (pal_kqueue_event_t*)event_handle;
-    if (!ev_data)
-        return er_fault;
+    chk_arg_fault_return(ev_data);
 
     plat_event = pal_event_type_to_kqueue_event(event_type);
     if (!plat_event)
@@ -307,6 +326,7 @@ void pal_event_close(
     }
 
     lock_exit(pal_port->lock);
+    atomic_dec(pal_port->num_events);
     pal_kqueue_event_free(ev_data);
 }
 
@@ -314,19 +334,23 @@ void pal_event_close(
 // Create vector to track events
 //
 int32_t pal_event_port_create(
+    pal_timeout_handler_t timeout_handler,
+    void* context,
     uintptr_t* port
 )
 {
     int32_t result;
     pal_kqueue_port_t* pal_port;
-    if (!port)
-        return er_fault;
+    chk_arg_fault_return(port);
 
     pal_port = mem_zalloc_type(pal_kqueue_port_t);
     if (!pal_port)
         return er_out_of_memory;
     do
     {
+        pal_port->log = log_get("pal.ev");
+        pal_port->cb = timeout_handler;
+        pal_port->context = context;
         pal_port->kqueue_fd = -1;
         result = lock_create(&pal_port->lock);
         if (result != er_ok)
@@ -357,31 +381,45 @@ int32_t pal_event_port_create(
 }
 
 //
-// Free the event port and vector
+// Stop event port
 //
-void pal_event_port_close(
+void pal_event_port_stop(
     uintptr_t port
 )
 {
     int32_t result;
     pal_kqueue_port_t* pal_port = (pal_kqueue_port_t*)port;
-    if (pal_port)
+    if (!pal_port || !pal_port->running)
+        return;
+    pal_port->running = false;
+    if (pal_port->thread)
+        ThreadAPI_Join(pal_port->thread, &result);
+    pal_port->thread = NULL;
+}
+
+//
+// Free the event port
+//
+void pal_event_port_close(
+    uintptr_t port
+)
+{
+    pal_kqueue_port_t* pal_port = (pal_kqueue_port_t*)port;
+    if (!pal_port)
+        return;
+
+    pal_event_port_stop(port);
+
+    if (pal_port->kqueue_fd != -1)
     {
-        pal_port->running = false;
-        if (pal_port->thread)
-            ThreadAPI_Join(pal_port->thread, &result);
-
-        if (pal_port->kqueue_fd != -1)
-        {
-            lock_enter(pal_port->lock);
-            (void)close(pal_port->kqueue_fd);
-            pal_port->kqueue_fd = -1;
-            lock_exit(pal_port->lock);
-        }
-
-        if (pal_port->lock)
-            lock_free(pal_port->lock);
-
-        mem_free_type(pal_kqueue_port_t, pal_port);
+        lock_enter(pal_port->lock);
+        (void)close(pal_port->kqueue_fd);
+        pal_port->kqueue_fd = -1;
+        lock_exit(pal_port->lock);
     }
+
+    if (pal_port->lock)
+        lock_free(pal_port->lock);
+
+    mem_free_type(pal_kqueue_port_t, pal_port);
 }

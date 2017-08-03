@@ -220,10 +220,47 @@ namespace Microsoft.Azure.Devices.Proxy {
                 );
 
             internal async Task InitAsync(IProvider provider, SocketAddress proxy,
-                ProxySocketAddress proxySocketAddress, CancellationToken ct) {
+                ProxySocketAddress folderAddress, CancellationToken ct) {
                 await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
-                await Socket.BrowseBeginAsync(proxySocketAddress, BrowseRequest.Dirpath,
+                await Socket.BrowseBeginAsync(folderAddress, BrowseRequest.Dirpath,
                     ct).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Port scanner
+        /// </summary>
+        class PortScanner : BrowserAsyncEnumerator<PortScanResult>,
+            IPortScanner {
+            protected override PortScanResult Yield(BrowseResponse response) =>
+                PortScanResult.Create(response.Item,
+                    response.Properties.Any() ? response.Properties.First() as Property<byte[]> : null,
+                    response.Interface);
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
+                SocketAddress hostAddress, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(hostAddress, BrowseRequest.PortScan,
+                    ct).ConfigureAwait(false);
+            }
+        }
+
+        /// <summary>
+        /// Subnet scanner
+        /// </summary>
+        class NetworkScanner : BrowserAsyncEnumerator<NetworkScanResult>,
+            INetworkScanner {
+            protected override NetworkScanResult Yield(BrowseResponse response) =>
+                NetworkScanResult.Create(
+                    new BoundSocketAddress(response.Interface, response.Item),
+                    response.Properties.Any() ? response.Properties.First() as Property<byte[]> : null,
+                    response.Interface);
+
+            internal async Task InitAsync(IProvider provider, SocketAddress proxy,
+                ushort port, CancellationToken ct) {
+                await base.InitAsync(provider, proxy, ct).ConfigureAwait(false);
+                await Socket.BrowseBeginAsync(new Inet4SocketAddress(0, port),
+                    BrowseRequest.IpScan, ct).ConfigureAwait(false);
             }
         }
 
@@ -294,6 +331,7 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// Create directory browser to browse remote directories.  Catch BrowseException
         /// and check code to understand e.g. permission issues, etc.
         /// </summary>
+        /// <param name="proxy">Proxy to use for browsing</param>
         /// <param name="folder">Folder name</param>
         /// <param name="cacheOnly">Only deliver from cache</param>
         /// <param name="ct"></param>
@@ -304,6 +342,38 @@ namespace Microsoft.Azure.Devices.Proxy {
             await browser.InitAsync(Socket.Provider, proxy, new ProxySocketAddress(folder ?? ""),
                 ct).ConfigureAwait(false);
             return browser;
+        }
+
+        /// <summary>
+        /// Create port scanner. Scans host for all ports that are open.
+        /// </summary>
+        /// <param name="proxy">Proxy to use for scanning</param>
+        /// <param name="host">Host to scan</param>
+        /// <param name="cacheOnly">Only deliver from cache</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public static async Task<IPortScanner> CreatePortScannerAsync(
+            SocketAddress proxy, SocketAddress host, bool cacheOnly, CancellationToken ct) {
+            var scanner = new PortScanner { CacheOnly = cacheOnly, Throw = true };
+            await scanner.InitAsync(Socket.Provider, proxy, host, ct).ConfigureAwait(false);
+            return scanner;
+        }
+
+
+        /// <summary>
+        /// Create network scanner. Scans networks for addresses.  If port is provided only
+        /// returns addresses that have port open.
+        /// </summary>
+        /// <param name="proxy">Proxy to use for scanning</param>
+        /// <param name="port">If not 0, returns only addreses with port open</param>
+        /// <param name="cacheOnly">Only deliver from cache</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public static async Task<INetworkScanner> CreateNetworkScannerAsync(
+            SocketAddress proxy, ushort port, bool cacheOnly, CancellationToken ct) {
+            var scanner = new NetworkScanner { CacheOnly = cacheOnly, Throw = true };
+            await scanner.InitAsync(Socket.Provider, proxy, port, ct).ConfigureAwait(false);
+            return scanner;
         }
     }
 }

@@ -95,6 +95,7 @@ if(WIN32)
     )
 else()
     target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
+    target_compile_definitions(libiotsdk PRIVATE UMQTT_PINGRESP_CALLBACK)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
     target_include_directories(libiotsdk
         PUBLIC ${_IOTSDK_INC}

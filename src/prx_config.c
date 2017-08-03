@@ -43,6 +43,8 @@ static const char* prx_config_key_name(
         return "browse_fs";
     case prx_config_key_restricted_ports:
         return "restricted_ports";
+    case prx_config_key_bind_device:
+        return "bind_device";
     case prx_config_key_max:
     default:
         return NULL;

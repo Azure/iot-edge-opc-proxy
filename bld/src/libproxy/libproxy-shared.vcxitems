@@ -23,6 +23,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\api.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\io_browse.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h" />
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_scan.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_sd.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
@@ -81,12 +82,12 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\cmp\cmp.c">
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_itr.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.c">
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_browse.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_browse.c" />

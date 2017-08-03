@@ -168,14 +168,14 @@ namespace Microsoft.Azure.Devices.Proxy.Provider {
                             _receiveWindow.Clear();
                         }
                         else {
-                            // Add message to sorted set and wait for sequence 
+                            // Add message to sorted set and wait for sequence
                             // number to catch up.
                             ProxyEventSource.Log.MissingData(this, data, _nextReceiveSequenceNumber);
                             _receiveWindow.Add(data.SequenceNumber, response);
                         }
                         return Enumerable.Empty<Message>();
                     }
-                    
+
                     // we received message with sequence number we expected.
                     _nextReceiveSequenceNumber++;
 

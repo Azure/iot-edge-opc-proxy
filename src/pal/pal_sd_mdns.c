@@ -106,16 +106,12 @@ static int32_t pal_sd_mdns_error_to_prx_error(
     case kDNSServiceErr_Transient:
         return er_retry;
     case kDNSServiceErr_ServiceNotRunning:
-        /* Background daemon not running */
         return er_bad_state;
     case kDNSServiceErr_NATPortMappingUnsupported:
-        /* NAT doesn't support PCP, NAT-PMP or UPnP */
         return er_not_supported;
     case kDNSServiceErr_NATPortMappingDisabled:
-        /* NAT supports PCP, NAT-PMP or UPnP, but it's disabled by the administrator */
         return er_bad_state;
     case kDNSServiceErr_NoRouter:
-        /* No router currently configured (probably no network connectivity) */
         return er_connecting;
     case kDNSServiceErr_PollingMode:
         return er_comm;
@@ -905,12 +901,48 @@ int32_t pal_sd_init(
     void
 )
 {
+    DNSServiceErrorType error;
+    uint32_t version;
+    uint32_t size = sizeof(version);
     int32_t result;
-    result = pal_event_port_create(&event_port);
+    int attempt = 0;
+
+    result = pal_event_port_create(NULL, NULL, &event_port);
     if (result != er_ok)
     {
         log_error(NULL, "FATAL: Failed creating event port.");
+        return result;
     }
+    
+    while (true)
+    {
+        error = DNSServiceGetProperty(kDNSServiceProperty_DaemonVersion,
+            &version, &size);
+        if (error == 0)
+        {
+            log_info(NULL, "Using Bonjour (Version %d.%d)\n",
+                version / 10000, version / 100 % 100);
+            return er_ok;
+        }
+
+        log_error(NULL, "%d: Cannot connect to local Bonjour Service. (Error %d)"
+            "Ensure the service is installed and running...", attempt, error);
+        
+        if (++attempt > 10)
+        {
+            if (error == kDNSServiceErr_ServiceNotRunning)
+            {
+                log_error(NULL, "  ... Giving up to connect to Bonjour -"
+                    " service discovery not supported on this platform.");
+                result = er_not_supported;  
+            }
+            else
+                result = pal_sd_mdns_error_to_prx_error(error);
+        }
+    }
+    
+    pal_event_port_close(event_port);
+    event_port = 0;
     return result;
 }
 

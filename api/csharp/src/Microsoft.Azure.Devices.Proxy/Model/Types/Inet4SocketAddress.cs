@@ -85,7 +85,11 @@ namespace Microsoft.Azure.Devices.Proxy {
         /// </summary>
         /// <returns></returns>
         public override string ToString() {
-            return AsString() + $":{Port}";
+            var addr = AsString();
+            if (Port == 0) {
+                return addr;
+            }
+            return $"{addr}:{Port}";
         }
 
         /// <summary>

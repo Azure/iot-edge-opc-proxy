@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.16
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyd-shared", "src\proxyd\proxyd-shared.vcxitems", "{C0464CB1-8C41-40CB-ADDC-99A256FD5978}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "proxyd-linux", "src\proxyd\proxyd-linux.vcxproj", "{261F6D5C-FB15-4507-B411-F31C1F481F2F}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libiotsdk-shared", "src\libiotsdk\libiotsdk-shared.vcxitems", "{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libproxy-shared", "src\libproxy\libproxy-shared.vcxitems", "{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{78B26CC0-46DF-4FF5-911E-369778853DDA}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\libiotsdk\libiotsdk-shared.vcxitems*{261f6d5c-fb15-4507-b411-f31c1f481f2f}*SharedItemsImports = 4
+		src\libproxy\libproxy-shared.vcxitems*{261f6d5c-fb15-4507-b411-f31c1f481f2f}*SharedItemsImports = 4
+		src\proxyd\proxyd-shared.vcxitems*{261f6d5c-fb15-4507-b411-f31c1f481f2f}*SharedItemsImports = 4
+		src\libiotsdk\libiotsdk-shared.vcxitems*{45d41acc-2c3c-43d2-bc10-02aa73ffc7c7}*SharedItemsImports = 9
+		src\libproxy\libproxy-shared.vcxitems*{4a4bce85-9d92-4b68-92e9-f010c82e3a5f}*SharedItemsImports = 9
+		src\proxyd\proxyd-shared.vcxitems*{c0464cb1-8c41-40cb-addc-99a256fd5978}*SharedItemsImports = 9
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|ARM = Release|ARM
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|ARM.ActiveCfg = Debug|ARM
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|ARM.Build.0 = Debug|ARM
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|x64.ActiveCfg = Debug|x64
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|x64.Build.0 = Debug|x64
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|x86.ActiveCfg = Debug|x86
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Debug|x86.Build.0 = Debug|x86
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|ARM.ActiveCfg = Release|ARM
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|ARM.Build.0 = Release|ARM
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|x64.ActiveCfg = Release|x64
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|x64.Build.0 = Release|x64
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|x86.ActiveCfg = Release|x86
+		{261F6D5C-FB15-4507-B411-F31C1F481F2F}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C0464CB1-8C41-40CB-ADDC-99A256FD5978} = {78B26CC0-46DF-4FF5-911E-369778853DDA}
+		{45D41ACC-2C3C-43D2-BC10-02AA73FFC7C7} = {78B26CC0-46DF-4FF5-911E-369778853DDA}
+		{4A4BCE85-9D92-4B68-92E9-F010C82E3A5F} = {78B26CC0-46DF-4FF5-911E-369778853DDA}
+	EndGlobalSection
+EndGlobal

@@ -54,6 +54,7 @@ if(WIN32)
         pal_net_win
         pal_rand_win
         pal_sk_win
+        pal_scan_win
         pal_time_win
     )
     if (NOT use_lws)
@@ -161,12 +162,14 @@ else()
             pal_ev_epoll
             pal_net_linux
             pal_proc_linux
+            pal_scan_linux
         )
     else()
         set(use_openssl 1)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
             pal_ev_poll
-            pal_net_stubs
+            pal_net_stub
+            pal_scan_stub
             pal_proc_posix
         )
     endif()
@@ -292,8 +295,14 @@ if(WIN32)
         PRIVATE iphlpapi
         PRIVATE secur32
         PRIVATE crypt32
-        PRIVATE schannel
+        PRIVATE advapi32
     )
+    if(NOT use_openssl)
+        target_link_libraries(libproxy
+            PRIVATE schannel
+            PRIVATE ncrypt
+        )
+    endif()
 else()
     target_link_libraries(libproxy
         PRIVATE ${CURL_LIBRARIES}
@@ -358,8 +367,14 @@ if(WIN32)
         PUBLIC iphlpapi
         PUBLIC secur32
         PUBLIC crypt32
-        PUBLIC schannel
+	    PUBLIC advapi32
     )
+    if(NOT use_openssl)
+        target_link_libraries(libproxy-static
+            PUBLIC schannel
+            PUBLIC ncrypt
+        )
+    endif()
 else()
     target_link_libraries(libproxy-static
         PRIVATE ${CURL_LIBRARIES}

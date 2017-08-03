@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Description>An Azure Relay based sample stream provider for Azure IoT Edge OPC device proxy.</Description>
     <AssemblyTitle>Azure Relay based stream provider sample for Azure Device Proxy</AssemblyTitle>
-    <VersionPrefix>1.0.2</VersionPrefix>
+    <VersionPrefix>1.0.3</VersionPrefix>
     <Authors>microsoft</Authors>
     <TargetFrameworks>net46;net45;netstandard1.3</TargetFrameworks>
     <NoWarn>$(NoWarn);1591;1734</NoWarn>
