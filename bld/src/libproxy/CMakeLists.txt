@@ -295,8 +295,14 @@ if(WIN32)
         PRIVATE iphlpapi
         PRIVATE secur32
         PRIVATE crypt32
-        PRIVATE schannel
+        PRIVATE advapi32
     )
+    if(NOT use_openssl)
+        target_link_libraries(libproxy
+            PRIVATE schannel
+            PRIVATE ncrypt
+        )
+    endif()
 else()
     target_link_libraries(libproxy
         PRIVATE ${CURL_LIBRARIES}
@@ -361,8 +367,14 @@ if(WIN32)
         PUBLIC iphlpapi
         PUBLIC secur32
         PUBLIC crypt32
-        PUBLIC schannel
+	    PUBLIC advapi32
     )
+    if(NOT use_openssl)
+        target_link_libraries(libproxy-static
+            PUBLIC schannel
+            PUBLIC ncrypt
+        )
+    endif()
 else()
     target_link_libraries(libproxy-static
         PRIVATE ${CURL_LIBRARIES}
