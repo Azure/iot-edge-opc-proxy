@@ -1180,7 +1180,7 @@ int32_t pal_socket_pair(
         // what we really want.
         //
         if (os_socktype == SOCK_DGRAM)
-            os_socktype == SOCK_SEQPACKET;
+            os_socktype = SOCK_SEQPACKET;
         if (0 != socketpair(AF_UNIX, os_socktype, os_prototype, fds))
         {
             result = pal_os_last_net_error_as_prx_error();
