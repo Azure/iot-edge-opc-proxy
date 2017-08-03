@@ -1164,7 +1164,6 @@ int32_t pal_socket_pair(
         return er_arg;
     do
     {
-        // Create socket pair and register both with event port
         result = pal_os_from_prx_socket_type(itf1->props.sock_type,
             &os_socktype);
         if (result != er_ok)
@@ -1173,13 +1172,25 @@ int32_t pal_socket_pair(
             &os_prototype);
         if (result != er_ok)
             break;
+        //
+        // Create socket pair and register both with event port. For
+        // datagram/message oriented sockets we do not reliably get
+        // POLLHUP on linux. Use seqpacket which also preserves message
+        // boundaries but is connection oriented which in this case is
+        // what we really want.
+        //
+        if (os_socktype == SOCK_DGRAM)
+            os_socktype == SOCK_SEQPACKET;
         if (0 != socketpair(AF_UNIX, os_socktype, os_prototype, fds))
         {
             result = pal_os_last_net_error_as_prx_error();
             break;
         }
-
-         // Make sure that sockets are created as pipe sockets - adjust address family
+        //
+        // Make sure that sockets are treated as pipe sockets and
+        // thus adjust address family for both interfaces should they
+        // be set to something different.
+        //
         itf1->props.family = itf2->props.family = prx_address_family_unix;
 
         result = pal_socket_create(itf1, &sock1);
