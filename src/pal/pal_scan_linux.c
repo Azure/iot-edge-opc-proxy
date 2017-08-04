@@ -15,9 +15,9 @@
 #include "util_string.h"
 #include "util_misc.h"
 
+#include <stdio.h>
 
 #if !defined(UNIT_TEST)
-#include <asm/types.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
 #endif

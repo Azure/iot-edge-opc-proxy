@@ -79,9 +79,9 @@ int32_t pal_sdbrowser_resolve(
 //
 int32_t pal_sdbrowser_browse(
     pal_sdbrowser_t* browser,
-    const char* service_name, 
-    const char* service_type, 
-    const char* domain,       
+    const char* service_name,
+    const char* service_type,
+    const char* domain,
     int32_t itf_index
 )
 {

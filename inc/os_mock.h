@@ -1159,10 +1159,9 @@ struct nlmsghdr
 };
 
 
-#define NLMSG_DATA(nlh) NULL
+#define NLMSG_DATA(nlh) ((void*)nlh)
 #define NLMSG_NEXT(nlh,len) NULL
 #define NLMSG_OK(nlh,len) (len != 0)
-#define NLMSG_PAYLOAD(nlh,len) (nlh)
 
 enum __NLMSG
 {
@@ -1184,7 +1183,7 @@ enum __NLMSG
 // rtnetlink.h
 
 #define RTM_RTA(r) NULL
-#define RTM_PAYLOAD(n) NULL
+#define RTM_PAYLOAD(n) 0
 
 struct rtattr
 {
@@ -1194,7 +1193,7 @@ struct rtattr
 
 #define RTA_OK(rta,len) (len != 0)
 #define RTA_NEXT(rta,attrlen) NULL
-#define RTA_DATA(rta) rta
+#define RTA_DATA(rta) ((void*)rta)
 
 // if_addr.h
 
