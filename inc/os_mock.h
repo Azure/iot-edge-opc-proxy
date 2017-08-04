@@ -1113,7 +1113,6 @@ struct ifaddrs
 #define IFF_LOOPBACK 0x2
 #define IFF_MULTICAST 0x4
 
-
 // in.h
 struct ip_mreqn
 {
@@ -1141,8 +1140,93 @@ struct ipv6_mreq
 // uuid/uuid.h
 typedef uint8_t uuid_t[16];
 
-// spawn.h
+// netlink.h
 
+#define AF_NETLINK 366
+#define NETLINK_ROUTE 6
+
+struct sockaddr_nl
+{
+    int	nl_family;
+    uint32_t nl_groups;
+};
+
+struct nlmsghdr
+{
+    uint32_t nlmsg_len;
+    uint16_t nlmsg_type;
+    uint16_t nlmsg_flags;
+};
+
+
+#define NLMSG_DATA(nlh) NULL
+#define NLMSG_NEXT(nlh,len) NULL
+#define NLMSG_OK(nlh,len) (len != 0)
+#define NLMSG_PAYLOAD(nlh,len) (nlh)
+
+enum __NLMSG
+{
+    NLMSG_NOOP,
+    NLMSG_ERROR,
+    NLMSG_DONE,
+
+    RTM_NEWADDR = 20,
+    RTM_DELADDR,
+    RTM_GETADDR,
+
+    RTM_NEWNEIGH,
+    RTM_DELNEIGH,
+    RTM_GETNEIGH,
+};
+
+#define NETLINK_NO_ENOBUFS	5
+
+// rtnetlink.h
+
+#define RTM_RTA(r) NULL
+#define RTM_PAYLOAD(n) NULL
+
+struct rtattr
+{
+    unsigned short	rta_len;
+    unsigned short	rta_type;
+};
+
+#define RTA_OK(rta,len) (len != 0)
+#define RTA_NEXT(rta,attrlen) NULL
+#define RTA_DATA(rta) rta
+
+// if_addr.h
+
+#define IFA_ADDRESS 1
+#define IFA_MAX 10
+
+struct ifaddrmsg
+{
+    uint8_t ifa_family;
+    uint8_t ifa_prefixlen;
+    uint8_t ifa_flags;
+    uint8_t ifa_scope;
+    uint32_t ifa_index;
+};
+
+// Neighbor.h
+
+#define NDA_DST 1
+#define NDA_MAX 8
+
+struct ndmsg
+{
+    uint8_t ndm_family;
+    int32_t ndm_ifindex;
+    uint16_t ndm_state;
+    uint8_t ndm_flags;
+    uint8_t ndm_type;
+};
+
+#define NUD_REACHABLE 0x02
+
+// spawn.h
 typedef struct posix_spawnattr posix_spawnattr_t;
 typedef struct posix_spawn_file_actions posix_spawn_file_actions_t;
 
@@ -1582,7 +1666,7 @@ typedef int fd_t;
 #define _invalid_fd -1
 typedef int socklen_t;
 typedef int socksize_t;
-typedef int sockssize_t;
+typedef int sockssize_t, ssize_t;
 typedef char sockbuf_t;
 typedef unsigned long saddr_t;
 typedef void ifinfo_t;

@@ -15,6 +15,13 @@
 #include "util_string.h"
 #include "util_misc.h"
 
+
+#if !defined(UNIT_TEST)
+#include <asm/types.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#endif
+
 //
 // Scan task represents an individual probe
 //
@@ -45,7 +52,6 @@ struct pal_scan_probe
     struct sockaddr_in6 to;                   // Destination address
     int sock_fd;                          // Socket used for probing
     uintptr_t event_handle;        // in progress event registration
-    char buf[128];
 };
 
 //
@@ -68,12 +74,74 @@ struct pal_scan
 #define MAX_PROBES 1024
     pal_scan_probe_t tasks[MAX_PROBES];            // Probe contexts
     struct ifaddrs* ifaddr;                    // Allocated if infos
+    int netlink_fd;               // For neighbor table notification
+    uintptr_t netlink_events;          // netlink event registration
     bool destroy;                // Whether the scan should be freed
 
     struct ifaddrs* ifcur;               // Iterate through adapters
     bool cache_exhausted;        // Whether all lists were exhausted
     log_t log;
 };
+
+//
+// Notify user of new result
+//
+static void pal_scan_notify(
+    pal_scan_t* scan,
+    int itf_index,
+    struct sockaddr* to
+)
+{
+    int32_t result;
+    prx_socket_address_t prx_addr;
+    char buf[128];
+
+    dbg_assert_ptr(scan);
+    dbg_assert_ptr(to);
+
+    result = pal_os_to_prx_socket_address(__sa_base(to), __sa_size(to),
+        &prx_addr);
+    if (result != er_ok)
+    {
+        log_error(scan->log, "Failed to convert address (%s)",
+            prx_err_string(result));
+        return;
+    }
+    if (scan->port == 0)
+        prx_addr.un.ip.port = 0;
+
+    if (prx_addr.un.family == prx_address_family_inet6)
+    {
+        log_debug(scan->log, "Found " __prx_sa_in6_fmt,
+            __prx_sa_in6_args(&prx_addr));
+    }
+    else
+    {
+        dbg_assert(prx_addr.un.family == prx_address_family_inet,
+            "af wrong");
+        log_debug(scan->log, "Found " __prx_sa_in4_fmt,
+            __prx_sa_in4_args(&prx_addr));
+    }
+
+    buf[0] = 0;
+    if (0 == (scan->flags & pal_scan_no_name_lookup))
+    {
+        if (__sa_base(&scan->address)->sa_family == AF_UNSPEC)
+        {
+            (void)getnameinfo(__sa_base(to), __sa_size(to),
+                buf, sizeof(buf), NULL, 0, 0);
+        }
+        else
+        {
+            (void)getnameinfo(__sa_base(to), __sa_size(to),
+                NULL, 0, buf, sizeof(buf), 0);
+        }
+    }
+
+    dbg_assert_ptr(scan->cb);
+    scan->cb(scan->context, itf_index, er_ok, &prx_addr,
+        buf[0] ? buf : NULL);
+}
 
 //
 // Begin next probe on the probe task
@@ -89,56 +157,11 @@ static void pal_scan_probe_complete(
     pal_scan_probe_t* task
 )
 {
-    int32_t result;
-    bool found;
-    prx_socket_address_t prx_addr;
     uintptr_t evt_handle;
+    dbg_assert_ptr(task);
 
-    dbg_assert_ptr(task->scan);
-    result = pal_os_to_prx_socket_address(__sa_base(&task->to),
-        __sa_size(&task->to), &prx_addr);
-    if (result != er_ok)
-    {
-        log_error(task->scan->log, "Failed to convert address (%s)",
-            prx_err_string(result));
-        found = false;
-    }
-    else
-    {
-        found = task->state == pal_scan_probe_done;
-        if (prx_addr.un.family == prx_address_family_inet6)
-        {
-            log_debug(task->scan->log, "%s: " __prx_sa_in6_fmt,
-                found ? "Found" : "Failed", __prx_sa_in6_args(&prx_addr));
-        }
-        else
-        {
-            dbg_assert(prx_addr.un.family == prx_address_family_inet,
-                "af wrong");
-            log_debug(task->scan->log, "%s: " __prx_sa_in4_fmt,
-                found ? "Found" : "Failed", __prx_sa_in4_args(&prx_addr));
-        }
-    }
-
-    if (found)
-    {
-        task->buf[0] = 0;
-        if (0 == (task->scan->flags & pal_scan_no_name_lookup))
-        {
-            if (__sa_base(&task->scan->address)->sa_family == AF_UNSPEC)
-            {
-                (void)getnameinfo(__sa_base(&task->to), __sa_size(&task->to),
-                    task->buf, sizeof(task->buf), NULL, 0, 0);
-            }
-            else
-            {
-                (void)getnameinfo(__sa_base(&task->to), __sa_size(&task->to),
-                    NULL, 0, task->buf, sizeof(task->buf), 0);
-            }
-        }
-        task->scan->cb(task->scan->context, task->itf_index,
-            er_ok, &prx_addr, task->buf[0] ? task->buf : NULL);
-    }
+    if (task->state == pal_scan_probe_done)
+        pal_scan_notify(task->scan, task->itf_index, __sa_base(&task->to));
 
     evt_handle = task->event_handle;
     if (evt_handle == 0)
@@ -247,6 +270,14 @@ void pal_scan_probe_begin(
             task->sock_fd, pal_scan_probe_cb, task, &task->event_handle);
         if (result != er_ok)
             break;
+
+        if (task->scan->port == 0)
+        {
+            if (__sa_is_in4(&task->to))
+                __sa_as_in4(&task->to)->sin_port = swap_16(40000);
+            else
+                __sa_as_in6(&task->to)->sin6_port = swap_16(40000);
+        }
 
         if (0 == connect(task->sock_fd, __sa_base(&task->to),
             __sa_size(&task->to)))
@@ -397,19 +428,12 @@ static void pal_scan_next(
     int32_t result;
     dbg_assert_ptr(task);
 
-    while(!task->scan->destroy) // Fill as many tasks as possible until er_nomore
+    while (!task->scan->destroy) // Fill as many tasks as possible until er_nomore
     {
         if (task->scan->address.sin6_family == AF_UNSPEC)
         {
             result = pal_scan_get_next_address(task->scan,
                 __sa_base(&task->from), __sa_base(&task->to));
-            if (!task->scan->port)
-            {
-                // TODO: Arp scan not yet supported
-                task->scan->cb(task->scan->context, 0,
-                    er_not_supported, NULL, NULL);
-                return;
-            }
         }
         else
         {
@@ -438,12 +462,88 @@ static void pal_scan_next(
                     "Probe on " __sa_in4_fmt " for " __sa_in4_fmt,
                     __sa_in4_args(&task->from), __sa_in4_args(&task->to));
             }
-            // Perform actual scan action
+
             task->state = pal_scan_probe_working;
+            // Perform actual scan action
             pal_scan_probe_begin(task);
             return;
         }
     }
+}
+
+//
+// Arp cache polling - correlates the current arp cache to ongoing probes.
+//
+static void pal_scan_arp_cache_check(
+    pal_scan_t* scan
+)
+{
+    FILE *fp;
+    char *pos, *line = NULL; // NULL so that getline allocates and reallocates.
+    ssize_t read;
+    size_t len = 0;
+    int flags;
+    uint32_t ip;
+    const char* mac, *dev;
+
+    dbg_assert_ptr(scan);
+    fp = fopen("/proc/scan/arp", "r");
+    if (!fp)
+        return;
+    read = getline(&line, &len, fp); // Skip header of arp cache
+    while (read >= 0 && line)
+    {
+        // Parse arp cache line by line.
+        read = getline(&line, &len, fp);
+        if (read < 0 || !line)
+            continue;
+        // Parse ipv4 address
+        ((uint8_t*)&ip)[0] = (uint8_t)strtol(line, &pos, 10);
+        if (*pos++ != '.') continue;
+        ((uint8_t*)&ip)[1] = (uint8_t)strtol(pos, &pos, 10);
+        if (*pos++ != '.') continue;
+        ((uint8_t*)&ip)[2] = (uint8_t)strtol(pos, &pos, 10);
+        if (*pos++ != '.') continue;
+        ((uint8_t*)&ip)[3] = (uint8_t)strtol(pos, &pos, 10);
+        while (*pos == ' ') pos++; // Skip spaces
+        if (!*pos) continue;
+        // Parse type
+        flags = strtol(pos, &pos, 0x10);
+        if (!*pos) continue;
+        while (*pos == ' ') pos++; // Skip spaces
+        // Parse flags
+        flags = strtol(pos, &pos, 0x10);
+        if (!flags || !*pos) // flags == 0, incomplete, else == complete.
+            continue; // Save ourselves from parsing more
+        while (*pos == ' ') pos++; // Skip spaces
+        mac = pos;  // Save mac
+        while (*pos != ' ') pos++;
+        *pos++ = 0;
+        while (*pos == ' ') pos++; // Skip spaces
+        while (*pos != ' ') pos++; // Skip mask
+        while (*pos == ' ') pos++; // Skip spaces
+        dev = pos;  // Save dev
+        while (*pos && *pos != '\n') pos++;
+        *pos = 0;
+        for (size_t i = 0; i < _countof(scan->tasks); i++)
+        {
+            // Complete the probe entry that matches the ip address.
+            if (scan->tasks[i].state == pal_scan_probe_working &&
+                __sa_is_in4(&scan->tasks[i].to) &&
+                __sa_as_in4(&scan->tasks[i].to)->sin_addr.s_addr == ip)
+            {
+                if (scan->tasks[i].itf_index != 0 &&
+                    scan->tasks[i].itf_index != (int)if_nametoindex(dev))
+                    continue;
+
+                scan->tasks[i].state = pal_scan_probe_done;
+                pal_scan_probe_complete(&scan->tasks[i]);
+            }
+        }
+    }
+    if (line)
+        free(line);
+    fclose(fp);
 }
 
 //
@@ -461,14 +561,19 @@ static int32_t pal_scan_scheduler(
 
     dbg_assert_ptr(scan);
     (void)no_events;
-    if (scan->destroy)
-        return -1;
+
+    // Synchronize tasks with arp cache
+    if (scan->port == 0 && !scan->destroy)
+        pal_scan_arp_cache_check(scan);
 
     // Run through all tasks and determine whether they are old
     now = ticks_get();
     reschedule = PROBE_TIMEOUT;
     for (size_t i = 0; i < _countof(scan->tasks); i++)
     {
+        if (scan->destroy)
+            return -1;
+
         // Find next non-pending task
         if (scan->tasks[i].state == pal_scan_probe_idle)
         {
@@ -490,7 +595,8 @@ static int32_t pal_scan_scheduler(
             evt_handle = scan->tasks[i].event_handle;
             scan->tasks[i].event_handle = 0;
             scan->tasks[i].sock_fd = -1;
-            pal_event_close(evt_handle, true);
+            if (evt_handle)
+                pal_event_close(evt_handle, true);
             continue;
         }
 
@@ -501,6 +607,313 @@ static int32_t pal_scan_scheduler(
 
     dbg_assert(reschedule > 0, "Should have some time between.");
     return reschedule;
+}
+
+//
+// Close netlink registration
+//
+static bool pal_scan_netlink_close(
+    pal_scan_t* scan
+)
+{
+    uintptr_t evt_handle;
+    dbg_assert_ptr(scan);
+
+    evt_handle = scan->netlink_events;
+    scan->netlink_events = 0;
+
+    if (evt_handle)
+    {
+        scan->netlink_fd = -1;
+        pal_event_close(evt_handle, true);
+        return false;
+    }
+
+    if (scan->netlink_fd != -1)
+    {
+        close(scan->netlink_fd);
+        scan->netlink_fd = -1;
+    }
+    return true;
+}
+
+//
+// Handle new address
+//
+static void pal_scan_netlink_on_addr(
+    pal_scan_t* scan,
+    struct nlmsghdr *nlh
+)
+{
+    struct ifaddrmsg *ifa_msg = (struct ifaddrmsg*)NLMSG_DATA(nlh);
+    int len = RTM_PAYLOAD(nlh);
+    void* addr = NULL;
+    struct sockaddr_in6 sa;
+
+    dbg_assert_ptr(scan);
+    dbg_assert_ptr(nlh);
+    dbg_assert(nlh->nlmsg_type != RTM_GETADDR, "Should not be get");
+
+    // Parse attributes
+    for (struct rtattr* rta = RTM_RTA(ifa_msg); RTA_OK(rta, len);
+        rta = RTA_NEXT(rta, len))
+    {
+        /**/ if (rta->rta_type == IFA_ADDRESS)
+            addr = RTA_DATA(ifa_msg);
+        else if (rta->rta_type > IFA_MAX)
+        {
+            log_error(scan->log, "Unexpected ifa type parsed %d",
+                rta->rta_type);
+        }
+        else
+        {
+            log_debug(scan->log, "Parsed %d", rta->rta_type);
+        }
+    }
+
+    memset(&sa, 0, sizeof(sa));
+    __sa_base(&sa)->sa_family = ifa_msg->ifa_family;
+
+    /**/ if (__sa_is_in6(&sa))
+    {
+        memcpy(&(__sa_as_in6(&sa)->sin6_addr), addr, 16);
+        log_trace(scan->log, "%s address: " __sa_in6_fmt,
+            nlh->nlmsg_type == RTM_NEWADDR ? "New" : "Lost",
+            __sa_in6_args(&sa));
+    }
+    else if (__sa_is_in4(&sa))
+    {
+        __sa_as_in4(&sa)->sin_addr.s_addr = *((int32_t*)addr);
+        log_debug(scan->log, "%s address: " __sa_in4_fmt,
+            nlh->nlmsg_type == RTM_NEWADDR ? "New" : "Lost",
+            __sa_in4_args(&sa));
+    }
+    else
+    {
+        log_error(scan->log, "Unknown address family in ifa message %d",
+            ifa_msg->ifa_family);
+        return;
+    }
+
+    if (nlh->nlmsg_type == RTM_NEWADDR)
+        pal_scan_notify(scan, ifa_msg->ifa_index, __sa_base(&sa));
+}
+
+//
+// Handle new neighbor address
+//
+static void pal_scan_netlink_on_neigh(
+    pal_scan_t* scan,
+    struct nlmsghdr* nlh
+)
+{
+    struct ndmsg *ndm = (struct ndmsg*)NLMSG_DATA(nlh);
+    int len = RTM_PAYLOAD(nlh);
+    void* addr = NULL;
+    struct sockaddr_in6 sa;
+
+    dbg_assert_ptr(scan);
+    dbg_assert_ptr(nlh);
+    log_debug(scan->log, "neighbor message state %x", ndm->ndm_state);
+    dbg_assert(nlh->nlmsg_type != RTM_GETNEIGH, "Should not be get");
+
+    if (nlh->nlmsg_type == RTM_NEWNEIGH && 0 == (ndm->ndm_state & NUD_REACHABLE))
+        return;
+
+    // Parse attributes
+    for (struct rtattr* rta = RTM_RTA(ndm); RTA_OK(rta, len);
+        rta = RTA_NEXT(rta, len))
+    {
+        /**/ if (rta->rta_type == NDA_DST)
+            addr = RTA_DATA(rta);
+        else if (rta->rta_type > IFA_MAX)
+        {
+            log_error(scan->log, "Unexpected ndm type parsed %d",
+                rta->rta_type);
+        }
+        else
+        {
+            log_debug(scan->log, "Parsed %d", rta->rta_type);
+        }
+    }
+    if (len > 0)
+        log_error(scan->log, "%d unparsed in RTA", len);
+
+    memset(&sa, 0, sizeof(sa));
+    __sa_base(&sa)->sa_family = ndm->ndm_family;
+
+    /**/ if (__sa_is_in6(&sa))
+    {
+        memcpy(&(__sa_as_in6(&sa)->sin6_addr), addr, 16);
+        log_trace(scan->log, "%s neighbor: " __sa_in6_fmt " (state: %x)",
+            nlh->nlmsg_type == RTM_NEWNEIGH ? "New" : "Lost",
+            __sa_in6_args(&sa), ndm->ndm_state);
+    }
+    else if (__sa_is_in4(&sa))
+    {
+        __sa_as_in4(&sa)->sin_addr.s_addr = *((int32_t*)addr);
+        log_debug(scan->log, "%s neighbor: " __sa_in4_fmt " (state: %x)",
+            nlh->nlmsg_type == RTM_NEWNEIGH ? "New" : "Lost",
+            __sa_in4_args(&sa), ndm->ndm_state);
+    }
+    else
+    {
+        log_error(scan->log, "Unknown address family in neigh message %d",
+            ndm->ndm_family);
+        return;
+    }
+
+    if (nlh->nlmsg_type == RTM_NEWNEIGH)
+        pal_scan_notify(scan, ndm->ndm_ifindex, __sa_base(&sa));
+}
+
+//
+// Receive neighbor messages
+//
+static int32_t pal_scan_netlink_recv(
+    pal_scan_t* scan
+)
+{
+    ssize_t buf_size;
+    char buf[4096];
+    struct nlmsghdr *nlh = (struct nlmsghdr*)buf;
+
+    while (!scan->destroy)
+    {
+        buf_size = recv(scan->netlink_fd, buf, sizeof(buf), 0);
+        if (buf_size <= 0)
+            return buf_size == 0 ? er_closed : pal_os_last_net_error_as_prx_error();
+        for (; NLMSG_OK(nlh, buf_size) && !scan->destroy;
+            nlh = NLMSG_NEXT(nlh, buf_size))
+        {
+            switch (nlh->nlmsg_type)
+            {
+            case RTM_NEWADDR:
+            case RTM_DELADDR:
+                pal_scan_netlink_on_addr(scan, nlh);
+                break;
+            case RTM_GETADDR:
+                break;
+            case RTM_NEWNEIGH:
+            case RTM_DELNEIGH:
+                pal_scan_netlink_on_neigh(scan, nlh);
+                break;
+            case RTM_GETNEIGH:
+                break;
+            case NLMSG_DONE:
+                log_info(scan->log, "End of multi-part message.");
+                break;
+            case NLMSG_ERROR:
+                log_error(scan->log, "Netlink error message.");
+                return er_comm;
+            default:
+                log_debug(scan->log, "Unknown message %d.", nlh->nlmsg_type);
+                break;
+            }
+        }
+    }
+    return er_aborted;
+}
+
+//
+// Called by event port when event occurred on netlink socket
+//
+static int32_t pal_scan_netlink_event(
+    void* context,
+    pal_event_type_t event_type,
+    int32_t error_code
+)
+{
+    pal_scan_t* scan = (pal_scan_t*)context;
+    dbg_assert_ptr(scan);
+    switch (event_type)
+    {
+    case pal_event_type_read:
+        if (error_code == er_ok)
+            return pal_scan_netlink_recv(scan);
+    case pal_event_type_write:
+    case pal_event_type_error:
+    case pal_event_type_close:
+        return error_code != er_ok ? error_code : er_closed;
+    case pal_event_type_destroy:
+        if (!scan->destroy) // Should never get here for now.
+            pal_scan_netlink_close(scan);
+        return er_ok;
+    case pal_event_type_unknown:
+    default:
+        dbg_assert(0, "Unknown event type %d", event_type);
+        return er_bad_state;
+    }
+}
+
+//
+// Open netlink socket and register for netlink multicast groups
+//
+static int32_t pal_scan_netlink_listen(
+    pal_scan_t* scan,
+    int32_t nl_groups
+)
+{
+    struct sockaddr_nl sa;
+    int32_t result;
+    int val;
+
+    dbg_assert_ptr(scan);
+    dbg_assert(nl_groups, "Bad arg");
+
+    // nl_groups |= RTMGRP_LINK;
+    // nl_groups |= RTMGRP_IPV4_IFADDR;
+    // nl_groups |= RTMGRP_IPV6_IFADDR;
+    // nl_groups |= RTMGRP_IPV6_IFINFO;
+
+    scan->netlink_fd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    if (scan->netlink_fd == -1)
+        return pal_os_last_net_error_as_prx_error();
+    do
+    {
+        // Subscribe to neighbor updates
+        memset(&sa, 0, sizeof(sa));
+        sa.nl_family = AF_NETLINK;
+        sa.nl_groups = nl_groups;
+
+        if (0 != bind(scan->netlink_fd, __sa_base(&sa), sizeof(sa)))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            break;
+        }
+
+        val = 0x10000;
+        if (0 != setsockopt(scan->netlink_fd, SOL_SOCKET,
+            SO_RCVBUF, (const sockbuf_t*)&val, sizeof(val)))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            break;
+        }
+
+        val = 1;
+#ifndef SOL_NETLINK
+#define SOL_NETLINK 270
+#endif
+        if (0 != setsockopt(scan->netlink_fd, SOL_NETLINK,
+            NETLINK_NO_ENOBUFS, (const sockbuf_t*)&val, sizeof(val)))
+        {
+            result = pal_os_last_net_error_as_prx_error();
+            break;
+        }
+
+        result = pal_event_port_register(scan->event_port, scan->netlink_fd,
+            pal_scan_netlink_event, scan, &scan->netlink_events);
+        if (result != er_ok)
+            break;
+
+        result = pal_event_select(scan->netlink_events, pal_event_type_read);
+        if (result != er_ok)
+            break;
+
+        return er_ok;
+    }
+    while (0);
+    return result;
 }
 
 //
@@ -526,6 +939,7 @@ static int32_t pal_scan_create(
     scan->flags = flags;
     scan->cb = cb;
     scan->context = context;
+    scan->netlink_fd = -1;
 
     for (size_t i = 0; i < _countof(scan->tasks); i++)
     {
@@ -561,7 +975,7 @@ int32_t pal_scan_net(
     do
     {
         scan->port = port;
-        // a) Get interface info
+
         error = getifaddrs(&scan->ifaddr);
         if (error != 0)
         {
@@ -571,21 +985,24 @@ int32_t pal_scan_net(
             break;
         }
 
-        // b) Start neighbor table scan for ipv6 addresses
-
-        // Todo.  Monitor netlink ?
-
-
-        // c) start scanning
         scan->ifcur = scan->ifaddr;
         result = pal_event_port_create(pal_scan_scheduler, scan,
             &scan->event_port);
         if (result != er_ok)
         {
-            log_error(NULL, "FATAL: Failed creating event port.");
+            log_error(scan->log, "Failed creating event port (%s).",
+                prx_err_string(result));
             break;
         }
 
+#if IP_NEIGHBOR
+        result = pal_scan_netlink_listen(scan, RTMGRP_NEIGH);
+        if (result != er_ok)
+        {
+            log_error(scan->log, "Failed to register for neighbors (%s).",
+                prx_err_string(result));
+        }
+#endif
         *created = scan;
         return er_ok;
     }
@@ -673,6 +1090,8 @@ void pal_scan_close(
     // Stop scanning (thread) - no more calls to functions above.
     if (scan->event_port)
         pal_event_port_stop(scan->event_port);
+
+    (void)pal_scan_netlink_close(scan);
 
     // Close all events now.
     for (size_t i = 0; i < _countof(scan->tasks); i++)

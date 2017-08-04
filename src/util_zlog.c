@@ -26,11 +26,11 @@ int32_t zlog_initialize(
     void
 )
 {
-    // 
+    //
     // If confpath is NULL, it looks for the environment variable
-    // ZLOG_CONF_PATH to find the configuration file. If $ZLOG_CONF_PATH 
-    // is NULL also, all logs will be output to stdout with an internal 
-    // format. 
+    // ZLOG_CONF_PATH to find the configuration file. If $ZLOG_CONF_PATH
+    // is NULL also, all logs will be output to stdout with an internal
+    // format.
     //
     if (init_called++)
         return er_ok;
@@ -156,10 +156,10 @@ void __zlog_debug_v(
 )
 {
     if (!log)
-        vdzlog(file, filelen, 
+        vdzlog(file, filelen,
             func, funclen, line, ZLOG_LEVEL_DEBUG, format, args);
     else
-        vzlog((zlog_category_t*)log, file, filelen, 
+        vzlog((zlog_category_t*)log, file, filelen,
             func, funclen, line, ZLOG_LEVEL_DEBUG, format, args);
 }
 
@@ -178,10 +178,10 @@ void __zlog_trace_v(
 )
 {
     if (!log)
-        vdzlog(file, filelen, 
+        vdzlog(file, filelen,
             func, funclen, line, ZLOG_LEVEL_INFO, format, args);
     else
-        vzlog((zlog_category_t*)log, file, filelen, 
+        vzlog((zlog_category_t*)log, file, filelen,
             func, funclen, line, ZLOG_LEVEL_INFO, format, args);
 }
 
@@ -222,10 +222,10 @@ void __zlog_error_v(
 )
 {
     if (!log)
-        vdzlog(file, filelen, 
+        vdzlog(file, filelen,
             func, funclen, line, ZLOG_LEVEL_ERROR, format, args);
     else
-        vzlog((zlog_category_t*)log, file, filelen, 
+        vzlog((zlog_category_t*)log, file, filelen,
             func, funclen, line, ZLOG_LEVEL_ERROR, format, args);
 }
 
@@ -317,7 +317,7 @@ void __zlog_error_b(
             func, funclen, line, ZLOG_LEVEL_ERROR, buf, buflen);
 }
 
-#define MAX_BUF 900 
+#define MAX_BUF 900
 
 //
 // Remove line breaks

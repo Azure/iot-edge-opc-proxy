@@ -23,7 +23,8 @@ typedef enum pal_scan_probe_state
 {
     pal_scan_probe_idle = 1,
     pal_scan_probe_working,
-    pal_scan_probe_done
+    pal_scan_probe_done,
+    pal_scan_probe_error
 }
 pal_scan_probe_state_t;
 
@@ -157,18 +158,17 @@ static void pal_scan_probe_complete(
         }
     }
 
-    if (task->sock_fd != _invalid_fd)
+    if (task->state == pal_scan_probe_working)
     {
-        while (!HasOverlappedIoCompleted(&task->ov))
-            CancelIoEx((HANDLE)task->sock_fd, &task->ov);
-        closesocket(task->sock_fd);
-        memset(&task->ov, 0, sizeof(OVERLAPPED));
-        task->sock_fd = _invalid_fd;
+        CancelIoEx((HANDLE)task->sock_fd, &task->ov);
+        return; // Wait for overlapped to post complete again with error
     }
 
-    task->buf[0] = 0;
     task->state = pal_scan_probe_idle;
-
+    closesocket(task->sock_fd);
+    task->sock_fd = _invalid_fd;
+    memset(&task->ov, 0, sizeof(OVERLAPPED));
+    task->buf[0] = 0;
     if (task->scan->scheduler)
         prx_scheduler_clear(task->scan->scheduler, NULL, task);
     __do_next(task->scan, pal_scan_next);
@@ -190,12 +190,11 @@ static void CALLBACK pal_scan_result_from_OVERLAPPED(
 
     dbg_assert_ptr(task);
     dbg_assert_ptr(task->scan);
+    dbg_assert(task->state == pal_scan_probe_working, "Not working %d", task->state);
     if (error == 0)
     {
         if (0 == (task->scan->flags & pal_scan_no_name_lookup))
         {
-            if (task->scan->destroy)
-                return;
             if (__sa_base(&task->scan->address)->sa_family == AF_UNSPEC)
             {
                 (void)getnameinfo(__sa_base(&task->to), __sa_size(&task->to),
@@ -209,8 +208,11 @@ static void CALLBACK pal_scan_result_from_OVERLAPPED(
         }
         task->state = pal_scan_probe_done;
     }
-    if (!task->scan->destroy)
-        __do_next_s(task->scan->scheduler, pal_scan_probe_complete, task);
+    else
+    {
+        task->state = pal_scan_probe_error;
+    }
+    __do_next_s(task->scan->scheduler, pal_scan_probe_complete, task);
 }
 
 //
@@ -234,15 +236,16 @@ static DWORD WINAPI pal_scan_probe_with_arp(
     {
         if (0 == (task->scan->flags & pal_scan_no_name_lookup))
         {
-            if (task->scan->destroy)
-                return 0;
             (void)getnameinfo(__sa_base(&task->to), __sa_size(&task->to),
                 task->buf, sizeof(task->buf), NULL, 0, 0);
         }
         task->state = pal_scan_probe_done;
     }
-    if (!task->scan->destroy)
-        __do_next_s(task->scan->scheduler, pal_scan_probe_complete, task);
+    else
+    {
+        task->state = pal_scan_probe_error;
+    }
+    __do_next_s(task->scan->scheduler, pal_scan_probe_complete, task);
     return 0;
 }
 
@@ -271,10 +274,7 @@ static void pal_scan_next_port(
     dbg_assert_ptr(scan);
     dbg_assert_is_task(scan->scheduler);
 
-    if (scan->cache_exhausted)
-        return;
-
-    for (size_t i = 0; i < _countof(scan->tasks); i++)
+    for (size_t i = 0; i < _countof(scan->tasks) && !scan->cache_exhausted; i++)
     {
         // Find next non-pending task
         if (scan->tasks[i].state != pal_scan_probe_idle)
@@ -328,6 +328,7 @@ static void pal_scan_next_port(
             // Failed to connect, continue;
             log_trace(scan->log, "Failed to call connect (%s)",
                 prx_err_string(result));
+            scan->tasks[i].state = pal_scan_probe_error;
             __do_next_s(scan->scheduler, pal_scan_probe_complete,
                 &scan->tasks[i]);
             continue;
@@ -356,10 +357,7 @@ static void pal_scan_next_address(
     dbg_assert_ptr(scan);
     dbg_assert_is_task(scan->scheduler);
 
-    if (scan->cache_exhausted)
-        return;
-
-    for (size_t i = 0; i < _countof(scan->tasks); i++)
+    for (size_t i = 0; i < _countof(scan->tasks) && !scan->cache_exhausted; i++)
     {
         // Find next non-pending task
         if (scan->tasks[i].state != pal_scan_probe_idle)
@@ -515,6 +513,7 @@ static void pal_scan_next_address(
                 // Failed to connect, continue;
                 log_trace(scan->log, "Failed to call connect (%s)",
                     prx_err_string(result));
+                scan->tasks[i].state = pal_scan_probe_error;
                 __do_next_s(scan->scheduler, pal_scan_probe_complete,
                     &scan->tasks[i]);
                 continue;
@@ -554,7 +553,7 @@ static void pal_scan_free(
 )
 {
     dbg_assert_ptr(scan);
-    scan->destroy = true;
+    scan->destroy = scan->cache_exhausted = true;
 
     if (scan->scheduler)
         prx_scheduler_clear(scan->scheduler, NULL, scan);
@@ -564,21 +563,15 @@ static void pal_scan_free(
         if (scan->tasks[i].state == pal_scan_probe_idle)
             continue;
 
-        if (scan->tasks[i].sock_fd != _invalid_fd)
-        {
-            while (!HasOverlappedIoCompleted(&scan->tasks[i].ov))
-                CancelIoEx((HANDLE)scan->tasks[i].sock_fd,
-                    &scan->tasks[i].ov);
-
-            closesocket(scan->tasks[i].sock_fd);
-            scan->tasks[i].sock_fd = _invalid_fd;
-        }
+        // If iocp, timeout the probe task
+        if (scan->address.si_family != AF_UNSPEC || scan->port)
+            pal_scan_probe_timeout(&scan->tasks[i]);
 
         //
-        // Cannot cancel threadpool task or in progress io safely.
-        // Wait for arp or iocp to finish, which will post back to
-        // the scheduler to reschedule. Due to destroy being set,
-        // this will instead call us back until all tasks are idle.
+        // Cannot cancel tasks safely. Wait for iocp or arp
+        // to finish, which will post back to the scheduler to
+        // reschedule. Due to destroy being set, this will
+        // instead call us back until all tasks are idle.
         //
         return;
     }
@@ -592,7 +585,7 @@ static void pal_scan_free(
     if (scan->neighbors)
         FreeMibTable(scan->neighbors);
 
-    log_trace(scan->log, "Scan %p destroy.", scan);
+    log_trace(scan->log, "Scan %p destroyed.", scan);
     mem_free_type(pal_scan_t, scan);
 }
 

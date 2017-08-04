@@ -26,15 +26,22 @@ MOCKABLE_FUNCTION(, int, bind,
     fd_t, s, const struct sockaddr*, name, socklen_t, namelen);
 MOCKABLE_FUNCTION(, int, close,
     fd_t, s);
+MOCKABLE_FUNCTION(, int, setsockopt,
+    fd_t, s, int, optlevel, int, optname, const sockbuf_t*, optval, socklen_t, optlen);
 MOCKABLE_FUNCTION(, int, getsockopt,
     fd_t, s, int, optlevel, int, optname, sockbuf_t*, optval, socklen_t*, optlen);
+MOCKABLE_FUNCTION(, sockssize_t, recv,
+    fd_t, s, sockbuf_t*, buf, socksize_t, len, int, flags);
 // netdb.h
-MOCKABLE_FUNCTION(WINAPI, int, getnameinfo,
-    const SOCKADDR*, pSockaddr, socklen_t, SockaddrLength, PCHAR, pNodeBuffer,
-    DWORD, NodeBufferSize, PCHAR, pServiceBuffer, DWORD, ServiceBufferSize, INT, Flags);
+MOCKABLE_FUNCTION(, int, getnameinfo,
+    const struct sockaddr*, address, socklen_t, addr_len, char*, buffer, socklen_t, buf_size,
+    char*, svcbuffer, socklen_t, svc_buf_size, int, flags);
 MOCKABLE_FUNCTION(, unsigned int,
     if_nametoindex, const char*, ifname);
-// netdb.h
+// stdio.h
+MOCKABLE_FUNCTION(, ssize_t, getline,
+    char**, lineptr, size_t*, n, FILE*, stream);
+
 //#undef h_errno
 //MOCKABLE_FUNCTION(, int*, h_errno_mock);
 //#define h_errno (*h_errno_mock())

@@ -45,6 +45,7 @@ struct pal_sdbrowser
 };
 
 static uintptr_t event_port = 0;
+static uint32_t bonjour_version;
 
 //
 // Translate error numbers from dns sd to prx
@@ -848,9 +849,6 @@ int32_t pal_sdclient_create(
         if (error != 0)
         {
             result = pal_sd_mdns_error_to_prx_error(error);
-            log_error(client->log,
-                "Failed creating connection to service: %d (%s)",
-                error, prx_err_string(result));
             break;
         }
 
@@ -870,10 +868,16 @@ int32_t pal_sdclient_create(
         result = pal_event_select(client->event_handle, pal_event_type_close);
         if (result != er_ok)
             break;
+
+        log_info(client->log, "Connected to Bonjour %d.%d service...",
+            bonjour_version / 10000, bonjour_version / 100 % 100);
         *created = client;
         return er_ok;
     } while (0);
 
+    log_error(client->log, "Failed connecting to Bonjour"
+        "%d.%d service: %d (%s)", bonjour_version / 10000,
+        bonjour_version / 100 % 100, error, prx_err_string(result));
     pal_sdclient_release(client);
     return result;
 }
@@ -902,8 +906,7 @@ int32_t pal_sd_init(
 )
 {
     DNSServiceErrorType error;
-    uint32_t version;
-    uint32_t size = sizeof(version);
+    uint32_t size = sizeof(bonjour_version);
     int32_t result;
     int attempt = 0;
 
@@ -913,34 +916,30 @@ int32_t pal_sd_init(
         log_error(NULL, "FATAL: Failed creating event port.");
         return result;
     }
-    
+
     while (true)
     {
         error = DNSServiceGetProperty(kDNSServiceProperty_DaemonVersion,
-            &version, &size);
+            &bonjour_version, &size);
         if (error == 0)
-        {
-            log_info(NULL, "Using Bonjour (Version %d.%d)\n",
-                version / 10000, version / 100 % 100);
             return er_ok;
-        }
 
         log_error(NULL, "%d: Cannot connect to local Bonjour Service. (Error %d)"
             "Ensure the service is installed and running...", attempt, error);
-        
+
         if (++attempt > 10)
         {
             if (error == kDNSServiceErr_ServiceNotRunning)
             {
                 log_error(NULL, "  ... Giving up to connect to Bonjour -"
                     " service discovery not supported on this platform.");
-                result = er_not_supported;  
+                result = er_not_supported;
             }
             else
                 result = pal_sd_mdns_error_to_prx_error(error);
         }
     }
-    
+
     pal_event_port_close(event_port);
     event_port = 0;
     return result;
