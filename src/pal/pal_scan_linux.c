@@ -995,7 +995,7 @@ int32_t pal_scan_net(
             break;
         }
 
-#if IP_NEIGHBOR
+#if defined(IP_NEIGHBOR)
         result = pal_scan_netlink_listen(scan, RTMGRP_NEIGH);
         if (result != er_ok)
         {
