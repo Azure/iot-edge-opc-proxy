@@ -12,7 +12,7 @@ const char* k_sep = "/";
 static char* working_dir = NULL;
 
 //
-// Initialize 
+// Initialize
 //
 int32_t pal_file_init(
     void
@@ -35,7 +35,7 @@ bool pal_file_exists(
 // Get Full path of a file name
 //
 int32_t pal_get_real_path(
-    const char* file_name, 
+    const char* file_name,
     const char** path
 )
 {
@@ -98,7 +98,7 @@ int32_t pal_get_real_path(
             result = er_ok;
             break;
         }
-        
+
         // Convert relative path to absolute using current working dir
         if (*file_name == '.')
         {
@@ -145,7 +145,7 @@ int32_t pal_get_real_path(
             {
                 strcat(buf, "/");
                 strcat(buf, file_name);
-                *path = buf; 
+                *path = buf;
                 buf = NULL;
                 result = er_ok;
                 break;
@@ -184,7 +184,7 @@ int32_t pal_read_dir(
     if (dir == NULL)
         return pal_os_last_error_as_prx_error();
     result = er_not_found;
-    while (true) 
+    while (true)
     {
         dp = readdir(dir);
         if (!dp)
@@ -216,7 +216,7 @@ int32_t pal_read_dir(
 
         /**/ if (S_ISDIR(statbuf.st_mode))
             palstat.type = prx_file_type_dir;
-        else 
+        else
             palstat.type = prx_file_type_file;
 
         if (er_ok != cb(context, er_ok, dp->d_name, &palstat))

@@ -148,11 +148,18 @@ Operations (Mutually exclusive):
             try {
                 ConsoleSampleClient(endpointURL, op, count).Wait();
             }
-            catch (Exception e) {
-                Console.Error.WriteLine($"Exit due to Exception: {e}");
-                Console.Out.WriteLine("Press any key to exit");
-                Console.ReadKey();
+            catch (AggregateException ae) {
+                ae.Flatten();
+                Console.Error.WriteLine("One or more error(s) occurred:");
+                foreach (var e in ae.InnerExceptions) {
+                    Console.Error.WriteLine($"   -> {e.Message}");
+                }
             }
+            catch (Exception e) {
+                Console.Error.WriteLine($"An error occurred: {e.Message}");
+            }
+            Console.Out.WriteLine("Press any key to exit");
+            Console.ReadKey();
         }
 
         static async Task ConsoleSampleClient(string endpointURL, Op op, int count) {

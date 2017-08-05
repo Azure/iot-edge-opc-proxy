@@ -10,6 +10,7 @@ RUN set -ex \
         abuild \
         binutils \
         make \
+        linux-headers \
         libc-dev \
         libressl-dev \
         curl-dev \

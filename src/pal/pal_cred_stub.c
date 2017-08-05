@@ -21,7 +21,7 @@ int32_t pal_cred_init(
         "Ensure you properly safeguard all secrets on this device!");
 
     //
-    // While cred store is not supported, hmac calc is still performed 
+    // While cred store is not supported, hmac calc is still performed
     // using below implementation.
     //
     return er_not_supported;
@@ -112,5 +112,5 @@ void pal_cred_deinit(
     void
 )
 {
-    // no-op 
+    // no-op
 }

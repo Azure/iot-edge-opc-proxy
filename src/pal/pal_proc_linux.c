@@ -81,7 +81,7 @@ int32_t pal_process_spawn(
 //
 // Kills a process
 //
-void pal_process_kill( 
+void pal_process_kill(
     process_t* proc
 )
 {
