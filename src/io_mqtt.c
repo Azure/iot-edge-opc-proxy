@@ -1039,7 +1039,18 @@ static void io_mqtt_connection_reconnect(
                     break;
 
                 // OpenSSL tls needs the trusted certs
-                (void)xio_setoption(connection->socket_io, "TrustedCerts", trusted_certs());
+                (void)xio_setoption(connection->socket_io, "TrustedCerts",
+                    trusted_certs());
+
+                //
+                // Register tls's do work as virtual dowork function in async xio_sk
+                // That way tls buffers are pushed when events are happening on the
+                // socket
+                //
+                (void)xio_setoption(connection->socket_io, xio_opt_dowork_cb,
+                    (void*)xio_dowork);
+                (void)xio_setoption(connection->socket_io, xio_opt_dowork_ctx,
+                    connection->socket_io);
             }
 
             // Set scheduler after the fact - this will push receives back to us

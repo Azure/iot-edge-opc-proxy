@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <VersionPrefix>1.0.3</VersionPrefix>
-    <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1</TargetFrameworks>
     <AssemblyName>Client</AssemblyName>
     <OutputType>Exe</OutputType>
     <PackageId>Client</PackageId>
@@ -23,13 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.Core" Version="0.2.4" />
-    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua.SDK" Version="0.2.4" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
+    <PackageReference Include="OPCFoundation.NetStandard.Opc.Ua" Version="0.4.1" />
   </ItemGroup>
 
 </Project>

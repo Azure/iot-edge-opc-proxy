@@ -68,8 +68,10 @@ struct pal_scan
     int32_t timeout;                      // Next event loop timeout
 
     uint32_t ip_scan_itf;
-    uint32_t ip_scan_cur;        // next ip address or port to probe
-    uint32_t ip_scan_end;         // End port or ip address to probe
+    uint32_t ip_scan_cur;         // Current ip address to be probed
+    uint32_t ip_scan_end;             // End ip address + 1 to probe
+    uint16_t port_scan_cur;             // Current port to be probed
+    uint32_t port_scan_end;                 // End port + 1 to probe
 
 #define MAX_PROBES 1024
     pal_scan_probe_t tasks[MAX_PROBES];            // Probe contexts
@@ -284,6 +286,7 @@ void pal_scan_probe_begin(
         {
             // Connected synchronously
             task->state = pal_scan_probe_done;
+            pal_scan_probe_complete(task); 
             break;
         }
 
@@ -305,8 +308,8 @@ void pal_scan_probe_begin(
     }
     while (0);
 
-    // Probe completed synchronously or failed, complete and continue...
-    pal_scan_probe_complete(task);
+    // Causes collect from scheduler - otherwise we might stack overflow.
+    task->probe_start = 0;
 }
 
 //
@@ -326,7 +329,7 @@ static int32_t pal_scan_get_next_port(
         return er_nomore;
 
     // Select next port
-    if (scan->ip_scan_cur >= scan->ip_scan_end)
+    if (scan->port_scan_cur >= scan->port_scan_end)
     {
         // No more candidates
         // Notify we are done.
@@ -336,7 +339,7 @@ static int32_t pal_scan_get_next_port(
         return er_nomore;
     }
 
-    port = (uint16_t)scan->ip_scan_cur++;
+    port = (uint16_t)scan->port_scan_cur++;
 
     // Perform actual scan action - update address with target and port
     memset(from, 0, sizeof(struct sockaddr_in6));
@@ -370,7 +373,6 @@ static int32_t pal_scan_get_next_address(
     {
         if (scan->ip_scan_cur < scan->ip_scan_end)
         {
-            scan->ip_scan_cur++;
             __sa_base(to)->sa_family = AF_INET;
             __sa_as_in4(to)->sin_addr.s_addr = swap_32(scan->ip_scan_cur);
 
@@ -380,6 +382,7 @@ static int32_t pal_scan_get_next_address(
 
             // Update address to add any port
             __sa_as_in4(to)->sin_port = swap_16(scan->port);
+            scan->ip_scan_cur++;
             return er_ok;
         }
 
@@ -487,7 +490,7 @@ static void pal_scan_arp_cache_check(
     const char* mac, *dev;
 
     dbg_assert_ptr(scan);
-    fp = fopen("/proc/scan/arp", "r");
+    fp = fopen("/proc/net/arp", "r");
     if (!fp)
         return;
     read = getline(&line, &len, fp); // Skip header of arp cache
@@ -582,7 +585,8 @@ static int32_t pal_scan_scheduler(
         }
 
         if (scan->tasks[i].sock_fd != -1 &&
-            scan->tasks[i].probe_start + PROBE_TIMEOUT < now)
+            (!scan->tasks[i].probe_start ||
+              scan->tasks[i].probe_start + PROBE_TIMEOUT < now))
         {
             dbg_assert(scan->tasks[i].event_handle != 0, "no reg?");
 
@@ -601,7 +605,7 @@ static int32_t pal_scan_scheduler(
         }
 
         tmp = now - scan->tasks[i].probe_start + PROBE_TIMEOUT;
-        if ((int32_t)tmp < reschedule)
+        if (tmp < (ticks_t)reschedule)
             reschedule = (int32_t)tmp;
     }
 
@@ -953,7 +957,7 @@ static int32_t pal_scan_create(
 }
 
 //
-// Scan for addresses with open port in subnet
+// Scan for addresses with optionally open port in subnet
 //
 int32_t pal_scan_net(
     uint16_t port,
@@ -974,7 +978,7 @@ int32_t pal_scan_net(
         return result;
     do
     {
-        scan->port = port;
+        scan->port_scan_end = scan->port = scan->port_scan_cur = port;
 
         error = getifaddrs(&scan->ifaddr);
         if (error != 0)
@@ -1044,9 +1048,11 @@ int32_t pal_scan_ports(
         return result;
     do
     {
-        scan->ip_scan_cur = port_range_low;
-        scan->ip_scan_end = port_range_high;
-        scan->ip_scan_end++;
+        scan->port_scan_cur = port_range_low;
+        scan->port_scan_end = port_range_high;
+
+        scan->port = scan->port_scan_cur;
+        scan->port_scan_end++;
 
         sa_len = sizeof(struct sockaddr_in6);
         result = pal_os_from_prx_socket_address(addr,

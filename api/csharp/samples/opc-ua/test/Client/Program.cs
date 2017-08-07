@@ -204,9 +204,18 @@ Operations (Mutually exclusive):
                 X509Certificate2 certificate = CertificateFactory.CreateCertificate(
                     config.SecurityConfiguration.ApplicationCertificate.StoreType,
                     config.SecurityConfiguration.ApplicationCertificate.StorePath,
+                    null,
                     config.ApplicationUri,
                     config.ApplicationName,
-                    config.SecurityConfiguration.ApplicationCertificate.SubjectName
+                    config.SecurityConfiguration.ApplicationCertificate.SubjectName,
+                    null,
+                    CertificateFactory.defaultKeySize,
+                    DateTime.UtcNow - TimeSpan.FromDays(1),
+                    CertificateFactory.defaultLifeTime,
+                    CertificateFactory.defaultHashSize,
+                    false,
+                    null,
+                    null
                     );
 
                 config.SecurityConfiguration.ApplicationCertificate.Certificate = certificate;
@@ -219,8 +228,7 @@ Operations (Mutually exclusive):
                     config.SecurityConfiguration.ApplicationCertificate.Certificate);
 
                 if (config.SecurityConfiguration.AutoAcceptUntrustedCertificates) {
-                    config.CertificateValidator.CertificateValidation +=
-                        new CertificateValidationEventHandler(CertificateValidator_CertificateValidation);
+                    config.CertificateValidator.CertificateValidation += CertificateValidator_CertificateValidation;
                 }
             }
             else {

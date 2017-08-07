@@ -11,6 +11,8 @@
 //
 #define xio_opt_scheduler "scheduler"
 #define xio_opt_flow_ctrl "xon"
+#define xio_opt_dowork_cb "doworkcb"
+#define xio_opt_dowork_ctx "doworkctx"
 
 //
 // Passed to xio for socket interface
