@@ -52,15 +52,17 @@ struct pal_scan
     prx_scheduler_t* scheduler;
     int32_t flags;
 
+    uint32_t ip_scan_itf;
+    uint32_t ip_scan_cur;         // Current ip address to be probed
+    uint32_t ip_scan_end;             // End ip address + 1 to probe
+
     SOCKADDR_INET address;     // Address of host when port scanning
     uint16_t port;  // Port or 0 if only addresses are to be scanned
+    uint16_t port_scan_cur;             // Current port to be probed
+    uint32_t port_scan_end;                 // End port + 1 to probe
 
     pal_scan_cb_t cb;
     void* context;
-
-    uint32_t ip_scan_itf;
-    uint32_t ip_scan_cur;        // next ip address or port to probe
-    uint32_t ip_scan_end;         // End port or ip address to probe
 
 #define MAX_PROBES 1024
     pal_scan_probe_t tasks[MAX_PROBES];            // Probe contexts
@@ -281,7 +283,7 @@ static void pal_scan_next_port(
             continue;
 
         // Select next port
-        if (scan->ip_scan_cur >= scan->ip_scan_end)
+        if (scan->port_scan_cur >= scan->port_scan_end)
         {
             // No more candidates
             if (i == 0)
@@ -294,7 +296,7 @@ static void pal_scan_next_port(
             return;
         }
 
-        port = (uint16_t)scan->ip_scan_cur++;
+        port = (uint16_t)scan->port_scan_cur++;
 
         // Perform actual scan action - update address with target and port
         scan->tasks[i].state = pal_scan_probe_working;
@@ -369,12 +371,13 @@ static void pal_scan_next_address(
         {
             if (scan->ip_scan_cur < scan->ip_scan_end)
             {
-                scan->ip_scan_cur++;
                 to->si_family = to->Ipv4.sin_family = AF_INET;  // Redundant
                 to->Ipv4.sin_addr.s_addr = swap_32(scan->ip_scan_cur);
 
                 from->si_family = from->Ipv4.sin_family = AF_INET;  // Redundant
                 from->Ipv4.sin_addr.s_addr = scan->ip_scan_itf;
+
+                scan->ip_scan_cur++;  // Go to next ip address
                 break;
             }
 
@@ -424,7 +427,6 @@ static void pal_scan_next_address(
 
                     if (from->si_family == AF_UNSPEC)
                         continue; // No address found
-
                     break;
                 }
             }
@@ -663,7 +665,7 @@ static int32_t pal_scan_create(
 }
 
 //
-// Scan for addresses with open port in subnet
+// Scan for addresses with optionally open port in subnet
 //
 int32_t pal_scan_net(
     uint16_t port,
@@ -685,7 +687,7 @@ int32_t pal_scan_net(
         return result;
     do
     {
-        scan->port = port;
+        scan->port_scan_end = scan->port = scan->port_scan_cur = port;
 
         // a) Get interface info
         while (true)
@@ -775,9 +777,11 @@ int32_t pal_scan_ports(
         return result;
     do
     {
-        scan->ip_scan_cur = port_range_low;
-        scan->ip_scan_end = port_range_high;
-        scan->ip_scan_end++;
+        scan->port_scan_cur = port_range_low;
+        scan->port_scan_end = port_range_high;
+
+        scan->port = scan->port_scan_cur;
+        scan->port_scan_end++;
 
         sa_len = sizeof(SOCKADDR_INET);
         result = pal_os_from_prx_socket_address(addr,

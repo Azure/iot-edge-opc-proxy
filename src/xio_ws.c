@@ -35,6 +35,8 @@ typedef struct xio_wsclient_t
     void* on_io_error_context;
     ON_IO_CLOSE_COMPLETE on_io_close_complete;
     void* on_io_close_complete_context;
+    IO_DOWORK dowork_cb;
+    CONCRETE_IO_HANDLE dowork_ctx;
 
     bool recv_enabled;
     io_queue_t* inbound;     // Inbound buffer queue with received buffers
@@ -129,10 +131,16 @@ static void xio_wsclient_deliver_inbound_results(
             ws->on_io_error(
                 ws->on_io_error_context);
         }
-        else if (ws->on_bytes_received && size > 0)
+        else if (size > 0)
         {
-            ws->on_bytes_received(
-                ws->on_bytes_received_context, buf, size);
+            if (ws->on_bytes_received)
+            {
+                ws->on_bytes_received(
+                    ws->on_bytes_received_context, buf, size);
+            }
+
+            if (ws->dowork_cb)
+                ws->dowork_cb(ws->dowork_ctx);
         }
 
         io_queue_buffer_release(buffer);
@@ -160,6 +168,10 @@ static void xio_wsclient_deliver_outbound_results(
             ((ON_SEND_COMPLETE)buffer->cb_ptr)(buffer->ctx,
                 buffer->code != er_ok ? IO_SEND_ERROR : IO_SEND_OK);
         }
+
+        if (ws->dowork_cb)
+            ws->dowork_cb(ws->dowork_ctx);
+
         io_queue_buffer_release(buffer);
     }
 }
@@ -523,6 +535,7 @@ static int32_t xio_wsclient_close(
     ws->on_bytes_received = NULL;
     ws->on_io_open_complete = NULL;
     ws->on_io_error = NULL;
+    ws->dowork_cb = NULL;
 
     ws->on_io_close_complete = on_io_close_complete;
     ws->on_io_close_complete_context = on_io_close_complete_context;
@@ -634,17 +647,21 @@ static int32_t xio_wsclient_setoption(
     const void* buffer
 )
 {
-    int32_t result;
     xio_wsclient_t* ws = (xio_wsclient_t*)handle;
     chk_arg_fault_return(handle);
-    /**/ if (0 == string_compare(option_name, xio_opt_scheduler))
-        result = prx_scheduler_create((prx_scheduler_t*)buffer, &ws->scheduler);
-    else if (0 == string_compare(option_name, xio_opt_flow_ctrl))
-        result = xio_wsclient_recv(handle, *((uint32_t*)buffer) != 0);
-    else
-        result = er_not_supported;
 
-    return result;
+    /**/ if (0 == string_compare(option_name, xio_opt_scheduler))
+        return prx_scheduler_create((prx_scheduler_t*)buffer, &ws->scheduler);
+    else if (0 == string_compare(option_name, xio_opt_flow_ctrl))
+        return xio_wsclient_recv(handle, *((uint32_t*)buffer) != 0);
+    else if (0 == string_compare(option_name, xio_opt_dowork_cb))
+        ws->dowork_cb = (IO_DOWORK)buffer;
+    else if (0 == string_compare(option_name, xio_opt_dowork_ctx))
+        ws->dowork_ctx = (CONCRETE_IO_HANDLE)buffer;
+    else
+        return er_not_supported;
+
+    return er_ok;
 }
 
 //

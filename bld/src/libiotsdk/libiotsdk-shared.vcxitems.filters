@@ -317,13 +317,13 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\xlogging.h">
       <Filter>inc\shared</Filter>
     </ClInclude>
-    <ClInclude Include="C:\git\iot-gateway-proxy\bld\src\libiotsdk\..\..\..\deps\shared\inc\azure_c_shared_utility\optimize_size.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\optimize_size.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\git\iot-gateway-proxy\bld\src\libiotsdk\..\..\..\deps\shared\inc\azure_c_shared_utility\string_tokenizer_types.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\string_tokenizer_types.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="C:\git\iot-gateway-proxy\bld\src\libiotsdk\..\..\..\deps\shared\inc\azure_c_shared_utility\vector_types.h">
+    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\shared\inc\azure_c_shared_utility\vector_types.h">
       <Filter>inc</Filter>
     </ClInclude>
   </ItemGroup>

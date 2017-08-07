@@ -104,7 +104,7 @@
       <ThreadSafeStatics />
       <RuntimeTypeInfo />
       <AdditionalOptions>-fpic -pthread -Wconversion -Wsign-conversion</AdditionalOptions>
-      <PreprocessorDefinitions>NO_ZLOG;USE_OPENSSL;_AVAHI_EMBEDDED;UMQTT_PINGRESP_CALLBACK;_POSIX_C_SOURCE=200112L;</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NO_ZLOG;USE_OPENSSL;_AVAHI_EMBEDDED;_POSIX_C_SOURCE=200112L;</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>inc;deps/parson;deps/cmp;deps/hashtable;deps/shared/inc;deps/umqtt/inc;%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -120,7 +120,7 @@
       <ThreadSafeStatics />
       <RuntimeTypeInfo />
       <AdditionalOptions>-fpic -pthread -Wconversion -Wsign-conversion</AdditionalOptions>
-      <PreprocessorDefinitions>NO_ZLOG;USE_OPENSSL;_AVAHI_EMBEDDED;UMQTT_PINGRESP_CALLBACK;_POSIX_C_SOURCE=200112L;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NO_ZLOG;USE_OPENSSL;_AVAHI_EMBEDDED;_POSIX_C_SOURCE=200112L;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>inc;deps/parson;deps/cmp;deps/hashtable;deps/shared/inc;deps/umqtt/inc;%(AdditionalIncludeDirectories);$(MSBuildThisFileDirectory)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
