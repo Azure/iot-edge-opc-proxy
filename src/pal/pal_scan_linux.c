@@ -286,6 +286,7 @@ void pal_scan_probe_begin(
         {
             // Connected synchronously
             task->state = pal_scan_probe_done;
+            pal_scan_probe_complete(task); 
             break;
         }
 
@@ -307,8 +308,8 @@ void pal_scan_probe_begin(
     }
     while (0);
 
-    // Probe completed synchronously or failed, complete and continue...
-    pal_scan_probe_complete(task);
+    // Causes collect from scheduler - otherwise we might stack overflow.
+    task->probe_start = 0;
 }
 
 //
@@ -489,7 +490,7 @@ static void pal_scan_arp_cache_check(
     const char* mac, *dev;
 
     dbg_assert_ptr(scan);
-    fp = fopen("/proc/scan/arp", "r");
+    fp = fopen("/proc/net/arp", "r");
     if (!fp)
         return;
     read = getline(&line, &len, fp); // Skip header of arp cache
@@ -584,7 +585,8 @@ static int32_t pal_scan_scheduler(
         }
 
         if (scan->tasks[i].sock_fd != -1 &&
-            scan->tasks[i].probe_start + PROBE_TIMEOUT < now)
+            (!scan->tasks[i].probe_start ||
+              scan->tasks[i].probe_start + PROBE_TIMEOUT < now))
         {
             dbg_assert(scan->tasks[i].event_handle != 0, "no reg?");
 
@@ -603,7 +605,7 @@ static int32_t pal_scan_scheduler(
         }
 
         tmp = now - scan->tasks[i].probe_start + PROBE_TIMEOUT;
-        if ((int32_t)tmp < reschedule)
+        if (tmp < (ticks_t)reschedule)
             reschedule = (int32_t)tmp;
     }
 
