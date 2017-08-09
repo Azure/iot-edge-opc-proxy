@@ -229,7 +229,7 @@ static bool pal_socket_async_has_close_completed(
 
     if (!HasOverlappedIoCompleted(&async_op->ov))
     {
-        // Cancel any pending io
+        // Cancel io in progress
         if (CancelIoEx((HANDLE)async_op->sock->sock_fd, &async_op->ov))
             return false;
 
@@ -237,8 +237,8 @@ static bool pal_socket_async_has_close_completed(
         memset(&async_op->ov, 0, sizeof(OVERLAPPED));
     }
 
-    if (async_op->buffer)
-        return false;  // Wait for buffer to complete
+    if (async_op->pending)
+        return false;  // Wait for pending io to complete
 
     prx_scheduler_clear(async_op->sock->scheduler, NULL, async_op);
     return true;
@@ -272,8 +272,10 @@ static void pal_socket_try_close(
     }
     else
     {
-        // Try again in 1 second
-        __do_later(sock, pal_socket_try_close, 1000);
+        // Try again in 3 seconds
+        prx_scheduler_clear(sock->scheduler,
+            (prx_task_t)pal_socket_try_close, sock);
+        __do_later(sock, pal_socket_try_close, 3000);
     }
 }
 
@@ -419,7 +421,11 @@ static void pal_socket_async_complete(
     async_op->pending = false;
 
     if (async_op->sock->closing)
+    {
+        __do_next(async_op->sock, pal_socket_try_close);
         return;
+    }
+
     if (async_op->result != er_ok)
         return;
     if (!async_op->enabled)
@@ -443,13 +449,14 @@ static void CALLBACK pal_socket_async_complete_from_OVERLAPPED(
 
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
+
     if (!async_op->sock)
         return; // Safety
 
     async_op->result = pal_socket_from_os_error(error);
     async_op->buf_len = (size_t)bytes;
 
-    for (int i = 0; ; i++)
+    for (int i = 0; !async_op->sock->closing; i++)
     {
         // Complete operation
         dbg_assert(async_op->pending, "Op should be pending");
