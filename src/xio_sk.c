@@ -290,7 +290,10 @@ static void xio_socket_on_end_receive(
     buffer = io_queue_buffer_from_ptr(*buf);
     dbg_assert_ptr(buffer);
 
-    if (result != er_ok && result != er_aborted && result != er_retry)
+    if (result != er_ok &&
+        result != er_aborted &&
+        result != er_retry &&
+        result != er_closed)
     {
         log_error(sk->log, "Error during pal receive (%s).",
             prx_err_string(result));

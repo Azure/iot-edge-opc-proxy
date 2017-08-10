@@ -253,6 +253,7 @@ static void pal_socket_try_close(
 {
     size_t size;
     dbg_assert_ptr(sock);
+    dbg_assert_is_task(sock->scheduler);
 
     if (sock->sock_fd == INVALID_SOCKET)
         return;
@@ -369,6 +370,7 @@ static int32_t pal_socket_connect_complete(
     }
 
     async_op->addr_len = 0;
+    async_op->pending = false;
 
     if (result != er_ok)
         pal_socket_close_handle(async_op->sock);
@@ -456,14 +458,14 @@ static void CALLBACK pal_socket_async_complete_from_OVERLAPPED(
     async_op->result = pal_socket_from_os_error(error);
     async_op->buf_len = (size_t)bytes;
 
-    for (int i = 0; !async_op->sock->closing; i++)
+    for (int i = 0; ; i++)
     {
         // Complete operation
         dbg_assert(async_op->pending, "Op should be pending");
         dbg_assert_ptr(async_op->complete);
         async_op->complete(async_op);
 
-        if (!async_op->enabled)
+        if (!async_op->enabled || async_op->sock->closing)
             break;
         if (async_op->result != er_ok)
             break;
@@ -746,17 +748,29 @@ static void pal_socket_async_recv_complete(
     dbg_assert_ptr(async_op->sock);
     dbg_assert(!async_op->addr_len, "Expected no adddress on WSARecv");
 
-    if (result == er_ok)
+    do
     {
+        if (result != er_ok)
+            break;
+        if (!async_op->buf_len)
+        {
+            result = er_closed; // Remote side closed
+            async_op->enabled = false;
+            break;
+        }
+
+        dbg_assert_ptr(async_op->buffer);
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
         if (result != er_ok)
         {
             log_error(async_op->sock->log, "Recv received bad flags %x (%s)",
                 async_op->flags, prx_err_string(result));
+            break;
         }
-    }
+        break;
+    } 
+    while (0);
 
-    dbg_assert_ptr(async_op->buffer);
     async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_end_recv,
         &async_op->buffer, &async_op->buf_len, NULL, &flags, result, &async_op->context);
     pal_socket_async_op_init(async_op);
@@ -796,6 +810,12 @@ static void pal_socket_async_recvfrom_complete(
     {
         if (result != er_ok)
             break;
+        if (!async_op->buf_len)
+        {
+            async_op->enabled = false;
+            result = er_aborted;
+            break;
+        }
 
         // Process received flags and address...
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
@@ -1435,7 +1455,6 @@ static int32_t pal_socket_async_connect_begin(
     while (0);
 
     // Finish connect
-    async_op->pending = false;
     async_op->buf_len = 0;
     async_op->result = result;
     result = pal_socket_connect_complete(async_op);

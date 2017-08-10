@@ -16,7 +16,7 @@
 #if !defined(DEBUG)
 #define DEFAULT_RENEWAL_TIMEOUT_SEC 8 * 60 * 60
 #else
-#define DEFAULT_RENEWAL_TIMEOUT_SEC     30 * 60
+#define DEFAULT_RENEWAL_TIMEOUT_SEC      30
 #endif // !defined(DEBUG)
 
 //
