@@ -14,9 +14,9 @@
 #include "azure_c_shared_utility/buffer_.h"
 
 #if !defined(DEBUG)
-#define DEFAULT_RENEWAL_TIMEOUT_SEC 8 * 60 * 60
+#define DEFAULT_RENEWAL_TIMEOUT_SEC (8 * 60 * 60)
 #else
-#define DEFAULT_RENEWAL_TIMEOUT_SEC      5 * 60
+#define DEFAULT_RENEWAL_TIMEOUT_SEC      (5 * 60)
 #endif // !defined(DEBUG)
 
 //
