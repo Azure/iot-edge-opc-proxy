@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+VisualStudioVersion = 15.0.26430.15
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Microsoft.Azure.Devices.Proxy.Samples", "Microsoft.Azure.Devices.Proxy.Samples", "{F78C9A16-78B2-4100-BB38-3889C17D6D01}"
 EndProject
@@ -155,8 +155,8 @@ Global
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net45.ActiveCfg = Debug|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net45.Build.0 = Debug|Any CPU
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net46.ActiveCfg = Debug|net46
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net46.Build.0 = Debug|net46
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net46.ActiveCfg = Debug|Any CPU
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|net46.Build.0 = Debug|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|x64.ActiveCfg = Debug|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|x64.Build.0 = Debug|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Debug|x86.ActiveCfg = Debug|Any CPU
@@ -165,8 +165,8 @@ Global
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|Any CPU.Build.0 = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net45.ActiveCfg = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net45.Build.0 = Release|Any CPU
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net46.ActiveCfg = Debug|net46
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net46.Build.0 = Debug|net46
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net46.ActiveCfg = Release|Any CPU
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|net46.Build.0 = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|x64.ActiveCfg = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|x64.Build.0 = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Perf|x86.ActiveCfg = Signed|Any CPU
@@ -175,8 +175,8 @@ Global
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net45.ActiveCfg = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net45.Build.0 = Release|Any CPU
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net46.ActiveCfg = Release|net46
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net46.Build.0 = Release|net46
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net46.ActiveCfg = Release|Any CPU
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|net46.Build.0 = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|x64.ActiveCfg = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|x64.Build.0 = Release|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Release|x86.ActiveCfg = Release|Any CPU
@@ -185,8 +185,8 @@ Global
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|Any CPU.Build.0 = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net45.ActiveCfg = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net45.Build.0 = Signed|Any CPU
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net46.ActiveCfg = Signed|net46
-		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net46.Build.0 = Signed|net46
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net46.ActiveCfg = Signed|Any CPU
+		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|net46.Build.0 = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|x64.ActiveCfg = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|x64.Build.0 = Signed|Any CPU
 		{88811AFB-D7C4-AB5A-B1DE-955407F90D1B}.Signed|x86.ActiveCfg = Signed|Any CPU

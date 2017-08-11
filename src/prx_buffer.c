@@ -453,6 +453,8 @@ static int32_t prx_dynamic_buffer_set_size(
     chk_arg_fault_return(*buffer);
 
     orig = __prx_buffer(*buffer);
+    if (orig->length == size)
+        return er_ok;
     dbg_assert_buf(orig);
 
     // Pointers will change after realloc, so remove from checked out list

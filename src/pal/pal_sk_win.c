@@ -229,7 +229,7 @@ static bool pal_socket_async_has_close_completed(
 
     if (!HasOverlappedIoCompleted(&async_op->ov))
     {
-        // Cancel any pending io
+        // Cancel io in progress
         if (CancelIoEx((HANDLE)async_op->sock->sock_fd, &async_op->ov))
             return false;
 
@@ -237,8 +237,8 @@ static bool pal_socket_async_has_close_completed(
         memset(&async_op->ov, 0, sizeof(OVERLAPPED));
     }
 
-    if (async_op->buffer)
-        return false;  // Wait for buffer to complete
+    if (async_op->pending)
+        return false;  // Wait for pending io to complete
 
     prx_scheduler_clear(async_op->sock->scheduler, NULL, async_op);
     return true;
@@ -253,6 +253,7 @@ static void pal_socket_try_close(
 {
     size_t size;
     dbg_assert_ptr(sock);
+    dbg_assert_is_task(sock->scheduler);
 
     if (sock->sock_fd == INVALID_SOCKET)
         return;
@@ -272,8 +273,10 @@ static void pal_socket_try_close(
     }
     else
     {
-        // Try again in 1 second
-        __do_later(sock, pal_socket_try_close, 1000);
+        // Try again in 3 seconds
+        prx_scheduler_clear(sock->scheduler,
+            (prx_task_t)pal_socket_try_close, sock);
+        __do_later(sock, pal_socket_try_close, 3000);
     }
 }
 
@@ -367,6 +370,7 @@ static int32_t pal_socket_connect_complete(
     }
 
     async_op->addr_len = 0;
+    async_op->pending = false;
 
     if (result != er_ok)
         pal_socket_close_handle(async_op->sock);
@@ -419,7 +423,11 @@ static void pal_socket_async_complete(
     async_op->pending = false;
 
     if (async_op->sock->closing)
+    {
+        __do_next(async_op->sock, pal_socket_try_close);
         return;
+    }
+
     if (async_op->result != er_ok)
         return;
     if (!async_op->enabled)
@@ -443,6 +451,7 @@ static void CALLBACK pal_socket_async_complete_from_OVERLAPPED(
 
     dbg_assert_ptr(async_op);
     dbg_assert_ptr(async_op->sock);
+
     if (!async_op->sock)
         return; // Safety
 
@@ -456,7 +465,7 @@ static void CALLBACK pal_socket_async_complete_from_OVERLAPPED(
         dbg_assert_ptr(async_op->complete);
         async_op->complete(async_op);
 
-        if (!async_op->enabled)
+        if (!async_op->enabled || async_op->sock->closing)
             break;
         if (async_op->result != er_ok)
             break;
@@ -739,17 +748,29 @@ static void pal_socket_async_recv_complete(
     dbg_assert_ptr(async_op->sock);
     dbg_assert(!async_op->addr_len, "Expected no adddress on WSARecv");
 
-    if (result == er_ok)
+    do
     {
+        if (result != er_ok)
+            break;
+        if (!async_op->buf_len)
+        {
+            result = er_closed; // Remote side closed
+            async_op->enabled = false;
+            break;
+        }
+
+        dbg_assert_ptr(async_op->buffer);
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
         if (result != er_ok)
         {
             log_error(async_op->sock->log, "Recv received bad flags %x (%s)",
                 async_op->flags, prx_err_string(result));
+            break;
         }
-    }
+        break;
+    } 
+    while (0);
 
-    dbg_assert_ptr(async_op->buffer);
     async_op->sock->itf.cb(async_op->sock->itf.context, pal_socket_event_end_recv,
         &async_op->buffer, &async_op->buf_len, NULL, &flags, result, &async_op->context);
     pal_socket_async_op_init(async_op);
@@ -789,6 +810,12 @@ static void pal_socket_async_recvfrom_complete(
     {
         if (result != er_ok)
             break;
+        if (!async_op->buf_len)
+        {
+            async_op->enabled = false;
+            result = er_aborted;
+            break;
+        }
 
         // Process received flags and address...
         result = pal_os_to_prx_message_flags(async_op->flags, &flags);
@@ -1428,7 +1455,6 @@ static int32_t pal_socket_async_connect_begin(
     while (0);
 
     // Finish connect
-    async_op->pending = false;
     async_op->buf_len = 0;
     async_op->result = result;
     result = pal_socket_connect_complete(async_op);
