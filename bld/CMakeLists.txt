@@ -172,7 +172,6 @@ function(add_files_to_install files)
 endfunction()
 
 add_subdirectory(src)
-add_subdirectory(api)
 
 option(run_unittests "set run_unittests to ON to run unittests (default is OFF)" OFF)
 
