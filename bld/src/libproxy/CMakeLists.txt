@@ -299,8 +299,9 @@ if(WIN32)
         PRIVATE advapi32
     )
     if(NOT use_lws)
-        # win7, or you would not use lws, no ncrypt on win7
         target_link_libraries(libproxy PRIVATE ncrypt)
+    else()
+        # win7, or you would not use lws. 
     endif()
 else()
     target_link_libraries(libproxy
@@ -369,8 +370,9 @@ if(WIN32)
 	    PUBLIC advapi32
     )
     if(NOT use_lws)
-        # win7, or you would not use lws, no ncrypt on win7
         target_link_libraries(libproxy-static PUBLIC ncrypt)
+    else()
+        # win7, or you would not use lws. 
     endif()
 else()
     target_link_libraries(libproxy-static

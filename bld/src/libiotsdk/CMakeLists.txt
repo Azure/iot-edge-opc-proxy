@@ -93,8 +93,10 @@ compileAsC99()
 
 if(WIN32)
     if(${use_lws})
-        # Fake older compiler to ensure that no ncrypt is used
-        # TODO: Should have a win7 macro and win7 build option.
+        #
+        # win7, or you would not use lws.  Fake older compiler to 
+        # ensure that no ecc and thus ncrypt is included then. 
+        #
         target_compile_definitions(libiotsdk PRIVATE _MSC_VER=1500)
     endif()
     target_include_directories(libiotsdk
