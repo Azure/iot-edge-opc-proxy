@@ -19,5 +19,7 @@
 /.vscode/**
 /build/**
 *.user
+/**/packages/**
+/**/packages.config
 # Ignore editor backup files
 *~
