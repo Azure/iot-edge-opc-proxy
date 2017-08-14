@@ -185,7 +185,7 @@ endif()
 #
 #  Build libwebsockets
 #
-if (use_lws)
+if(use_lws)
     set(use_openssl 1)
     if(WIN32)
         string(REPLACE "/W4" "/W0" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
@@ -291,17 +291,16 @@ endif()
 if(WIN32)
     target_link_libraries(libproxy
         PRIVATE winhttp
+        PRIVATE schannel
         PRIVATE ws2_32
         PRIVATE iphlpapi
         PRIVATE secur32
         PRIVATE crypt32
         PRIVATE advapi32
     )
-    if(NOT use_openssl)
-        target_link_libraries(libproxy
-            PRIVATE schannel
-            PRIVATE ncrypt
-        )
+    if(NOT use_lws)
+        # win7, or you would not use lws, no ncrypt on win7
+        target_link_libraries(libproxy PRIVATE ncrypt)
     endif()
 else()
     target_link_libraries(libproxy
@@ -369,11 +368,9 @@ if(WIN32)
         PUBLIC crypt32
 	    PUBLIC advapi32
     )
-    if(NOT use_openssl)
-        target_link_libraries(libproxy-static
-            PUBLIC schannel
-            PUBLIC ncrypt
-        )
+    if(NOT use_lws)
+        # win7, or you would not use lws, no ncrypt on win7
+        target_link_libraries(libproxy-static PUBLIC ncrypt)
     endif()
 else()
     target_link_libraries(libproxy-static
@@ -391,7 +388,7 @@ endif()
     target_link_libraries(libproxy-static PUBLIC ${_PAL_DEP_LIBS})
 
 if(WIN32)
-  # Place here the install rule for win32
+    # Place here the install rule for win32
 elseif(LINUX)
     install (TARGETS libproxy LIBRARY DESTINATION lib )
 endif()

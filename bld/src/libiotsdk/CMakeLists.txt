@@ -52,9 +52,16 @@ if(WIN32)
         ${_SHARED_ROOT}/adapters/threadapi_win32.c
         ${_SHARED_ROOT}/adapters/lock_win32.c
         ${_SHARED_ROOT}/adapters/httpapi_winhttp.c
-        ${_SHARED_ROOT}/src/tlsio_schannel.c
         ${_SHARED_ROOT}/src/x509_schannel.c
+        ${_SHARED_ROOT}/src/tlsio_schannel.c
     )
+    if(${use_lws} OR ${use_openssl})
+        set(use_openssl 1)
+        set(source_c_files ${source_c_files}
+            ${_SHARED_ROOT}/src/tlsio_openssl.c
+            ${_SHARED_ROOT}/src/x509_openssl.c
+        )
+    endif()
 else()
     set(source_c_files ${source_c_files}
         ${_SHARED_ROOT}/adapters/httpapi_curl.c
@@ -63,21 +70,17 @@ else()
         ${_SHARED_ROOT}/adapters/lock_pthreads.c
         ${_SHARED_ROOT}/adapters/linux_time.c
     )
-    if(NOT ${use_wolfssl})
+    if(${use_wolfssl})
+        set(source_c_files ${source_c_files}
+            ${_SHARED_ROOT}/src/tlsio_wolfssl.c
+        )
+    else()
         set(use_openssl 1)
+        set(source_c_files ${source_c_files}
+            ${_SHARED_ROOT}/src/tlsio_openssl.c
+            ${_SHARED_ROOT}/src/x509_openssl.c
+        )
     endif()
-endif()
-
-if(${use_lws} OR ${use_openssl})
-    set(use_openssl 1)
-    set(source_c_files ${source_c_files}
-        ${_SHARED_ROOT}/src/tlsio_openssl.c
-        ${_SHARED_ROOT}/src/x509_openssl.c
-    )
-elseif(${use_wolfssl})
-    set(source_c_files ${source_c_files}
-        ${_SHARED_ROOT}/src/tlsio_wolfssl.c
-    )
 endif()
 
 compileAsC99()
@@ -89,13 +92,17 @@ compileAsC99()
     set_property(TARGET libiotsdk PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 if(WIN32)
+    if(${use_lws})
+        # Fake older compiler to ensure that no ncrypt is used
+        # TODO: Should have a win7 macro and win7 build option.
+        target_compile_definitions(libiotsdk PRIVATE _MSC_VER=1500)
+    endif()
     target_include_directories(libiotsdk
         PUBLIC ${_IOTSDK_INC}
         PUBLIC ${_UMQTT_INC}
     )
 else()
     target_compile_definitions(libiotsdk PRIVATE _POSIX_C_SOURCE=200112L)
-    target_compile_definitions(libiotsdk PRIVATE UMQTT_PINGRESP_CALLBACK)
     set_target_properties(libiotsdk PROPERTIES PREFIX "")
     target_include_directories(libiotsdk
         PUBLIC ${_IOTSDK_INC}
@@ -103,14 +110,15 @@ else()
         PRIVATE ${CURL_INCLUDE_DIRS}
     )
 endif()
+
 if(${use_openssl})
     include(FindOpenSSL)
-if(${OPENSSL_FOUND})
-    target_include_directories(libiotsdk PRIVATE "${OPENSSL_INCLUDE_DIR}")
-else()
-    message(FATAL_ERROR, "No OpenSSL found, please install!")
-endif()
-    target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
+    if(${OPENSSL_FOUND})
+        target_include_directories(libiotsdk PRIVATE "${OPENSSL_INCLUDE_DIR}")
+    else()
+        message(FATAL_ERROR, "No OpenSSL found, please install!")
+    endif()
+        target_compile_definitions(libiotsdk PRIVATE USE_OPENSSL=1)
 elseif(${use_wolfssl})
     target_include_directories(libiotsdk PRIVATE $ENV(WOLFSSL_INCLUDE_DIR))
 endif()
