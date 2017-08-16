@@ -7,7 +7,6 @@
 
 The Proxy module was tested on Ubuntu 16.04 and Alpine Linux 3.5, but can be built on a variety of Linux flavors. Check out the [Dockerfile folder](/docker) to find examples on how to set up your specific distribution.  If you do not find yours in the folder, consider contributing a Dockerfile for your distribution to this project.
 
-To build the dotnet samples and API, follow the instructions [here](https://www.microsoft.com/net/core#linuxubuntu) to install .net Core.
 Run ```bash <repo-root>/bld/build.sh```.  After a successful build, all proxy binaries can be found under the /build/cmake/bin folder.
 
 ### Install (Optional)
