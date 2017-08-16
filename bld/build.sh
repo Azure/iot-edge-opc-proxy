@@ -6,7 +6,6 @@ current_root=$(pwd)
 repo_root=$(cd "$(dirname "$0")/.." && pwd)
 
 run_unittests=ON
-skip_dotnet=0
 use_zlog=OFF
 with_memcheck=OFF
 use_dnssd=ON
@@ -18,9 +17,7 @@ MAKE_PARALLEL_JOBS=0
 build_root="${repo_root}"/build
 build_clean=0
 build_os=
-build_pack_only=0
 build_configs=()
-build_nuget_output=$build_root
 
 usage ()
 {
@@ -36,9 +33,6 @@ usage ()
     echo "    --use-dnssd <value>         [Yes] Sets the dnssd build option (Yes, No, Embedded)."
     echo "    --with-memcheck             Compile in memory checks."
     echo "    --skip-unittests            Skips building and executing unit tests."
-    echo "    --skip-dotnet               Do not build dotnet core API and packages."
-    echo "    --pack-only                 Only creates packages. (Cannot be combined with --clean)"
-    echo " -n --nuget-folder <value>      [/build] Folder to use when outputting nuget packages."
     echo " -x --xtrace                    print a trace of each command."
     echo " -j --jobs <value>              Number of parallel make jobs, see description of make -j."
     echo "                                Unit test need a lot of memory. So --skip-unittests should be set,"
@@ -55,7 +49,7 @@ process_args ()
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
     TEMP=`getopt -o xo:C:T:cn:j: \
-          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-dnssd:,use-openssl,use-libwebsockets,with-memcheck,pack-only,skip-unittests,skip-dotnet,os:,nuget-folder:,jobs: \
+          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-dnssd:,use-openssl,use-libwebsockets,with-memcheck,skip-unittests,os:,jobs: \
          -- "$@"`
 
     if [ $? != 0 ]; then
@@ -111,20 +105,11 @@ process_args ()
             shift ;;
         --use-libwebsockets)
             shift ;;
-        --pack-only)
-            build_pack_only=1
-            shift ;;
         --skip-unittests)
             run_unittests=OFF
             shift ;;
-        --skip-dotnet)
-            skip_dotnet=1
-            shift ;;
         --os)
             build_os="$2"
-            shift 2 ;;
-        -n | --nuget-folder)
-            build_nuget_output="$2"
             shift 2 ;;
         -j | --jobs)
             MAKE_PARALLEL_JOBS=$2
@@ -193,51 +178,6 @@ native_build()
 }
 
 # -----------------------------------------------------------------------------
-# -- build dotnet api
-# -----------------------------------------------------------------------------
-managed_build()
-{
-    if [ $skip_dotnet == 1 ]; then
-        echo "Skipping dotnet..."
-    else
-        if dotnet --version; then
-            cd "${repo_root}/api/csharp" > /dev/null
-            if [ $build_pack_only == 0 ]; then
-                echo -e "\033[1mBuilding dotnet...\033[0m"
-                dotnet restore || exit 1
-            fi
-            for c in ${build_configs[@]}; do
-                echo -e "\033[1m    ${c}...\033[0m"
-
-                mkdir -p "${build_nuget_output}/${c}"
-                mkdir -p "${build_root}/${c}"
-
-                for f in $(find . -type f -name "*.csproj"); do
-                    grep -q netstandard1.3 $f
-                    if [ $? -eq 0 ]; then
-                        echo -e "\033[1mBuilding ${f} as netstandard1.3\033[0m"
-                        dotnet build -c $c -o "${build_root}/${c}" \
-                            --framework netstandard1.3 $f \
-                            || return $?
-                    else
-                        grep -q netcoreapp1.1 $f
-                        if [ $? -eq 0 ]; then
-                            echo -e "\033[1mBuilding ${f} as netcoreapp1.1\033[0m"
-                            dotnet build -c $c -o "${build_root}/${c}" \
-                                --framework netcoreapp1.1 $f \
-                                || return $?
-                        fi
-                    fi
-                done
-            done
-        else
-            echo "No dotnet installed, skipping dotnet build."
-        fi
-    fi
-    return 0
-}
-
-# -----------------------------------------------------------------------------
 # -- build in docker container
 # -----------------------------------------------------------------------------
 #container_build()
@@ -260,8 +200,6 @@ main()
     fi
     mkdir -p "${build_root}"
     native_build \
-        || return $?
-    managed_build \
         || return $?
 }
 

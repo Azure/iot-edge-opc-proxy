@@ -24,7 +24,6 @@ set build-platform=win32
 if "%PROCESSOR_ARCHITECTURE%" == "AMD64" set build-platform=x64
 set build-os=Windows
 set build-use-remote-branch=
-set build-skip-dotnet=
 set build-pack-only=
 set build-clean=
 set build-docker-args=
@@ -64,8 +63,6 @@ if "%1" equ  "-n" goto :arg-build-nuget-folder
 if "%1" equ "--platform" goto :arg-build-platform
 if "%1" equ  "-p" goto :arg-build-platform
 if "%1" equ "--skip-unittests" goto :arg-skip-unittests
-if "%1" equ "--skip-dotnet" goto :arg-skip-dotnet
-if "%1" equ "--pack-only" goto :arg-pack-only
 if "%1" equ "--use-zlog" goto :arg-use-zlog
 if "%1" equ "--use-libwebsockets" goto :arg-use-libwebsockets
 if "%1" equ "--use-openssl" goto :arg-use-openssl
@@ -122,12 +119,6 @@ goto :args-continue
 :arg-skip-unittests 
 set CMAKE_run_unittests=OFF
 goto :args-continue
-:arg-skip-dotnet 
-set build-skip-dotnet=1
-goto :args-continue
-:arg-pack-only 
-set build-pack-only=1
-goto :args-continue
 :arg-use-dnssd 
 shift
 if /I "%1" == "No" set CMAKE_use_dnssd=OFF && goto :args-continue
@@ -167,8 +158,6 @@ if not exist %build-root% mkdir %build-root%
 if /I not "%build-os%" == "Windows" goto :docker-build
 call :native-build
 if not !ERRORLEVEL! == 0 echo Failures during native build... && exit /b !ERRORLEVEL!
-call :dotnet-build
-if not !ERRORLEVEL! == 0 echo Failures during dotnet build... && exit /b !ERRORLEVEL!
 goto :build-done
 
 rem -----------------------------------------------------------------------------
@@ -222,50 +211,6 @@ if not "%1" == "3" goto :eof
 if "%build-vs-ver%" == "15" if %2 lss 7 echo Install cmake 3.7 or higher to build for Visual Studio 2017... && goto :eof
 if "%build-vs-ver%" == "14" if %2 equ 0 echo Install cmake 3.1 or higher to build for Visual Studio 2015... && goto :eof
 set CMAKE-version=%1.%2.%3
-goto :eof
-
-rem -----------------------------------------------------------------------------
-rem -- build dotnet api
-rem -----------------------------------------------------------------------------
-:dotnet-build 
-if not "%build-skip-dotnet%" == "" goto :eof
-call dotnet --version
-if not !ERRORLEVEL! == 0 echo No dotnet installed, skipping dotnet build. && goto :eof
-if not "%build-pack-only%" == "" goto :dotnet-build-test-and-pack-all
-pushd %repo-root%\api\csharp
-call dotnet restore
-if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-popd
-:dotnet-build-test-and-pack-all 
-for %%c in (%build-configs%) do (
-    pushd %repo-root%\api\csharp
-    call :dotnet-build-test-and-pack %%c
-    popd
-    if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-)
-goto :eof
-
-:dotnet-build-test-and-pack 
-if /I not "%1" == "Release" if /I not "%1" == "Debug" if /I not "%1" == "Signed" goto :eof
-for /f %%i in ('dir /b /s *.csproj') do call :dotnet-project-build %1 "%%i"
-for /f %%i in ('dir /b /s *.csproj') do call :dotnet-project-pack %1 "%%i"
-goto :eof
-:dotnet-project-build 
-if not "%build-pack-only%" == "" goto :eof
-if not exist "%build-root%\managed\%1" mkdir "%build-root%\managed\%1"
-pushd "%~dp2"
-echo.
-if not "%build-clean%" == "" call :rmdir-force "bin\%1"
-call dotnet build -c %1
-xcopy /e /y /i /q "bin\%1" "%build-root%\managed\%1"
-popd
-if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
-goto :eof
-:dotnet-project-pack 
-if not exist "%build-nuget-output%\%1" mkdir "%build-nuget-output%\%1"
-echo.
-call dotnet pack --no-build -c %1 -o "%build-nuget-output%\%1" "%2"
-if not !ERRORLEVEL! == 0 exit /b !ERRORLEVEL!
 goto :eof
 
 rem -----------------------------------------------------------------------------
@@ -382,9 +327,6 @@ echo    --use-libwebsockets      Uses libwebsockets instead of winhttp on Window
 echo    --use-dnssd ^<value^>      [Yes] Sets the dnssd build option (Yes, No, Embedded).
 echo    --with-memcheck          Compile in memory checks.
 echo    --skip-unittests         Skips building and executing unit tests.
-echo    --skip-dotnet            Skips building dotnet API and packages.
-echo    --pack-only              Only creates packages. (Cannot be combined with --clean)
-echo -n --nuget-folder ^<value^>   [/build] Folder to use when outputting nuget packages.
 echo -p --platform ^<value^>       [%build-platform%] build platform (e.g. Win32, x64, ...).
 echo    --vs ^<value^>               [%build-vs-ver%] Visual Studio version to use (e.g. 14 for Visual Studio 2015).
 goto :eof
