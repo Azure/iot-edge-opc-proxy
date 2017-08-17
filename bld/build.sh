@@ -129,7 +129,8 @@ process_args ()
 # -----------------------------------------------------------------------------
 native_build()
 {
-    if [ $build_pack_only == 0 ]; then
+
+
         echo -e "\033[1mBuilding native...\033[0m"
         for c in ${build_configs[@]}; do
             echo -e "\033[1m    ${c}...\033[0m"
@@ -173,7 +174,8 @@ native_build()
                     return 1
             fi
         done
-    fi
+    
+
     return 0
 }
 
