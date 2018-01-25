@@ -924,10 +924,10 @@ int32_t pal_sd_init(
         if (error == 0)
             return er_ok;
 
-        log_error(NULL, "%d: Cannot connect to local Bonjour Service. (Error %d)"
+        log_error(NULL, "%d: Cannot connect to local Bonjour Service. (Error %d). "
             "Ensure the service is installed and running...", attempt, error);
 
-        if (++attempt > 10)
+        if (++attempt > 3)
         {
             if (error == kDNSServiceErr_ServiceNotRunning)
             {
@@ -937,6 +937,7 @@ int32_t pal_sd_init(
             }
             else
                 result = pal_sd_mdns_error_to_prx_error(error);
+            break;
         }
     }
 

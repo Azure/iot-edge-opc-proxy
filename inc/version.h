@@ -13,7 +13,7 @@
 #endif
 
 #if !defined(MODULE_REL_VER)
-#define MODULE_REL_VER 3
+#define MODULE_REL_VER 4
 #endif
 
 #if !defined(SCM_VERSION)
