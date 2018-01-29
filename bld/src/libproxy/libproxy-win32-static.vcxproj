@@ -38,7 +38,7 @@
     <ProjectGuid>{697C4297-7BB2-4810-8947-BA87EE399EA5}</ProjectGuid>
     <RootNamespace>
     </RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <ProjectName>libproxy-win32-lib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
