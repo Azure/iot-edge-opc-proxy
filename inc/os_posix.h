@@ -58,6 +58,7 @@ static inline int _fd_nonblock(fd_t fd)
         r |= O_NONBLOCK;
         r = fcntl(fd, F_SETFL, r);
     }
+    return r;
 }
 
 #define closesocket close
