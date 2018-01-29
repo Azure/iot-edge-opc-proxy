@@ -549,7 +549,7 @@ STRING_HANDLE STRING_construct_lowercase(
     if (!val)
         return NULL;
 
-    s = copy = (char*)crt_alloc(strlen(val + 1));
+    s = copy = (char*)crt_alloc(strlen(val) + 1);
     if (!copy)
         return NULL;
     while (*val) *s++ = (char)tolower((int)*val++);

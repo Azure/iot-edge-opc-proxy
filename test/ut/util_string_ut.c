@@ -40,7 +40,7 @@ TEST_FUNCTION(STRING_construct_lowercase__success)
     STRING_HANDLE result;
 
     // arrange
-    STRICT_EXPECTED_CALL(c_realloc(3, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(c_realloc(9, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(STRING_new_with_memory("testtest"))
@@ -79,7 +79,7 @@ TEST_FUNCTION(STRING_construct_lowercase__neg__STRING_new_with_memory_fails)
     STRING_HANDLE result;
 
     // arrange
-    STRICT_EXPECTED_CALL(c_realloc(5, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+    STRICT_EXPECTED_CALL(c_realloc(9, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
         .SetReturn((void*)UT_MEM);
     STRICT_EXPECTED_CALL(STRING_new_with_memory("testtest"))
