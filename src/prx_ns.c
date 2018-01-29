@@ -420,7 +420,7 @@ static int32_t prx_ns_generic_entry_create(
 
         if (name)
         {
-            entry->name = STRING_construct(name);
+            entry->name = STRING_construct_lowercase(name);
             if (!entry->name)
             {
                 result = er_out_of_memory;
@@ -430,7 +430,7 @@ static int32_t prx_ns_generic_entry_create(
 
         if (domain)
         {
-            entry->domain = STRING_construct(domain);
+            entry->domain = STRING_construct_lowercase(domain);
             if (!entry->domain)
             {
                 result = er_out_of_memory;

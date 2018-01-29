@@ -31,6 +31,72 @@ DECLARE_TEST_SETUP()
 
 
 //
+// Test STRING_construct_lowercase happy path
+//
+TEST_FUNCTION(STRING_construct_lowercase__success)
+{
+    static STRING_HANDLE k_string_handle_valid = (STRING_HANDLE)0x2442;
+    static const char* in = "TesTTEst";
+    STRING_HANDLE result;
+
+    // arrange
+    STRICT_EXPECTED_CALL(c_realloc(3, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_new_with_memory("testtest"))
+        .SetReturn(k_string_handle_valid);
+
+    // act
+    result = STRING_construct_lowercase(in);
+
+    // assert
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "testtest", UT_MEM);
+    ASSERT_ARE_EQUAL(void_ptr, k_string_handle_valid, result);
+}
+
+//
+// Test STRING_construct_lowercase passing as value argument an invalid const char* value
+//
+TEST_FUNCTION(STRING_construct_lowercase__arg_value_invalid)
+{
+    STRING_HANDLE result;
+
+    // act
+    result = STRING_construct_lowercase(NULL);
+
+    // assert
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
+}
+
+//
+// STRING_safe_construct_n STRING_new_with_memory fails
+//
+TEST_FUNCTION(STRING_construct_lowercase__neg__STRING_new_with_memory_fails)
+{
+    static const char* in = "TesTTEst";
+    STRING_HANDLE result;
+
+    // arrange
+    STRICT_EXPECTED_CALL(c_realloc(5, NULL, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(3).IgnoreArgument(4).IgnoreArgument(5)
+        .SetReturn((void*)UT_MEM);
+    STRICT_EXPECTED_CALL(STRING_new_with_memory("testtest"))
+        .SetReturn((STRING_HANDLE)NULL);
+    STRICT_EXPECTED_CALL(c_free((void*)UT_MEM, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
+        .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
+
+    // act
+    result = STRING_construct_lowercase(in);
+
+    // assert
+    ASSERT_EXPECTED_CALLS();
+    ASSERT_ARE_EQUAL(char_ptr, "testtest", UT_MEM);
+    ASSERT_ARE_EQUAL(void_ptr, NULL, result);
+}
+
+//
 // Test STRING_safe_construct_n happy path
 //
 TEST_FUNCTION(STRING_safe_construct_n__success)
