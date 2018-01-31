@@ -563,6 +563,28 @@ STRING_HANDLE STRING_construct_lowercase(
 }
 
 //
+// Concat a lowercase 0 terminated string from passed in value
+//
+int32_t STRING_concat_lowercase(
+    STRING_HANDLE string,
+    const char* value
+)
+{
+    int32_t result = er_ok;
+    STRING_HANDLE tmp;
+
+    tmp = STRING_construct_lowercase(value);
+    if (!tmp)
+        return er_out_of_memory;
+
+    if (0 != STRING_concat_with_STRING(string, tmp))
+        result = er_out_of_memory;
+
+    STRING_delete(tmp);
+    return result;
+}
+
+//
 // Concat a buffer up to len chars
 //
 int32_t STRING_concat_n(

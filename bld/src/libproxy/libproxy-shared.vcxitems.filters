@@ -140,9 +140,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\io_host.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_client.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable.h">
       <Filter>inc\hashtable</Filter>
     </ClInclude>
@@ -284,9 +281,6 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\util_stream.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_client.c">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_mqtt.c">

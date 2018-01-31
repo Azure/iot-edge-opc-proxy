@@ -550,9 +550,8 @@ decl_internal_3(int32_t, prx_ns_entry_to_prx_socket_address,
 //
 // Create in memory entry
 //
-decl_internal_6(int32_t, prx_ns_entry_create,
+decl_internal_5(int32_t, prx_ns_entry_create,
     uint32_t, type,
-    const char*, id,
     const char*, name,
     const char*, domain,
     uint32_t, version,

@@ -15,14 +15,13 @@ static log_t cat;
 int32_t ns_add(
     prx_ns_t* ns,
     uint32_t type,
-    const char* id,
     const char* name
 )
 {
     int32_t result;
     prx_ns_entry_t* entry;
 
-    result = prx_ns_entry_create(type, id, name, "test", MODULE_VER_NUM, &entry);
+    result = prx_ns_entry_create(type, name, "test", MODULE_VER_NUM, &entry);
     if (result != er_ok)
         return result;
     result = prx_ns_create_entry(ns, entry);
@@ -172,7 +171,7 @@ int test_ns(
             strcpy(buffer, "proxy_");
             string_from_int(i, 10, buffer + 6, sizeof(buffer) - 6);
 
-            result = ns_add(ns, prx_ns_entry_type_proxy, buffer, "proxy");
+            result = ns_add(ns, prx_ns_entry_type_proxy, buffer);
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",
@@ -187,7 +186,7 @@ int test_ns(
             strcpy(buffer, "host_");
             string_from_int(i, 10, buffer + 5, sizeof(buffer) - 5);
 
-            result = ns_add(ns, prx_ns_entry_type_host, buffer, "host");
+            result = ns_add(ns, prx_ns_entry_type_host, buffer);
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",
@@ -202,7 +201,7 @@ int test_ns(
             strcpy(buffer, "link_");
             string_from_int(i, 10, buffer + 5, sizeof(buffer) - 5);
 
-            result = ns_add(ns, prx_ns_entry_type_link, buffer, "link");
+            result = ns_add(ns, prx_ns_entry_type_link, buffer);
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",

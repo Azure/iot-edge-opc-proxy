@@ -26,7 +26,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_log.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_host.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_client.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\common.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\io_ref.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_buffer.h" />
@@ -88,7 +87,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_host.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_client.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_ref.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_buffer.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_codec.c" />

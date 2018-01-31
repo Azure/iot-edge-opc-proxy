@@ -154,9 +154,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_h_error__success)
 }
 
 //
-// Test pal_os_from_prx_client_getaddrinfo_flags happy path
+// Test pal_os_from_prx_getaddrinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_1)
+TEST_FUNCTION(pal_posix_os_from_prx_getaddrinfo_flags__success_1)
 {
     static const int32_t k_flags_valid = prx_ai_passive;
     int plat_flags_valid;
@@ -165,7 +165,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_1)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getaddrinfo_flags(k_flags_valid, &plat_flags_valid);
+    result = pal_os_from_prx_getaddrinfo_flags(k_flags_valid, &plat_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -174,9 +174,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_1)
 }
 
 //
-// Test pal_os_from_prx_client_getaddrinfo_flags happy path
+// Test pal_os_from_prx_getaddrinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_2)
+TEST_FUNCTION(pal_posix_os_from_prx_getaddrinfo_flags__success_2)
 {
     static const int32_t k_flags_valid = 0;
     int plat_flags_valid;
@@ -185,7 +185,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_2)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getaddrinfo_flags(k_flags_valid, &plat_flags_valid);
+    result = pal_os_from_prx_getaddrinfo_flags(k_flags_valid, &plat_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -194,9 +194,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__success_2)
 }
 
 //
-// Test pal_os_from_prx_client_getaddrinfo_flags passing as flags argument an invalid int32_t value
+// Test pal_os_from_prx_getaddrinfo_flags passing as flags argument an invalid int32_t value
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_flags_invalid)
+TEST_FUNCTION(pal_posix_os_from_prx_getaddrinfo_flags__arg_flags_invalid)
 {
     static const int32_t k_flags_invalid = 0x100000;
     int plat_flags_valid;
@@ -205,7 +205,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_flags_invalid)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getaddrinfo_flags(k_flags_invalid, &plat_flags_valid);
+    result = pal_os_from_prx_getaddrinfo_flags(k_flags_invalid, &plat_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -214,9 +214,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_flags_invalid)
 }
 
 //
-// Test pal_os_from_prx_client_getaddrinfo_flags passing as platform_flags argument an invalid int* value
+// Test pal_os_from_prx_getaddrinfo_flags passing as platform_flags argument an invalid int* value
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_platform_flags_null)
+TEST_FUNCTION(pal_posix_os_from_prx_getaddrinfo_flags__arg_platform_flags_null)
 {
     static const int32_t k_flags_valid = prx_ai_passive;
     int32_t result;
@@ -224,7 +224,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_platform_flags
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getaddrinfo_flags(k_flags_valid, NULL);
+    result = pal_os_from_prx_getaddrinfo_flags(k_flags_valid, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -232,9 +232,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getaddrinfo_flags__arg_platform_flags
 }
 
 //
-// Test pal_os_to_prx_client_getaddrinfo_flags happy path
+// Test pal_os_to_prx_getaddrinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_1)
+TEST_FUNCTION(pal_posix_os_to_prx_getaddrinfo_flags__success_1)
 {
     static const int k_flags_valid = AI_PASSIVE;
     int32_t prx_flags_valid;
@@ -243,7 +243,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_1)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getaddrinfo_flags(k_flags_valid, &prx_flags_valid);
+    result = pal_os_to_prx_getaddrinfo_flags(k_flags_valid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -252,9 +252,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_1)
 }
 
 //
-// Test pal_os_to_prx_client_getaddrinfo_flags happy path
+// Test pal_os_to_prx_getaddrinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_2)
+TEST_FUNCTION(pal_posix_os_to_prx_getaddrinfo_flags__success_2)
 {
     static const int k_flags_valid = 0;
     int32_t prx_flags_valid;
@@ -263,7 +263,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_2)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getaddrinfo_flags(k_flags_valid, &prx_flags_valid);
+    result = pal_os_to_prx_getaddrinfo_flags(k_flags_valid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -272,9 +272,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__success_2)
 }
 
 //
-// Test pal_os_to_prx_client_getaddrinfo_flags passing as flags argument an invalid int value
+// Test pal_os_to_prx_getaddrinfo_flags passing as flags argument an invalid int value
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__arg_flags_invalid)
+TEST_FUNCTION(pal_posix_os_to_prx_getaddrinfo_flags__arg_flags_invalid)
 {
     static const int k_flags_invalid = -1;
     int32_t prx_flags_valid;
@@ -283,7 +283,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__arg_flags_invalid)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getaddrinfo_flags(k_flags_invalid, &prx_flags_valid);
+    result = pal_os_to_prx_getaddrinfo_flags(k_flags_invalid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -291,9 +291,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__arg_flags_invalid)
 }
 
 //
-// Test pal_os_to_prx_client_getaddrinfo_flags passing as prx_flags argument an invalid int32_t* value
+// Test pal_os_to_prx_getaddrinfo_flags passing as prx_flags argument an invalid int32_t* value
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__arg_prx_flags_null)
+TEST_FUNCTION(pal_posix_os_to_prx_getaddrinfo_flags__arg_prx_flags_null)
 {
     static const int k_flags_valid = AI_PASSIVE;
     int32_t result;
@@ -301,7 +301,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getaddrinfo_flags__arg_prx_flags_null)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getaddrinfo_flags(k_flags_valid, NULL);
+    result = pal_os_to_prx_getaddrinfo_flags(k_flags_valid, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -588,9 +588,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_addrinfo__neg)
 #endif
 
 //
-// Test pal_os_from_prx_client_getnameinfo_flags happy path
+// Test pal_os_from_prx_getnameinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_1)
+TEST_FUNCTION(pal_posix_os_from_prx_getnameinfo_flags__success_1)
 {
     static const int32_t k_flags_valid = prx_ni_flag_namereqd;
     int plat_flags_valid;
@@ -599,7 +599,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_1)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getnameinfo_flags(k_flags_valid, &plat_flags_valid);
+    result = pal_os_from_prx_getnameinfo_flags(k_flags_valid, &plat_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -608,9 +608,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_1)
 }
 
 //
-// Test pal_os_from_prx_client_getnameinfo_flags happy path
+// Test pal_os_from_prx_getnameinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_2)
+TEST_FUNCTION(pal_posix_os_from_prx_getnameinfo_flags__success_2)
 {
     static const int32_t k_flags_valid = 0;
     int plat_flags_valid;
@@ -619,7 +619,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_2)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getnameinfo_flags(k_flags_valid, &plat_flags_valid);
+    result = pal_os_from_prx_getnameinfo_flags(k_flags_valid, &plat_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -627,9 +627,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__success_2)
     ASSERT_ARE_EQUAL(int, 0, plat_flags_valid);
 }
 //
-// Test pal_os_from_prx_client_getnameinfo_flags passing as flags argument an invalid int32_t value
+// Test pal_os_from_prx_getnameinfo_flags passing as flags argument an invalid int32_t value
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__arg_flags_invalid)
+TEST_FUNCTION(pal_posix_os_from_prx_getnameinfo_flags__arg_flags_invalid)
 {
     static const int32_t k_flags_invalid = 0x100000;
     int plat_flags_valid;
@@ -638,16 +638,16 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__arg_flags_invalid)
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getnameinfo_flags(k_flags_invalid, &plat_flags_valid);
+    result = pal_os_from_prx_getnameinfo_flags(k_flags_invalid, &plat_flags_valid);
 
     // assert
     ASSERT_ARE_EQUAL(int32_t, er_arg, result);
 }
 
 //
-// Test pal_os_from_prx_client_getnameinfo_flags passing as plat_flags argument an invalid int* value
+// Test pal_os_from_prx_getnameinfo_flags passing as plat_flags argument an invalid int* value
 //
-TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__arg_plat_flags_null)
+TEST_FUNCTION(pal_posix_os_from_prx_getnameinfo_flags__arg_plat_flags_null)
 {
     static const int32_t k_flags_valid = prx_ni_flag_namereqd;
     int32_t result;
@@ -655,7 +655,7 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__arg_plat_flags_nul
     // arrange
 
     // act
-    result = pal_os_from_prx_client_getnameinfo_flags(k_flags_valid, NULL);
+    result = pal_os_from_prx_getnameinfo_flags(k_flags_valid, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -663,9 +663,9 @@ TEST_FUNCTION(pal_posix_os_from_prx_client_getnameinfo_flags__arg_plat_flags_nul
 }
 
 //
-// Test pal_os_to_prx_client_getnameinfo_flags happy path
+// Test pal_os_to_prx_getnameinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_1)
+TEST_FUNCTION(pal_posix_os_to_prx_getnameinfo_flags__success_1)
 {
     static const int k_flags_valid = NI_NAMEREQD;
     int32_t prx_flags_valid;
@@ -674,7 +674,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_1)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getnameinfo_flags(k_flags_valid, &prx_flags_valid);
+    result = pal_os_to_prx_getnameinfo_flags(k_flags_valid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -683,9 +683,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_1)
 }
 
 //
-// Test pal_os_to_prx_client_getnameinfo_flags happy path
+// Test pal_os_to_prx_getnameinfo_flags happy path
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_2)
+TEST_FUNCTION(pal_posix_os_to_prx_getnameinfo_flags__success_2)
 {
     static const int k_flags_valid = 0;
     int32_t prx_flags_valid;
@@ -694,7 +694,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_2)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getnameinfo_flags(k_flags_valid, &prx_flags_valid);
+    result = pal_os_to_prx_getnameinfo_flags(k_flags_valid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -703,9 +703,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__success_2)
 }
 
 //
-// Test pal_os_to_prx_client_getnameinfo_flags passing as flags argument an invalid int value
+// Test pal_os_to_prx_getnameinfo_flags passing as flags argument an invalid int value
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__arg_flags_invalid)
+TEST_FUNCTION(pal_posix_os_to_prx_getnameinfo_flags__arg_flags_invalid)
 {
     static const int k_flags_invalid = -1;
     int32_t prx_flags_valid;
@@ -714,7 +714,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__arg_flags_invalid)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getnameinfo_flags(k_flags_invalid, &prx_flags_valid);
+    result = pal_os_to_prx_getnameinfo_flags(k_flags_invalid, &prx_flags_valid);
 
     // assert
     ASSERT_EXPECTED_CALLS();
@@ -722,9 +722,9 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__arg_flags_invalid)
 }
 
 //
-// Test pal_os_to_prx_client_getnameinfo_flags passing as prx_flags argument an invalid int32_t* value
+// Test pal_os_to_prx_getnameinfo_flags passing as prx_flags argument an invalid int32_t* value
 //
-TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__arg_prx_flags_null)
+TEST_FUNCTION(pal_posix_os_to_prx_getnameinfo_flags__arg_prx_flags_null)
 {
     static const int k_flags_valid = NI_NAMEREQD;
     int32_t result;
@@ -732,7 +732,7 @@ TEST_FUNCTION(pal_posix_os_to_prx_client_getnameinfo_flags__arg_prx_flags_null)
     // arrange
 
     // act
-    result = pal_os_to_prx_client_getnameinfo_flags(k_flags_valid, NULL);
+    result = pal_os_to_prx_getnameinfo_flags(k_flags_valid, NULL);
 
     // assert
     ASSERT_EXPECTED_CALLS();

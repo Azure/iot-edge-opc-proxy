@@ -155,7 +155,7 @@ int pal_os_from_prx_h_error(
 //
 // Convert platform independent getnameinfo flag to OS flags
 //
-int32_t pal_os_from_prx_client_getnameinfo_flags(
+int32_t pal_os_from_prx_getnameinfo_flags(
     int32_t flags,
     int *plat_flags
 )
@@ -174,7 +174,7 @@ int32_t pal_os_from_prx_client_getnameinfo_flags(
 //
 // Convert OS getnameinfo flag to platform independent flags
 //
-int32_t pal_os_to_prx_client_getnameinfo_flags(
+int32_t pal_os_to_prx_getnameinfo_flags(
     int flags,
     int32_t* prx_flags
 )
@@ -925,7 +925,7 @@ int32_t pal_os_from_prx_socket_type(
 //
 // Convert OS flags to platform independent address info flags
 //
-int32_t pal_os_to_prx_client_getaddrinfo_flags(
+int32_t pal_os_to_prx_getaddrinfo_flags(
     int flags,
     int32_t* prx_flags
 )
@@ -945,7 +945,7 @@ int32_t pal_os_to_prx_client_getaddrinfo_flags(
 //
 // Convert platform independent address info flags to OS flags
 //
-int32_t pal_os_from_prx_client_getaddrinfo_flags(
+int32_t pal_os_from_prx_getaddrinfo_flags(
     int32_t flags,
     int* platform_flags
 )
@@ -1031,7 +1031,7 @@ int32_t pal_getaddrinfo(
     if (result != er_ok)
         return result;
 
-    result = pal_os_from_prx_client_getaddrinfo_flags(flags, &hint.ai_flags);
+    result = pal_os_from_prx_getaddrinfo_flags(flags, &hint.ai_flags);
     if (result != er_ok)
         return result;
 
@@ -1197,7 +1197,7 @@ int32_t pal_getnameinfo(
     }
     else
     {
-        result = pal_os_from_prx_client_getnameinfo_flags(flags, &plat_flags);
+        result = pal_os_from_prx_getnameinfo_flags(flags, &plat_flags);
         if (result != er_ok)
             return result;
     }

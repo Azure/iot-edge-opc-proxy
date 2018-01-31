@@ -86,7 +86,7 @@ static int32_t prx_host_install_server(
         if (result == er_not_found)
         {
             result = prx_ns_entry_create(prx_ns_entry_type_proxy,
-                name, name, domain, MODULE_VER_NUM, &entry);
+                name, domain, MODULE_VER_NUM, &entry);
             if (result != er_ok)
                 break;
             result = prx_ns_create_entry(host->remote, entry);
@@ -99,6 +99,8 @@ static int32_t prx_host_install_server(
 
         if (result != er_ok)
             break;
+
+        result = er_already_exists;
         entry = prx_ns_result_pop(resultset);
         while (entry)
         {
@@ -222,7 +224,6 @@ static int32_t prx_host_init_from_command_line(
         { "install",                        no_argument,                 NULL, 'i' },
         { "uninstall",                      no_argument,                 NULL, 'u' },
         { "only-websocket",                 no_argument,                 NULL, 'w' },
-        { "daemonize",                      no_argument,                 NULL, 'd' },
         { "help",                           no_argument,                 NULL, 'h' },
         { "version",                        no_argument,                 NULL, 'v' },
         { "log-to-iothub",                  no_argument,                 NULL, 'T' },
@@ -232,7 +233,7 @@ static int32_t prx_host_init_from_command_line(
         { "blacklisted-ports",              required_argument,           NULL, 'r' },
         { "import",                         required_argument,           NULL, 's' },
         { "name",                           required_argument,           NULL, 'n' },
-        { "domain",                         required_argument,           NULL, 'N' },
+        { "domain",                         required_argument,           NULL, 'd' },
         { "connection-string",              required_argument,           NULL, 'c' },
         { "log-file",                       required_argument,           NULL, 'l' },
         { "log-config-file",                required_argument,           NULL, 'L' },
@@ -301,9 +302,6 @@ static int32_t prx_host_init_from_command_line(
             case 't':
                 __prx_config_set(prx_config_key_token_ttl, optarg);
                 break;
-            case 'd':
-                host->hidden = true;
-                break;
             case 'i':
                 should_exit = true;
                 is_install = true;
@@ -322,7 +320,7 @@ static int32_t prx_host_init_from_command_line(
             case 'n':
                 server_name = optarg;
                 break;
-            case 'N':
+            case 'd':
                 domain = optarg;
                 break;
             case 's':
@@ -649,7 +647,7 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    and access to the shared access key.    \n");
     printf(" -n, --name <string>                Name of proxy to install or uninstall.  \n");
     printf("                                    If -n is not provided, hostname is used.\n");
-    printf("     --domain <string>              Virtual domain the proxy is assigned to.\n");
+    printf(" -d, --domain <string>              Virtual domain the proxy is assigned to.\n");
     printf("                                    Use for -i. If not provided, no domain  \n");
     printf("                                    is assigned.                            \n");
     if (pal_caps() & pal_cap_file)
@@ -662,11 +660,6 @@ static int32_t prx_host_init_from_command_line(
     printf(" -t, --token-ttl int                Time to live in seconds for all shared  \n");
     printf("                                    access tokens provided to IoT Hub if you\n");
     printf("                                    prefer a value different from default.  \n");
-#if defined(EXPERIMENTAL)
-    printf(" -d, --daemonize                    Runs the proxy as a service/daemon,     \n");
-    printf("                                    otherwise runs proxy host process as    \n");
-    printf("                                    console process.                        \n");
-#endif
     printf(" -v, --version                      Prints the version information for this \n");
     printf("                                    binary and exits.                       \n");
     return er_arg;

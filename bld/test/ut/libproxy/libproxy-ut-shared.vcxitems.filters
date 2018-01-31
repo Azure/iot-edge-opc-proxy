@@ -64,9 +64,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_buffer_ut.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_client_ut.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_host_ut.c">
       <Filter>src</Filter>
     </ClCompile>

@@ -2015,7 +2015,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_name(
     do
     {
         // Name query parameter
-        if (0 != STRING_concat(sql_query_string, name) ||
+        if (0 != STRING_concat_lowercase(sql_query_string, name) ||
             0 != STRING_concat(sql_query_string, "'"))
         {
             result = er_out_of_memory;
@@ -2676,7 +2676,6 @@ int32_t prx_ns_entry_create_from_cs(
 //
 int32_t prx_ns_entry_create(
     uint32_t type,
-    const char* id,
     const char* name,
     const char* domain,
     uint32_t version,
@@ -2686,20 +2685,52 @@ int32_t prx_ns_entry_create(
     int32_t result;
     prx_ns_generic_entry_t* entry;
     io_cs_t* cs;
+    STRING_HANDLE id;
 
     chk_arg_fault_return(name);
     chk_arg_fault_return(created);
 
-    result = io_cs_create("proxy.localhost", id, NULL, NULL, &cs);
-    if (result != er_ok)
-        return result;
-    result = prx_ns_generic_entry_create(type, NULL, name, domain, version, cs, &entry);
-    io_cs_free(cs);
-    if (result != er_ok)
-        return result;
+    id = STRING_construct("proxy");
+    if (!id)
+        return er_out_of_memory;
+    do
+    {
+        // Concat name and domain to unique id - lookup is always done by name and domain.
+        if (domain && *domain)
+        {
+            if (0 != STRING_concat(id, domain) ||
+                0 != STRING_concat(id, "."))
+            {
+                result = er_out_of_memory;
+                break;
+            }
+        }
 
-    *created = &entry->itf;
-    return er_ok;
+        // Append a .proxy to distinguish from other endpoints that might have same name.
+        if (0 != STRING_concat(id, name) ||
+            0 != STRING_concat(id, ".proxy"))
+        {
+            result = er_out_of_memory;
+            break;
+        }
+
+        // Create a fake connection string to wrap the id in and attach to generic entry.
+        result = io_cs_create("proxy.localhost", STRING_c_str(id), NULL, NULL, &cs);
+        if (result != er_ok)
+            break;
+
+        // Create entry
+        result = prx_ns_generic_entry_create(type, NULL, name, domain, version, cs, &entry);
+        io_cs_free(cs);
+        if (result != er_ok)
+            break;
+        *created = &entry->itf;
+        result = er_ok;
+        break;
+    } 
+    while (0);
+
+    return result;
 }
 
 //

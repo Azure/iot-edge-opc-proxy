@@ -32,7 +32,6 @@ set(_PROXY_UNITS_UNDER_TEST
     prx_err
     prx_config
     prx_host
-    prx_client
     prx_server
     prx_buffer
     prx_log

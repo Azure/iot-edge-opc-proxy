@@ -65,7 +65,7 @@ decl_internal_2(STRING_HANDLE, STRING_construct_base16,
 // Construct a lower case 0 terminated string from the passed string
 //
 decl_internal_1(STRING_HANDLE, STRING_construct_lowercase,
-    const char*, val
+    const char*, value
 );
 
 //
@@ -84,6 +84,14 @@ decl_internal_3(int32_t, STRING_concat_int,
     STRING_HANDLE, string,
     int32_t, value,
     int32_t, radix
+);
+
+//
+// Concat a lowercase 0 terminated string from passed in value
+//
+decl_internal_2(int32_t, STRING_concat_lowercase,
+    STRING_HANDLE, string,
+    const char*, value
 );
 
 //

@@ -8,7 +8,6 @@ set(_PROXY_COMPONENTS
     prx_err
     prx_host
     prx_config
-    prx_client
     prx_server
     prx_sched
     prx_log

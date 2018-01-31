@@ -18,7 +18,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_config_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_err_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_host_ut.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_client_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_ref_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\prx_buffer_ut.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\..\test\ut\io_codec_ut.c" />
