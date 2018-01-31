@@ -70,7 +70,7 @@ int32_t ns_list_by_name(
     prx_ns_entry_t* entry;
     prx_ns_result_t* resultset;
 
-    result = prx_ns_get_entry_by_name(ns, name, &resultset);
+    result = prx_ns_get_entry_by_name(ns, name, NULL, &resultset);
     if (result != er_ok)
         return result;
 
@@ -97,7 +97,7 @@ int32_t ns_remove(
     prx_ns_entry_t* entry;
     prx_ns_result_t* resultset;
 
-    result = prx_ns_get_entry_by_name(ns, name, &resultset);
+    result = prx_ns_get_entry_by_name(ns, name, NULL, &resultset);
     if (result != er_ok)
         return result;
     dbg_assert(prx_ns_result_size(resultset) == 1, "");

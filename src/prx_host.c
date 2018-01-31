@@ -82,7 +82,7 @@ static int32_t prx_host_install_server(
 
     while (true)
     {
-        result = prx_ns_get_entry_by_name(host->remote, name, &resultset);
+        result = prx_ns_get_entry_by_name(host->remote, name, domain, &resultset);
         if (result == er_not_found)
         {
             result = prx_ns_entry_create(prx_ns_entry_type_proxy,
@@ -128,7 +128,8 @@ static int32_t prx_host_install_server(
 //
 static int32_t prx_host_uninstall_server(
     prx_host_t* host,
-    const char* name
+    const char* name,
+    const char* domain
 )
 {
     int32_t result;
@@ -148,7 +149,7 @@ static int32_t prx_host_uninstall_server(
         //
         if (name)
             result = prx_ns_get_entry_by_name(local ? host->local : host->remote,
-                name, &resultset);
+                name, domain, &resultset);
         else
             result = prx_ns_get_entry_by_type(local ? host->local : host->remote,
                 prx_ns_entry_type_proxy, &resultset);
@@ -253,7 +254,7 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwWdhvTFr:s:n:N:c:l:L:C:H:D:p:x:y:t:b:",
+            c = getopt_long(argc, argv, "iuwWhvTFr:s:n:d:c:l:L:C:H:D:p:x:y:t:b:",
                 long_options, &option_index);
             if (c == -1)
                 break;
@@ -557,7 +558,7 @@ static int32_t prx_host_init_from_command_line(
             /**/ if (is_install)
                 result = prx_host_install_server(host, server_name, domain);
             else if (is_uninstall)
-                result = prx_host_uninstall_server(host, server_name);
+                result = prx_host_uninstall_server(host, server_name, domain);
 
             if (result != er_ok)
             {
@@ -565,8 +566,8 @@ static int32_t prx_host_init_from_command_line(
                     prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                 break;
             }
-            printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ?
-                "installed" : "uninstalled");
+            printf("%s (%s) %s\n", server_name ? server_name : "All", 
+                domain ? domain : "no domain", !is_uninstall ? "installed" : "uninstalled");
             server_name = NULL;
         }
         break;
@@ -687,8 +688,8 @@ static void prx_host_modules_stop(
         // Remove this entry if it was ad-hoc created
         if (host->uninstall_on_exit)
         {
-            result = prx_host_uninstall_server(
-                host, prx_ns_entry_get_name(next->entry));
+            result = prx_host_uninstall_server(host, 
+                prx_ns_entry_get_name(next->entry), prx_ns_entry_get_domain(next->entry));
             if (result != er_ok)
             {
                 log_error(host->log, "Failed uninstalling server %s", "");

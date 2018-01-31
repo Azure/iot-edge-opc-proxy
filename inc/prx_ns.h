@@ -71,11 +71,12 @@ typedef int32_t (*prx_ns_get_entry_by_addr_t)(
     );
 
 //
-// Provider to lookup entries with a particular name
+// Provider to lookup entries by name and optional domain
 //
 typedef int32_t (*prx_ns_get_entry_by_name_t)(
     void* context,
     const char* name,
+    const char* domain,
     prx_ns_result_t** list
     );
 
@@ -153,9 +154,10 @@ decl_inline_3(int32_t, prx_ns_get_entry_by_addr,
 //
 // Get entry by name
 //
-decl_inline_3(int32_t, prx_ns_get_entry_by_name,
+decl_inline_4(int32_t, prx_ns_get_entry_by_name,
     prx_ns_t*, ns,
     const char*, name,
+    const char*, domain,
     prx_ns_result_t**, results
 )
 {
@@ -163,7 +165,7 @@ decl_inline_3(int32_t, prx_ns_get_entry_by_name,
     chk_arg_fault_return(name);
     chk_arg_fault_return(results);
     dbg_assert_ptr(ns->get_by_name);
-    return ns->get_by_name(ns->context, name, results);
+    return ns->get_by_name(ns->context, name, domain, results);
 }
 
 //

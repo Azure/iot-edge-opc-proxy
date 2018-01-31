@@ -427,7 +427,7 @@ TEST_FUNCTION(prx_ns_get_entry_by_name__success)
     // ...
 
     // act
-    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, k_results_valid);
+    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, NULL, k_results_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -512,7 +512,7 @@ TEST_FUNCTION(prx_ns_get_entry_by_name__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, k_results_valid);
+    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, NULL, k_results_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);

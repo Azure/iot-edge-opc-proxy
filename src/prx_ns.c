@@ -924,6 +924,7 @@ static int32_t prx_ns_generic_registry_entry_by_addr(
 static int32_t prx_ns_generic_registry_entry_by_name(
     prx_ns_generic_registry_t* registry,
     const char* name,
+    const char* domain,
     prx_ns_result_t** created
 )
 {
@@ -946,6 +947,8 @@ static int32_t prx_ns_generic_registry_entry_by_name(
     {
         next = containingRecord(p, prx_ns_generic_entry_t, link);
         if (0 != STRING_compare_c_str_nocase(next->name, name))
+            continue;
+        if (domain && 0 != STRING_compare_c_str_nocase(next->domain, domain))
             continue;
 
         result = prx_ns_generic_entry_clone(next, &clone);
@@ -1997,6 +2000,7 @@ static int32_t prx_ns_iot_hub_registry_entry_by_addr(
 static int32_t prx_ns_iot_hub_registry_entry_by_name(
     prx_ns_iot_hub_registry_t* registry,
     const char* name,
+    const char* domain,
     prx_ns_result_t** created
 )
 {
@@ -2020,6 +2024,18 @@ static int32_t prx_ns_iot_hub_registry_entry_by_name(
         {
             result = er_out_of_memory;
             break;
+        }
+
+        if (domain)
+        {
+            // Domain query parameter
+            if (0 != STRING_concat(sql_query_string, " AND tags.domain='") ||
+                0 != STRING_concat_lowercase(sql_query_string, domain) ||
+                0 != STRING_concat(sql_query_string, "'"))
+            {
+                result = er_out_of_memory;
+                break;
+            }
         }
 
         result = prx_ns_iot_hub_registry_entry_query(
@@ -2241,6 +2257,7 @@ static int32_t prx_ns_iot_hub_composite_entry_by_addr(
 static int32_t prx_ns_iot_hub_composite_entry_by_name(
     prx_ns_iot_hub_composite_t* registry,
     const char* name,
+    const char* domain,
     prx_ns_result_t** created
 )
 {
@@ -2257,7 +2274,7 @@ static int32_t prx_ns_iot_hub_composite_entry_by_name(
     for (PDLIST_ENTRY p = registry->hubs.Flink; p != &registry->hubs; p = p->Flink)
     {
         next = containingRecord(p, prx_ns_iot_hub_registry_t, link);
-        result = prx_ns_iot_hub_registry_entry_by_name(next, name, &entries);
+        result = prx_ns_iot_hub_registry_entry_by_name(next, name, domain, &entries);
         if (result != er_ok)
             break;
         resultset = prx_ns_generic_resultset_concat(resultset,
@@ -2690,7 +2707,7 @@ int32_t prx_ns_entry_create(
     chk_arg_fault_return(name);
     chk_arg_fault_return(created);
 
-    id = STRING_construct("proxy");
+    id = STRING_new();
     if (!id)
         return er_out_of_memory;
     do
