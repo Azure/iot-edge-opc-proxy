@@ -14,7 +14,6 @@ set(_PROXY_COMPONENTS
     prx_log
     prx_module
     prx_buffer
-    prx_browse
     prx_ns
     io_codec
     io_cs
@@ -25,7 +24,6 @@ set(_PROXY_COMPONENTS
     io_token
     io_transport
     io_types
-    io_browse
     io_url
     io_ws
     pal

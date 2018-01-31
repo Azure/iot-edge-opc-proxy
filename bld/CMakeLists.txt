@@ -75,11 +75,6 @@ else()
         "set use_openssl to OFF to use a different library (default is ON)" ON)
 endif()
 
-    option(use_dnssd
-        "set use_dnssd to OFF to prevent the use of dnssd and mdns (default is ON)" ON)
-    option(prefer_dnssd_embedded_api
-        "set prefer_dnssd_embedded_api to ON to try and not use the sd daemon (default is OFF)" OFF)
-
     option(use_zlog
         "set use_zlog to ON to use zlog as logging library (default is OFF)" OFF)
     if(NOT ${use_zlog})
