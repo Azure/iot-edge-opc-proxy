@@ -2562,8 +2562,6 @@ TEST_FUNCTION(pal_posix_getaddrinfo__neg_1)
     STRICT_EXPECTED_CALL(h_free(UT_MEM_ALLOCED, IGNORED_PTR_ARG, IGNORED_NUM_ARG, IGNORED_NUM_ARG))
         .IgnoreArgument(2).IgnoreArgument(3).IgnoreArgument(4);
     STRICT_EXPECTED_CALL(freeaddrinfo(ai_info_ptr_valid));
-    STRICT_EXPECTED_CALL(pal_caps())
-        .SetReturn(0);
 
     // act
     result = pal_getaddrinfo(k_host_name_valid, k_service_valid, k_family_valid, k_flags_valid, &info_valid, &info_count_valid);

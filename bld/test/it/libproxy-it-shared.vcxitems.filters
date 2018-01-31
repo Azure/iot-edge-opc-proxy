@@ -19,11 +19,5 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\main.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\sd.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\test\it\scan.c">
-      <Filter>src</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

@@ -15,7 +15,6 @@ RUN \
             python3-dbg python3-dev python3-setuptools \
             golang \
             pkg-config
-            libavahi-client-dev \
     && \
         curl -sSL -o afl.tgz http://lcamtuf.coredump.cx/afl/releases/afl-latest.tgz \
     &&  tar -xvf afl.tgz && rm -f afl.tgz \

@@ -114,9 +114,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libdnssd\libdnssd-win32.vcxproj">
-      <Project>{2bfc69d2-0912-4c08-9b6c-2af422fa823b}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\libiotsdk\libiotsdk-win32.vcxproj">
       <Project>{6d8be690-5bd5-4964-8c98-c18e6117877f}</Project>
     </ProjectReference>
@@ -136,8 +133,6 @@
     <ClCompile Include="..\..\..\src\pal\pal_net_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_proc_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_rand_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_scan_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c" />
     <ClCompile Include="..\..\..\src\pal\pal_sk_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_time_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
@@ -154,7 +149,6 @@
     <ClInclude Include="..\..\..\inc\pal_net.h" />
     <ClInclude Include="..\..\..\inc\pal_proc.h" />
     <ClInclude Include="..\..\..\inc\pal_rand.h" />
-    <ClInclude Include="..\..\..\inc\pal_sd.h" />
     <ClInclude Include="..\..\..\inc\pal_sk.h" />
     <ClInclude Include="..\..\..\inc\pal_time.h" />
     <ClInclude Include="..\..\..\inc\pal_types.h" />

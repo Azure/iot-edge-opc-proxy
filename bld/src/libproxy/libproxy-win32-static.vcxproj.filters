@@ -51,13 +51,7 @@
     <ClCompile Include="..\..\..\src\pal\pal_cred_win.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\pal\pal_ev_win.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\pal\pal_scan_win.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -72,9 +66,6 @@
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_err.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\pal_ev.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_file.h">
@@ -104,13 +95,14 @@
     <ClInclude Include="..\..\..\inc\pal_cred.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\pal_sd.h">
-      <Filter>inc</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\inc\pal_time.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_ev.h" />
+    <ClInclude Include="..\..\..\inc\pal_ev.h" />
+    <ClInclude Include="..\..\..\inc\pal_ev.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

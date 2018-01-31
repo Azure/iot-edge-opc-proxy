@@ -36,7 +36,6 @@
     <ClInclude Include="..\..\..\inc\pal_net.h" />
     <ClInclude Include="..\..\..\inc\pal_proc.h" />
     <ClInclude Include="..\..\..\inc\pal_rand.h" />
-    <ClInclude Include="..\..\..\inc\pal_sd.h" />
     <ClInclude Include="..\..\..\inc\pal_sk.h" />
     <ClInclude Include="..\..\..\inc\pal_time.h" />
     <ClInclude Include="..\..\..\inc\pal_types.h" />
@@ -54,8 +53,6 @@
     <ClCompile Include="..\..\..\src\pal\pal_net_posix.c" />
     <ClCompile Include="..\..\..\src\pal\pal_proc_linux.c" />
     <ClCompile Include="..\..\..\src\pal\pal_rand_openssl.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_scan_linux.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_sd_stub.c" />
     <ClCompile Include="..\..\..\src\pal\pal_sk_posix.c" />
     <ClCompile Include="..\..\..\src\pal\pal_time_posix.c" />
     <ClCompile Include="..\..\..\deps\shared\adapters\condition_pthreads.c" />

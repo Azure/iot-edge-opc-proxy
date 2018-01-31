@@ -11,11 +11,9 @@
 #include "pal_file.h"
 #include "pal_ws.h"
 #include "pal_net.h"
-#include "pal_sd.h"
 #include "pal_sk.h"
 #include "pal_time.h"
 #include "pal_rand.h"
-#include "pal_scan.h"
 #include "pal_cred.h"
 
 static uint32_t capabilities = pal_not_init;
@@ -85,17 +83,6 @@ int32_t pal_init(
             break;
         }
 
-        // Initialize service discovery
-        result = pal_sd_init();
-        if (result == er_ok)
-            capabilities |= pal_cap_dnssd;
-        else if (result != er_not_supported)
-        {
-            log_error(NULL, "Failed to init name service pal (%s).",
-                prx_err_string(result));
-            break;
-        }
-
         // Initialize socket
         result = pal_socket_init(&capabilities);
         if (result == er_ok)
@@ -103,17 +90,6 @@ int32_t pal_init(
         else
         {
             log_error(NULL, "Failed to init socket pal (%s).",
-                prx_err_string(result));
-            break;
-        }
-
-        // Initialize networking scanning
-        result = pal_scan_init();
-        if (result == er_ok)
-            capabilities |= pal_cap_scan;
-        else if (result != er_not_supported)
-        {
-            log_error(NULL, "Failed to init net scanning pal (%s).",
                 prx_err_string(result));
             break;
         }
@@ -170,14 +146,8 @@ int32_t pal_deinit(
     if (capabilities & pal_cap_wsclient)
         pal_wsclient_deinit();
 
-    if (capabilities & pal_cap_scan)
-        pal_scan_deinit();
-
     if (capabilities & pal_cap_sockets)
         pal_socket_deinit();
-
-    if (capabilities & pal_cap_dnssd)
-        pal_sd_deinit();
 
     if (capabilities & pal_cap_net)
         pal_net_deinit();

@@ -21,10 +21,7 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\hashtable\hashtable_private.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\api.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\io_browse.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_cred.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_scan.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_sd.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_config.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_err.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_log.h" />
@@ -67,7 +64,6 @@
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_rand.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\pal_ws.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_types.h" />
-    <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\prx_browse.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_ringbuf.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_stream.h" />
     <ClInclude Include="$(MSBuildThisFileDirectory)..\..\..\inc\util_dbg.h" />
@@ -89,8 +85,6 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\deps\parson\parson.c">
       <WarningLevel>TurnOffAllWarnings</WarningLevel>
     </ClCompile>
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\io_browse.c" />
-    <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_browse.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_config.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_err.c" />
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\..\src\prx_host.c" />
