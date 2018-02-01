@@ -264,7 +264,7 @@ static int32_t prx_host_init_from_command_line(
             case 'w':
                 if (0 == (pal_caps() & pal_cap_wsclient))
                 {
-                    printf("ERROR: Websocket not supported!\n");
+                    printf("ERROR: Websocket not supported!\n\n");
                     result = er_arg;
                     break;
                 }
@@ -277,9 +277,6 @@ static int32_t prx_host_init_from_command_line(
                 break;
             case 'T':
                 __prx_config_set_int(prx_config_key_log_telemetry, 1);
-                break;
-            case 'F':
-                __prx_config_set_int(prx_config_key_browse_fs, 1);
                 break;
             case 'r':
                 result = string_parse_range_list(optarg, NULL, NULL);
@@ -327,7 +324,7 @@ static int32_t prx_host_init_from_command_line(
             case 's':
                 if (0 == (pal_caps() & pal_cap_cred))
                 {
-                    printf("ERROR: Secret store not supported on this platform!\n");
+                    printf("ERROR: Secret store not supported on this platform!\n\n");
                     result = er_arg;
                     break;
                 }
@@ -338,10 +335,10 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                printf("Importing connection string...\n");
+                printf("Importing connection string...\n\n");
                 __prx_config_set(prx_config_key_policy_import, optarg);
                 should_exit = true;
-                c_string = optarg;
+                c_string = string_trim(optarg, "'\"");
                 if (c_string && strlen(c_string) > 0)
                     result = io_cs_create_from_string(c_string, &cs);
                 else
@@ -357,7 +354,7 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                c_string = optarg;
+                c_string = string_trim(optarg, "'\"");
                 if (c_string && strlen(c_string) > 0)
                     result = io_cs_create_from_string(c_string, &cs);
                 else
@@ -408,13 +405,13 @@ static int32_t prx_host_init_from_command_line(
 
         if (is_install && is_uninstall)
         {
-            printf("ERROR: Cannot use --install and --uninstall together...");
+            printf("ERROR: Cannot use --install and --uninstall together...\n\n");
             result = er_arg;
             break;
         }
 
         if (log_config && log_file)
-            printf("WARNING: --log-file overrides --log-config-file option...");
+            printf("WARNING: --log-file overrides --log-config-file option...\n\n");
         if (log_config)
         {
             // Configure logging
@@ -460,7 +457,11 @@ static int32_t prx_host_init_from_command_line(
             {
                 result = io_cs_create_from_string(c_string, &cs);
                 if (result != er_ok)
+                {
+                    printf("ERROR: No connection string provided, and none/bad one "
+                        "configured in $_HUB_CS environment variable. \n\n");
                     break;
+                }
             }
         }
 
@@ -476,7 +477,7 @@ static int32_t prx_host_init_from_command_line(
         {
             if (is_install || is_uninstall || server_name)
             {
-                printf("ERROR: A device connection string cannot be used for -i or -u or -n");
+                printf("ERROR: A device connection string cannot be used for -i or -u or -n.\n\n");
                 result = er_arg;
                 break;
             }
@@ -493,7 +494,7 @@ static int32_t prx_host_init_from_command_line(
             result = prx_ns_create_entry(host->local, entry);
             if (result != er_ok)
             {
-                printf("ERROR: Failed to add device connection string to local registry");
+                printf("ERROR: Failed to add device connection string to local registry.\n\n");
                 break;
             }
             // Ok, done...
@@ -535,7 +536,7 @@ static int32_t prx_host_init_from_command_line(
             if (!host->remote)
             {
                 // Empty local registry and no remote, nothing to do...
-                printf("ERROR: Cannot connect without connection strings...");
+                printf("ERROR: Cannot connect without connection strings...\n\n");
                 result = er_arg;
                 break;
             }
@@ -562,11 +563,11 @@ static int32_t prx_host_init_from_command_line(
 
             if (result != er_ok)
             {
-                printf("ERROR: %s %s failed! Check parameters...\n",
+                printf("ERROR: %s %s failed! Check parameters...\n\n",
                     prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                 break;
             }
-            printf("%s (%s) %s\n", server_name ? server_name : "All", 
+            printf("%s (%s) %s\n\n", server_name ? server_name : "All", 
                 domain ? domain : "no domain", !is_uninstall ? "installed" : "uninstalled");
             server_name = NULL;
         }
@@ -580,13 +581,13 @@ static int32_t prx_host_init_from_command_line(
         prx_ns_entry_release(entry);
     if (should_exit && !host->hidden && result == er_ok)
     {
-        printf("Success.\n");
+        printf("Success.\n\n");
         return er_aborted;
     }
     if (result != er_arg)
     {
         if (result != er_ok)
-            printf("Operation failed.\n");
+            printf("Operation failed.\n\n");
         return result;
     }
 

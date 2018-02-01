@@ -2037,6 +2037,13 @@ static int32_t prx_ns_iot_hub_registry_entry_by_name(
                 break;
             }
         }
+        else {
+            if (0 != STRING_concat(sql_query_string, " AND NOT IS_DEFINED(tags.domain)"))
+            {
+                result = er_out_of_memory;
+                break;
+            }
+        }
 
         result = prx_ns_iot_hub_registry_entry_query(
             registry, STRING_c_str(sql_query_string), &results);
