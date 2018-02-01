@@ -241,12 +241,22 @@ static void prx_server_socket_free(
     dbg_assert_is_task(server_sock->scheduler);
 
     if (server_sock->sock)
+    {
         pal_socket_free(server_sock->sock);
+        server_sock->sock = NULL;
+    }
+    
     if (server_sock->stream && !server_sock->server_stream)
+    {
         io_connection_free(server_sock->stream);
+        server_sock->stream = NULL;
+    }
 
     if (server_sock->link_message)
+    {
         io_message_release(server_sock->link_message);
+        server_sock->link_message = NULL;
+    }
 
     if (server_sock->send_lock && server_sock->recv_lock)
     {
@@ -254,11 +264,17 @@ static void prx_server_socket_free(
         prx_server_socket_empty_transport_queues(server_sock);
     }
 
-    if (!server_sock->server->exit &&
-        !io_message_factory_is_safe_to_free(server_sock->recv_pool))
+    if (server_sock->recv_pool)
     {
-        // Delay free and try until message factory is safe to free
-        __do_later(server_sock, prx_server_socket_free, 5000);
+        if (!server_sock->server->exit &&
+            !io_message_factory_is_safe_to_free(server_sock->recv_pool))
+        {
+            // Delay free and try until message factory is safe to free
+            __do_later(server_sock, prx_server_socket_free, 5000);
+            return;
+        }
+
+        io_message_factory_free(server_sock->recv_pool);
     }
 
     dbg_assert(DList_IsListEmpty(&server_sock->read_queue),
@@ -270,8 +286,6 @@ static void prx_server_socket_free(
     dbg_assert(DList_IsListEmpty(&server_sock->write_queue),
         "write_queue not empty");
 
-    if (server_sock->recv_pool)
-        io_message_factory_free(server_sock->recv_pool);
 
     if (server_sock->send_lock)
         lock_free(server_sock->send_lock);
