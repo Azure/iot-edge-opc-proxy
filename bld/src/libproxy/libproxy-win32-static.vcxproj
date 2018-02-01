@@ -122,7 +122,6 @@
     <ClInclude Include="..\..\..\inc\pal_cred.h" />
     <ClInclude Include="..\..\..\inc\pal_err.h" />
     <ClInclude Include="..\..\..\inc\pal_ev.h" />
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\inc\pal_file.h" />
     <ClInclude Include="..\..\..\inc\pal_mt.h" />
     <ClInclude Include="..\..\..\inc\pal_net.h" />

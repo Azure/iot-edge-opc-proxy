@@ -2712,23 +2712,23 @@ int32_t prx_ns_entry_create(
         return er_out_of_memory;
     do
     {
-        // Concat name and domain to unique id - lookup is always done by name and domain.
-        if (domain && *domain)
-        {
-            if (0 != STRING_concat(id, domain) ||
-                0 != STRING_concat(id, "."))
-            {
-                result = er_out_of_memory;
-                break;
-            }
-        }
-
         // Append a .proxy to distinguish from other endpoints that might have same name.
-        if (0 != STRING_concat(id, name) ||
+        if (0 != STRING_concat_lowercase(id, name) ||
             0 != STRING_concat(id, ".proxy"))
         {
             result = er_out_of_memory;
             break;
+        }
+
+        // Concat name and domain to unique id - lookup is always done by name and domain.
+        if (domain && *domain)
+        {
+            if (0 != STRING_concat(id, ".") ||
+                0 != STRING_concat_lowercase(id, domain))
+            {
+                result = er_out_of_memory;
+                break;
+            }
         }
 
         // Create a fake connection string to wrap the id in and attach to generic entry.
