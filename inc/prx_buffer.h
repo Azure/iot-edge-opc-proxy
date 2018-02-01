@@ -55,6 +55,13 @@ typedef void (*prx_buffer_factory_free_t) (
     );
 
 //
+// Check whether safe to free
+//
+typedef bool(*prx_buffer_factory_is_safe_to_free_t) (
+    void* context
+    );
+
+//
 // Buffer factory interface, provides different implementations, e.g. pool
 //
 typedef struct prx_buffer_factory
@@ -65,6 +72,7 @@ typedef struct prx_buffer_factory
     prx_buffer_set_size_t on_set_size;           // Resize the buffer to length
     prx_buffer_free_t on_release;                             // Release buffer
 
+    prx_buffer_factory_is_safe_to_free_t on_is_safe_to_free;
     prx_buffer_factory_free_t on_free;                   // Free buffer factory
     prx_buffer_factory_available_t on_available;     // Items available in pool
 }
@@ -145,6 +153,19 @@ decl_inline_2(void, prx_buffer_release,
         return;
     dbg_assert_ptr(buffer_factory->on_release);
     buffer_factory->on_release(buffer_factory->context, buffer);
+}
+
+//
+// Check whether releasing the factory will be safe
+//
+decl_inline_1(bool, prx_buffer_factory_is_safe_to_free,
+    prx_buffer_factory_t*, buffer_factory
+)
+{
+    if (!buffer_factory)
+        return true;
+    dbg_assert_ptr(buffer_factory->on_is_safe_to_free);
+    return buffer_factory->on_is_safe_to_free(buffer_factory->context);
 }
 
 //

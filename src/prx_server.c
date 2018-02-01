@@ -248,6 +248,19 @@ static void prx_server_socket_free(
     if (server_sock->link_message)
         io_message_release(server_sock->link_message);
 
+    if (server_sock->send_lock && server_sock->recv_lock)
+    {
+        prx_server_socket_empty_socket_queues(server_sock);
+        prx_server_socket_empty_transport_queues(server_sock);
+    }
+
+    if (!server_sock->server->exit &&
+        !io_message_factory_is_safe_to_free(server_sock->recv_pool))
+    {
+        // Delay free and try until message factory is safe to free
+        __do_later(server_sock, prx_server_socket_free, 5000);
+    }
+
     dbg_assert(DList_IsListEmpty(&server_sock->read_queue),
         "read_queue not empty");
     dbg_assert(DList_IsListEmpty(&server_sock->recv_queue),
@@ -256,12 +269,6 @@ static void prx_server_socket_free(
         "send_queue not empty");
     dbg_assert(DList_IsListEmpty(&server_sock->write_queue),
         "write_queue not empty");
-
-    if (server_sock->send_lock && server_sock->recv_lock)
-    {
-        prx_server_socket_empty_socket_queues(server_sock);
-        prx_server_socket_empty_transport_queues(server_sock);
-    }
 
     if (server_sock->recv_pool)
         io_message_factory_free(server_sock->recv_pool);

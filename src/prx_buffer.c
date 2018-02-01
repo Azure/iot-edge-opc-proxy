@@ -315,6 +315,17 @@ static size_t prx_dynamic_pool_available(
 }
 
 //
+// Check whether pool can be freed
+//
+static bool prx_dynamic_pool_is_safe_to_free(
+    prx_fixed_pool_t* pool
+)
+{
+    dbg_assert_ptr(pool);
+    return 0 != DList_IsListEmpty(&pool->pool.checked_out);
+}
+
+//
 // Release dynamic pool
 //
 static void prx_dynamic_pool_free(
@@ -505,6 +516,17 @@ static size_t prx_fixed_pool_available(
 )
 {
     return pool->pool.free_count; // TODO
+}
+
+//
+// Check whether pool can be freed
+//
+static bool prx_fixed_pool_is_safe_to_free(
+    prx_fixed_pool_t* pool
+)
+{
+    dbg_assert_ptr(pool);
+    return 0 != DList_IsListEmpty(&pool->pool.checked_out);
 }
 
 //
@@ -699,6 +721,8 @@ int32_t prx_dynamic_pool_create(
             pool;
         pool->funcs.on_available = (prx_buffer_factory_available_t)
             prx_dynamic_pool_available;
+        pool->funcs.on_is_safe_to_free = (prx_buffer_factory_is_safe_to_free_t)
+            prx_dynamic_pool_is_safe_to_free;
         pool->funcs.on_free = (prx_buffer_factory_free_t)
             prx_dynamic_pool_free;
         pool->funcs.on_alloc = (prx_buffer_alloc_t)
@@ -752,6 +776,8 @@ int32_t prx_fixed_pool_create(
             pool;
         pool->funcs.on_available = (prx_buffer_factory_available_t)
             prx_fixed_pool_available;
+        pool->funcs.on_is_safe_to_free = (prx_buffer_factory_is_safe_to_free_t)
+            prx_fixed_pool_is_safe_to_free;
         pool->funcs.on_free = (prx_buffer_factory_free_t)
             prx_fixed_pool_free;
         pool->funcs.on_alloc = (prx_buffer_alloc_t)

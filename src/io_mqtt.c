@@ -939,13 +939,27 @@ static void io_mqtt_connection_complete_disconnect(
         log_trace(connection->log, "Client disconnected.");
     }
 
-    // Reset send queue
-    for (PDLIST_ENTRY p = connection->send_queue.Flink;
-        p != &connection->send_queue; p = p->Flink)
+    // Reset send queue - drop all if we have to wait longer than 30 seconds
+    if (connection->back_off_in_seconds < 16) // 2 + 4 + 8 + 16
     {
-        message = containingRecord(p, io_mqtt_message_t, qlink);
-        message->attempted = 0;
-        message->published = false;
+        for (PDLIST_ENTRY p = connection->send_queue.Flink;
+            p != &connection->send_queue; p = p->Flink)
+        {
+            message = containingRecord(p, io_mqtt_message_t, qlink);
+            message->attempted = 0;
+            message->published = false;
+        }
+    }
+    else
+    {
+        while (!DList_IsListEmpty(&connection->send_queue))
+        {
+            message = containingRecord(DList_RemoveHeadList(
+                &connection->send_queue), io_mqtt_message_t, qlink);
+            if (message->cb)
+                message->cb(message->context, er_aborted);
+            io_mqtt_message_free(message);
+        }
     }
 
     // Clear all subscriptions

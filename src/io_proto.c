@@ -84,6 +84,25 @@ int32_t io_message_factory_create(
 }
 
 //
+// Check whether message factory is safe to free
+//
+bool io_message_factory_is_safe_to_free(
+    io_message_factory_t* factory
+)
+{
+    bool result = true;
+    if (!factory)
+        return result;
+    if (factory->buffers && 
+        !prx_buffer_factory_is_safe_to_free(factory->buffers))
+        result = false;
+    if (factory->messages && 
+        !prx_buffer_factory_is_safe_to_free(factory->messages))
+        result = false;
+    return result;
+}
+
+//
 // Free protocol message factory
 //
 void io_message_factory_free(
