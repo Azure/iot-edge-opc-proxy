@@ -1562,7 +1562,7 @@ TEST_FUNCTION(io_cs_clone__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
         er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory,
-        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok);
+        er_out_of_memory, er_out_of_memory, er_out_of_memory, er_out_of_memory, er_ok);
 }
 
 //
@@ -1674,6 +1674,15 @@ TEST_FUNCTION(io_cs_append_to_STRING__success)
         .SetReturn(0);
     STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid,
         (STRING_HANDLE)(0x80000 | io_cs_entry_shared_access_key_handle)))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_length(k_string_valid))
+        .SetReturn(1);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, ";"))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat(k_string_valid, "GatewayHostName="))
+        .SetReturn(0);
+    STRICT_EXPECTED_CALL(STRING_concat_with_STRING(k_string_valid,
+        (STRING_HANDLE)(0x80000 | io_cs_entry_gateway_host_name)))
         .SetReturn(0);
 
     // act
