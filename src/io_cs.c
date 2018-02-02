@@ -750,8 +750,10 @@ const char* io_cs_get_host_name(
 
     if (!cs)
         return NULL;
+#if defined(ENABLE_EDGE_HUB)
     if (cs->entries[io_cs_entry_gateway_host_name])
         return io_cs_get_entry(cs, io_cs_entry_gateway_host_name);
+#endif
     if (!cs->entries[io_cs_entry_host_name])
     {
         val = io_cs_get_endpoint(cs);
