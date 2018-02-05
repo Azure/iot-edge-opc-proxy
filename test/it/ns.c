@@ -15,14 +15,14 @@ static log_t cat;
 int32_t ns_add(
     prx_ns_t* ns,
     uint32_t type,
-    const char* id,
-    const char* name
+    const char* name,
+    const char* domain
 )
 {
     int32_t result;
     prx_ns_entry_t* entry;
 
-    result = prx_ns_entry_create(type, id, name, "test", MODULE_VER_NUM, &entry);
+    result = prx_ns_entry_create(type, name, domain, MODULE_VER_NUM, &entry);
     if (result != er_ok)
         return result;
     result = prx_ns_create_entry(ns, entry);
@@ -71,7 +71,7 @@ int32_t ns_list_by_name(
     prx_ns_entry_t* entry;
     prx_ns_result_t* resultset;
 
-    result = prx_ns_get_entry_by_name(ns, name, &resultset);
+    result = prx_ns_get_entry_by_name(ns, name, NULL, &resultset);
     if (result != er_ok)
         return result;
 
@@ -98,7 +98,7 @@ int32_t ns_remove(
     prx_ns_entry_t* entry;
     prx_ns_result_t* resultset;
 
-    result = prx_ns_get_entry_by_name(ns, name, &resultset);
+    result = prx_ns_get_entry_by_name(ns, name, NULL, &resultset);
     if (result != er_ok)
         return result;
     dbg_assert(prx_ns_result_size(resultset) == 1, "");
@@ -142,9 +142,79 @@ int32_t ns_clean(
 }
 
 //
+// Add proxies with different domains
+//
+int test_stuff_proxies_with_different_domains(
+    int number_of_proxies
+)
+{
+    int32_t result;
+    char buffer[64];
+    io_cs_t* cs;
+    prx_ns_t* ns;
+
+    result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
+    if (result != er_ok)
+        return result;
+    do
+    {
+        result = prx_ns_iot_hub_create_from_cs(cs, &ns);
+        if (result != er_ok)
+            break;
+        log_trace(cat, "Creating %d proxy entries", number_of_proxies);
+        for (int i = 0; i < number_of_proxies; i++)
+        {
+            strcpy(buffer, "domain");
+            string_from_int(i, 10, buffer + 6, sizeof(buffer) - 6);
+
+            result = ns_add(ns, prx_ns_entry_type_proxy, "proxy_0", buffer);
+            if (result != er_ok)
+            {
+                log_error(cat, "Failed to add proxy entry %s (%s)",
+                    buffer, prx_err_string(result));
+                break;
+            }
+        }
+    } 
+    while (0);
+    if (ns)
+        prx_ns_close(ns);
+    io_cs_free(cs);
+    return result;
+}
+
+//
+// Add proxies with different domains
+//
+int test_clean_up(
+    void
+)
+{
+    int32_t result;
+    io_cs_t* cs;
+    prx_ns_t* ns;
+
+    result = io_cs_create_from_string(getenv("_HUB_CS"), &cs);
+    if (result != er_ok)
+        return result;
+    do
+    {
+        result = prx_ns_iot_hub_create_from_cs(cs, &ns);
+        if (result != er_ok)
+            break;
+        ns_clean(ns);
+    } 
+    while (0);
+    if (ns)
+        prx_ns_close(ns);
+    io_cs_free(cs);
+    return result;
+}
+
+//
 // Name service registry test utility
 //
-int test_ns(
+int test_ns_end_to_end(
     void
 )
 {
@@ -172,7 +242,7 @@ int test_ns(
             strcpy(buffer, "proxy_");
             string_from_int(i, 10, buffer + 6, sizeof(buffer) - 6);
 
-            result = ns_add(ns, prx_ns_entry_type_proxy, buffer, "proxy");
+            result = ns_add(ns, prx_ns_entry_type_proxy, buffer, "test");
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",
@@ -187,7 +257,7 @@ int test_ns(
             strcpy(buffer, "host_");
             string_from_int(i, 10, buffer + 5, sizeof(buffer) - 5);
 
-            result = ns_add(ns, prx_ns_entry_type_host, buffer, "host");
+            result = ns_add(ns, prx_ns_entry_type_host, buffer, "test");
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",
@@ -202,7 +272,7 @@ int test_ns(
             strcpy(buffer, "link_");
             string_from_int(i, 10, buffer + 5, sizeof(buffer) - 5);
 
-            result = ns_add(ns, prx_ns_entry_type_link, buffer, "link");
+            result = ns_add(ns, prx_ns_entry_type_link, buffer, "test");
             if (result != er_ok)
             {
                 log_error(cat, "Failed to add proxy entry %s (%s)",
@@ -248,14 +318,18 @@ int test_ns(
 //
 int main_ns(int argc, char *argv[])
 {
-    int32_t result;
-
-    (void)argc;
-    (void)argv;
-
+    int32_t result = pal_init();
+    if (result != er_ok)
+        return result;
     cat = log_get("test.ns");
-
-    result = test_ns();
-
+    if (argc < 1)
+        result = test_ns_end_to_end();
+    else if (!strcmp(argv[0], "stuff"))
+        result = test_stuff_proxies_with_different_domains(--argc ? atoi(argv[1]) : 10);
+    else if (!strcmp(argv[0], "clean"))
+        result = test_clean_up();
+    else
+        result = er_arg;
+    pal_deinit();
     return result;
 }

@@ -38,6 +38,13 @@ decl_internal_8(int32_t, io_message_factory_create,
 );
 
 //
+// Check whether message factory is safe to free
+//
+decl_internal_1(bool, io_message_factory_is_safe_to_free,
+    io_message_factory_t*, factory
+);
+
+//
 // Free message factory
 //
 decl_internal_1(void, io_message_factory_free,

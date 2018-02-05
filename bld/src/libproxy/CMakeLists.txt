@@ -8,13 +8,11 @@ set(_PROXY_COMPONENTS
     prx_err
     prx_host
     prx_config
-    prx_client
     prx_server
     prx_sched
     prx_log
     prx_module
     prx_buffer
-    prx_browse
     prx_ns
     io_codec
     io_cs
@@ -25,7 +23,6 @@ set(_PROXY_COMPONENTS
     io_token
     io_transport
     io_types
-    io_browse
     io_url
     io_ws
     pal
@@ -54,21 +51,12 @@ if(WIN32)
         pal_net_win
         pal_rand_win
         pal_sk_win
-        pal_scan_win
         pal_time_win
     )
     if (NOT use_lws)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_ws_win)
     endif()
 
-    if(use_dnssd OR prefer_dnssd_embedded_api)
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_mdns pal_ev_poll)
-        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} dnssd)
-        set(_PAL_DEP_INC ${_PAL_DEP_INC} PUBLIC ${_DNSSD_ROOT}/src)
-        message(STATUS "  linking with dnssd")
-    else()
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_stub)
-    endif()
 else()
 
     include(CheckIncludeFile)
@@ -119,57 +107,17 @@ else()
         endif()
     endif()
 
-    if(use_dnssd OR prefer_dnssd_embedded_api)
-        set (use_dnssd 1)
-        if(CMAKE_CROSSCOMPILING)
-            message(STATUS "  forced linking with avahi for cross compiling")
-            set(LIBAVAHI_LIBRARIES avahi-client avahi-common)
-            set(LIBAVAHI_FOUND 1)
-
-            set(LIBAVAHICORE_LIBRARIES avahi-client avahi-common)
-            set(LIBAVAHICORE_FOUND 1)
-        else()
-            pkg_check_modules(LIBAVAHICORE avahi-core)
-            pkg_check_modules(LIBAVAHI avahi-client)
-
-            if (NOT LIBAVAHI_FOUND)
-                if (LIBAVAHICORE_FOUND)
-                    set (prefer_dnssd_embedded_api 1)
-                elseif (NOT LIBAVAHI_FOUND)
-                    message(WARNING "no mdns/dnssd - install avahi-client/avahi-core!")
-                endif()
-            endif()
-        endif()
-    endif()
-
-    if (prefer_dnssd_embedded_api AND LIBAVAHICORE_FOUND)
-        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBAVAHICORE_LIBRARIES})
-        set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBAVAHICORE_INCLUDEDIR})
-        set(_PAL_DEP_DEFS ${_PAL_DEP_DEFS} _AVAHI_EMBEDDED=1)
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_avahi)
-        message(STATUS "  linking with avahi-core")
-    elseif (use_dnssd AND LIBAVAHI_FOUND)
-        set(_PAL_DEP_LIBS ${_PAL_DEP_LIBS} ${LIBAVAHI_LIBRARIES})
-        set(_PAL_DEP_INC ${_PAL_DEP_INC} ${LIBAVAHI_INCLUDEDIR})
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_avahi)
-        message(STATUS "  linking with avahi-client")
-    else()
-        set(_PAL_COMPONENTS ${_PAL_COMPONENTS} pal_sd_stub)
-    endif()
-
     if(LINUX)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
             pal_ev_epoll
             pal_net_linux
             pal_proc_linux
-            pal_scan_linux
         )
     else()
         set(use_openssl 1)
         set(_PAL_COMPONENTS ${_PAL_COMPONENTS}
             pal_ev_poll
             pal_net_stub
-            pal_scan_stub
             pal_proc_posix
         )
     endif()

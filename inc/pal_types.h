@@ -10,7 +10,7 @@
 //
 // Convert platform independent addressinfo flags to OS flags
 //
-decl_public_2(int32_t, pal_os_from_prx_client_getaddrinfo_flags,
+decl_public_2(int32_t, pal_os_from_prx_getaddrinfo_flags,
     int32_t, flags,
     int*, platform_flags
 );
@@ -18,7 +18,7 @@ decl_public_2(int32_t, pal_os_from_prx_client_getaddrinfo_flags,
 //
 // Convert OS flags to platform independent address info flags
 //
-decl_public_2(int32_t, pal_os_to_prx_client_getaddrinfo_flags,
+decl_public_2(int32_t, pal_os_to_prx_getaddrinfo_flags,
     int, flags,
     int32_t*, prx_flags
 );
@@ -60,7 +60,7 @@ decl_public_3(int32_t, pal_os_to_prx_ifaddrinfo,
 //
 // Convert platform independent getnameinfo flag to OS flags
 //
-decl_public_2(int32_t, pal_os_from_prx_client_getnameinfo_flags,
+decl_public_2(int32_t, pal_os_from_prx_getnameinfo_flags,
     int32_t, flags,
     int*, plat_flags
 );
@@ -68,7 +68,7 @@ decl_public_2(int32_t, pal_os_from_prx_client_getnameinfo_flags,
 //
 // Convert OS getnameinfo flag to platform independent flags
 //
-decl_public_2(int32_t, pal_os_to_prx_client_getnameinfo_flags,
+decl_public_2(int32_t, pal_os_to_prx_getnameinfo_flags,
     int, flags,
     int32_t*, prx_flags
 );

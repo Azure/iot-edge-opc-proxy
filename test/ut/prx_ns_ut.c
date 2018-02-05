@@ -427,7 +427,7 @@ TEST_FUNCTION(prx_ns_get_entry_by_name__success)
     // ...
 
     // act
-    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, k_results_valid);
+    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, NULL, k_results_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -512,7 +512,7 @@ TEST_FUNCTION(prx_ns_get_entry_by_name__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, k_results_valid);
+    result = prx_ns_get_entry_by_name(k_ns_valid, k_name_valid, NULL, k_results_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);
@@ -2032,7 +2032,6 @@ TEST_FUNCTION(prx_ns_entry_to_prx_socket_address__neg)
 TEST_FUNCTION(prx_ns_entry_create__success)
 {
     static const uint32_t k_type_valid;
-    static const const char* k_id_valid;
     static const const char* k_name_valid;
     static const prx_ns_entry_t** k_entry_valid;
     int32_t result;
@@ -2041,7 +2040,7 @@ TEST_FUNCTION(prx_ns_entry_create__success)
     // ...
 
     // act
-    result = prx_ns_entry_create(k_type_valid, k_id_valid, k_name_valid, k_entry_valid);
+    result = prx_ns_entry_create(k_type_valid, k_name_valid, k_entry_valid);
 
     ASSERT_EXPECTED_CALLS();
     ASSERT_ARE_EQUAL(int32_t, er_ok, result);
@@ -2052,26 +2051,6 @@ TEST_FUNCTION(prx_ns_entry_create__success)
 // Test prx_ns_entry_create passing as type argument an invalid uint32_t value
 //
 TEST_FUNCTION(prx_ns_entry_create__arg_type_invalid)
-{
-    // ...
-    int32_t result;
-
-    // arrange
-    // ...
-
-    // act
-    handle = prx_ns_entry_create();
-
-    // assert
-    ASSERT_EXPECTED_CALLS();
-    ASSERT_ARE_EQUAL(int32_t, er_fault, result);
-    // ...
-}
-
-//
-// Test prx_ns_entry_create passing as id argument an invalid const char* value
-//
-TEST_FUNCTION(prx_ns_entry_create__arg_id_invalid)
 {
     // ...
     int32_t result;
@@ -2134,7 +2113,6 @@ TEST_FUNCTION(prx_ns_entry_create__arg_entry_invalid)
 TEST_FUNCTION(prx_ns_entry_create__neg)
 {
     static const uint32_t k_type_valid;
-    static const const char* k_id_valid;
     static const const char* k_name_valid;
     static const prx_ns_entry_t** k_entry_valid;
     int32_t result;
@@ -2147,7 +2125,7 @@ TEST_FUNCTION(prx_ns_entry_create__neg)
 
     // act
     UMOCK_C_NEGATIVE_TESTS_ACT();
-    result = prx_ns_entry_create(k_type_valid, k_id_valid, k_name_valid, k_entry_valid);
+    result = prx_ns_entry_create(k_type_valid, k_name_valid, k_entry_valid);
 
     // assert
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_ok);

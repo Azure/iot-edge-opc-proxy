@@ -82,11 +82,11 @@ static int32_t prx_host_install_server(
 
     while (true)
     {
-        result = prx_ns_get_entry_by_name(host->remote, name, &resultset);
+        result = prx_ns_get_entry_by_name(host->remote, name, domain, &resultset);
         if (result == er_not_found)
         {
             result = prx_ns_entry_create(prx_ns_entry_type_proxy,
-                name, name, domain, MODULE_VER_NUM, &entry);
+                name, domain, MODULE_VER_NUM, &entry);
             if (result != er_ok)
                 break;
             result = prx_ns_create_entry(host->remote, entry);
@@ -99,6 +99,8 @@ static int32_t prx_host_install_server(
 
         if (result != er_ok)
             break;
+
+        result = er_already_exists;
         entry = prx_ns_result_pop(resultset);
         while (entry)
         {
@@ -126,7 +128,8 @@ static int32_t prx_host_install_server(
 //
 static int32_t prx_host_uninstall_server(
     prx_host_t* host,
-    const char* name
+    const char* name,
+    const char* domain
 )
 {
     int32_t result;
@@ -146,7 +149,7 @@ static int32_t prx_host_uninstall_server(
         //
         if (name)
             result = prx_ns_get_entry_by_name(local ? host->local : host->remote,
-                name, &resultset);
+                name, domain, &resultset);
         else
             result = prx_ns_get_entry_by_type(local ? host->local : host->remote,
                 prx_ns_entry_type_proxy, &resultset);
@@ -222,7 +225,6 @@ static int32_t prx_host_init_from_command_line(
         { "install",                        no_argument,                 NULL, 'i' },
         { "uninstall",                      no_argument,                 NULL, 'u' },
         { "only-websocket",                 no_argument,                 NULL, 'w' },
-        { "daemonize",                      no_argument,                 NULL, 'd' },
         { "help",                           no_argument,                 NULL, 'h' },
         { "version",                        no_argument,                 NULL, 'v' },
         { "log-to-iothub",                  no_argument,                 NULL, 'T' },
@@ -232,7 +234,7 @@ static int32_t prx_host_init_from_command_line(
         { "blacklisted-ports",              required_argument,           NULL, 'r' },
         { "import",                         required_argument,           NULL, 's' },
         { "name",                           required_argument,           NULL, 'n' },
-        { "domain",                         required_argument,           NULL, 'N' },
+        { "domain",                         required_argument,           NULL, 'd' },
         { "connection-string",              required_argument,           NULL, 'c' },
         { "log-file",                       required_argument,           NULL, 'l' },
         { "log-config-file",                required_argument,           NULL, 'L' },
@@ -252,7 +254,7 @@ static int32_t prx_host_init_from_command_line(
         // Parse options
         while (result == er_ok)
         {
-            c = getopt_long(argc, argv, "iuwWdhvTFr:s:n:N:c:l:L:C:H:D:p:x:y:t:b:",
+            c = getopt_long(argc, argv, "iuwWhvTFr:s:n:d:c:l:L:C:H:D:p:x:y:t:b:",
                 long_options, &option_index);
             if (c == -1)
                 break;
@@ -262,7 +264,7 @@ static int32_t prx_host_init_from_command_line(
             case 'w':
                 if (0 == (pal_caps() & pal_cap_wsclient))
                 {
-                    printf("ERROR: Websocket not supported!\n");
+                    printf("ERROR: Websocket not supported!\n\n");
                     result = er_arg;
                     break;
                 }
@@ -275,9 +277,6 @@ static int32_t prx_host_init_from_command_line(
                 break;
             case 'T':
                 __prx_config_set_int(prx_config_key_log_telemetry, 1);
-                break;
-            case 'F':
-                __prx_config_set_int(prx_config_key_browse_fs, 1);
                 break;
             case 'r':
                 result = string_parse_range_list(optarg, NULL, NULL);
@@ -301,9 +300,6 @@ static int32_t prx_host_init_from_command_line(
             case 't':
                 __prx_config_set(prx_config_key_token_ttl, optarg);
                 break;
-            case 'd':
-                host->hidden = true;
-                break;
             case 'i':
                 should_exit = true;
                 is_install = true;
@@ -322,13 +318,13 @@ static int32_t prx_host_init_from_command_line(
             case 'n':
                 server_name = optarg;
                 break;
-            case 'N':
+            case 'd':
                 domain = optarg;
                 break;
             case 's':
                 if (0 == (pal_caps() & pal_cap_cred))
                 {
-                    printf("ERROR: Secret store not supported on this platform!\n");
+                    printf("ERROR: Secret store not supported on this platform!\n\n");
                     result = er_arg;
                     break;
                 }
@@ -339,10 +335,10 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                printf("Importing connection string...\n");
-                __prx_config_set(prx_config_key_policy_import, optarg);
+                printf("Importing connection string...\n\n");
+                __prx_config_set_int(prx_config_key_policy_import, 1);
+                c_string = string_trim(optarg, "'\"");
                 should_exit = true;
-                c_string = optarg;
                 if (c_string && strlen(c_string) > 0)
                     result = io_cs_create_from_string(c_string, &cs);
                 else
@@ -358,7 +354,7 @@ static int32_t prx_host_init_from_command_line(
                     result = er_arg;
                     break;
                 }
-                c_string = optarg;
+                c_string = string_trim(optarg, "'\"");
                 if (c_string && strlen(c_string) > 0)
                     result = io_cs_create_from_string(c_string, &cs);
                 else
@@ -409,13 +405,13 @@ static int32_t prx_host_init_from_command_line(
 
         if (is_install && is_uninstall)
         {
-            printf("ERROR: Cannot use --install and --uninstall together...");
+            printf("ERROR: Cannot use --install and --uninstall together...\n\n");
             result = er_arg;
             break;
         }
 
         if (log_config && log_file)
-            printf("WARNING: --log-file overrides --log-config-file option...");
+            printf("WARNING: --log-file overrides --log-config-file option...\n\n");
         if (log_config)
         {
             // Configure logging
@@ -456,12 +452,19 @@ static int32_t prx_host_init_from_command_line(
 
         if (!cs)
         {
-            c_string = getenv("_HUB_CS");
+            c_string = getenv("EdgeHubConnectionString");
+            if (!c_string || !strlen(c_string))
+                c_string = getenv("_HUB_CS");
             if (c_string && strlen(c_string) > 0)
             {
                 result = io_cs_create_from_string(c_string, &cs);
                 if (result != er_ok)
+                {
+                    printf("ERROR: No connection string provided, and none/bad one \n"
+                        "configured in $_HUB_CS or $EdgeHubConnectionString \n"
+                        "environment variable. \n\n");
                     break;
+                }
             }
         }
 
@@ -477,7 +480,7 @@ static int32_t prx_host_init_from_command_line(
         {
             if (is_install || is_uninstall || server_name)
             {
-                printf("ERROR: A device connection string cannot be used for -i or -u or -n");
+                printf("ERROR: A device connection string cannot be used for -i or -u or -n.\n\n");
                 result = er_arg;
                 break;
             }
@@ -494,7 +497,7 @@ static int32_t prx_host_init_from_command_line(
             result = prx_ns_create_entry(host->local, entry);
             if (result != er_ok)
             {
-                printf("ERROR: Failed to add device connection string to local registry");
+                printf("ERROR: Failed to add device connection string to local registry.\n\n");
                 break;
             }
             // Ok, done...
@@ -536,7 +539,7 @@ static int32_t prx_host_init_from_command_line(
             if (!host->remote)
             {
                 // Empty local registry and no remote, nothing to do...
-                printf("ERROR: Cannot connect without connection strings...");
+                printf("ERROR: Cannot connect without connection strings...\n\n");
                 result = er_arg;
                 break;
             }
@@ -559,16 +562,16 @@ static int32_t prx_host_init_from_command_line(
             /**/ if (is_install)
                 result = prx_host_install_server(host, server_name, domain);
             else if (is_uninstall)
-                result = prx_host_uninstall_server(host, server_name);
+                result = prx_host_uninstall_server(host, server_name, domain);
 
             if (result != er_ok)
             {
-                printf("ERROR: %s %s failed! Check parameters...\n",
+                printf("ERROR: %s %s failed! Check parameters...\n\n",
                     prx_err_string(result), !is_uninstall ? "Install" : "Uninstall");
                 break;
             }
-            printf("%s %s\n", server_name ? server_name : "All", !is_uninstall ?
-                "installed" : "uninstalled");
+            printf("%s (%s) %s\n\n", server_name ? server_name : "All", 
+                domain ? domain : "no domain", !is_uninstall ? "installed" : "uninstalled");
             server_name = NULL;
         }
         break;
@@ -581,13 +584,13 @@ static int32_t prx_host_init_from_command_line(
         prx_ns_entry_release(entry);
     if (should_exit && !host->hidden && result == er_ok)
     {
-        printf("Success.\n");
+        printf("Success.\n\n");
         return er_aborted;
     }
     if (result != er_arg)
     {
         if (result != er_ok)
-            printf("Operation failed.\n");
+            printf("Operation failed.\n\n");
         return result;
     }
 
@@ -649,7 +652,7 @@ static int32_t prx_host_init_from_command_line(
     printf("                                    and access to the shared access key.    \n");
     printf(" -n, --name <string>                Name of proxy to install or uninstall.  \n");
     printf("                                    If -n is not provided, hostname is used.\n");
-    printf("     --domain <string>              Virtual domain the proxy is assigned to.\n");
+    printf(" -d, --domain <string>              Virtual domain the proxy is assigned to.\n");
     printf("                                    Use for -i. If not provided, no domain  \n");
     printf("                                    is assigned.                            \n");
     if (pal_caps() & pal_cap_file)
@@ -662,11 +665,6 @@ static int32_t prx_host_init_from_command_line(
     printf(" -t, --token-ttl int                Time to live in seconds for all shared  \n");
     printf("                                    access tokens provided to IoT Hub if you\n");
     printf("                                    prefer a value different from default.  \n");
-#if defined(EXPERIMENTAL)
-    printf(" -d, --daemonize                    Runs the proxy as a service/daemon,     \n");
-    printf("                                    otherwise runs proxy host process as    \n");
-    printf("                                    console process.                        \n");
-#endif
     printf(" -v, --version                      Prints the version information for this \n");
     printf("                                    binary and exits.                       \n");
     return er_arg;
@@ -694,8 +692,8 @@ static void prx_host_modules_stop(
         // Remove this entry if it was ad-hoc created
         if (host->uninstall_on_exit)
         {
-            result = prx_host_uninstall_server(
-                host, prx_ns_entry_get_name(next->entry));
+            result = prx_host_uninstall_server(host, 
+                prx_ns_entry_get_name(next->entry), prx_ns_entry_get_domain(next->entry));
             if (result != er_ok)
             {
                 log_error(host->log, "Failed uninstalling server %s", "");

@@ -5,7 +5,6 @@
 #include "util_mem.h"
 #include "pal_net.h"
 #include "pal.h"
-#include "pal_sd.h"
 #include "pal_types.h"
 #include "pal_err.h"
 
@@ -46,160 +45,6 @@ _inl__ void pal_net_trace_resolved(
     default:
         dbg_assert(0, "Unexpected family %d resolved", prx_ai->address.un.family);
     }
-}
-
-//
-// Callback context
-//
-typedef struct pal_net_sd_ctx
-{
-    const char* address;
-    const char* service;
-    signal_t* signal;
-    size_t result_len;
-    prx_addrinfo_t* result;
-    int32_t error;
-}
-pal_net_sd_ctx_t;
-
-//
-// Results callback
-//
-static int32_t pal_sd_getaddrinfo_cb(
-    void *context,
-    int32_t itf_index,
-    int32_t error,
-    pal_sd_result_type_t type,
-    void *result,
-    int32_t flags
-)
-{
-    pal_net_sd_ctx_t* ctx = (pal_net_sd_ctx_t*)context;
-    prx_addrinfo_t* ptr, *prx_ai = (prx_addrinfo_t*)result;
-
-    (void)flags;
-    (void)itf_index;
-
-    if (error != er_ok)
-    {
-        log_trace(NULL, "Error %s in resolve cb ...", prx_err_string(error));
-        ctx->error = error;
-    }
-    else if (type == pal_sd_result_addrinfo)
-    {
-        pal_net_trace_resolved(ctx->address, ctx->service, prx_ai);
-
-        ptr = (prx_addrinfo_t*)mem_realloc(ctx->result, (ctx->result_len + 2) *
-            sizeof(prx_addrinfo_t));
-        if (!ptr)
-            return er_out_of_memory;
-
-        memcpy(&ptr[ctx->result_len], prx_ai, sizeof(prx_addrinfo_t));
-        ptr[ctx->result_len].reserved = 0;
-        ptr[ctx->result_len].name = NULL;
-
-        ctx->error = er_ok;
-        ctx->result = ptr;
-
-        if (prx_ai->name)
-        {
-            error = string_clone(
-                prx_ai->name, (char**)&ptr[ctx->result_len].name);
-            if (error != er_ok)
-                return error;
-        }
-
-        ctx->result_len++;
-        ctx->result[ctx->result_len].reserved = 1;
-    }
-    else
-    {
-        dbg_assert(0, "Unexpected result type %d", type);
-    }
-    return er_ok;
-}
-
-//
-// Resolve host name using sd but synchronously waiting for results for timeout ms.
-//
-static int32_t pal_sd_getaddrinfo(
-    const char* address,
-    const char* service,
-    int32_t timeout,
-    prx_addrinfo_t** ai_info,
-    size_t* ai_size
-)
-{
-    int32_t result;
-    prx_socket_address_proxy_t host_addr;
-    pal_net_sd_ctx_t ctx;
-    pal_sdclient_t* client;
-    pal_sdbrowser_t* browser = NULL;
-
-    dbg_assert_ptr(address);
-    dbg_assert_ptr(ai_info);
-    dbg_assert_ptr(ai_size);
-
-    result = pal_sdclient_create(NULL, NULL, &client);
-    if (result != er_ok)
-        return result;
-    do
-    {
-        memset(&ctx, 0, sizeof(pal_net_sd_ctx_t));
-        ctx.address = address;
-        ctx.service = service;
-
-        result = signal_create(true, false, &ctx.signal);
-        if (result != er_ok)
-            break;
-        result = pal_sdbrowser_create(client, pal_sd_getaddrinfo_cb, &ctx,
-            &browser);
-        if (result != er_ok)
-            break;
-
-        memset(&host_addr, 0, sizeof(host_addr));
-        host_addr.family = prx_address_family_proxy;
-        if (service)
-            host_addr.port = (uint16_t)atoi(service);
-        host_addr.host_dyn = address;
-        result = pal_sdbrowser_resolve(browser, &host_addr, prx_itf_index_all);
-        if (result != er_ok)
-        {
-            log_error(NULL, "Warning: Failed to resolve on sd browser (%s)",
-                prx_err_string(result));
-            break;
-        }
-
-        // Wait for signal or timeout...
-        result = signal_wait_ex(ctx.signal, &timeout);
-
-        // Collect result
-        if (!ctx.result)
-        {
-            if (ctx.error == er_ok)
-                result = er_not_found;
-            else
-                result = ctx.error;
-            break;
-        }
-
-        // Mark last element so free works correctly
-        *ai_info = ctx.result;
-        ctx.result = NULL;
-        *ai_size = ctx.result_len;
-        ctx.result_len = 0;
-        result = er_ok;
-        break;
-    }
-    while (0);
-    if (browser)
-        pal_sdbrowser_free(browser);
-    pal_sdclient_free(client);
-    if (ctx.result)
-        pal_freeaddrinfo(ctx.result);
-    if (ctx.signal)
-        signal_free(ctx.signal);
-    return result;
 }
 
 //
@@ -310,7 +155,7 @@ int pal_os_from_prx_h_error(
 //
 // Convert platform independent getnameinfo flag to OS flags
 //
-int32_t pal_os_from_prx_client_getnameinfo_flags(
+int32_t pal_os_from_prx_getnameinfo_flags(
     int32_t flags,
     int *plat_flags
 )
@@ -329,7 +174,7 @@ int32_t pal_os_from_prx_client_getnameinfo_flags(
 //
 // Convert OS getnameinfo flag to platform independent flags
 //
-int32_t pal_os_to_prx_client_getnameinfo_flags(
+int32_t pal_os_to_prx_getnameinfo_flags(
     int flags,
     int32_t* prx_flags
 )
@@ -1080,7 +925,7 @@ int32_t pal_os_from_prx_socket_type(
 //
 // Convert OS flags to platform independent address info flags
 //
-int32_t pal_os_to_prx_client_getaddrinfo_flags(
+int32_t pal_os_to_prx_getaddrinfo_flags(
     int flags,
     int32_t* prx_flags
 )
@@ -1100,7 +945,7 @@ int32_t pal_os_to_prx_client_getaddrinfo_flags(
 //
 // Convert platform independent address info flags to OS flags
 //
-int32_t pal_os_from_prx_client_getaddrinfo_flags(
+int32_t pal_os_from_prx_getaddrinfo_flags(
     int32_t flags,
     int* platform_flags
 )
@@ -1186,7 +1031,7 @@ int32_t pal_getaddrinfo(
     if (result != er_ok)
         return result;
 
-    result = pal_os_from_prx_client_getaddrinfo_flags(flags, &hint.ai_flags);
+    result = pal_os_from_prx_getaddrinfo_flags(flags, &hint.ai_flags);
     if (result != er_ok)
         return result;
 
@@ -1291,17 +1136,7 @@ int32_t pal_getaddrinfo(
 
     if (info)
         freeaddrinfo(info);
-
-    //
-    // We do getaddrinfo first since doing mdns lookup is more expansive due to the
-    // allocation and closing of sd clients. Todo: consider to cache a client instance
-    // and re-create it only in case of errors.
-    //
-    if (result != er_ok && address &&
-        0 == (flags & prx_ai_passive) && (pal_caps() & pal_cap_dnssd))
-        return pal_sd_getaddrinfo(address, service, 100, prx_ai_result, prx_ai_result_count);
-    else
-        return result;
+    return result;
 }
 
 //
@@ -1362,7 +1197,7 @@ int32_t pal_getnameinfo(
     }
     else
     {
-        result = pal_os_from_prx_client_getnameinfo_flags(flags, &plat_flags);
+        result = pal_os_from_prx_getnameinfo_flags(flags, &plat_flags);
         if (result != er_ok)
             return result;
     }

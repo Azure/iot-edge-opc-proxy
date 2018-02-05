@@ -6,7 +6,6 @@
 #include "prx_ns.h"
 #include "prx_log.h"
 #include "prx_buffer.h"
-#include "prx_browse.h"
 #include "prx_config.h"
 
 #include "pal.h"
@@ -30,7 +29,6 @@ struct prx_server
     io_ref_t id;              // Server id == Proxy id == Module entry id
     io_connection_t* listener;     // connection used by server to listen
     io_transport_t* transport;                 // Transport instance used
-    prx_browse_server_t* browser;              // Internal browser server
 #define DEFAULT_RESTRICTED_PORTS ""
     int32_t* restricted_ports;    // Tuple range list of restricted ports
     size_t restricted_port_count;       // Number of tuples in restricted
@@ -125,9 +123,6 @@ static void prx_server_free(
 {
     dbg_assert_ptr(server);
     dbg_assert(server->exit, "Should be exiting");
-
-    if (server->browser)
-        prx_browse_server_free(server->browser);
 
     if (server->scheduler)
         prx_scheduler_release(server->scheduler, server);
@@ -246,12 +241,41 @@ static void prx_server_socket_free(
     dbg_assert_is_task(server_sock->scheduler);
 
     if (server_sock->sock)
+    {
         pal_socket_free(server_sock->sock);
+        server_sock->sock = NULL;
+    }
+    
     if (server_sock->stream && !server_sock->server_stream)
+    {
         io_connection_free(server_sock->stream);
+        server_sock->stream = NULL;
+    }
 
     if (server_sock->link_message)
+    {
         io_message_release(server_sock->link_message);
+        server_sock->link_message = NULL;
+    }
+
+    if (server_sock->send_lock && server_sock->recv_lock)
+    {
+        prx_server_socket_empty_socket_queues(server_sock);
+        prx_server_socket_empty_transport_queues(server_sock);
+    }
+
+    if (server_sock->recv_pool)
+    {
+        if (!server_sock->server->exit &&
+            !io_message_factory_is_safe_to_free(server_sock->recv_pool))
+        {
+            // Delay free and try until message factory is safe to free
+            __do_later(server_sock, prx_server_socket_free, 5000);
+            return;
+        }
+
+        io_message_factory_free(server_sock->recv_pool);
+    }
 
     dbg_assert(DList_IsListEmpty(&server_sock->read_queue),
         "read_queue not empty");
@@ -262,14 +286,6 @@ static void prx_server_socket_free(
     dbg_assert(DList_IsListEmpty(&server_sock->write_queue),
         "write_queue not empty");
 
-    if (server_sock->send_lock && server_sock->recv_lock)
-    {
-        prx_server_socket_empty_socket_queues(server_sock);
-        prx_server_socket_empty_transport_queues(server_sock);
-    }
-
-    if (server_sock->recv_pool)
-        io_message_factory_free(server_sock->recv_pool);
 
     if (server_sock->send_lock)
         lock_free(server_sock->send_lock);
@@ -2138,8 +2154,6 @@ static void prx_server_handle_linkrequest(
 {
     int32_t result;
     prx_server_socket_t* server_sock = NULL;
-    pal_socket_client_itf_t internal_itf;
-    pal_socket_t* internal_sock;
 
     dbg_assert_ptr(message);
     dbg_assert_ptr(server);
@@ -2186,84 +2200,37 @@ static void prx_server_handle_linkrequest(
         else if (server_sock->client_itf.props.timeout < MIN_GC_TIMEOUT)
             server_sock->client_itf.props.timeout = MIN_GC_TIMEOUT;
 
-        //
-        // Create socket. If this is an internal socket open a socket pair with
-        // requested server's client interface.  Socket pairs are already open.
-        //
-        if (!(message->content.link_request.props.flags & prx_socket_flag_internal))
+        result = pal_socket_create(&server_sock->client_itf, &server_sock->sock);
+        if (result != er_ok)
         {
-            result = pal_socket_create(&server_sock->client_itf, &server_sock->sock);
-            if (result != er_ok)
-            {
-                log_error(server->log, "Failed to create client socket handle (%s)",
-                    prx_err_string(result));
-                break;
-            }
-
-            // Now connect or bind socket using the address provided in socket properties
-            result = pal_socket_open(server_sock->sock,
-                __prx_config_get(prx_config_key_bind_device, NULL));
-            if (result != er_ok)
-            {
-                log_error(server->log, "Failed to open client socket handle (%s)",
-                    prx_err_string(result));
-                break;
-            }
-
-            // Apply initial socket options
-            for (size_t i = 0; i < message->content.link_request.props.options_len; i++)
-            {
-                result = prx_server_socket_setopt(
-                    server_sock, &message->content.link_request.props.options[i]);
-                if (result != er_ok)
-                {
-                    log_error(server->log, "Failed to set initial option on handle (%s)",
-                        prx_err_string(result));
-                    break;
-                }
-            }
-        }
-        else
-        {
-            // Pick the right internal server based on the provided port. Codec id
-            // is sent as part of flags member.
-            switch (message->content.link_request.props.address.un.proxy.port)
-            {
-            case prx_internal_service_port_browse:
-                result = prx_browse_server_accept(server->browser, (io_codec_id_t)
-                    message->content.link_request.props.address.un.proxy.flags,
-                    &internal_itf);
-                break;
-            case prx_internal_service_port_invalid:
-            default:
-                result = er_not_supported;
-                break;
-            }
-            if (result != er_ok)
-            {
-                log_error(server->log, "Failed to accept internal server socket (%s)",
-                    prx_err_string(result));
-                break;
-            }
-
-            dbg_assert(message->content.link_request.props.options_len == 0,
-                "no options expected");
-
-            result = pal_socket_pair(&server_sock->client_itf, &server_sock->sock,
-                &internal_itf, &internal_sock);
-            if (result != er_ok)
-            {
-                log_error(server->log, "Failed to create internal socket pair (%s)",
-                    prx_err_string(result));
-                dbg_assert(0, "Leaking client interface - pal should notify cb");
-                break;
-            }
-
-            dbg_assert_ptr(internal_sock);
-            internal_sock = NULL;
-            // Already opened at this point due to callback.
+            log_error(server->log, "Failed to create client socket handle (%s)",
+                prx_err_string(result));
+            break;
         }
 
+        // Now connect or bind socket using the address provided in socket properties
+        result = pal_socket_open(server_sock->sock,
+            __prx_config_get(prx_config_key_bind_device, NULL));
+        if (result != er_ok)
+        {
+            log_error(server->log, "Failed to open client socket handle (%s)",
+                prx_err_string(result));
+            break;
+        }
+
+        // Apply initial socket options
+        for (size_t i = 0; i < message->content.link_request.props.options_len; i++)
+        {
+            result = prx_server_socket_setopt(
+                server_sock, &message->content.link_request.props.options[i]);
+            if (result != er_ok)
+            {
+                log_error(server->log, "Failed to set initial option on handle (%s)",
+                    prx_err_string(result));
+                break;
+            }
+        }
+        
         // Save context for async completion
         message->context = server->listener;
 
@@ -2545,10 +2512,6 @@ int32_t prx_server_create(
         result = io_transport_create(server->transport, entry, io_codec_json,
             prx_server_handler, server, server->scheduler,
             &server->listener);
-        if (result != er_ok)
-            break;
-
-        result = prx_browse_server_create(scheduler, &server->browser);
         if (result != er_ok)
             break;
 

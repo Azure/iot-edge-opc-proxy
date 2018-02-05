@@ -30,6 +30,7 @@ typedef enum io_cs_entry
     io_cs_entry_endpoint_name,
     io_cs_entry_shared_access_token,
     io_cs_entry_shared_access_key_handle,
+    io_cs_entry_gateway_host_name,
     io_cs_entry_max
 }
 io_cs_entry_t;
@@ -146,7 +147,9 @@ static int32_t io_cs_validate(
     dbg_assert_ptr(cs);
 
     val = io_cs_get_host_name(cs);
-    if (val && !cs->entries[io_cs_entry_endpoint])
+    if (cs->entries[io_cs_entry_host_name] && 
+        !cs->entries[io_cs_entry_endpoint] &&
+        !cs->entries[io_cs_entry_gateway_host_name])
     {
         if (!strlen(val))
             return er_invalid_format;
@@ -359,7 +362,7 @@ static int32_t io_cs_parser_callback(
     else if (string_is_equal_nocase(key, key_len, "SharedAccessKeyHandle"))
         __io_cs_add_entry(io_cs_entry_shared_access_key_handle)
     else if (string_is_equal_nocase(key, key_len, "GatewayHostName"))
-        return er_ok; // Not used
+        __io_cs_add_entry(io_cs_entry_gateway_host_name)
     else
         return er_invalid_format;
     return er_ok;
@@ -464,6 +467,10 @@ int32_t io_cs_append_to_STRING(
         return result;
     result = io_cs_append_entry_to_STRING(
         cs, io_cs_entry_shared_access_key_handle, "SharedAccessKeyHandle=", c_string);
+    if (result != er_ok)
+        return result;
+    result = io_cs_append_entry_to_STRING(
+        cs, io_cs_entry_gateway_host_name, "GatewayHostName=", c_string);
     if (result != er_ok)
         return result;
 
@@ -743,6 +750,10 @@ const char* io_cs_get_host_name(
 
     if (!cs)
         return NULL;
+#if defined(ENABLE_EDGE_HUB)
+    if (cs->entries[io_cs_entry_gateway_host_name])
+        return io_cs_get_entry(cs, io_cs_entry_gateway_host_name);
+#endif
     if (!cs->entries[io_cs_entry_host_name])
     {
         val = io_cs_get_endpoint(cs);

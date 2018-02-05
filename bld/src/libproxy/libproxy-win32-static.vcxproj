@@ -38,7 +38,7 @@
     <ProjectGuid>{697C4297-7BB2-4810-8947-BA87EE399EA5}</ProjectGuid>
     <RootNamespace>
     </RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.16299.0</WindowsTargetPlatformVersion>
     <ProjectName>libproxy-win32-lib</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -111,9 +111,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ProjectReference Include="..\libdnssd\libdnssd-win32-static.vcxproj">
-      <Project>{7adc69d2-1912-4d23-9b6c-2fa423fa823b}</Project>
-    </ProjectReference>
     <ProjectReference Include="..\libiotsdk\libiotsdk-win32.vcxproj">
       <Project>{6d8be690-5bd5-4964-8c98-c18e6117877f}</Project>
     </ProjectReference>
@@ -125,13 +122,11 @@
     <ClInclude Include="..\..\..\inc\pal_cred.h" />
     <ClInclude Include="..\..\..\inc\pal_err.h" />
     <ClInclude Include="..\..\..\inc\pal_ev.h" />
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\inc\pal_file.h" />
     <ClInclude Include="..\..\..\inc\pal_mt.h" />
     <ClInclude Include="..\..\..\inc\pal_net.h" />
     <ClInclude Include="..\..\..\inc\pal_proc.h" />
     <ClInclude Include="..\..\..\inc\pal_rand.h" />
-    <ClInclude Include="..\..\..\inc\pal_sd.h" />
     <ClInclude Include="..\..\..\inc\pal_sk.h" />
     <ClInclude Include="..\..\..\inc\pal_time.h" />
     <ClInclude Include="..\..\..\inc\pal_types.h" />
@@ -143,8 +138,6 @@
     <ClCompile Include="..\..\..\src\pal\pal_err_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_ev_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_file_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_scan_win.c" />
-    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c" />
     <ClCompile Include="..\..\..\src\pal\pal_net_posix.c" />
     <ClCompile Include="..\..\..\src\pal\pal_net_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_proc_win.c" />

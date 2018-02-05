@@ -30,6 +30,7 @@ END_DECLARE_TEST_SUITE()
 //
 DECLARE_TEST_SETUP()
 
+#if 0
 //
 // Test io_encode_prx_addrinfo happy path
 //
@@ -1674,6 +1675,7 @@ TEST_FUNCTION(io_decode_prx_property__neg)
     UMOCK_C_NEGATIVE_TESTS_ASSERT(int32_t, result, er_invalid_format, er_out_of_memory);
 }
 
+#endif 
 
 //
 // 5. Teardown tests and test suite

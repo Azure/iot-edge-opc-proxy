@@ -34,18 +34,12 @@ set(_PAL_UNITS_UNDER_TEST
     pal_net_posix
     pal_net_win
     pal_net_stub
-    pal_scan_linux
-    pal_scan_stub
-    pal_scan_win
     pal_proc_linux
     pal_proc_posix
     pal_proc_win
     pal_rand_linux
     pal_rand_openssl
     pal_rand_win
-    pal_sd_avahi
-    pal_sd_mdns
-    pal_sd_stub
     pal_sk_posix
     pal_sk_win
     pal_time_posix

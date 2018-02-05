@@ -54,13 +54,7 @@
     <ClCompile Include="..\..\..\src\pal\pal_cred_win.c">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\src\pal\pal_sd_mdns.c">
-      <Filter>src</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\src\pal\pal_ev_poll.c">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\src\pal\pal_scan_win.c">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
@@ -105,9 +99,6 @@
       <Filter>inc\getopt</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_cred.h">
-      <Filter>inc</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\inc\pal_sd.h">
       <Filter>inc</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\inc\pal_time.h">

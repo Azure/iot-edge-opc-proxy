@@ -537,6 +537,54 @@ STRING_HANDLE STRING_safe_construct_n(
 }
 
 //
+// Construct a lower case 0 terminated string from the passed string
+//
+STRING_HANDLE STRING_construct_lowercase(
+    const char* val
+)
+{
+    STRING_HANDLE result;
+    char* copy, *s;
+    
+    if (!val)
+        return NULL;
+
+    s = copy = (char*)crt_alloc(strlen(val) + 1);
+    if (!copy)
+        return NULL;
+    while (*val) *s++ = (char)tolower((int)*val++);
+    *s = 0;
+
+    result = STRING_new_with_memory(copy);
+    if (result)
+        return result;
+    crt_free(copy);
+    return NULL;
+}
+
+//
+// Concat a lowercase 0 terminated string from passed in value
+//
+int32_t STRING_concat_lowercase(
+    STRING_HANDLE string,
+    const char* value
+)
+{
+    int32_t result = er_ok;
+    STRING_HANDLE tmp;
+
+    tmp = STRING_construct_lowercase(value);
+    if (!tmp)
+        return er_out_of_memory;
+
+    if (0 != STRING_concat_with_STRING(string, tmp))
+        result = er_out_of_memory;
+
+    STRING_delete(tmp);
+    return result;
+}
+
+//
 // Concat a buffer up to len chars
 //
 int32_t STRING_concat_n(

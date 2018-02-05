@@ -70,7 +70,9 @@ int main(int argc, char *argv[])
 
     if (argc > 1)
     {
-        arg = argv[1];
+        argc--;
+        argv++;
+        arg = argv[0];
         argc--;
         argv++;
     }

@@ -12,7 +12,6 @@ RUN \
             pkg-config \
             libssl-dev \
             libcurl4-openssl-dev \
-            libavahi-client-dev \
     && \
         update-alternatives --install /usr/bin/cc cc /usr/bin/clang 100 \
     && \

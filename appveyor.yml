@@ -1,4 +1,4 @@
-version: 1.0.3.{build}
+version: 1.0.4.{build}
 environment:
   matrix:
     - proxy: no_zlog 
@@ -16,8 +16,8 @@ environment:
 image: Visual Studio 2017
 install:
   - git submodule update --init
-  - ps: Start-FileDownload 'https://slproweb.com/download/Win32OpenSSL-1_0_2L.exe'
-  - cmd /c Win32OpenSSL-1_0_2L.exe /silent /verysilent /sp- /suppressmsgboxes
+  - ps: Start-FileDownload 'https://slproweb.com/download/Win32OpenSSL-1_0_2n.exe'
+  - cmd /c Win32OpenSSL-1_0_2n.exe /silent /verysilent /sp- /suppressmsgboxes
 build:
 build_script:
   - bld\build.cmd -c %build_args%

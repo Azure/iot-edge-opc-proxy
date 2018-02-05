@@ -8,8 +8,6 @@ repo_root=$(cd "$(dirname "$0")/.." && pwd)
 run_unittests=ON
 use_zlog=OFF
 with_memcheck=OFF
-use_dnssd=ON
-prefer_dnssd_embedded_api=OFF
 toolset=
 compile_options=" "
 MAKE_PARALLEL_JOBS=0
@@ -30,7 +28,6 @@ usage ()
     echo "    --cl <value>                Specify additional compile options to be passed to the compiler"
     echo " -o --build-root <value>        [/build] Directory in which to place all files during build."
     echo "    --use-zlog                  Use zlog as logging framework instead of xlogging."
-    echo "    --use-dnssd <value>         [Yes] Sets the dnssd build option (Yes, No, Embedded)."
     echo "    --with-memcheck             Compile in memory checks."
     echo "    --skip-unittests            Skips building and executing unit tests."
     echo " -x --xtrace                    print a trace of each command."
@@ -49,7 +46,7 @@ process_args ()
     # separate word. The quotes around `$@' are essential!
     # We need TEMP as the `eval set --' would nuke the return value of getopt.
     TEMP=`getopt -o xo:C:T:cn:j: \
-          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-dnssd:,use-openssl,use-libwebsockets,with-memcheck,skip-unittests,os:,jobs: \
+          -l xtrace,build-root:,config:,clean,toolset:,cl:,use-zlog,use-openssl,use-libwebsockets,with-memcheck,skip-unittests,os:,jobs: \
          -- "$@"`
 
     if [ $? != 0 ]; then
@@ -87,20 +84,6 @@ process_args ()
         --use-zlog)
             use_zlog=ON
             shift ;;
-        --use-dnssd)
-              if [ "${2,,}" == "no" ]; then
-                use_dnssd=OFF
-            elif [ "${2,,}" == "embedded" ]; then
-                use_dnssd=ON
-                prefer_dnssd_embedded_api=ON
-            elif [ "${2,,}" == "yes" ]; then
-                use_dnssd=ON
-            else
-                echo "Bad argument for --use-dnssd: $2"
-                usage
-                exit 1
-            fi
-            shift 2 ;;
         --use-openssl)
             shift ;;
         --use-libwebsockets)
@@ -139,8 +122,8 @@ native_build()
 
             cmake $toolset -DCMAKE_BUILD_TYPE=$c -Drun_unittests:BOOL=$run_unittests \
                   -Dcompile_options_C:STRING="$compile_options" -Dcompile_options_CXX:STRING="$compile_options" \
-                  -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog -Duse_dnssd:BOOL=$use_dnssd \
-                  -Dprefer_dnssd_embedded_api:BOOL=$prefer_dnssd_embedded_api -DLWS_IPV6:BOOL=ON "$repo_root" || \
+                  -Dmem_check:BOOL=$with_memcheck -Duse_zlog:BOOL=$use_zlog \
+                  -DLWS_IPV6:BOOL=ON "$repo_root" || \
                 return 1
             
             CORES=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || nproc)
