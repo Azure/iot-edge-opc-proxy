@@ -95,12 +95,9 @@
     <ClInclude Include="..\..\..\inc\pal_cred.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\inc\pal_time.h">
       <Filter>inc</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
     <ClInclude Include="..\..\..\inc\pal_ev.h">
       <Filter>inc</Filter>
     </ClInclude>
