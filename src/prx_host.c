@@ -336,9 +336,9 @@ static int32_t prx_host_init_from_command_line(
                     break;
                 }
                 printf("Importing connection string...\n\n");
-                __prx_config_set(prx_config_key_policy_import, optarg);
-                should_exit = true;
+                __prx_config_set_int(prx_config_key_policy_import, 1);
                 c_string = string_trim(optarg, "'\"");
+                should_exit = true;
                 if (c_string && strlen(c_string) > 0)
                     result = io_cs_create_from_string(c_string, &cs);
                 else
@@ -452,14 +452,17 @@ static int32_t prx_host_init_from_command_line(
 
         if (!cs)
         {
-            c_string = getenv("_HUB_CS");
+            c_string = getenv("EdgeHubConnectionString");
+            if (!c_string || !strlen(c_string))
+                c_string = getenv("_HUB_CS");
             if (c_string && strlen(c_string) > 0)
             {
                 result = io_cs_create_from_string(c_string, &cs);
                 if (result != er_ok)
                 {
-                    printf("ERROR: No connection string provided, and none/bad one "
-                        "configured in $_HUB_CS environment variable. \n\n");
+                    printf("ERROR: No connection string provided, and none/bad one \n"
+                        "configured in $_HUB_CS or $EdgeHubConnectionString \n"
+                        "environment variable. \n\n");
                     break;
                 }
             }
