@@ -24,4 +24,4 @@ BuildApplication:
   artifacts:
     name: linux-armhf-proxyd
     paths:
-      - armhf_build/
+      - armhf_build/bin/
