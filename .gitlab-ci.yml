@@ -1,0 +1,27 @@
+# For syntax description see: http://gitlab.com/help/ci/yaml/README.md
+
+# Regarding the docker image to use:
+# For our private images we must use our private registry.
+# See https://gitlab.com/gitlab-org/gitlab-runner/issues/225
+# https://docs.docker.com/registry/deploying/
+# and https://blog.docker.com/2013/07/how-to-use-your-own-registry/
+# To start the registry run on wklj.inat.internal
+# docker run -d -p 5000:5000 --restart=always --name docker-images-registry registry
+# Restart, if needed:
+# docker container start docker-images-registry
+image: wklj.inat.internal:5000/oriole-build-armhf:7.11
+
+# A job building our application for linux-armhf
+BuildApplication:
+  tags:
+    - docker
+  script:
+    - git submodule update --init
+    - mkdir armhf_build
+    - cd armhf_build
+    - ../bld/toolchain/build4armhf.sh
+    - make -j`nproc`
+  artifacts:
+    name: linux-armhf-proxyd
+    paths:
+      - armhf_build/bin/
