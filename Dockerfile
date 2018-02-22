@@ -13,14 +13,13 @@ RUN set -ex \
         linux-headers \
         libc-dev \
         libressl-dev \
-        curl-dev \
-        avahi-dev
+        curl-dev
 
 ADD / /proxy_build
         
 RUN set -ex \
         && \
-	bash /proxy_build/bld/build.sh -C Release --skip-unittests --use-zlog --use-dnssd embedded \
+	bash /proxy_build/bld/build.sh -C Release --skip-unittests --use-zlog \
         && \
     mv /proxy_build/build/cmake/Release/bin/* /usr/bin \
         && \
@@ -38,7 +37,6 @@ RUN set -ex \
         bash \
         curl \
         libressl \
-        ca-certificates \
-        avahi
+        ca-certificates
 
 ENTRYPOINT ["proxyd"]
