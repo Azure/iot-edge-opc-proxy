@@ -1,4 +1,4 @@
-FROM alpine:3.6
+FROM alpine:3.7
 
 RUN set -ex \
         && \
@@ -13,7 +13,8 @@ RUN set -ex \
         linux-headers \
         libc-dev \
         libressl-dev \
-        curl-dev
+        curl-dev \
+        zlib-dev
 
 ADD / /proxy_build
         
@@ -37,6 +38,7 @@ RUN set -ex \
         bash \
         curl \
         libressl \
+        zlib \
         ca-certificates
 
 ENTRYPOINT ["proxyd"]
