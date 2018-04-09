@@ -4,7 +4,7 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 
 |Branch|Status|
 |------|-------------|
-|master|[![Build status](https://ci.appveyor.com/api/projects/status/do87bhdyyykf6sbj/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-gateway-opc-ua-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
+|master|[![Build status](https://ci.appveyor.com/api/projects/status/jsg9w13c6uqqp90w/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-edge-opc-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
 
 # Azure IoT Edge OPC
 
