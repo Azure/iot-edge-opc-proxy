@@ -36,27 +36,14 @@ As an example, you can create a file that contains the connection string and sav
 
 More options are available to configure transport and logging.  To send raw log output to your IoT Hub event hub endpoint, use the ```-T``` option.  To ensure the proxy only uses websockets to communicate with Azure IoT Hub, use the ```-w``` switch. Use the ```--proxy```, ```--proxy-user```, and ```--proxy-pwd``` options to configure your network's web proxy.  Run the ```proxyd``` executable with ```--help``` command line switch to see all available options and additional help information. 
 
-# Running as 
-
-You can configure the proxy's functionality through its command line interface.
-
-An IoT Hub connection string can be set via the ```-c```, ```-C``` or ```-s``` command line arguments or through the ```_HUB_CS ``` environment variable (which allows you to run the proxy without any command line arguments).   
-
-If the ```iothubowner``` connection string is used here, the proxy will automatically register with your Iot Hub.  By default it will use the host name of the machine it is running on for the registration.  You can override this name using the ```-n``` command line option.  Use the ```-D <file>``` option to persist the retrieved registration locally (otherwise it is only stored in memory, and needs to be retrieved again when the proxy restarts).  
-
-As an example, you can create a file that contains the connection string and save it on a USB pen drive.  On the proxy machine you can then run ```proxy -i -C <usbmntpath>/iothubowner.txt -D proxy-registration.json``` which will add the device in the proxy-registration.json file, and optionally safe the retrieved shared access key for the proxy in a secure location (depending on the capabilities of your platform and the configuration of the proxy).  You can then start the proxy by passing it the registration configuration using ```proxy -D proxy-registration.json```.  The proxy will read the connection string from proxy-registration.json, connect to Azure, and wait for requests.
-
-More options are available to configure transport and logging.  To send raw log output to your IoT Hub event hub endpoint, use the ```-T``` option.  To ensure the proxy only uses websockets to communicate with Azure IoT Hub, use the ```-w``` switch. Use the ```--proxy```, ```--proxy-user```, and ```--proxy-pwd``` options to configure your network's web proxy.  Run the ```proxyd``` executable with ```--help``` command line switch to see all available options and additional help information. 
-
-
-## Running it as a module (container) in Azure IoT Edge
+# Running as a module (container) in Azure IoT Edge
 OPC Proxy is ready to be used as a module to run in [Azure IoT Edge](https://docs.microsoft.com/en-us/azure/iot-edge) Microsoft's Intelligent Edge framework.
 We recommend to take a look on the information available on the beforementioned link and use then the information provided here.
 
 To add OPC Proxy as module to your IoT Edge deployment, you go to the Azure portal and navigate to your IoTHub and:
 * Go to IoT Edge and create or select your IoT Edge device.
 * Select `Set Modules`.
-* Select `Add`under `Deployment Modules`and then `IoT Edge Module`.
+* Select `Add` under `Deployment Modules` and then `IoT Edge Module`.
 * In the `Name` field, enter `iot-edge-opc-proxy`.
 In the `Image URI` field, enter `microsoft/iot-edge-opc-proxy:1.0.4`
 * Paste the following into the `Container Create Options` field and replace `<your_iothubowner_connectionstring>` with the iothubowner connectionstring of your IoTHub:
@@ -86,7 +73,7 @@ In the `Image URI` field, enter `microsoft/iot-edge-opc-proxy:1.0.4`
 * When you have started IoT Edge on your edge device and the docker container `iot-edge-opc-proxy` is started, you can check out the log output of OPC Proxy either by
   using `docker logs -f iot-edge-opc-proxy`.
 
-OPC Proxy usage scenario is to connect to enable connection to devices in the network it is running on. To connect to those devices you typically use hostnames. Please be aware that you can not use the hostname of the host IoT Edge and the OPC Proxy module are running running on, because IoT Edge has configured the docker internal networking in a way that it resolves the hostname to a docker network internal IP address. To connect to a socket on the host, you need to specify the IP address.
+OPC Proxy usage scenario is to connect to enable connection to devices in the network it is running on. To connect to those devices you typically use hostnames. Please be aware that you can not use the hostname of the host IoT Edge and the OPC Proxy module are running running on, because IoT Edge has configured the docker internal networking in a way that it resolves the hostname to a docker network internal IP address. To connect to a socket on the host, you need to specify the IP address or a full qualified domain name of your host.
 
 
 # Samples and API
