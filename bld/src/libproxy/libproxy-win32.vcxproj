@@ -137,23 +137,6 @@
     <ClCompile Include="..\..\..\src\pal\pal_time_win.c" />
     <ClCompile Include="..\..\..\src\pal\pal_ws_win.c" />
   </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\..\deps\getopt\src\getopt.h" />
-    <ClInclude Include="..\..\..\inc\os_win.h" />
-    <ClInclude Include="..\..\..\inc\pal.h" />
-    <ClInclude Include="..\..\..\inc\pal_cred.h" />
-    <ClInclude Include="..\..\..\inc\pal_err.h" />
-    <ClInclude Include="..\..\..\inc\pal_ev.h" />
-    <ClInclude Include="..\..\..\inc\pal_file.h" />
-    <ClInclude Include="..\..\..\inc\pal_mt.h" />
-    <ClInclude Include="..\..\..\inc\pal_net.h" />
-    <ClInclude Include="..\..\..\inc\pal_proc.h" />
-    <ClInclude Include="..\..\..\inc\pal_rand.h" />
-    <ClInclude Include="..\..\..\inc\pal_sk.h" />
-    <ClInclude Include="..\..\..\inc\pal_time.h" />
-    <ClInclude Include="..\..\..\inc\pal_types.h" />
-    <ClInclude Include="..\..\..\inc\pal_ws.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>
