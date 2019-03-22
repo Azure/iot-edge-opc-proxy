@@ -16,13 +16,19 @@ The proxy only requires port 443 (outgoing) open to the Internet.
 
 # Building
 
-The proxy gateway can be built and run directly from github using [docker](https://www.docker.com/get-docker):
+Clone the repository first.  Open a terminal or command prompt and run
 ```
-docker build -t proxyd https://github.com/Azure/iot-edge-opc-proxy.git
+git clone --recursive https://github.com/Azure/iot-edge-opc-proxy.git
+cd iot-edge-opc-proxy
+``` 
+
+You can now build and run the proxy using [docker](https://www.docker.com/get-docker):
+```
+docker build -t proxyd .
 docker run -it proxyd -c "<*iothubownerconnectionstring>"
 ``` 
 
-If you want to build the proxy on your developer machine, follow the build instructions [here](/bld/readme.md).
+If you want to build the proxy on your developer machine, follow the build instructions [here](bld/readme.md).
 
 # Running
 
