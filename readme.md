@@ -46,7 +46,7 @@ More options are available to configure transport and logging.  To send raw log 
 
 The proxy API and samples can be found here:
 
-- [.net API and samples](https://github.com/Azure/iot-edge-opc-proxy-api-csharp/tree/master)
+- [.net API and samples](https://github.com/Azure/iot-edge-opc-proxy-api-csharp/tree/1.0.4-lts)
 
 # Support and Contributions
 
