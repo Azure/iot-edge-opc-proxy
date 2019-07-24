@@ -6,9 +6,9 @@ contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additio
 |------|-------------|
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/jsg9w13c6uqqp90w/branch/master?svg=true)](https://ci.appveyor.com/project/marcschier/iot-edge-opc-proxy/branch/master) [![Build Status](https://travis-ci.org/Azure/iot-edge-opc-proxy.svg?branch=master)](https://travis-ci.org/Azure/iot-edge-opc-proxy)|
 
-# Azure IoT Edge OPC
+# OPC Proxy
 
-Using the Azure IoT Edge OPC Reverse Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  
+Using the OPC (Reverse) Proxy, client applications can connect to devices in the local gateway network and exchange transparent payloads, allowing developers to implement applications in Azure where the command and control protocol layer resides in the cloud.  
 
 An example for where this can be used is for tunneling OPC-UA binary protocol (secure channel) from a cloud application to a machine on the factory network, or tunneling SSH to an IoT device behind a firewall.
 
@@ -42,51 +42,11 @@ As an example, you can create a file that contains the connection string and sav
 
 More options are available to configure transport and logging.  To send raw log output to your IoT Hub event hub endpoint, use the ```-T``` option.  To ensure the proxy only uses websockets to communicate with Azure IoT Hub, use the ```-w``` switch. Use the ```--proxy```, ```--proxy-user```, and ```--proxy-pwd``` options to configure your network's web proxy.  Run the ```proxyd``` executable with ```--help``` command line switch to see all available options and additional help information. 
 
-# Running as a module (container) in Azure IoT Edge
-OPC Proxy is ready to be used as a module to run in [Azure IoT Edge](https://docs.microsoft.com/en-us/azure/iot-edge) Microsoft's Intelligent Edge framework.
-We recommend to take a look on the information available on the beforementioned link and use then the information provided here.
-
-To add OPC Proxy as module to your IoT Edge deployment, you go to the Azure portal and navigate to your IoTHub and:
-* Go to IoT Edge and create or select your IoT Edge device.
-* Select `Set Modules`.
-* Select `Add` under `Deployment Modules` and then `IoT Edge Module`.
-* In the `Name` field, enter `iot-edge-opc-proxy`.
-In the `Image URI` field, enter `microsoft/iot-edge-opc-proxy:1.0.4`
-* Paste the following into the `Container Create Options` field and replace `<your_iothubowner_connectionstring>` with the iothubowner connectionstring of your IoTHub:
-
-        {
-            "Hostname": "prx-test",
-            "Cmd": [
-                "-c",
-                "\"<your_iothubowner_connectionstring>\""
-            ]
-        }
-
-* This [reference (here the link to the V1.37 API)](https://docs.docker.com/engine/api/v1.37/#operation/ContainerCreate) explains which `Container Create Options` exist and what the meaning of it is.
-* You can adjust the command line parameters in the `Cmd` object of the IoT Edge module configuration to fit your needs. You can use all available OPC Proxy command line options.
-* Leave the other settings unchanged and select `Save`.
-* Back in the `Set Modules` page, select `Next`
-* Add the following route in the `Specify Routes` page:
-
-        {
-           "routes":{
-              "upstream":"FROM /* INTO $upstream"
-           }
-        }
-
-* Select `Next`
-* Select `Submit` to send your configuration down to IoT Edge
-* When you have started IoT Edge on your edge device and the docker container `iot-edge-opc-proxy` is started, you can check out the log output of OPC Proxy either by
-  using `docker logs -f iot-edge-opc-proxy`.
-
-OPC Proxy usage scenario is to connect to enable connection to devices in the network it is running on. To connect to those devices you typically use hostnames. Please be aware that you can not use the hostname of the host IoT Edge and the OPC Proxy module are running running on, because IoT Edge has configured the docker internal networking in a way that it resolves the hostname to a docker network internal IP address. To connect to a socket on the host, you need to specify the IP address or a full qualified domain name of your host.
-
-
 # Samples and API
 
 The proxy API and samples can be found here:
 
-- [.net API and samples](https://github.com/Azure/iot-edge-opc-proxy-api-csharp.git)
+- [.net API and samples](https://github.com/Azure/iot-edge-opc-proxy-api-csharp/tree/master)
 
 # Support and Contributions
 
